@@ -1,0 +1,23 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: Catalog
+metadata:
+  asOf: '2026-07-13'
+  taxonomyVersion: 1.4.0
+  analyticalModelVersion: 1.1.0
+  normalization:
+    month_hours: 720
+    currency: RUB
+    storage_quantity: GiB
+    storage_byte_basis: binary
+    ram_quantity: GiB-RAM
+    ram_byte_basis: binary
+    vat: included
+    vat_rate_percent: 22
+spec:
+  providers:
+  - yandex-cloud
+  - vk-cloud
+  - cloud-ru
+  - t1-cloud
+  - selectel
+  - mws-cloud

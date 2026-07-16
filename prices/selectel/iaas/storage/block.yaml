@@ -1,0 +1,178 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: selectel
+  layer: iaas
+  service: storage
+  category: iaas.storage.block
+  title: Block storage
+spec:
+  meters:
+  - sku: selectel.disk.network-hdd
+    name: Сетевой базовый HDD
+    meter: storage.block.capacity
+    status: available
+    pricingMode: unit
+    region: Москва / ru-6a
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - selectel.prices
+    - selectel.calculator
+    - selectel.compute-rules
+    dimensions:
+      poolDependent: true
+      diskType: network-hdd
+      performanceTier: hdd
+      storageMedia: hdd
+      storageInterface: sata
+      storageTopology: network
+    pricing:
+      rate:
+        amount: '0.0112'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: hour
+        vat: included
+        byteBasis: binary
+  - sku: selectel.disk.network-ssd
+    name: Сетевой базовый SSD
+    meter: storage.block.capacity
+    status: available
+    pricingMode: unit
+    region: Москва / ru-6a
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - selectel.prices
+    - selectel.calculator
+    - selectel.compute-rules
+    dimensions:
+      poolDependent: true
+      diskType: network-ssd
+      performanceTier: ssd
+      storageMedia: ssd
+      storageInterface: unknown
+      storageTopology: network
+    pricing:
+      rate:
+        amount: '0.0138'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: hour
+        vat: included
+        byteBasis: binary
+  - sku: selectel.disk.fast-ssd-v2
+    name: Сетевой быстрый SSD v2
+    meter: storage.block.capacity
+    status: available
+    pricingMode: unit
+    region: Москва / ru-6a
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - selectel.prices
+    - selectel.calculator
+    - selectel.compute-rules
+    dimensions:
+      poolDependent: true
+      diskType: fast-ssd-v2
+      performanceTier: nvme
+      storageMedia: ssd
+      storageInterface: nvme
+      storageTopology: network
+      nativeMediaLabel: SSD NVMe
+    pricing:
+      rate:
+        amount: '0.0332'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: hour
+        vat: included
+        byteBasis: binary
+  - sku: selectel.disk.universal-ssd-v2
+    name: Сетевой универсальный SSD v2
+    meter: storage.block.capacity
+    status: available
+    pricingMode: unit
+    region: Москва / ru-6a
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - selectel.prices
+    - selectel.calculator
+    - selectel.compute-rules
+    dimensions:
+      poolDependent: true
+      diskType: universal-ssd-v2
+      performanceTier: ssd
+      storageMedia: ssd
+      storageInterface: unknown
+      storageTopology: network
+    pricing:
+      rate:
+        amount: '0.0144'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: hour
+        vat: included
+        byteBasis: binary
+  - sku: selectel.disk.fast-ssd-v2-iops
+    name: Дополнительные IOPS быстрого SSD v2
+    meter: storage.block.iops
+    status: available
+    pricingMode: unit
+    region: Москва / ru-6a
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - selectel.prices
+    - selectel.calculator
+    dimensions:
+      poolDependent: true
+      diskType: fast-ssd-v2
+      performanceTier: nvme
+      storageMedia: ssd
+      storageInterface: nvme
+      storageTopology: network
+    pricing:
+      rate:
+        amount: '0.0001'
+        currency: RUB
+        unit:
+          quantity: IOPS
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+  - sku: selectel.disk.universal-ssd-v2-iops
+    name: Дополнительные IOPS универсального SSD v2
+    meter: storage.block.iops
+    status: available
+    pricingMode: unit
+    region: Москва / ru-6a
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - selectel.prices
+    - selectel.calculator
+    dimensions:
+      poolDependent: true
+      diskType: universal-ssd-v2
+      performanceTier: ssd
+      storageMedia: ssd
+      storageInterface: unknown
+      storageTopology: network
+    pricing:
+      rate:
+        amount: '0.0004'
+        currency: RUB
+        unit:
+          quantity: IOPS
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Ставки зависят от выбранного пула; зафиксирован публичный выбор ru-6a.

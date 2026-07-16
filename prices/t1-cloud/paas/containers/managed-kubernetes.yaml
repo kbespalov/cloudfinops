@@ -1,0 +1,45 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: t1-cloud
+  layer: paas
+  service: containers
+  category: paas.containers.managed-kubernetes
+  title: Managed Kubernetes
+spec:
+  meters:
+  - sku: t1.kubernetes.master-small
+    name: Master Small
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: fixed
+    region: Россия
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    - t1.kubernetes
+    dimensions:
+      published30Days: 5417
+      vatRatePercent: 22
+      nativeVat: excluded
+      comparabilityClass: native-fixed
+      comparableTier: basic
+      masterCount: 1
+    pricing:
+      rate:
+        amount: '0.12539352'
+        currency: RUB
+        unit:
+          quantity: master
+          period: minute
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '9.1788057'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: 0.12539352 × 60 × 1.22 VAT
+        vat: included

@@ -1,0 +1,77 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: yandex-cloud
+  layer: iaas
+  service: network
+  category: iaas.network.public-ip
+  title: Public IPv4
+spec:
+  meters:
+  - sku: yc.vpc.public-ip.active
+    name: Активный динамический или статический публичный IP
+    meter: network.ipv4.attached
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-01-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.vpc
+    dimensions:
+      nativeIpType: dynamic or static, attached to running resource
+      yandexSkuId: dn229q5mnmp58t58tfel
+      serviceId: dn21qssbrdtcaus362kp
+    pricing:
+      rate:
+        amount: '0.26352'
+        currency: RUB
+        unit:
+          quantity: address
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.26352'
+        unit:
+          currency: RUB
+          quantity: address
+          period: hour
+        formula: native hourly rate
+        vat: included
+  - sku: yc.vpc.public-ip.inactive-static
+    name: Неактивный статический публичный IP
+    meter: network.ipv4.reserved
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-01-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.vpc
+    dimensions:
+      nativeIpType: inactive reserved static
+      baseAddressRate: 0.26352
+      reservationSurcharge: 0.34038
+      baseYandexSkuId: dn229q5mnmp58t58tfel
+      reservationYandexSkuId: dn2nqa0nqffbhihsq2n5
+      serviceId: dn21qssbrdtcaus362kp
+    pricing:
+      rate:
+        amount: '0.6039'
+        currency: RUB
+        unit:
+          quantity: address
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.6039'
+        unit:
+          currency: RUB
+          quantity: address
+          period: hour
+        formula: 0.26352 public IP + 0.34038 inactive static reservation
+        vat: included

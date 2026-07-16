@@ -1,0 +1,129 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: cloud-ru
+  layer: iaas
+  service: network
+  category: iaas.network.traffic
+  title: Internet traffic
+spec:
+  meters:
+  - sku: cloudru.traffic.internet.ingress
+    name: Входящий интернет-трафик Virtual Machines
+    meter: network.traffic.ingress
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.traffic-rules
+    dimensions:
+      sourceService: compute
+      trafficScope: public-internet
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: usage
+        vat: included
+        byteBasis: binary
+    notes: Документация указывает, что трафик временно не тарифицируется.
+  - sku: cloudru.traffic.internet.egress
+    name: Исходящий интернет-трафик Virtual Machines
+    meter: network.traffic.egress
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.traffic-rules
+    - cloudru.compute-pdf
+    dimensions:
+      sourceService: compute
+      trafficScope: public-internet
+      dormantTariffRubPerMb: '0.00366'
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: usage
+        vat: included
+        byteBasis: binary
+    notes: Тарифный PDF содержит ненулевую строку, но действующая сервисная документация прямо сообщает
+      о временном отсутствии начислений; калькулятор использует ноль с предупреждением.
+  - sku: cloudru.object-storage.traffic.ingress
+    name: Входящий интернет-трафик Object Storage
+    meter: network.traffic.ingress
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.s3-pdf
+    - cloudru.s3-rules
+    dimensions:
+      sourceService: object-storage
+      trafficScope: public-internet
+      storageClassScope: all
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: usage
+        vat: included
+        byteBasis: binary
+  - sku: cloudru.object-storage.traffic.egress
+    name: Исходящий интернет-трафик Object Storage
+    meter: network.traffic.egress
+    status: available
+    pricingMode: tiered
+    region: Москва
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.s3-pdf
+    - cloudru.s3-rules
+    dimensions:
+      sourceService: object-storage
+      trafficScope: public-internet
+      storageClassScope: all
+      freeTierGiBMonth: 10000
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: usage
+        vat: included
+        byteBasis: binary
+      tiers:
+      - from: '0'
+        to: '10000'
+        rate:
+          amount: '0'
+          currency: RUB
+          unit:
+            quantity: GiB
+            period: usage
+          vat: included
+          byteBasis: binary
+      - from: '10000'
+        to: null
+        rate:
+          amount: '1.1712'
+          currency: RUB
+          unit:
+            quantity: GiB
+            period: usage
+          vat: included
+          byteBasis: binary

@@ -1,0 +1,81 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: selectel
+  layer: paas
+  service: containers
+  category: paas.containers.managed-kubernetes
+  title: Managed Kubernetes
+spec:
+  meters:
+  - sku: selectel.kubernetes.master-basic
+    name: Базовый кластер, 1 master
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: fixed
+    region: Санкт-Петербург / ru-9
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - selectel.prices
+    - selectel.calculator
+    - selectel.k8s-rules
+    dimensions:
+      topology: basic
+      masterCount: 1
+      poolDependent: true
+      comparabilityClass: native-fixed
+      comparableTier: basic
+    pricing:
+      rate:
+        amount: '8.16'
+        currency: RUB
+        unit:
+          quantity: master
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '8.16'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: native hourly master rate
+        vat: included
+  - sku: selectel.kubernetes.master-ha
+    name: Отказоустойчивый кластер, 3 master
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: fixed
+    region: Санкт-Петербург / ru-9
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - selectel.prices
+    - selectel.calculator
+    - selectel.k8s-rules
+    dimensions:
+      topology: high-availability
+      masterCount: 3
+      poolDependent: true
+      comparabilityClass: native-fixed
+      comparableTier: ha
+    pricing:
+      rate:
+        amount: '23.40'
+        currency: RUB
+        unit:
+          quantity: master
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '23.40'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: native hourly master rate
+        vat: included
+    notes: Worker-ноды оплачиваются отдельно; зафиксирован публичный выбор ru-9.

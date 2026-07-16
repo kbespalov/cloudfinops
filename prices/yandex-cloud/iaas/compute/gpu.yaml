@@ -1,0 +1,326 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: yandex-cloud
+  layer: iaas
+  service: compute
+  category: iaas.compute.gpu
+  title: GPU compute
+spec:
+  meters:
+  - sku: yc.gpu.v100-broadwell
+    name: NVIDIA V100, Intel Broadwell
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      gpuModel: NVIDIA V100
+      gpuMemoryGb: 32
+      cpuPlatformFamily: intel-broadwell
+      cpuPlatformNative: Intel Broadwell
+      platformId: gpu-standard-v1
+      purchaseModel: on-demand
+      availableGpuCounts: [1, 2, 4]
+      yandexSkuId: dn2oroscvvtb6sqtt83i
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate:
+        amount: '261.28'
+        currency: RUB
+        unit:
+          quantity: GPU
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.gpu.v100-cascade-lake
+    name: NVIDIA V100, Intel Cascade Lake
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      gpuModel: NVIDIA V100
+      gpuMemoryGb: 32
+      cpuPlatformFamily: intel-cascade-lake
+      cpuPlatformNative: Intel Cascade Lake
+      platformId: gpu-standard-v2
+      purchaseModel: on-demand
+      availableGpuCounts: [1, 2, 4, 8]
+      yandexSkuId: dn2dlvuk2ecf6hu0kjtl
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate:
+        amount: '261.28'
+        currency: RUB
+        unit:
+          quantity: GPU
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.gpu.a100
+    name: NVIDIA A100
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      gpuModel: NVIDIA A100
+      gpuMemoryGb: 80
+      cpuPlatformFamily: unknown
+      cpuPlatformNative: AMD EPYC
+      platformId: gpu-standard-v3
+      purchaseModel: on-demand
+      availableGpuCounts: [1, 2, 4, 8]
+      yandexSkuId: dn2395q10bihjmm2b0v6
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate:
+        amount: '408.12'
+        currency: RUB
+        unit:
+          quantity: GPU
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.gpu.gen2
+    name: Gen2 GPU
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      gpuModel: unknown
+      gpuMemoryGb: 80
+      platformId: gpu-standard-v3i
+      purchaseModel: on-demand
+      availableGpuCounts: [1, 2, 4, 8]
+      yandexSkuId: dn2jfrjoic5h3nh7e6jh
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate:
+        amount: '757.63'
+        currency: RUB
+        unit:
+          quantity: GPU
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Yandex Cloud не раскрывает модель GPU для платформы Gen2; gpuModel установлен в unknown для корректного межпровайдерного матчинга.
+  - sku: yc.gpu.platform-v4
+    name: GPU Platform V4
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-01-23'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      gpuModel: unknown
+      platformId: gpu-standard-v4
+      purchaseModel: on-demand
+      availableGpuCounts: [1, 2, 4, 8]
+      yandexSkuId: dn2qtqtmybqbpyihfxri
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate:
+        amount: '1016.9'
+        currency: RUB
+        unit:
+          quantity: GPU
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Yandex Cloud не раскрывает модель GPU для платформы V4; gpuModel установлен в unknown для корректного межпровайдерного матчинга.
+  - sku: yc.gpu.t4
+    name: NVIDIA T4
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      gpuModel: NVIDIA T4
+      gpuMemoryGb: 16
+      cpuPlatformFamily: intel-ice-lake
+      cpuPlatformNative: Intel Ice Lake
+      platformId: standard-v3-t4
+      purchaseModel: on-demand
+      availableGpuCounts: [1]
+      availableVcpuCounts: [4, 8, 16, 32]
+      yandexSkuId: dn20ml8ifdps6m7048an
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate:
+        amount: '70.27'
+        currency: RUB
+        unit:
+          quantity: GPU
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.gpu.t4i
+    name: T4i
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      gpuModel: unknown
+      gpuMemoryGb: 24
+      cpuPlatformFamily: intel-ice-lake
+      cpuPlatformNative: Intel Ice Lake
+      platformId: standard-v3-t4i
+      purchaseModel: on-demand
+      availableGpuCounts: [1]
+      availableVcpuCounts: [4, 8, 16, 32]
+      yandexSkuId: dn2hql9evci880d8jq7i
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate:
+        amount: '158.11'
+        currency: RUB
+        unit:
+          quantity: GPU
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: T4i — внутреннее обозначение Yandex Cloud; NVIDIA не выпускает GPU с таким названием. gpuModel установлен в unknown, пока модель ускорителя не подтверждена провайдером. Требуемые vCPU и RAM тарифицируются отдельными SKU.
+  - sku: yc.gpu.a100.preemptible
+    name: NVIDIA A100, прерываемый
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      gpuModel: NVIDIA A100
+      gpuMemoryGb: 80
+      cpuPlatformFamily: unknown
+      cpuPlatformNative: AMD EPYC
+      platformId: gpu-standard-v3
+      purchaseModel: preemptible
+      availableGpuCounts: [1, 2, 4, 8]
+      yandexSkuId: dn211dses9ju3abvq0bs
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate:
+        amount: '163.25'
+        currency: RUB
+        unit: {quantity: GPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+    notes: Требуемые vCPU и RAM тарифицируются отдельно; ВМ может быть остановлена провайдером.
+  - sku: yc.gpu.v100-cascade-lake.preemptible
+    name: NVIDIA V100, Intel Cascade Lake, прерываемый
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      gpuModel: NVIDIA V100
+      gpuMemoryGb: 32
+      cpuPlatformFamily: intel-cascade-lake
+      cpuPlatformNative: Intel Cascade Lake
+      platformId: gpu-standard-v2
+      purchaseModel: preemptible
+      availableGpuCounts: [1, 2, 4, 8]
+      yandexSkuId: dn23ppvthcls7rjt5pol
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate:
+        amount: '65.34'
+        currency: RUB
+        unit: {quantity: GPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+    notes: Требуемые vCPU и RAM тарифицируются отдельно; ВМ может быть остановлена провайдером.
+  - sku: yc.gpu.t4.preemptible
+    name: NVIDIA T4, прерываемый
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      gpuModel: NVIDIA T4
+      gpuMemoryGb: 16
+      cpuPlatformFamily: intel-ice-lake
+      cpuPlatformNative: Intel Ice Lake
+      platformId: standard-v3-t4
+      purchaseModel: preemptible
+      availableGpuCounts: [1]
+      availableVcpuCounts: [4, 8, 16, 32]
+      yandexSkuId: dn2cpk4mc82b1vib72e5
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate:
+        amount: '17.56'
+        currency: RUB
+        unit: {quantity: GPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+    notes: Требуемые vCPU и RAM тарифицируются отдельно; ВМ может быть остановлена провайдером.
+  - sku: yc.gpu.platform-v4.preemptible
+    name: GPU Platform V4, прерываемый
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-01-23'
+    checkedAt: '2026-07-13'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      gpuModel: unknown
+      platformId: gpu-standard-v4
+      purchaseModel: preemptible
+      availableGpuCounts: [1, 2, 4, 8]
+      yandexSkuId: dn2azjbhk7j6jwi5agdv
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate:
+        amount: '1016.9'
+        currency: RUB
+        unit: {quantity: GPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+    notes: Ставка Billing API совпадает с on-demand на дату проверки; в отличие от других GPU-платформ Yandex, preemptible-скидка для V4 не применяется. vCPU и RAM тарифицируются отдельно. Yandex Cloud не раскрывает модель GPU для платформы V4; gpuModel установлен в unknown.

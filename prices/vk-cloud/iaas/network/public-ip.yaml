@@ -1,0 +1,72 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: vk-cloud
+  layer: iaas
+  service: network
+  category: iaas.network.public-ip
+  title: Public IPv4
+spec:
+  meters:
+  - sku: vk.ip.port-bound
+    name: IPv4-адрес на порту виртуальной машины
+    meter: network.ipv4.attached
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    - vk.network-rules
+    dimensions:
+      nativeIpType: port-bound IPv4
+      published30Days: 187
+    pricing:
+      rate:
+        amount: '0.004321'
+        currency: RUB
+        unit:
+          quantity: address
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.25926'
+        unit:
+          currency: RUB
+          quantity: address
+          period: hour
+        formula: 0.004321 × 60
+        vat: included
+  - sku: vk.ip.floating
+    name: Плавающий IPv4-адрес
+    meter: network.ipv4.reserved
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    - vk.network-rules
+    dimensions:
+      nativeIpType: floating IPv4, billed even when unassigned
+      published30Days: 188
+    pricing:
+      rate:
+        amount: '0.004361'
+        currency: RUB
+        unit:
+          quantity: address
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.26166'
+        unit:
+          currency: RUB
+          quantity: address
+          period: hour
+        formula: 0.004361 × 60
+        vat: included

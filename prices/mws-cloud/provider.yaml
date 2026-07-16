@@ -1,0 +1,82 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: Provider
+metadata:
+  id: mws-cloud
+  name: MWS Cloud Platform
+spec:
+  platform: Cloud Platform
+  homepage: https://mws.ru
+  sources:
+  - id: mws.all-prices
+    title: Тарификация сервисов MWS Cloud Platform
+    url: https://mws.ru/docs/cloud-platform/about/general/mws-cloud-platform-pricing.html
+    type: html
+    access: public
+    priority: 1
+    covers:
+    - compute.ram
+    - compute.vcpu
+    - containers.kubernetes.control-plane
+    - network.nat.gateway
+    - network.ipv4.attached
+    - network.ipv4.reserved
+    - network.traffic.ingress
+    - network.traffic.egress
+    - storage.backup.capacity
+    - storage.block.capacity
+    - storage.block.iops
+    - storage.image.capacity
+    - storage.object.capacity
+    - storage.object.requests
+  - id: mws.compute
+    title: Тарификация Compute
+    url: https://mws.ru/docs/cloud-platform/compute/general/pricing.html
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - compute.ram
+    - compute.vcpu
+    - storage.backup.capacity
+    - storage.block.capacity
+    - storage.block.iops
+    - storage.image.capacity
+  - id: mws.vm-types
+    title: Типы виртуальных машин Compute
+    url: https://mws.ru/docs/cloud-platform/compute/general/vm-types.html
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - compute.ram
+    - compute.vcpu
+  - id: mws.vpc
+    title: Тарификация VPC
+    url: https://mws.ru/docs/cloud-platform/vpc/general/pricing.html
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - network.nat.gateway
+    - network.ipv4.attached
+    - network.ipv4.reserved
+    - network.traffic.ingress
+    - network.traffic.egress
+  - id: mws.object-storage
+    title: Тарификация Object Storage
+    url: https://mws.ru/docs/cloud-platform/storage/general/pricing.html
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - storage.object.capacity
+    - storage.object.requests
+    - network.traffic.egress
+  - id: mws.kubernetes
+    title: Тарификация Managed Kubernetes
+    url: https://mws.ru/docs/cloud-platform/mk8s/general/pricing.html
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - containers.kubernetes.control-plane

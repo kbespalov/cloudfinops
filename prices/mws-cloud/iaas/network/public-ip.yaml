@@ -1,0 +1,72 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: mws-cloud
+  layer: iaas
+  service: network
+  category: iaas.network.public-ip
+  title: Public IPv4
+spec:
+  meters:
+  - sku: mws.ip.active
+    name: Активный внешний IP-адрес
+    meter: network.ipv4.attached
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - mws.all-prices
+    - mws.vpc
+    dimensions:
+      nativeIpType: active external IPv4
+      publishedMonth: 152.49
+    pricing:
+      rate:
+        amount: '0.2117'
+        currency: RUB
+        unit:
+          quantity: address
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.2117'
+        unit:
+          currency: RUB
+          quantity: address
+          period: hour
+        formula: native hourly rate
+        vat: included
+  - sku: mws.ip.inactive
+    name: Неактивный внешний IP-адрес
+    meter: network.ipv4.reserved
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - mws.all-prices
+    - mws.vpc
+    dimensions:
+      nativeIpType: inactive external IPv4
+      publishedMonth: 304.98
+    pricing:
+      rate:
+        amount: '0.4235'
+        currency: RUB
+        unit:
+          quantity: address
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.4235'
+        unit:
+          currency: RUB
+          quantity: address
+          period: hour
+        formula: native hourly rate
+        vat: included

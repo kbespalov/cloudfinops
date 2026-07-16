@@ -1,0 +1,125 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: cloud-ru
+  layer: iaas
+  service: storage
+  category: iaas.storage.object
+  title: Object storage
+spec:
+  meters:
+  - sku: cloudru.object-storage.standard
+    name: Стандартный класс хранения
+    meter: storage.object.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.s3-pdf
+    - cloudru.s3-rules
+    dimensions:
+      freeTierGiBMonth: 15
+      storageClass: standard
+      redundancy: multi-zone
+      copies: 2
+      verificationStatus: verified
+      verificationMethod: official-tariff-pdf
+      verifiedAt: '2026-07-13'
+      vatRatePercent: 22
+      nativeNetAmount: '1.5075'
+      nativeBillingPeriod: month
+    pricing:
+      rate:
+        amount: '1.83915'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: month
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '1.83915'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: month
+        formula: 1.5075 RUB excluding VAT × 1.22
+        vat: included
+    notes: Действующая ставка взята из тарифного PDF; 15 ГБ бесплатного объема подтверждены правилами
+      тарификации.
+  - sku: cloudru.object-storage.single-zone
+    name: Однозонный класс хранения
+    meter: storage.object.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.s3-pdf
+    - cloudru.s3-rules
+    dimensions:
+      storageClass: single-zone
+      redundancy: single-copy
+      availability: zonal
+    pricing:
+      rate:
+        amount: '1.1346'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: month
+        vat: included
+        byteBasis: binary
+  - sku: cloudru.object-storage.cold
+    name: Холодный класс хранения
+    meter: storage.object.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.s3-pdf
+    - cloudru.s3-rules
+    dimensions:
+      storageClass: cold
+      redundancy: multi-zone
+      copies: 2
+      minimumObjectSizeKb: 128
+    pricing:
+      rate:
+        amount: '0.97905'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: month
+        vat: included
+        byteBasis: binary
+  - sku: cloudru.object-storage.ice
+    name: Ледяной класс хранения
+    meter: storage.object.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.s3-pdf
+    - cloudru.s3-rules
+    dimensions:
+      storageClass: ice
+      redundancy: multi-zone
+      copies: 2
+      minimumObjectSizeKb: 128
+    pricing:
+      rate:
+        amount: '0.489525'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: month
+        vat: included
+        byteBasis: binary

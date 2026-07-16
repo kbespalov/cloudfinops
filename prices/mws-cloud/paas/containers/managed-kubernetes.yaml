@@ -1,0 +1,84 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: mws-cloud
+  layer: paas
+  service: containers
+  category: paas.containers.managed-kubernetes
+  title: Managed Kubernetes
+spec:
+  meters:
+  - sku: mws.kubernetes.master-basic
+    name: Базовый мастер
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: fixed
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - mws.all-prices
+    - mws.kubernetes
+    dimensions:
+      publishedMonth: 6264
+      futureRateFrom: '2026-08-01'
+      futureHourlyAmount: '8.785586'
+      futurePublishedMonth: '6325.62192'
+      availability: zonal
+      comparabilityClass: native-fixed
+      comparableTier: basic
+      masterCount: 1
+    pricing:
+      rate:
+        amount: '8.7'
+        currency: RUB
+        unit:
+          quantity: master
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '8.7'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: native hourly rate
+        vat: included
+  - sku: mws.kubernetes.master-ha
+    name: Отказоустойчивый мастер
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: fixed
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - mws.all-prices
+    - mws.kubernetes
+    dimensions:
+      publishedMonth: 15818.4
+      futureRateFrom: '2026-08-01'
+      futureHourlyAmount: '23.07081'
+      futurePublishedMonth: '16610.9832'
+      availability: regional
+      comparabilityClass: native-fixed
+      comparableTier: ha
+      masterCount: 3
+    pricing:
+      rate:
+        amount: '21.97'
+        currency: RUB
+        unit:
+          quantity: master
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '21.97'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: native hourly rate
+        vat: included

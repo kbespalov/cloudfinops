@@ -1,0 +1,96 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: Provider
+metadata:
+  id: cloud-ru
+  name: Cloud.ru
+spec:
+  platform: Evolution
+  homepage: https://cloud.ru
+  sources:
+  - id: cloudru.compute-pdf
+    title: Тарифы Evolution Compute
+    url: https://cdn.cloud.ru/docs/legal/tariffs/evolution/current-version/evolution-compute.pdf
+    type: pdf
+    access: public
+    priority: 1
+    documentVersion: '260619'
+    covers:
+    - compute.ram
+    - compute.vcpu
+    - network.ipv4.attached
+    - network.ipv4.reserved
+    - network.traffic.egress
+    - storage.block.capacity
+  - id: cloudru.compute-rules
+    title: Тарификация сервиса Виртуальные машины
+    url: https://cloud.ru/docs/virtual-machines/ug/topics/pricing
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - compute.flavor
+    - compute.gpu
+    - compute.ram
+    - compute.vcpu
+    - network.ipv4.attached
+    - network.traffic.ingress
+    - network.traffic.egress
+    - storage.block.capacity
+  - id: cloudru.compute-gpu-pdf
+    title: Тарифы Evolution Compute GPU
+    url: https://cdn.cloud.ru/docs/legal/tariffs/evolution/current-version/evolution-compute-gpu.pdf
+    type: pdf
+    access: public
+    priority: 1
+    documentVersion: '260619'
+    covers:
+    - compute.flavor
+    - compute.gpu
+  - id: cloudru.traffic-rules
+    title: Тарификация трафика Virtual Machines
+    url: https://cloud.ru/docs/virtual-machines/ug/topics/faq__traffic-tariff?source-platform=Evolution
+    type: html
+    access: public
+    priority: 1
+    covers:
+    - network.traffic.ingress
+    - network.traffic.egress
+  - id: cloudru.k8s-pdf
+    title: Тарифы Evolution Managed Kubernetes
+    url: https://cdn.cloud.ru/docs/legal/tariffs/evolution/current-version/managed-kubernetes.pdf
+    type: pdf
+    access: public
+    priority: 1
+    documentVersion: '260619'
+    covers:
+    - containers.kubernetes.control-plane
+  - id: cloudru.k8s-gpu-pdf
+    title: Тарифы Evolution Managed Kubernetes GPU
+    url: https://cdn.cloud.ru/docs/legal/tariffs/evolution/current-version/managed-kubernetes-gpu.pdf
+    type: pdf
+    access: public
+    priority: 1
+    covers:
+    - compute.flavor
+    - compute.gpu
+  - id: cloudru.s3-rules
+    title: Тарификация Evolution Object Storage
+    url: https://cloud.ru/docs/s3e/ug/topics/pricing?source-platform=Evolution
+    type: html
+    access: public
+    priority: 1
+    covers:
+    - storage.object.capacity
+    - network.traffic.ingress
+    - network.traffic.egress
+  - id: cloudru.s3-pdf
+    title: Тарифы Evolution Object Storage
+    url: https://cdn.cloud.ru/docs/legal/tariffs/evolution/current-version/object-storage.pdf
+    type: pdf
+    access: public
+    priority: 1
+    documentVersion: '260619'
+    covers:
+    - storage.object.capacity
+    - network.traffic.ingress
+    - network.traffic.egress

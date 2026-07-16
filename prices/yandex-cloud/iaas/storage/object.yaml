@@ -1,0 +1,186 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: yandex-cloud
+  layer: iaas
+  service: storage
+  category: iaas.storage.object
+  title: Object storage
+spec:
+  meters:
+  - sku: yc.object-storage.standard
+    name: STANDARD
+    meter: storage.object.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.object-storage
+    dimensions:
+      freeTierGiBMonth: 1
+      storageClass: standard
+      yandexSkuId: dn2blgm6egk7u97t0mr0
+      verificationStatus: verified
+      verificationMethod: official-billing-api-and-pricing-page
+      verifiedAt: '2026-07-13'
+      vatRatePercent: 22
+      nativeBillingPeriod: calendar-month
+    pricing:
+      rate:
+        amount: '2.376'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: month
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '2.376'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: month
+        formula: native monthly rate
+        vat: included
+    notes: Ставка подтверждается примером тарификации; первый 1 ГиБ стандартного класса в месяц не тарифицируется.
+  - sku: yc.object-storage.cold
+    name: COLD
+    meter: storage.object.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.object-storage
+    dimensions:
+      storageClass: cold
+      yandexSkuId: dn26nb54lgd96j6t6l13
+    pricing:
+      rate:
+        amount: '1.2672'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: month
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '1.2672'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: month
+        formula: native monthly rate
+        vat: included
+    notes: Тариф хранения не включает операции и исходящий трафик.
+  - sku: yc.object-storage.ice
+    name: ICE
+    meter: storage.object.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.object-storage
+    dimensions:
+      minimumStorageMonths: 12
+      storageClass: ice
+      yandexSkuId: dn2rcm93802vh4d96pq6
+    pricing:
+      rate:
+        amount: '0.6336'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: month
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.6336'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: month
+        formula: native monthly rate
+        vat: included
+    notes: При раннем удалении списывается остаток минимального 12-месячного срока.
+  - sku: yc.object-storage.intelligent-frequent
+    name: Intelligent Tiering — Frequent Access
+    meter: storage.object.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-17'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.object-storage
+    dimensions:
+      storageClass: intelligent-tiering
+      accessTier: frequent
+      yandexSkuId: dn2iowkapi7fyb7sfxe3
+    pricing:
+      rate:
+        amount: '2.376'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: month
+        vat: included
+        byteBasis: binary
+  - sku: yc.object-storage.intelligent-infrequent
+    name: Intelligent Tiering — Infrequent Access
+    meter: storage.object.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-17'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.object-storage
+    dimensions:
+      storageClass: intelligent-tiering
+      accessTier: infrequent
+      yandexSkuId: dn2koqshahtcw6lanpix
+    pricing:
+      rate:
+        amount: '1.2672'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: month
+        vat: included
+        byteBasis: binary
+  - sku: yc.object-storage.intelligent-archive
+    name: Intelligent Tiering — Archive Instant Access
+    meter: storage.object.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-17'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.object-storage
+    dimensions:
+      storageClass: intelligent-tiering
+      accessTier: archive
+      yandexSkuId: dn2j5cugxcm6v56wydix
+    pricing:
+      rate:
+        amount: '0.6336'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: month
+        vat: included
+        byteBasis: binary
+    notes: Помимо хранения тарифицируется мониторинг количества объектов.

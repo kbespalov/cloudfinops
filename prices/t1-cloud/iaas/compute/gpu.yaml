@@ -1,0 +1,249 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: t1-cloud
+  layer: iaas
+  service: compute
+  category: iaas.compute.gpu
+  title: GPU compute
+spec:
+  meters:
+  - sku: t1.gpu.a100
+    name: GPU g2, NVIDIA A100 40GB PCIe
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    dimensions:
+      gpuModel: NVIDIA A100 40GB PCIe
+      gpuMemoryGb: 40
+      series: g2
+      cpuPlatformFamily: intel-cascade-lake
+      purchaseModel: on-demand
+      availableGpuCounts:
+      - 1
+      - 2
+      - 4
+      published30Days: 133333.33
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '3.08641968'
+        currency: RUB
+        unit:
+          quantity: GPU
+          period: minute
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '225.9259206'
+        unit:
+          currency: RUB
+          quantity: GPU
+          period: hour
+        formula: 3.08641968 × 60 × 1.22 VAT
+        vat: included
+    notes: vCPU и RAM GPU-инстанса тарифицируются отдельными строками.
+  - sku: t1.gpu.h100-pcie
+    name: GPU g1, NVIDIA H100 80GB PCIe
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: ru-central1-a
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    dimensions:
+      series: g1
+      gpuModel: NVIDIA H100 80GB PCIe
+      gpuMemoryGb: 80
+      cpuPlatformFamily: amd-zen4
+      purchaseModel: on-demand
+      availableGpuCounts:
+      - 1
+      - 2
+      - 4
+      - 8
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '5.72823704'
+        currency: RUB
+        unit:
+          quantity: GPU
+          period: minute
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '419.3069513'
+        unit:
+          currency: RUB
+          quantity: GPU
+          period: hour
+        formula: 5.72823704 × 60 × 1.22 VAT
+        vat: included
+  - sku: t1.gpu.h100-sxm5
+    name: GPU g3, NVIDIA H100 80GB SXM5
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: ru-central2-a
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    dimensions:
+      series: g3
+      gpuModel: NVIDIA H100 80GB SXM5
+      gpuMemoryGb: 80
+      cpuPlatformFamily: intel-sapphire-rapids
+      purchaseModel: on-demand
+      availableGpuCounts:
+      - 8
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '5.72823704'
+        currency: RUB
+        unit:
+          quantity: GPU
+          period: minute
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '419.3069513'
+        unit:
+          currency: RUB
+          quantity: GPU
+          period: hour
+        formula: 5.72823704 × 60 × 1.22 VAT
+        vat: included
+  - sku: t1.gpu.l40s
+    name: GPU g6, NVIDIA L40S 48GB PCIe
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: ru-central2-a
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    dimensions:
+      series: g6
+      gpuModel: NVIDIA L40S 48GB PCIe
+      gpuMemoryGb: 48
+      cpuPlatformFamily: amd-zen4
+      purchaseModel: on-demand
+      availableGpuCounts:
+      - 1
+      - 2
+      - 4
+      - 8
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '2.08078472'
+        currency: RUB
+        unit:
+          quantity: GPU
+          period: minute
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '152.3134415'
+        unit:
+          currency: RUB
+          quantity: GPU
+          period: hour
+        formula: 2.08078472 × 60 × 1.22 VAT
+        vat: included
+  - sku: t1.gpu.h200
+    name: GPU g7, NVIDIA H200 141GB SXM
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: ru-central2-a
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    dimensions:
+      series: g7
+      gpuModel: NVIDIA H200 141GB SXM
+      gpuMemoryGb: 141
+      cpuPlatformFamily: intel-sapphire-rapids
+      purchaseModel: on-demand
+      availableGpuCounts:
+      - 1
+      - 2
+      - 4
+      - 8
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '8.10185185'
+        currency: RUB
+        unit:
+          quantity: GPU
+          period: minute
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '593.0555554'
+        unit:
+          currency: RUB
+          quantity: GPU
+          period: hour
+        formula: 8.10185185 × 60 × 1.22 VAT
+        vat: included
+  - sku: t1.gpu.metax-c500
+    name: GPU g4, Metax C500
+    meter: compute.gpu
+    status: not-publicly-disclosed
+    pricingMode: status-only
+    region: ru-central3-a
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    dimensions:
+      series: g4
+      gpuModel: Metax C500
+      cpuPlatformFamily: intel-ice-lake
+      purchaseModel: on-demand
+      availableGpuCounts:
+      - 1
+      - 2
+      - 4
+      - 8
+  - sku: t1.gpu.metax-c550
+    name: GPU g5, Metax C550 64GB
+    meter: compute.gpu
+    status: not-publicly-disclosed
+    pricingMode: status-only
+    region: ru-central3-a
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    dimensions:
+      series: g5
+      gpuModel: Metax C550 64GB
+      gpuMemoryGb: 64
+      cpuPlatformFamily: intel-sapphire-rapids
+      purchaseModel: on-demand
+      availableGpuCounts:
+      - 1
+      - 2
+      - 4
+      - 8

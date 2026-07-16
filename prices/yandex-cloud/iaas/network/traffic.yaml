@@ -1,0 +1,150 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: yandex-cloud
+  layer: iaas
+  service: network
+  category: iaas.network.traffic
+  title: Internet traffic
+spec:
+  meters:
+  - sku: yc.traffic.internet.ingress
+    name: Входящий интернет-трафик
+    meter: network.traffic.ingress
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs: [yc.vpc]
+    dimensions:
+      sourceService: compute
+      trafficScope: public-internet
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: included
+        byteBasis: binary
+  - sku: yc.traffic.internet.egress
+    name: Исходящий интернет-трафик Compute/VPC
+    meter: network.traffic.egress
+    status: available
+    pricingMode: tiered
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs: [yc.billing-api, yc.vpc]
+    dimensions:
+      sourceService: compute
+      trafficScope: public-internet
+      freeTierGiBMonth: 100
+      yandexSkuId: dn28ml7sjbb5v98jkuj3
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: included
+        byteBasis: binary
+      tiers:
+      - from: '0'
+        to: '100'
+        rate:
+          amount: '0'
+          currency: RUB
+          unit: {quantity: GiB, period: usage}
+          vat: included
+          byteBasis: binary
+      - from: '100'
+        to: null
+        rate:
+          amount: '1.42'
+          currency: RUB
+          unit: {quantity: GiB, period: usage}
+          vat: included
+          byteBasis: binary
+  - sku: yc.object-storage.traffic.ingress
+    name: Входящий интернет-трафик Object Storage
+    meter: network.traffic.ingress
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-01-01'
+    checkedAt: '2026-07-13'
+    sourceRefs: [yc.object-storage]
+    dimensions:
+      sourceService: object-storage
+      trafficScope: public-internet
+      storageClassScope: all
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: included
+        byteBasis: binary
+  - sku: yc.object-storage.traffic.egress
+    name: Исходящий интернет-трафик Object Storage
+    meter: network.traffic.egress
+    status: available
+    pricingMode: tiered
+    region: Россия
+    effectiveFrom: '2026-01-01'
+    checkedAt: '2026-07-13'
+    sourceRefs: [yc.billing-api, yc.object-storage]
+    dimensions:
+      sourceService: object-storage
+      trafficScope: public-internet
+      storageClassScope: all
+      freeTierGiBMonth: 100
+      yandexSkuId: dn2fghbb6nhc0qgc03ta
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: included
+        byteBasis: binary
+      tiers:
+      - from: '0'
+        to: '100'
+        rate:
+          amount: '0'
+          currency: RUB
+          unit: {quantity: GiB, period: usage}
+          vat: included
+          byteBasis: binary
+      - from: '100'
+        to: '1024'
+        rate:
+          amount: '1.67994'
+          currency: RUB
+          unit: {quantity: GiB, period: usage}
+          vat: included
+          byteBasis: binary
+      - from: '1024'
+        to: '51200'
+        rate:
+          amount: '1.40544'
+          currency: RUB
+          unit: {quantity: GiB, period: usage}
+          vat: included
+          byteBasis: binary
+      - from: '51200'
+        to: '102400'
+        rate:
+          amount: '1.3176'
+          currency: RUB
+          unit: {quantity: GiB, period: usage}
+          vat: included
+          byteBasis: binary
+      - from: '102400'
+        to: null
+        rate:
+          amount: '1.2627'
+          currency: RUB
+          unit: {quantity: GiB, period: usage}
+          vat: included
+          byteBasis: binary

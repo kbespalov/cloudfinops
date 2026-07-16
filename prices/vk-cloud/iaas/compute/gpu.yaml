@@ -1,0 +1,1010 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: vk-cloud
+  layer: iaas
+  service: compute
+  category: iaas.compute.gpu
+  title: GPU compute
+spec:
+  meters:
+  - sku: vk.gpu.l4
+    name: GPU2-16-72-L4-1
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA L4
+      gpuCount: 1
+      vcpu: 16
+      ramGb: 72
+      vramGb: 24
+      purchaseModel: on-demand
+      virtualGpu: false
+      published30Days: 71456
+      ramGiB: 72
+    pricing:
+      rate:
+        amount: '1.65'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '99'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 1.65 × 60; published minute rate is rounded
+        vat: included
+    notes: Цена относится ко всему flavor, а не к одному GPU отдельно.
+  - sku: vk.gpu.a30-1
+    name: GPU2-12-112-A30-1
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA A30
+      gpuCount: 1
+      vcpu: 12
+      ramGb: 112
+      vramGb: 24
+      purchaseModel: on-demand
+      virtualGpu: false
+      published30Days: 99359
+      ramGiB: 112
+    pricing:
+      rate:
+        amount: '2.30'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '138'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 2.30 × 60
+        vat: included
+    notes: Цена полного GPU flavor; vCPU, RAM и GPU включены.
+  - sku: vk.gpu.l40s-1
+    name: GPU3-16-112-L40S-1
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA L40S
+      gpuCount: 1
+      vcpu: 16
+      ramGb: 112
+      vramGb: 48
+      purchaseModel: on-demand
+      virtualGpu: false
+      published30Days: 173479
+      ramGiB: 112
+    pricing:
+      rate:
+        amount: '4.02'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '241.2'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 4.02 × 60
+        vat: included
+    notes: Цена полного GPU flavor; vCPU, RAM и GPU включены.
+  - sku: vk.gpu.v100-1
+    name: GPU1-16-48-V100-1
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA V100
+      gpuCount: 1
+      vcpu: 16
+      ramGb: 48
+      vramGb: 16
+      purchaseModel: on-demand
+      virtualGpu: false
+      promotionDiscountPercent: 50
+      promotionalRate: true
+      published30Days: 87433
+      ramGiB: 48
+    pricing:
+      rate:
+        amount: '2.02'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '121.2'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 2.02 × 60
+        vat: included
+    notes: Публичный прайс показывает скидку 50%; ставка относится ко всему flavor и уже включает акцию.
+  - sku: vk.gpu.v100s-1
+    name: GPU2-24-72-V100S-1
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA V100S
+      gpuCount: 1
+      vcpu: 24
+      ramGb: 72
+      vramGb: 32
+      purchaseModel: on-demand
+      virtualGpu: false
+      promotionDiscountPercent: 50
+      promotionalRate: true
+      published30Days: 97600
+      ramGiB: 72
+    pricing:
+      rate:
+        amount: '2.26'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '135.6'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 2.26 × 60
+        vat: included
+    notes: Публичный прайс показывает скидку 50%; ставка относится ко всему flavor и уже включает акцию.
+  - sku: vk.gpu.a100-40-1
+    name: GPU1A-32-96-A100-1
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA A100
+      gpuCount: 1
+      vcpu: 32
+      ramGb: 96
+      vramGb: 40
+      purchaseModel: on-demand
+      virtualGpu: false
+      published30Days: 227733
+      ramGiB: 96
+    pricing:
+      rate:
+        amount: '5.27'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '316.2'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 5.27 × 60
+        vat: included
+    notes: Цена полного GPU flavor; vCPU, RAM и GPU включены.
+  - sku: vk.gpu.a100-80-1
+    name: GPU3-32-192-A100x80-1
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA A100
+      gpuCount: 1
+      vcpu: 32
+      ramGb: 192
+      vramGb: 80
+      purchaseModel: on-demand
+      virtualGpu: false
+      published30Days: 241662
+      ramGiB: 192
+    pricing:
+      rate:
+        amount: '5.59'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '335.4'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 5.59 × 60
+        vat: included
+    notes: Цена полного GPU flavor; vCPU, RAM и GPU включены.
+  - sku: vk.gpu.h200-1
+    name: GPU-44-256-H200-1
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA H200
+      gpuCount: 1
+      vcpu: 44
+      ramGb: 256
+      vramGb: 141
+      purchaseModel: on-demand
+      virtualGpu: false
+      published30Days: 793000
+      ramGiB: 256
+    pricing:
+      rate:
+        amount: '18.36'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '1101.6'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 18.36 × 60
+        vat: included
+    notes: Цена полного GPU flavor; vCPU, RAM и GPU включены.
+  - sku: vk.gpu.h200-8
+    name: GPU-240-2048-H200-8
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA H200
+      gpuCount: 8
+      vcpu: 240
+      ramGb: 2048
+      vramGb: 1128
+      purchaseModel: on-demand
+      virtualGpu: false
+      published30Days: 6344000
+      ramGiB: 2048
+    pricing:
+      rate:
+        amount: '146.85'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '8811'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 146.85 × 60
+        vat: included
+    notes: Цена полного GPU flavor; vCPU, RAM и восемь GPU включены.
+  - sku: vk.gpu.a100-80-2
+    name: GPU2-64-384-A100x80-2
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA A100
+      gpuCount: 2
+      vcpu: 64
+      ramGb: 384
+      vramGb: 160
+      purchaseModel: on-demand
+      virtualGpu: false
+      published30Days: 483323
+      ramGiB: 384
+    pricing:
+      rate:
+        amount: '11.19'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '671.4'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 11.19 × 60
+        vat: included
+    notes: Цена полного GPU flavor; vCPU, RAM и два GPU включены.
+  - sku: vk.gpu.a100-80-4
+    name: GPU3-112-768-A100x80-4
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA A100
+      gpuCount: 4
+      vcpu: 112
+      ramGb: 768
+      vramGb: 320
+      purchaseModel: on-demand
+      virtualGpu: false
+      published30Days: 966647
+      ramGiB: 768
+    pricing:
+      rate:
+        amount: '22.38'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '1342.8'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 22.38 × 60
+        vat: included
+    notes: Цена полного GPU flavor; vCPU, RAM и четыре GPU включены.
+  - sku: vk.gpu.l40s-2
+    name: GPU3-32-224-L40S-2
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA L40S
+      gpuCount: 2
+      vcpu: 32
+      ramGb: 224
+      vramGb: 96
+      purchaseModel: on-demand
+      virtualGpu: false
+      published30Days: 346959
+      ramGiB: 224
+    pricing:
+      rate:
+        amount: '8.03'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '481.8'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 8.03 × 60
+        vat: included
+    notes: Цена полного GPU flavor; vCPU, RAM и два GPU включены.
+  - sku: vk.gpu.l40s-4
+    name: GPU3-64-448-L40S-4
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA L40S
+      gpuCount: 4
+      vcpu: 64
+      ramGb: 448
+      vramGb: 192
+      purchaseModel: on-demand
+      virtualGpu: false
+      published30Days: 693917
+      ramGiB: 448
+    pricing:
+      rate:
+        amount: '16.06'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '963.6'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 16.06 × 60
+        vat: included
+    notes: Цена полного GPU flavor; vCPU, RAM и четыре GPU включены.
+  - sku: vk.gpu.a30-2
+    name: GPU2-24-224-A30-2
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA A30
+      gpuCount: 2
+      vcpu: 24
+      ramGb: 224
+      vramGb: 48
+      purchaseModel: on-demand
+      virtualGpu: false
+      published30Days: 198718
+      ramGiB: 224
+    pricing:
+      rate:
+        amount: '4.60'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '276'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 4.60 × 60
+        vat: included
+    notes: Цена полного GPU flavor; vCPU, RAM и два GPU включены.
+  - sku: vk.gpu.a30-4
+    name: GPU2-48-448-A30-4
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA A30
+      gpuCount: 4
+      vcpu: 48
+      ramGb: 448
+      vramGb: 96
+      purchaseModel: on-demand
+      virtualGpu: false
+      published30Days: 397435
+      ramGiB: 448
+    pricing:
+      rate:
+        amount: '9.20'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '552'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 9.20 × 60
+        vat: included
+    notes: Цена полного GPU flavor; vCPU, RAM и четыре GPU включены.
+  - sku: vk.gpu.v100-2
+    name: GPU1-32-96-V100-2
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA V100
+      gpuCount: 2
+      vcpu: 32
+      ramGb: 96
+      vramGb: 32
+      purchaseModel: on-demand
+      virtualGpu: false
+      promotionDiscountPercent: 50
+      promotionalRate: true
+      published30Days: 174867
+      ramGiB: 96
+    pricing:
+      rate:
+        amount: '4.05'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '243'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 4.05 × 60
+        vat: included
+    notes: Публичный прайс показывает скидку 50%; ставка относится ко всему flavor и уже включает акцию.
+  - sku: vk.gpu.v100-4
+    name: GPU1-64-192-V100-4
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA V100
+      gpuCount: 4
+      vcpu: 64
+      ramGb: 192
+      vramGb: 64
+      purchaseModel: on-demand
+      virtualGpu: false
+      promotionDiscountPercent: 50
+      promotionalRate: true
+      published30Days: 349733
+      ramGiB: 192
+    pricing:
+      rate:
+        amount: '8.10'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '486'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 8.10 × 60
+        vat: included
+    notes: Публичный прайс показывает скидку 50%; ставка относится ко всему flavor и уже включает акцию.
+  - sku: vk.gpu.v100s-2
+    name: GPU2-48-144-V100S-2
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA V100S
+      gpuCount: 2
+      vcpu: 48
+      ramGb: 144
+      vramGb: 64
+      purchaseModel: on-demand
+      virtualGpu: false
+      promotionDiscountPercent: 50
+      promotionalRate: true
+      published30Days: 195200
+      ramGiB: 144
+    pricing:
+      rate:
+        amount: '4.52'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '271.2'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 4.52 × 60
+        vat: included
+    notes: Публичный прайс показывает скидку 50%; ставка относится ко всему flavor и уже включает акцию.
+  - sku: vk.gpu.v100s-4
+    name: GPU2-96-288-V100S-4
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA V100S
+      gpuCount: 4
+      vcpu: 96
+      ramGb: 288
+      vramGb: 128
+      purchaseModel: on-demand
+      virtualGpu: false
+      promotionDiscountPercent: 50
+      promotionalRate: true
+      published30Days: 390400
+      ramGiB: 288
+    pricing:
+      rate:
+        amount: '9.04'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '542.4'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 9.04 × 60
+        vat: included
+    notes: Публичный прайс показывает скидку 50%; ставка относится ко всему flavor и уже включает акцию.
+  - sku: vk.gpu.l4-2
+    name: GPU2-32-144-L4-2
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA L4
+      gpuCount: 2
+      vcpu: 32
+      ramGb: 144
+      vramGb: 48
+      purchaseModel: on-demand
+      virtualGpu: false
+      published30Days: 142912
+      ramGiB: 144
+    pricing:
+      rate:
+        amount: '3.31'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '198.6'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 3.31 × 60
+        vat: included
+    notes: Цена полного GPU flavor; vCPU, RAM и два GPU включены.
+  - sku: vk.gpu.l4-4
+    name: GPU2-64-288-L4-4
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA L4
+      gpuCount: 4
+      vcpu: 64
+      ramGb: 288
+      vramGb: 96
+      purchaseModel: on-demand
+      virtualGpu: false
+      published30Days: 285825
+      ramGiB: 288
+    pricing:
+      rate:
+        amount: '6.62'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '397.2'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 6.62 × 60
+        vat: included
+    notes: Цена полного GPU flavor; vCPU, RAM и четыре GPU включены.
+  - sku: vk.gpu.a100-40-2
+    name: GPU1A-64-192-A100-2
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA A100
+      gpuCount: 2
+      vcpu: 64
+      ramGb: 192
+      vramGb: 80
+      purchaseModel: on-demand
+      virtualGpu: false
+      published30Days: 456280
+      ramGiB: 192
+    pricing:
+      rate:
+        amount: '10.56'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '633.6'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 10.56 × 60
+        vat: included
+    notes: Цена полного GPU flavor; vCPU, RAM и два GPU включены.
+  - sku: vk.gpu.a100-40-4
+    name: GPU1A-128-384-A100-4
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA A100
+      gpuCount: 4
+      vcpu: 128
+      ramGb: 384
+      vramGb: 160
+      purchaseModel: on-demand
+      virtualGpu: false
+      published30Days: 912560
+      ramGiB: 384
+    pricing:
+      rate:
+        amount: '21.12'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '1267.2'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 21.12 × 60
+        vat: included
+    notes: Цена полного GPU flavor; vCPU, RAM и четыре GPU включены.
+  - sku: vk.vgpu.l4-1q
+    name: vGPU-2-8-L4-1Q
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA L4 vGPU
+      virtualGpu: true
+      vgpuProfile: 1Q
+      vcpu: 2
+      ramGb: 8
+      vramGb: 1
+      purchaseModel: on-demand
+      published30Days: 10097.89
+      ramGiB: 8
+    pricing:
+      rate:
+        amount: '0.23'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '13.8'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 0.23 × 60
+        vat: included
+    notes: Виртуальная доля NVIDIA L4; это не один физический GPU.
+  - sku: vk.vgpu.l4-4q
+    name: vGPU-4-16-L4-4Q
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA L4 vGPU
+      virtualGpu: true
+      vgpuProfile: 4Q
+      vcpu: 4
+      ramGb: 16
+      vramGb: 4
+      purchaseModel: on-demand
+      published30Days: 19422.6
+      ramGiB: 16
+    pricing:
+      rate:
+        amount: '0.45'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '27'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 0.45 × 60
+        vat: included
+    notes: Виртуальная доля NVIDIA L4; это не один физический GPU.
+  - sku: vk.vgpu.l4-8q
+    name: vGPU-8-16-L4-8Q
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA L4 vGPU
+      virtualGpu: true
+      vgpuProfile: 8Q
+      vcpu: 8
+      ramGb: 16
+      vramGb: 8
+      purchaseModel: on-demand
+      published30Days: 30624.41
+      ramGiB: 16
+    pricing:
+      rate:
+        amount: '0.71'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '42.6'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 0.71 × 60
+        vat: included
+    notes: Виртуальная доля NVIDIA L4; это не один физический GPU.

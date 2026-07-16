@@ -1,0 +1,184 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: t1-cloud
+  layer: iaas
+  service: network
+  category: iaas.network.traffic
+  title: Internet traffic
+spec:
+  meters:
+  - sku: t1.traffic.internet.ingress
+    name: Входящий интернет-трафик облачных сервисов
+    meter: network.traffic.ingress
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - t1.network-traffic
+    dimensions:
+      sourceService: compute
+      confidence: medium
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: usage
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '0'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: usage
+        formula: 0 × 1.22 VAT
+        vat: included
+  - sku: t1.traffic.internet.egress
+    name: Исходящий интернет-трафик облачных сервисов
+    meter: network.traffic.egress
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - t1.network-traffic
+    dimensions:
+      sourceService: compute
+      confidence: medium
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: usage
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '0'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: usage
+        formula: 0 × 1.22 VAT
+        vat: included
+    notes: Общий Cloud Engine traffic SKU в тарифном PDF отсутствует; бесплатность подтверждена сервисной
+      страницей и требует договорной сверки.
+  - sku: t1.object-storage.traffic.ingress
+    name: Входящий интернет-трафик Object Storage
+    meter: network.traffic.ingress
+    status: available
+    pricingMode: unit
+    priceProvenance: derived
+    region: Москва
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    - t1.s3
+    dimensions:
+      sourceService: object-storage
+      trafficScope: public-internet
+      storageClassScope: all
+      confidence: medium
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: usage
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '0'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: usage
+        formula: 0 × 1.22 VAT
+        vat: included
+    notes: Нулевая ставка следует из отсутствия ingress SKU в исчерпывающем тарифном приложении; это аналитический
+      вывод, а не опубликованная строка тарифа.
+  - sku: t1.object-storage.single-zone.traffic.egress
+    name: Скачивание из однозонного S3
+    meter: network.traffic.egress
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    - t1.s3
+    dimensions:
+      sourceService: object-storage
+      storageClass: standard
+      availability: zonal
+      topology: single-zone
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.25'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: usage
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '0.305'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: usage
+        formula: 0.25 × 1.22 VAT
+        vat: included
+  - sku: t1.object-storage.multi-zone.traffic.egress
+    name: Скачивание из мультизонального S3
+    meter: network.traffic.egress
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    - t1.s3
+    dimensions:
+      sourceService: object-storage
+      storageClass: standard
+      availability: multi-zone
+      topology: multi-zone
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.5'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: usage
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '0.61'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: usage
+        formula: 0.5 × 1.22 VAT
+        vat: included

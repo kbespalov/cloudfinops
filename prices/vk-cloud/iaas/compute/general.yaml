@@ -1,0 +1,77 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: vk-cloud
+  layer: iaas
+  service: compute
+  category: iaas.compute.general
+  title: General compute
+spec:
+  meters:
+  - sku: vk.compute.ice-lake.vcpu
+    name: Intel Ice Lake, 100% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    - vk.iaas-rules
+    dimensions:
+      published30Days: 849
+      cpuPlatformFamily: intel-ice-lake
+      cpuPlatformNative: Intel Ice Lake
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+    pricing:
+      rate:
+        amount: '0.01966'
+        currency: RUB
+        unit:
+          quantity: vCPU
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '1.1796'
+        unit:
+          currency: RUB
+          quantity: vCPU
+          period: hour
+        formula: 0.019660 × 60
+        vat: included
+  - sku: vk.compute.ram
+    name: Intel Ice Lake, RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    - vk.iaas-rules
+    dimensions:
+      published30Days: 223
+      cpuPlatformFamily: intel-ice-lake
+      cpuPlatformNative: Intel Ice Lake
+      purchaseModel: on-demand
+    pricing:
+      rate:
+        amount: '0.005154'
+        currency: RUB
+        unit:
+          quantity: GiB-RAM
+          period: minute
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.30924'
+        unit:
+          currency: RUB
+          quantity: GiB-RAM
+          period: hour
+        formula: 0.005154 × 60
+        vat: included

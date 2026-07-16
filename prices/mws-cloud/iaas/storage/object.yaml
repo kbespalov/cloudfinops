@@ -1,0 +1,412 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: mws-cloud
+  layer: iaas
+  service: storage
+  category: iaas.storage.object
+  title: Object storage
+spec:
+  meters:
+  - sku: mws.object-storage.standard
+    name: Стандартный класс хранения
+    meter: storage.object.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - mws.all-prices
+    - mws.object-storage
+    dimensions:
+      storageClass: standard
+      redundancy: regional
+      datacenterCount: 2
+      verificationStatus: verified
+      verificationMethod: official-pricing-page
+      verifiedAt: '2026-07-13'
+      vatRatePercent: 22
+      nativeBillingPeriod: month
+      futureStorageRateFrom: '2026-08-01'
+      futureStorageRateAmount: '2.44'
+    pricing:
+      rate:
+        amount: '2.44'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: month
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '2.44'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: month
+        formula: native monthly rate
+        vat: included
+  - sku: mws.object-storage.warm
+    name: Теплый класс хранения
+    meter: storage.object.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - mws.all-prices
+    - mws.object-storage
+    dimensions:
+      storageClass: warm
+      redundancy: regional
+      datacenterCount: 2
+      media: NVMe
+    pricing:
+      rate:
+        amount: '9.15'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: month
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '9.15'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: month
+        formula: native monthly rate
+        vat: included
+    notes: Теплый класс имеет отдельные ставки запросов; хранение дороже стандартного.
+  - sku: mws.object-storage.standard.requests.put
+    name: Запросы PUT — стандартный класс
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs: [mws.all-prices, mws.object-storage]
+    dimensions:
+      storageClass: standard
+      operation: PUT
+      nativeBillingStepRequests: 10
+      nativeAmountPerStep: '0.0051'
+      futureRateFrom: '2026-08-01'
+      futureAmountPerRequest: '0.00055'
+      futureNativeAmountPerStep: '0.0055'
+    pricing:
+      rate:
+        amount: '0.00051'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная ставка 0,0051 ₽ за 10 операций; в каталоге нормализована до одной операции.
+  - sku: mws.object-storage.standard.requests.post
+    name: Запросы POST — стандартный класс
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs: [mws.all-prices, mws.object-storage]
+    dimensions:
+      storageClass: standard
+      operation: POST
+      nativeBillingStepRequests: 10
+      nativeAmountPerStep: '0.0051'
+      futureRateFrom: '2026-08-01'
+      futureAmountPerRequest: '0.00055'
+      futureNativeAmountPerStep: '0.0055'
+    pricing:
+      rate:
+        amount: '0.00051'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная ставка 0,0051 ₽ за 10 операций; в каталоге нормализована до одной операции.
+  - sku: mws.object-storage.standard.requests.patch
+    name: Запросы PATCH — стандартный класс
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs: [mws.all-prices, mws.object-storage]
+    dimensions:
+      storageClass: standard
+      operation: PATCH
+      nativeBillingStepRequests: 10
+      nativeAmountPerStep: '0.0051'
+      futureRateFrom: '2026-08-01'
+      futureAmountPerRequest: '0.00055'
+      futureNativeAmountPerStep: '0.0055'
+    pricing:
+      rate:
+        amount: '0.00051'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная ставка 0,0051 ₽ за 10 операций; в каталоге нормализована до одной операции.
+  - sku: mws.object-storage.standard.requests.list
+    name: Запросы LIST — стандартный класс
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs: [mws.all-prices, mws.object-storage]
+    dimensions:
+      storageClass: standard
+      operation: LIST
+      nativeBillingStepRequests: 10
+      nativeAmountPerStep: '0.0051'
+      futureRateFrom: '2026-08-01'
+      futureAmountPerRequest: '0.00055'
+      futureNativeAmountPerStep: '0.0055'
+    pricing:
+      rate:
+        amount: '0.00051'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная ставка 0,0051 ₽ за 10 операций; в каталоге нормализована до одной операции.
+  - sku: mws.object-storage.standard.requests.get
+    name: Запросы GET — стандартный класс
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs: [mws.all-prices, mws.object-storage]
+    dimensions:
+      storageClass: standard
+      operation: GET
+      nativeBillingStepRequests: 100
+      nativeAmountPerStep: '0.004'
+      futureRateFrom: '2026-08-01'
+      futureAmountPerRequest: '0.000045'
+      futureNativeAmountPerStep: '0.0045'
+    pricing:
+      rate:
+        amount: '0.00004'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная ставка 0,004 ₽ за 100 операций; в каталоге нормализована до одной операции.
+  - sku: mws.object-storage.standard.requests.head
+    name: Запросы HEAD — стандартный класс
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs: [mws.all-prices, mws.object-storage]
+    dimensions:
+      storageClass: standard
+      operation: HEAD
+      nativeBillingStepRequests: 100
+      nativeAmountPerStep: '0.004'
+      futureRateFrom: '2026-08-01'
+      futureAmountPerRequest: '0.000045'
+      futureNativeAmountPerStep: '0.0045'
+    pricing:
+      rate:
+        amount: '0.00004'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная ставка 0,004 ₽ за 100 операций; в каталоге нормализована до одной операции.
+  - sku: mws.object-storage.standard.requests.options
+    name: Запросы OPTIONS — стандартный класс
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs: [mws.all-prices, mws.object-storage]
+    dimensions:
+      storageClass: standard
+      operation: OPTIONS
+      nativeBillingStepRequests: 100
+      nativeAmountPerStep: '0.004'
+      futureRateFrom: '2026-08-01'
+      futureAmountPerRequest: '0.000045'
+      futureNativeAmountPerStep: '0.0045'
+    pricing:
+      rate:
+        amount: '0.00004'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная ставка 0,004 ₽ за 100 операций; в каталоге нормализована до одной операции.
+  - sku: mws.object-storage.warm.requests.put
+    name: Запросы PUT — теплый класс
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs: [mws.all-prices, mws.object-storage]
+    dimensions:
+      storageClass: warm
+      operation: PUT
+      nativeBillingStepRequests: 10
+      nativeAmountPerStep: '0.0055'
+    pricing:
+      rate:
+        amount: '0.00055'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная ставка 0,0055 ₽ за 10 операций; в каталоге нормализована до одной операции.
+  - sku: mws.object-storage.warm.requests.post
+    name: Запросы POST — теплый класс
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs: [mws.all-prices, mws.object-storage]
+    dimensions:
+      storageClass: warm
+      operation: POST
+      nativeBillingStepRequests: 10
+      nativeAmountPerStep: '0.0055'
+    pricing:
+      rate:
+        amount: '0.00055'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная ставка 0,0055 ₽ за 10 операций; в каталоге нормализована до одной операции.
+  - sku: mws.object-storage.warm.requests.patch
+    name: Запросы PATCH — теплый класс
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs: [mws.all-prices, mws.object-storage]
+    dimensions:
+      storageClass: warm
+      operation: PATCH
+      nativeBillingStepRequests: 10
+      nativeAmountPerStep: '0.0055'
+    pricing:
+      rate:
+        amount: '0.00055'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная ставка 0,0055 ₽ за 10 операций; в каталоге нормализована до одной операции.
+  - sku: mws.object-storage.warm.requests.list
+    name: Запросы LIST — теплый класс
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs: [mws.all-prices, mws.object-storage]
+    dimensions:
+      storageClass: warm
+      operation: LIST
+      nativeBillingStepRequests: 10
+      nativeAmountPerStep: '0.0055'
+    pricing:
+      rate:
+        amount: '0.00055'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная ставка 0,0055 ₽ за 10 операций; в каталоге нормализована до одной операции.
+  - sku: mws.object-storage.warm.requests.get
+    name: Запросы GET — теплый класс
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs: [mws.all-prices, mws.object-storage]
+    dimensions:
+      storageClass: warm
+      operation: GET
+      nativeBillingStepRequests: 100
+      nativeAmountPerStep: '0.0045'
+    pricing:
+      rate:
+        amount: '0.000045'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная ставка 0,0045 ₽ за 100 операций; в каталоге нормализована до одной операции.
+  - sku: mws.object-storage.warm.requests.head
+    name: Запросы HEAD — теплый класс
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs: [mws.all-prices, mws.object-storage]
+    dimensions:
+      storageClass: warm
+      operation: HEAD
+      nativeBillingStepRequests: 100
+      nativeAmountPerStep: '0.0045'
+    pricing:
+      rate:
+        amount: '0.000045'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная ставка 0,0045 ₽ за 100 операций; в каталоге нормализована до одной операции.
+  - sku: mws.object-storage.warm.requests.options
+    name: Запросы OPTIONS — теплый класс
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs: [mws.all-prices, mws.object-storage]
+    dimensions:
+      storageClass: warm
+      operation: OPTIONS
+      nativeBillingStepRequests: 100
+      nativeAmountPerStep: '0.0045'
+    pricing:
+      rate:
+        amount: '0.000045'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная ставка 0,0045 ₽ за 100 операций; в каталоге нормализована до одной операции.

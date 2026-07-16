@@ -1,0 +1,119 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: selectel
+  layer: iaas
+  service: compute
+  category: iaas.compute.general
+  title: General compute
+spec:
+  meters:
+  - sku: selectel.compute.vcpu-2250
+    name: AMD EPYC 9754, 100% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Москва / ru-6a
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - selectel.prices
+    - selectel.calculator
+    - selectel.compute-rules
+    dimensions:
+      poolDependent: true
+      cpuFrequencyGHz: '2.25'
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      cpuPlatformFamily: amd-zen4
+      cpuPlatformNative: AMD EPYC 9754
+    pricing:
+      rate:
+        amount: '1.0071'
+        currency: RUB
+        unit:
+          quantity: vCPU
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+  - sku: selectel.compute.ram-2133-2933
+    name: AMD EPYC 9754, RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Москва / ru-6a
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - selectel.prices
+    - selectel.calculator
+    - selectel.compute-rules
+    dimensions:
+      poolDependent: true
+      ramFrequencyMHz: 2133-2933
+      purchaseModel: on-demand
+      cpuPlatformFamily: amd-zen4
+      cpuPlatformNative: AMD EPYC 9754
+    pricing:
+      rate:
+        amount: '0.3662'
+        currency: RUB
+        unit:
+          quantity: GiB-RAM
+          period: hour
+        vat: included
+        byteBasis: binary
+    notes: Ставки зависят от выбранного пула; зафиксирован публичный выбор ru-6a.
+  - sku: selectel.compute.preemptible-vcpu
+    name: Intel Xeon Gold 6240R, 100% preemptible vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Санкт-Петербург / ru-9a
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - selectel.prices
+    - selectel.calculator
+    - selectel.compute-rules
+    dimensions:
+      poolDependent: true
+      cpuPlatformFamily: intel-cascade-lake
+      cpuPlatformNative: Intel Xeon Gold 6240R
+      guaranteedVcpuShare: 100%
+      purchaseModel: preemptible
+    pricing:
+      rate:
+        amount: '0.2518'
+        currency: RUB
+        unit:
+          quantity: vCPU
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+  - sku: selectel.compute.preemptible-ram
+    name: Intel Xeon Gold 6240R, preemptible RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Санкт-Петербург / ru-9a
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - selectel.prices
+    - selectel.calculator
+    - selectel.compute-rules
+    dimensions:
+      poolDependent: true
+      cpuPlatformFamily: intel-cascade-lake
+      cpuPlatformNative: Intel Xeon Gold 6240R
+      purchaseModel: preemptible
+    pricing:
+      rate:
+        amount: '0.0919'
+        currency: RUB
+        unit:
+          quantity: GiB-RAM
+          period: hour
+        vat: included
+        byteBasis: binary

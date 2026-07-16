@@ -1,0 +1,59 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: selectel
+  layer: iaas
+  service: network
+  category: iaas.network.public-ip
+  title: Public IPv4
+spec:
+  meters:
+  - sku: selectel.ip.direct
+    name: Прямой публичный IP
+    meter: network.ipv4.attached
+    status: available
+    pricingMode: unit
+    region: Москва / ru-6a
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - selectel.prices
+    - selectel.calculator
+    - selectel.compute-rules
+    dimensions:
+      nativeIpType: direct public IP
+      poolDependent: true
+    pricing:
+      rate:
+        amount: '0.2597'
+        currency: RUB
+        unit:
+          quantity: address
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+  - sku: selectel.ip.floating
+    name: Публичный плавающий IP
+    meter: network.ipv4.reserved
+    status: available
+    pricingMode: unit
+    region: Москва / ru-6a
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - selectel.prices
+    - selectel.calculator
+    - selectel.compute-rules
+    dimensions:
+      nativeIpType: floating public IP
+      poolDependent: true
+    pricing:
+      rate:
+        amount: '0.2597'
+        currency: RUB
+        unit:
+          quantity: address
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Ставки зависят от пула; зафиксирован публичный выбор ru-6a.

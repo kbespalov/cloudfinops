@@ -1,0 +1,124 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: yandex-cloud
+  layer: iaas
+  service: storage
+  category: iaas.storage.block
+  title: Block storage
+spec:
+  meters:
+  - sku: yc.disk.network-hdd
+    name: Standard disk HDD
+    meter: storage.block.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      diskType: network-hdd
+      performanceTier: hdd
+      storageMedia: hdd
+      storageInterface: unknown
+      storageTopology: network
+      yandexSkuId: dn2al287u6jr3a710u8g
+      serviceId: dn22pas77ftg9h3f2djj
+    pricing:
+      rate:
+        amount: '0.0048'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: hour
+        vat: included
+        byteBasis: binary
+  - sku: yc.disk.network-ssd
+    name: Fast disk SSD
+    meter: storage.block.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      diskType: network-ssd
+      performanceTier: ssd
+      storageMedia: ssd
+      storageInterface: unknown
+      storageTopology: network
+      yandexSkuId: dn27ajm6m8mnfcshbi61
+      serviceId: dn22pas77ftg9h3f2djj
+    pricing:
+      rate:
+        amount: '0.0199'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: hour
+        vat: included
+        byteBasis: binary
+  - sku: yc.disk.network-ssd-nonreplicated
+    name: Non-replicated SSD
+    meter: storage.block.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      diskType: network-ssd-nonreplicated
+      performanceTier: ssd
+      storageMedia: ssd
+      storageInterface: unknown
+      storageTopology: network
+      redundancy: non-replicated
+      yandexSkuId: dn24kdllggk8ahsol15g
+      serviceId: dn22pas77ftg9h3f2djj
+    pricing:
+      rate:
+        amount: '0.0147'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: hour
+        vat: included
+        byteBasis: binary
+  - sku: yc.disk.network-ssd-io-m3
+    name: Triple-replicated ultra-fast SSD
+    meter: storage.block.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      diskType: network-ssd-io-m3
+      performanceTier: ssd
+      storageMedia: ssd
+      storageInterface: unknown
+      storageTopology: network
+      redundancy: triple-replicated
+      yandexSkuId: dn2bl3v71k1mej7andmc
+      serviceId: dn22pas77ftg9h3f2djj
+    pricing:
+      rate:
+        amount: '0.0332'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: hour
+        vat: included
+        byteBasis: binary

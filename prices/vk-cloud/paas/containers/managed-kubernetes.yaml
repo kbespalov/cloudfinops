@@ -1,0 +1,128 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: vk-cloud
+  layer: paas
+  service: containers
+  category: paas.containers.managed-kubernetes
+  title: Managed Kubernetes
+spec:
+  meters:
+  - sku: vk.kubernetes.master-vcpu
+    name: Master CPU, Intel Cascade Lake
+    meter: containers.kubernetes.control-plane.vcpu
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    - vk.k8s-rules
+    dimensions:
+      component: master vCPU
+      published30Days: 983.51
+    pricing:
+      rate:
+        amount: '0.022766'
+        currency: RUB
+        unit:
+          quantity: vCPU
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '1.36596'
+        unit:
+          currency: RUB
+          quantity: vCPU
+          period: hour
+        formula: 0.022766 × 60
+        vat: included
+    notes: Публично тарифицируется только master vCPU; отдельной ставки master RAM нет.
+  - sku: vk.kubernetes.master-basic-2vcpu.synthetic
+    name: Synthetic basic master 2 vCPU
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    - vk.k8s-rules
+    priceProvenance: derived
+    dimensions:
+      comparabilityClass: synthetic-bundle
+      comparableTier: basic
+      availability: zonal
+      masterCount: 1
+      vcpu: 2
+      ramGiB: null
+      ramPricedSeparately: false
+      synthetic: true
+      syntheticFrom:
+      - vk.kubernetes.master-vcpu
+      vatRatePercent: 22
+      coverageNote: ram-not-published
+    pricing:
+      rate:
+        amount: '2.73192'
+        currency: RUB
+        unit:
+          quantity: master
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '2.73192'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: 2 × 1.36596 (master vCPU-hour)
+        vat: included
+    notes: Синтетический basic master для сравнения. В публичном прайсе VK Cloud нет master RAM — в bundle только 2 vCPU; сравнение с 2vCPU/4GiB бандлами неполное.
+  - sku: vk.kubernetes.master-ha-2vcpu.synthetic
+    name: Synthetic HA master 3×2 vCPU
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    - vk.k8s-rules
+    priceProvenance: derived
+    dimensions:
+      comparabilityClass: synthetic-bundle
+      comparableTier: ha
+      availability: regional
+      masterCount: 3
+      vcpu: 2
+      ramGiB: null
+      ramPricedSeparately: false
+      synthetic: true
+      syntheticFrom:
+      - vk.kubernetes.master-vcpu
+      vatRatePercent: 22
+      coverageNote: ram-not-published
+    pricing:
+      rate:
+        amount: '8.19576'
+        currency: RUB
+        unit:
+          quantity: master
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '8.19576'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: 3 × 2 × 1.36596 (master vCPU-hour)
+        vat: included
+    notes: Синтетический HA-эквивалент как 3×(2 vCPU). Master RAM в публичном прайсе отсутствует.

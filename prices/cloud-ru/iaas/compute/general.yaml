@@ -1,0 +1,1059 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: cloud-ru
+  layer: iaas
+  service: compute
+  category: iaas.compute.general
+  title: General compute
+spec:
+  meters:
+  - sku: cloudru.compute.1vcpu-2gb
+    name: Виртуальная машина 1vCPU/2GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 1
+      ramGb: 2
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: unknown
+      cpuPlatformNative: Intel Xeon Gold 6248R или 6348
+      ramGiB: 2
+    pricing:
+      rate:
+        amount: '1.48535'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '1.48535'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: native hourly bundle rate
+        vat: included
+      derivedEstimates:
+      - targetMeter: compute.vcpu
+        amount: '0.976'
+        unit:
+          quantity: vCPU
+          period: hour
+        vat: included
+        method: multi-flavor-lattice
+        sourceSkuRefs:
+        - cloudru.compute.1vcpu-2gb
+        - cloudru.compute.2vcpu-4gb
+        - cloudru.compute.4vcpu-8gb
+        - cloudru.compute.4vcpu-16gb
+        - cloudru.compute.8vcpu-16gb
+        - cloudru.compute.8vcpu-32gb
+        formula: 1.22 × 0.8 RUB/vCPU-hour excluding VAT
+        confidence: medium
+        notPublished: true
+        fit:
+          scope: stable 100% vCPU flavor lattice
+          exactOnSourceRows: true
+      - targetMeter: compute.ram
+        amount: '0.254675'
+        unit:
+          quantity: GiB-RAM
+          period: hour
+        vat: included
+        method: multi-flavor-lattice
+        sourceSkuRefs:
+        - cloudru.compute.1vcpu-2gb
+        - cloudru.compute.2vcpu-4gb
+        - cloudru.compute.4vcpu-8gb
+        - cloudru.compute.4vcpu-16gb
+        - cloudru.compute.8vcpu-16gb
+        - cloudru.compute.8vcpu-32gb
+        formula: 1.22 × 0.20875 RUB/GiB-RAM-hour excluding VAT
+        confidence: medium
+        notPublished: true
+        fit:
+          scope: stable 100% vCPU flavor lattice
+          exactOnSourceRows: true
+    notes: Нельзя использовать как независимую цену одного vCPU. Декомпозиция vCPU/RAM — аналитическая
+      оценка по flavor-решетке, не тариф Cloud.ru.
+  - sku: cloudru.compute.2vcpu-4gb
+    name: Виртуальная машина 2vCPU/4GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    dimensions:
+      vcpu: 2
+      ramGb: 4
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: unknown
+      ramGiB: 4
+    pricing:
+      rate:
+        amount: '2.9707'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.compute.4vcpu-8gb
+    name: Виртуальная машина 4vCPU/8GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    dimensions:
+      vcpu: 4
+      ramGb: 8
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: unknown
+      ramGiB: 8
+    pricing:
+      rate:
+        amount: '5.9414'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.compute.4vcpu-16gb
+    name: Виртуальная машина 4vCPU/16GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    dimensions:
+      vcpu: 4
+      ramGb: 16
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: unknown
+      ramGiB: 16
+    pricing:
+      rate:
+        amount: '7.9788'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100%.
+  - sku: cloudru.compute.8vcpu-16gb
+    name: Виртуальная машина 8vCPU/16GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    dimensions:
+      vcpu: 8
+      ramGb: 16
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: unknown
+      ramGiB: 16
+    pricing:
+      rate:
+        amount: '11.8828'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.compute.8vcpu-32gb
+    name: Виртуальная машина 8vCPU/32GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    dimensions:
+      vcpu: 8
+      ramGb: 32
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: unknown
+      ramGiB: 32
+    pricing:
+      rate:
+        amount: '15.9576'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.compute.share10.1vcpu-1gb
+    name: Виртуальная машина 1vCPU/1GB RAM — 10% vCPU
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 1
+      ramGb: 1
+      guaranteedVcpuShare: 10%
+      purchaseModel: on-demand
+      workloadFamily: economy
+      cpuPlatformFamily: unknown
+      publishedTariffRow: 34
+      ramGiB: 1
+    pricing:
+      rate:
+        amount: '0.4148'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 10%.
+  - sku: cloudru.compute.share10.1vcpu-2gb
+    name: Виртуальная машина 1vCPU/2GB RAM — 10% vCPU
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 1
+      ramGb: 2
+      guaranteedVcpuShare: 10%
+      purchaseModel: on-demand
+      workloadFamily: economy
+      cpuPlatformFamily: unknown
+      publishedTariffRow: 35
+      ramGiB: 2
+    pricing:
+      rate:
+        amount: '0.49511666'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 10%.
+  - sku: cloudru.compute.share10.2vcpu-4gb
+    name: Виртуальная машина 2vCPU/4GB RAM — 10% vCPU
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 2
+      ramGb: 4
+      guaranteedVcpuShare: 10%
+      purchaseModel: on-demand
+      workloadFamily: economy
+      cpuPlatformFamily: unknown
+      publishedTariffRow: 36
+      ramGiB: 4
+    pricing:
+      rate:
+        amount: '0.99023334'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 10%.
+  - sku: cloudru.compute.share10.4vcpu-8gb
+    name: Виртуальная машина 4vCPU/8GB RAM — 10% vCPU
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 4
+      ramGb: 8
+      guaranteedVcpuShare: 10%
+      purchaseModel: on-demand
+      workloadFamily: economy
+      cpuPlatformFamily: unknown
+      publishedTariffRow: 39
+      ramGiB: 8
+    pricing:
+      rate:
+        amount: '1.98046666'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 10%.
+  - sku: cloudru.compute.share10.4vcpu-16gb
+    name: Виртуальная машина 4vCPU/16GB RAM — 10% vCPU
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 4
+      ramGb: 16
+      guaranteedVcpuShare: 10%
+      purchaseModel: on-demand
+      workloadFamily: economy
+      cpuPlatformFamily: unknown
+      publishedTariffRow: 37
+      ramGiB: 16
+    pricing:
+      rate:
+        amount: '2.6596'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 10%.
+  - sku: cloudru.compute.share10.4vcpu-32gb
+    name: Виртуальная машина 4vCPU/32GB RAM — 10% vCPU
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 4
+      ramGb: 32
+      guaranteedVcpuShare: 10%
+      purchaseModel: on-demand
+      workloadFamily: economy
+      cpuPlatformFamily: unknown
+      publishedTariffRow: 38
+      ramGiB: 32
+    pricing:
+      rate:
+        amount: '4.0138'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 10%.
+  - sku: cloudru.compute.share10.8vcpu-16gb
+    name: Виртуальная машина 8vCPU/16GB RAM — 10% vCPU
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 8
+      ramGb: 16
+      guaranteedVcpuShare: 10%
+      purchaseModel: on-demand
+      workloadFamily: economy
+      cpuPlatformFamily: unknown
+      publishedTariffRow: 40
+      ramGiB: 16
+    pricing:
+      rate:
+        amount: '3.96093334'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 10%.
+  - sku: cloudru.compute.share10.8vcpu-32gb
+    name: Виртуальная машина 8vCPU/32GB RAM — 10% vCPU
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 8
+      ramGb: 32
+      guaranteedVcpuShare: 10%
+      purchaseModel: on-demand
+      workloadFamily: economy
+      cpuPlatformFamily: unknown
+      publishedTariffRow: 41
+      ramGiB: 32
+    pricing:
+      rate:
+        amount: '5.3192'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 10%.
+  - sku: cloudru.compute.share30.1vcpu-1gb
+    name: Виртуальная машина 1vCPU/1GB RAM — 30% vCPU
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 1
+      ramGb: 1
+      guaranteedVcpuShare: 30%
+      purchaseModel: on-demand
+      workloadFamily: standard
+      cpuPlatformFamily: unknown
+      publishedTariffRow: 44
+      ramGiB: 1
+    pricing:
+      rate:
+        amount: '0.64233'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+  - sku: cloudru.compute.share30.1vcpu-2gb
+    name: Виртуальная машина 1vCPU/2GB RAM — 30% vCPU
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 1
+      ramGb: 2
+      guaranteedVcpuShare: 30%
+      purchaseModel: on-demand
+      workloadFamily: standard
+      cpuPlatformFamily: unknown
+      publishedTariffRow: 45
+      ramGiB: 2
+    pricing:
+      rate:
+        amount: '0.899262'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+  - sku: cloudru.compute.share30.2vcpu-4gb
+    name: Виртуальная машина 2vCPU/4GB RAM — 30% vCPU
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 2
+      ramGb: 4
+      guaranteedVcpuShare: 30%
+      purchaseModel: on-demand
+      workloadFamily: standard
+      cpuPlatformFamily: unknown
+      publishedTariffRow: 47
+      ramGiB: 4
+    pricing:
+      rate:
+        amount: '1.798524'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+  - sku: cloudru.compute.share30.4vcpu-8gb
+    name: Виртуальная машина 4vCPU/8GB RAM — 30% vCPU
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 4
+      ramGb: 8
+      guaranteedVcpuShare: 30%
+      purchaseModel: on-demand
+      workloadFamily: standard
+      cpuPlatformFamily: unknown
+      publishedTariffRow: 52
+      ramGiB: 8
+    pricing:
+      rate:
+        amount: '3.597048'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+  - sku: cloudru.compute.share30.4vcpu-16gb
+    name: Виртуальная машина 4vCPU/16GB RAM — 30% vCPU
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 4
+      ramGb: 16
+      guaranteedVcpuShare: 30%
+      purchaseModel: on-demand
+      workloadFamily: standard
+      cpuPlatformFamily: unknown
+      publishedTariffRow: 49
+      ramGiB: 16
+    pricing:
+      rate:
+        amount: '5.71936'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+  - sku: cloudru.compute.share30.4vcpu-32gb
+    name: Виртуальная машина 4vCPU/32GB RAM — 30% vCPU
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 4
+      ramGb: 32
+      guaranteedVcpuShare: 30%
+      purchaseModel: on-demand
+      workloadFamily: standard
+      cpuPlatformFamily: unknown
+      publishedTariffRow: 50
+      ramGiB: 32
+    pricing:
+      rate:
+        amount: '7.70796'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+  - sku: cloudru.compute.share30.4vcpu-64gb
+    name: Виртуальная машина 4vCPU/64GB RAM — 30% vCPU
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 4
+      ramGb: 64
+      guaranteedVcpuShare: 30%
+      purchaseModel: on-demand
+      workloadFamily: standard
+      cpuPlatformFamily: unknown
+      publishedTariffRow: 51
+      ramGiB: 64
+    pricing:
+      rate:
+        amount: '11.56194'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+  - sku: cloudru.compute.share30.8vcpu-16gb
+    name: Виртуальная машина 8vCPU/16GB RAM — 30% vCPU
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 8
+      ramGb: 16
+      guaranteedVcpuShare: 30%
+      purchaseModel: on-demand
+      workloadFamily: standard
+      cpuPlatformFamily: unknown
+      publishedTariffRow: 53
+      ramGiB: 16
+    pricing:
+      rate:
+        amount: '7.194096'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+  - sku: cloudru.compute.share30.8vcpu-32gb
+    name: Виртуальная машина 8vCPU/32GB RAM — 30% vCPU
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 8
+      ramGb: 32
+      guaranteedVcpuShare: 30%
+      purchaseModel: on-demand
+      workloadFamily: standard
+      cpuPlatformFamily: unknown
+      publishedTariffRow: 54
+      ramGiB: 32
+    pricing:
+      rate:
+        amount: '11.43872'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+  - sku: cloudru.compute.share30.8vcpu-64gb
+    name: Виртуальная машина 8vCPU/64GB RAM — 30% vCPU
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 8
+      ramGb: 64
+      guaranteedVcpuShare: 30%
+      purchaseModel: on-demand
+      workloadFamily: standard
+      cpuPlatformFamily: unknown
+      publishedTariffRow: 55
+      ramGiB: 64
+    pricing:
+      rate:
+        amount: '15.41592'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+  - sku: cloudru.compute.share30.16vcpu-32gb
+    name: Виртуальная машина 16vCPU/32GB RAM — 30% vCPU
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 16
+      ramGb: 32
+      guaranteedVcpuShare: 30%
+      purchaseModel: on-demand
+      workloadFamily: standard
+      cpuPlatformFamily: unknown
+      publishedTariffRow: 42
+      ramGiB: 32
+    pricing:
+      rate:
+        amount: '14.388192'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+  - sku: cloudru.compute.share30.16vcpu-64gb
+    name: Виртуальная машина 16vCPU/64GB RAM — 30% vCPU
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 16
+      ramGb: 64
+      guaranteedVcpuShare: 30%
+      purchaseModel: on-demand
+      workloadFamily: standard
+      cpuPlatformFamily: unknown
+      publishedTariffRow: 43
+      ramGiB: 64
+    pricing:
+      rate:
+        amount: '22.87744'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+  - sku: cloudru.compute.share30.24vcpu-48gb
+    name: Виртуальная машина 24vCPU/48GB RAM — 30% vCPU
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 24
+      ramGb: 48
+      guaranteedVcpuShare: 30%
+      purchaseModel: on-demand
+      workloadFamily: standard
+      cpuPlatformFamily: unknown
+      publishedTariffRow: 46
+      ramGiB: 48
+    pricing:
+      rate:
+        amount: '21.582288'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+  - sku: cloudru.compute.share30.32vcpu-64gb
+    name: Виртуальная машина 32vCPU/64GB RAM — 30% vCPU
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 32
+      ramGb: 64
+      guaranteedVcpuShare: 30%
+      purchaseModel: on-demand
+      workloadFamily: standard
+      cpuPlatformFamily: unknown
+      publishedTariffRow: 48
+      ramGiB: 64
+    pricing:
+      rate:
+        amount: '28.776384'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+  - sku: cloudru.compute.vcpu-separate
+    name: Intel Xeon Gold 6248R / 6348, 100% vCPU
+    meter: compute.vcpu
+    status: not-publicly-disclosed
+    pricingMode: status-only
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    dimensions:
+      publishedModel: flavor-bundle
+      cpuPlatformFamily: unknown
+      cpuPlatformNative: Intel Xeon Gold 6248R / 6348
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+    notes: Отдельная ставка не опубликована; модельная оценка хранится в derivedEstimates SKU cloudru.compute.1vcpu-2gb.
+  - sku: cloudru.compute.ram-separate
+    name: Intel Xeon Gold 6248R / 6348, RAM
+    meter: compute.ram
+    status: not-publicly-disclosed
+    pricingMode: status-only
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    dimensions:
+      publishedModel: fixed vCPU/RAM flavors
+      cpuPlatformFamily: unknown
+      cpuPlatformNative: Intel Xeon Gold 6248R / 6348
+      purchaseModel: on-demand
+    notes: RAM опубликована только внутри готовых конфигураций VM.

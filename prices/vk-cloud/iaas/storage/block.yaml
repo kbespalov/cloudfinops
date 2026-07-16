@@ -1,0 +1,112 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: vk-cloud
+  layer: iaas
+  service: storage
+  category: iaas.storage.block
+  title: Block storage
+spec:
+  meters:
+  - sku: vk.disk.hdd
+    name: Жесткий диск, HDD
+    meter: storage.block.capacity
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      publishedPerMinute: 0.000102
+      diskType: ceph-hdd
+      performanceTier: hdd
+      storageMedia: hdd
+      storageInterface: unknown
+      storageTopology: network
+    pricing:
+      rate:
+        amount: '4'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: month
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '4'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: month
+        formula: published 30-day rate
+        vat: included
+  - sku: vk.disk.ssd
+    name: Жесткий диск, SSD
+    meter: storage.block.capacity
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      publishedPerMinute: 0.000307
+      diskType: ceph-ssd
+      performanceTier: ssd
+      storageMedia: ssd
+      storageInterface: unknown
+      storageTopology: network
+    pricing:
+      rate:
+        amount: '13'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: month
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '13'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: month
+        formula: published 30-day rate
+        vat: included
+  - sku: vk.disk.nvme
+    name: Low Latency NVME
+    meter: storage.block.capacity
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      publishedPerMinute: 0.000255
+      diskType: ef-nvme
+      performanceTier: nvme
+      storageMedia: ssd
+      storageInterface: nvme
+      storageTopology: local
+    pricing:
+      rate:
+        amount: '11'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: month
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '11'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: month
+        formula: published 30-day rate
+        vat: included

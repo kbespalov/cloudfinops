@@ -1,0 +1,1288 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: cloud-ru
+  layer: iaas
+  service: compute
+  category: iaas.compute.gpu
+  title: GPU compute
+spec:
+  meters:
+  - sku: cloudru.gpu.h100x5
+    name: 100vCPU/550GB RAM/5 GPU H100 94GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 94GB PCI
+      gpuCount: 5
+      vcpu: 100
+      ramGb: 550
+      vramGb: 470
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 550
+    pricing:
+      rate:
+        amount: '3233'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '3233'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: native hourly bundle rate
+        vat: included
+    notes: Цена полного GPU flavor Evolution Compute; не ставка одного GPU.
+  - sku: cloudru.gpu.h100-94-pcie-1
+    name: 20vCPU/110GB RAM/1 GPU H100 94GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 94GB PCI
+      gpuCount: 1
+      vcpu: 20
+      ramGb: 110
+      vramGb: 94
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 110
+    pricing:
+      rate:
+        amount: '646.60'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.h100-94-pcie-2
+    name: 40vCPU/220GB RAM/2 GPU H100 94GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 94GB PCI
+      gpuCount: 2
+      vcpu: 40
+      ramGb: 220
+      vramGb: 188
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 220
+    pricing:
+      rate:
+        amount: '1293.20'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.h100-94-pcie-3
+    name: 60vCPU/330GB RAM/3 GPU H100 94GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 94GB PCI
+      gpuCount: 3
+      vcpu: 60
+      ramGb: 330
+      vramGb: 282
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 330
+    pricing:
+      rate:
+        amount: '1939.80'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.h100-94-pcie-4
+    name: 80vCPU/440GB RAM/4 GPU H100 94GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 94GB PCI
+      gpuCount: 4
+      vcpu: 80
+      ramGb: 440
+      vramGb: 376
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 440
+    pricing:
+      rate:
+        amount: '2586.40'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.h100-94-pcie-6
+    name: 120vCPU/660GB RAM/6 GPU H100 94GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 94GB PCI
+      gpuCount: 6
+      vcpu: 120
+      ramGb: 660
+      vramGb: 564
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 660
+    pricing:
+      rate:
+        amount: '3879.60'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.h100-94-pcie-7
+    name: 140vCPU/770GB RAM/7 GPU H100 94GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 94GB PCI
+      gpuCount: 7
+      vcpu: 140
+      ramGb: 770
+      vramGb: 658
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 770
+    pricing:
+      rate:
+        amount: '4526.20'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.h100-94-pcie-8
+    name: 160vCPU/880GB RAM/8 GPU H100 94GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 94GB PCI
+      gpuCount: 8
+      vcpu: 160
+      ramGb: 880
+      vramGb: 752
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 880
+    pricing:
+      rate:
+        amount: '5172.80'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.h100-80-pcie-1
+    name: 20vCPU/110GB RAM/1 GPU H100 80GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 80GB PCI
+      gpuCount: 1
+      vcpu: 20
+      ramGb: 110
+      vramGb: 80
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 110
+    pricing:
+      rate:
+        amount: '549.00'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.h100-80-pcie-2
+    name: 40vCPU/220GB RAM/2 GPU H100 80GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 80GB PCI
+      gpuCount: 2
+      vcpu: 40
+      ramGb: 220
+      vramGb: 160
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 220
+    pricing:
+      rate:
+        amount: '1098.00'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.h100-80-pcie-3
+    name: 60vCPU/330GB RAM/3 GPU H100 80GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 80GB PCI
+      gpuCount: 3
+      vcpu: 60
+      ramGb: 330
+      vramGb: 240
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 330
+    pricing:
+      rate:
+        amount: '1647.00'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.h100-80-pcie-4
+    name: 80vCPU/440GB RAM/4 GPU H100 80GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 80GB PCI
+      gpuCount: 4
+      vcpu: 80
+      ramGb: 440
+      vramGb: 320
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 440
+    pricing:
+      rate:
+        amount: '2196.00'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.h100-80-pcie-5
+    name: 100vCPU/550GB RAM/5 GPU H100 80GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 80GB PCI
+      gpuCount: 5
+      vcpu: 100
+      ramGb: 550
+      vramGb: 400
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 550
+    pricing:
+      rate:
+        amount: '2745.00'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.h100-80-pcie-6
+    name: 120vCPU/660GB RAM/6 GPU H100 80GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 80GB PCI
+      gpuCount: 6
+      vcpu: 120
+      ramGb: 660
+      vramGb: 480
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 660
+    pricing:
+      rate:
+        amount: '3294.00'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.h100-80-pcie-7
+    name: 140vCPU/770GB RAM/7 GPU H100 80GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 80GB PCI
+      gpuCount: 7
+      vcpu: 140
+      ramGb: 770
+      vramGb: 560
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 770
+    pricing:
+      rate:
+        amount: '3843.00'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.h100-80-pcie-8
+    name: 160vCPU/880GB RAM/8 GPU H100 80GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 80GB PCI
+      gpuCount: 8
+      vcpu: 160
+      ramGb: 880
+      vramGb: 640
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 880
+    pricing:
+      rate:
+        amount: '4392.00'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.a100-80-pcie-1
+    name: 20vCPU/125GB RAM/1 GPU A100 80GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA A100 80GB PCI
+      gpuCount: 1
+      vcpu: 20
+      ramGb: 125
+      vramGb: 80
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 125
+    pricing:
+      rate:
+        amount: '317.20'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.a100-80-pcie-2
+    name: 40vCPU/250GB RAM/2 GPU A100 80GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA A100 80GB PCI
+      gpuCount: 2
+      vcpu: 40
+      ramGb: 250
+      vramGb: 160
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 250
+    pricing:
+      rate:
+        amount: '634.40'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.a100-80-pcie-3
+    name: 60vCPU/375GB RAM/3 GPU A100 80GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA A100 80GB PCI
+      gpuCount: 3
+      vcpu: 60
+      ramGb: 375
+      vramGb: 240
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 375
+    pricing:
+      rate:
+        amount: '951.60'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.a100-80-pcie-4
+    name: 80vCPU/500GB RAM/4 GPU A100 80GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA A100 80GB PCI
+      gpuCount: 4
+      vcpu: 80
+      ramGb: 500
+      vramGb: 320
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 500
+    pricing:
+      rate:
+        amount: '1268.80'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.a100-80-pcie-5
+    name: 100vCPU/625GB RAM/5 GPU A100 80GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA A100 80GB PCI
+      gpuCount: 5
+      vcpu: 100
+      ramGb: 625
+      vramGb: 400
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 625
+    pricing:
+      rate:
+        amount: '1586.00'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.a100-80-pcie-6
+    name: 120vCPU/750GB RAM/6 GPU A100 80GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA A100 80GB PCI
+      gpuCount: 6
+      vcpu: 120
+      ramGb: 750
+      vramGb: 480
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 750
+    pricing:
+      rate:
+        amount: '1903.20'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.a100-80-pcie-7
+    name: 140vCPU/875GB RAM/7 GPU A100 80GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA A100 80GB PCI
+      gpuCount: 7
+      vcpu: 140
+      ramGb: 875
+      vramGb: 560
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 875
+    pricing:
+      rate:
+        amount: '2220.40'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.a100-80-pcie-8
+    name: 160vCPU/900GB RAM/8 GPU A100 80GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA A100 80GB PCI
+      gpuCount: 8
+      vcpu: 160
+      ramGb: 900
+      vramGb: 640
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 900
+    pricing:
+      rate:
+        amount: '2537.60'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute; RAM соответствует официальному тарифу.
+  - sku: cloudru.gpu.h100-80-nvlink-1
+    name: 20vCPU/186GB RAM/1 GPU H100 80GB NVLink
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 80GB
+      gpuCount: 1
+      vcpu: 20
+      ramGb: 186
+      vramGb: 80
+      gpuInterconnect: NVLink
+      nvlink: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 186
+    pricing:
+      rate:
+        amount: '854.00'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute с NVLink.
+  - sku: cloudru.gpu.h100-80-nvlink-2
+    name: 40vCPU/372GB RAM/2 GPU H100 80GB NVLink
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 80GB
+      gpuCount: 2
+      vcpu: 40
+      ramGb: 372
+      vramGb: 160
+      gpuInterconnect: NVLink
+      nvlink: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 372
+    pricing:
+      rate:
+        amount: '1708.00'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute с NVLink.
+  - sku: cloudru.gpu.h100-80-nvlink-3
+    name: 60vCPU/558GB RAM/3 GPU H100 80GB NVLink
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 80GB
+      gpuCount: 3
+      vcpu: 60
+      ramGb: 558
+      vramGb: 240
+      gpuInterconnect: NVLink
+      nvlink: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 558
+    pricing:
+      rate:
+        amount: '2562.00'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute с NVLink.
+  - sku: cloudru.gpu.h100-80-nvlink-4
+    name: 80vCPU/744GB RAM/4 GPU H100 80GB NVLink
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 80GB
+      gpuCount: 4
+      vcpu: 80
+      ramGb: 744
+      vramGb: 320
+      gpuInterconnect: NVLink
+      nvlink: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 744
+    pricing:
+      rate:
+        amount: '3416.00'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute с NVLink.
+  - sku: cloudru.gpu.h100-80-nvlink-5
+    name: 100vCPU/930GB RAM/5 GPU H100 80GB NVLink
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 80GB
+      gpuCount: 5
+      vcpu: 100
+      ramGb: 930
+      vramGb: 400
+      gpuInterconnect: NVLink
+      nvlink: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 930
+    pricing:
+      rate:
+        amount: '4270.00'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute с NVLink.
+  - sku: cloudru.gpu.h100-80-nvlink-6
+    name: 120vCPU/1116GB RAM/6 GPU H100 80GB NVLink
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 80GB
+      gpuCount: 6
+      vcpu: 120
+      ramGb: 1116
+      vramGb: 480
+      gpuInterconnect: NVLink
+      nvlink: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 1116
+    pricing:
+      rate:
+        amount: '5124.00'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute с NVLink.
+  - sku: cloudru.gpu.h100-80-nvlink-7
+    name: 140vCPU/1302GB RAM/7 GPU H100 80GB NVLink
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 80GB
+      gpuCount: 7
+      vcpu: 140
+      ramGb: 1302
+      vramGb: 560
+      gpuInterconnect: NVLink
+      nvlink: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 1302
+    pricing:
+      rate:
+        amount: '5978.00'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute с NVLink.
+  - sku: cloudru.gpu.h100-80-nvlink-8
+    name: 160vCPU/1488GB RAM/8 GPU H100 80GB NVLink
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 80GB
+      gpuCount: 8
+      vcpu: 160
+      ramGb: 1488
+      vramGb: 640
+      gpuInterconnect: NVLink
+      nvlink: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 1488
+    pricing:
+      rate:
+        amount: '6832.00'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute с NVLink.
+  - sku: cloudru.gpu.a100-40-pcie-1
+    name: 24vCPU/220GB RAM/1 GPU A100 40GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA A100 40GB PCI
+      gpuCount: 1
+      vcpu: 24
+      ramGb: 220
+      vramGb: 40
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 220
+    pricing:
+      rate:
+        amount: '256.20'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.a100-40-pcie-2
+    name: 48vCPU/440GB RAM/2 GPU A100 40GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA A100 40GB PCI
+      gpuCount: 2
+      vcpu: 48
+      ramGb: 440
+      vramGb: 80
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 440
+    pricing:
+      rate:
+        amount: '512.40'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.a100-40-pcie-4
+    name: 96vCPU/880GB RAM/4 GPU A100 40GB PCI
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA A100 40GB PCI
+      gpuCount: 4
+      vcpu: 96
+      ramGb: 880
+      vramGb: 160
+      gpuInterconnect: PCIe
+      nvlink: false
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 880
+    pricing:
+      rate:
+        amount: '1024.80'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.v100-32-1
+    name: 4vCPU/64GB RAM/1 GPU V100 32GB
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA V100 32GB
+      gpuCount: 1
+      vcpu: 4
+      ramGb: 64
+      vramGb: 32
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 64
+    pricing:
+      rate:
+        amount: '244.00'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.v100-32-2
+    name: 8vCPU/128GB RAM/2 GPU V100 32GB
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA V100 32GB
+      gpuCount: 2
+      vcpu: 8
+      ramGb: 128
+      vramGb: 64
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 128
+    pricing:
+      rate:
+        amount: '488.00'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.v100-32-4
+    name: 16vCPU/256GB RAM/4 GPU V100 32GB
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA V100 32GB
+      gpuCount: 4
+      vcpu: 16
+      ramGb: 256
+      vramGb: 128
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 256
+    pricing:
+      rate:
+        amount: '988.20'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.v100-32-8
+    name: 32vCPU/512GB RAM/8 GPU V100 32GB
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA V100 32GB
+      gpuCount: 8
+      vcpu: 32
+      ramGb: 512
+      vramGb: 256
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 512
+    pricing:
+      rate:
+        amount: '1976.40'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.
+  - sku: cloudru.gpu.v100-32-16
+    name: 64vCPU/1024GB RAM/16 GPU V100 32GB
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA V100 32GB
+      gpuCount: 16
+      vcpu: 64
+      ramGb: 1024
+      vramGb: 512
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      documentVersion: '260619'
+      ramGiB: 1024
+    pricing:
+      rate:
+        amount: '3940.60'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Цена полного GPU flavor Evolution Compute.

@@ -1,0 +1,174 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: t1-cloud
+  layer: iaas
+  service: storage
+  category: iaas.storage.block
+  title: Block storage
+spec:
+  meters:
+  - sku: t1.disk.light
+    name: Дисковое пространство Light
+    meter: storage.block.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    dimensions:
+      published30Days: 3.66
+      diskType: light
+      nativePerformanceTier: light
+      performanceTier: hdd
+      storageMedia: hdd
+      storageInterface: unknown
+      storageTopology: network
+      includedIops: 500
+      maximumIops: 500
+      iopsChargedSeparately: false
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.00008472'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: minute
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '0.0062015'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: hour
+        formula: 0.00008472 × 60 × 1.22 VAT
+        vat: included
+    notes: Нативный класс Light T1; до 500 IOPS включено в ставку.
+  - sku: t1.disk.basic
+    name: Дисковое пространство Basic
+    meter: storage.block.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    dimensions:
+      published30Days: 6.55
+      diskType: basic
+      nativePerformanceTier: basic
+      performanceTier: ssd
+      storageMedia: ssd
+      storageInterface: unknown
+      storageTopology: network
+      includedIops: 3000
+      maximumIops: 3000
+      iopsChargedSeparately: false
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.00015162'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: minute
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '0.0110986'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: hour
+        formula: 0.00015162 × 60 × 1.22 VAT
+        vat: included
+    notes: Нативный класс Basic T1; до 3000 IOPS включено в ставку.
+  - sku: t1.disk.average
+    name: Дисковое пространство Average
+    meter: storage.block.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    dimensions:
+      published30Days: 10.75
+      diskType: average
+      nativePerformanceTier: average
+      performanceTier: nvme
+      storageMedia: ssd
+      storageInterface: nvme
+      storageTopology: network
+      includedIops: 10000
+      maximumIops: 10000
+      iopsChargedSeparately: false
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.00024907'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: minute
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '0.0182319'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: hour
+        formula: 0.00024907 × 60 × 1.22 VAT
+        vat: included
+    notes: Нативный класс Average T1; до 10 000 IOPS включено в ставку.
+  - sku: t1.disk.high
+    name: Дисковое пространство High
+    meter: storage.block.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    dimensions:
+      published30Days: 18.25
+      diskType: high
+      nativePerformanceTier: high
+      performanceTier: nvme
+      storageMedia: ssd
+      storageInterface: nvme
+      storageTopology: network
+      includedIops: 15000
+      maximumIops: 15000
+      iopsChargedSeparately: false
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.00042292'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: minute
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '0.0309577'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: hour
+        formula: 0.00042292 × 60 × 1.22 VAT
+        vat: included
+    notes: Нативный класс High T1; до 15 000 IOPS включено в ставку.

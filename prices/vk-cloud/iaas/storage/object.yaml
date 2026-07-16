@@ -1,0 +1,80 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: vk-cloud
+  layer: iaas
+  service: storage
+  category: iaas.storage.object
+  title: Object storage
+spec:
+  meters:
+  - sku: vk.object-storage.hotbox
+    name: Hotbox
+    meter: storage.object.capacity
+    status: available
+    pricingMode: unit
+    region: Москва / ru-msk
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    - vk.s3-rules
+    dimensions:
+      storageClass: standard
+      storageClassNative: Hotbox
+      verificationStatus: verified
+      verificationMethod: official-pricelist
+      verifiedAt: '2026-07-13'
+      vatRatePercent: 22
+      nativeBillingPeriodDays: 30
+      nativeMinuteAmount: '0.000053'
+    pricing:
+      rate:
+        amount: '2.28'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: month
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '2.28'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: month
+        formula: published 30-day rate
+        vat: included
+    notes: Hotbox соответствует API-классу STANDARD; 2,28 ₽ опубликованы за 30 дней, параллельно указана
+      поминутная ставка 0,000053 ₽/GB.
+  - sku: vk.object-storage.icebox
+    name: Icebox
+    meter: storage.object.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    - vk.s3-rules
+    dimensions:
+      storageClass: cold
+      storageClassNative: Icebox
+    pricing:
+      rate:
+        amount: '1.09'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: month
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '1.09'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: month
+        formula: published 30-day rate
+        vat: included

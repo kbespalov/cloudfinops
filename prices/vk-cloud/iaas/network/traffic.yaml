@@ -1,0 +1,147 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: vk-cloud
+  layer: iaas
+  service: network
+  category: iaas.network.traffic
+  title: Internet traffic
+spec:
+  meters:
+  - sku: vk.traffic.internet.ingress
+    name: Входящий интернет-трафик Cloud Servers
+    meter: network.traffic.ingress
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.iaas-rules
+    - vk.network-rules
+    dimensions:
+      sourceService: compute
+      trafficScope: public-internet
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: usage
+        vat: included
+        byteBasis: binary
+    notes: Это не free tier — документация Cloud Servers и Cloud Networks прямо указывает, что входящий
+      трафик не тарифицируется.
+  - sku: vk.traffic.internet.egress
+    name: Исходящий интернет-трафик Cloud Servers
+    meter: network.traffic.egress
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    - vk.iaas-rules
+    - vk.network-rules
+    dimensions:
+      sourceService: compute
+      trafficScope: public-internet
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: usage
+        vat: included
+        byteBasis: binary
+    notes: Это не free tier — документация Cloud Servers и Cloud Networks прямо указывает, что исходящий
+      трафик не тарифицируется.
+  - sku: vk.object-storage.traffic.ingress
+    name: Входящий интернет-трафик Object Storage
+    meter: network.traffic.ingress
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    - vk.s3-rules
+    dimensions:
+      sourceService: object-storage
+      trafficScope: public-internet
+      storageClassScope: all
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: usage
+        vat: included
+        byteBasis: binary
+  - sku: vk.object-storage.hotbox.traffic.egress
+    name: Исходящий трафик Object Storage — Hotbox
+    meter: network.traffic.egress
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    - vk.s3-rules
+    dimensions:
+      sourceService: object-storage
+      trafficScope: object-download
+      storageClass: standard
+      storageClassNative: Hotbox
+      verificationStatus: verified
+      verificationMethod: official-pricelist
+      verifiedAt: '2026-07-13'
+      freeTierGiBMonth: 0
+    pricing:
+      rate:
+        amount: '1.31'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: usage
+        vat: included
+        byteBasis: binary
+    notes: Публичная ставка 1,31 ₽ за каждый GB исходящего трафика; бесплатный порог в прайс-листе не
+      указан.
+  - sku: vk.object-storage.icebox.traffic.egress
+    name: Исходящий трафик Object Storage — Icebox
+    meter: network.traffic.egress
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    - vk.s3-rules
+    dimensions:
+      sourceService: object-storage
+      trafficScope: object-download
+      storageClass: cold
+      storageClassNative: Icebox
+      verificationStatus: verified
+      verificationMethod: official-pricelist
+      verifiedAt: '2026-07-13'
+      freeTierGiBMonth: 0
+    pricing:
+      rate:
+        amount: '1.67'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: usage
+        vat: included
+        byteBasis: binary
+    notes: Публичная ставка 1,67 ₽ за каждый GB исходящего трафика; бесплатный порог в прайс-листе не
+      указан.

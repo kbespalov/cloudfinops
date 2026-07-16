@@ -1,0 +1,218 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: yandex-cloud
+  layer: paas
+  service: containers
+  category: paas.containers.managed-kubernetes
+  title: Managed Kubernetes
+spec:
+  meters:
+  - sku: yc.kubernetes.master-vcpu
+    name: Master vCPU
+    meter: containers.kubernetes.control-plane.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.kubernetes
+    dimensions:
+      component: master-vcpu
+      yandexSkuId: dn2pjj9vapo7724rik0b
+      serviceId: dn2af04ph5otc5f23o1h
+    pricing:
+      rate:
+        amount: '1.76'
+        currency: RUB
+        unit:
+          quantity: vCPU
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '1.76'
+        unit:
+          currency: RUB
+          quantity: vCPU
+          period: hour
+        formula: native hourly rate
+        vat: included
+  - sku: yc.kubernetes.master-ram
+    name: Master RAM
+    meter: containers.kubernetes.control-plane.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.kubernetes
+    dimensions:
+      component: master-ram
+      yandexSkuId: dn2u6o8avnm6b5tb8klu
+      serviceId: dn2af04ph5otc5f23o1h
+    pricing:
+      rate:
+        amount: '0.46'
+        currency: RUB
+        unit:
+          quantity: GiB-RAM
+          period: hour
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.46'
+        unit:
+          currency: RUB
+          quantity: GiB-RAM
+          period: hour
+        formula: native hourly rate
+        vat: included
+  - sku: yc.kubernetes.master-zonal
+    name: Zonal master fixed component
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: fixed
+    region: Россия
+    effectiveFrom: '2025-06-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.kubernetes
+    dimensions:
+      topology: zonal
+      yandexSkuId: dn2tdli7u18tvvc28ov8
+      serviceId: dn2af04ph5otc5f23o1h
+      comparabilityClass: native-fixed
+      comparableTier: fixed-component
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit:
+          quantity: master
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Нулевая фиксированная ставка подтверждена Billing API; vCPU и RAM мастера оплачиваются отдельно.
+  - sku: yc.kubernetes.master-regional
+    name: Regional master fixed component
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: fixed
+    region: Россия
+    effectiveFrom: '2025-06-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.kubernetes
+    dimensions:
+      topology: regional
+      yandexSkuId: dn2j2khrfcdc4p1aki30
+      serviceId: dn2af04ph5otc5f23o1h
+      comparabilityClass: native-fixed
+      comparableTier: fixed-component
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit:
+          quantity: master
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Нулевая фиксированная ставка подтверждена Billing API; vCPU и RAM мастера оплачиваются отдельно.
+  - sku: yc.kubernetes.master-basic-2-4.synthetic
+    name: Synthetic basic master 2 vCPU / 4 GiB RAM (zonal)
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.kubernetes
+    priceProvenance: derived
+    dimensions:
+      comparabilityClass: synthetic-bundle
+      comparableTier: basic
+      availability: zonal
+      topology: zonal
+      masterCount: 1
+      vcpu: 2
+      ramGiB: 4
+      synthetic: true
+      syntheticFrom:
+      - yc.kubernetes.master-vcpu
+      - yc.kubernetes.master-ram
+      - yc.kubernetes.master-zonal
+      vatRatePercent: 22
+    pricing:
+      rate:
+        amount: '5.36'
+        currency: RUB
+        unit:
+          quantity: master
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '5.36'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: 2 × 1.76 (vCPU) + 4 × 0.46 (GiB-RAM) + 0 (zonal fixed)
+        vat: included
+    notes: Синтетический bundle для кросс-провайдерного сравнения с fixed/bundle master (Cloud.ru 2/4,
+      Selectel/MWS basic). Нативные component SKU сохранены.
+  - sku: yc.kubernetes.master-ha-2-4.synthetic
+    name: Synthetic HA master 3×(2 vCPU / 4 GiB RAM)
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.kubernetes
+    priceProvenance: derived
+    dimensions:
+      comparabilityClass: synthetic-bundle
+      comparableTier: ha
+      availability: regional
+      topology: regional
+      masterCount: 3
+      vcpu: 2
+      ramGiB: 4
+      synthetic: true
+      syntheticFrom:
+      - yc.kubernetes.master-vcpu
+      - yc.kubernetes.master-ram
+      - yc.kubernetes.master-regional
+      vatRatePercent: 22
+    pricing:
+      rate:
+        amount: '16.08'
+        currency: RUB
+        unit:
+          quantity: master
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '16.08'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: 3 × (2 × 1.76 + 4 × 0.46 + 0 regional fixed)
+        vat: included
+    notes: Синтетический HA-эквивалент как 3 независимых master 2/4 для сравнения с Selectel/MWS HA. Реальный
+      размер master в YC выбирается пользователем.

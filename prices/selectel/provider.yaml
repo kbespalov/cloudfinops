@@ -1,0 +1,76 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: Provider
+metadata:
+  id: selectel
+  name: Selectel
+spec:
+  platform: Облачная платформа
+  homepage: https://selectel.ru
+  sources:
+  - id: selectel.calculator
+    title: Калькулятор ресурсов
+    url: https://selectel.ru/prices/calculator/
+    type: calculator
+    access: public
+    priority: 1
+    covers:
+    - compute.gpu
+    - compute.ram
+    - compute.vcpu
+    - containers.kubernetes.control-plane
+    - network.ipv4.attached
+    - network.ipv4.reserved
+    - network.traffic.ingress
+    - network.traffic.egress
+    - storage.block.capacity
+    - storage.object.capacity
+  - id: selectel.prices
+    title: Тарифы и цены на услуги
+    url: https://selectel.ru/prices/
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - compute.gpu
+    - compute.ram
+    - compute.vcpu
+    - containers.kubernetes.control-plane
+    - network.ipv4.attached
+    - network.ipv4.reserved
+    - network.traffic.ingress
+    - network.traffic.egress
+    - storage.block.capacity
+    - storage.object.capacity
+  - id: selectel.compute-rules
+    title: Модель оплаты облачного сервера
+    url: https://docs.selectel.ru/cloud-servers/about/payment/
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - compute.gpu
+    - compute.ram
+    - compute.vcpu
+    - network.ipv4.attached
+    - network.ipv4.reserved
+    - network.traffic.ingress
+    - network.traffic.egress
+    - storage.block.capacity
+  - id: selectel.k8s-rules
+    title: Модель оплаты Managed Kubernetes
+    url: https://docs.selectel.ru/managed-kubernetes/about/payment/
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - containers.kubernetes.control-plane
+  - id: selectel.s3-rules
+    title: Модель оплаты S3
+    url: https://docs.selectel.ru/s3/about/payment/
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - storage.object.capacity
+    - network.traffic.ingress
+    - network.traffic.egress

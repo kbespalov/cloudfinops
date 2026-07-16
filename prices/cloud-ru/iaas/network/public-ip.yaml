@@ -1,0 +1,69 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: cloud-ru
+  layer: iaas
+  service: network
+  category: iaas.network.public-ip
+  title: Public IPv4
+spec:
+  meters:
+  - sku: cloudru.ip.direct
+    name: Direct IP / аренда публичного IP
+    meter: network.ipv4.attached
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    dimensions:
+      nativeIpType: Direct IP / public IP rental
+    pricing:
+      rate:
+        amount: '0.2074'
+        currency: RUB
+        unit:
+          quantity: address
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.2074'
+        unit:
+          currency: RUB
+          quantity: address
+          period: hour
+        formula: native hourly rate
+        vat: included
+  - sku: cloudru.ip.reserved
+    name: Зарезервированный неактивный публичный IP
+    meter: network.ipv4.reserved
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    dimensions:
+      nativeIpType: public IP rental while address exists
+    pricing:
+      rate:
+        amount: '0.2074'
+        currency: RUB
+        unit:
+          quantity: address
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.2074'
+        unit:
+          currency: RUB
+          quantity: address
+          period: hour
+        formula: same rental rate regardless of attachment
+        vat: included
+    notes: Аренда продолжается до удаления адреса; attachment не создает отдельную накопительную ставку.

@@ -1,0 +1,167 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: mws-cloud
+  layer: iaas
+  service: storage
+  category: iaas.storage.block
+  title: Block storage
+spec:
+  meters:
+  - sku: mws.disk.nbs-pl2
+    name: Объем диска NBS-PL2
+    meter: storage.block.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - mws.all-prices
+    - mws.compute
+    dimensions:
+      publishedMonth: 8.17
+      iopsChargedSeparately: true
+      futureRateFrom: '2026-08-01'
+      futureHourlyAmount: '0.012444'
+      futurePublishedMonth: '8.95968'
+      performanceTier: provisioned-iops
+      nativePerformanceTier: nbs-pl2
+      diskType: nbs-pl2
+      storageMedia: ssd
+      storageInterface: nvme
+      storageTopology: network
+      includedIops: 1000
+      maximumIops: 10000
+    pricing:
+      rate:
+        amount: '0.0113'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: hour
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.0113'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: hour
+        formula: native hourly rate
+        vat: included
+    notes: NBS-PL2 классифицирован для сравнения как сетевой SSD/NVMe с настраиваемой производительностью;
+      MWS тарифицирует емкость и IOPS раздельно.
+  - sku: mws.disk.nbs-pl2-iops
+    name: Дополнительная производительность диска NBS-PL2
+    meter: storage.block.iops
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - mws.all-prices
+    - mws.compute
+    dimensions:
+      performanceTier: provisioned-iops
+      nativePerformanceTier: nbs-pl2
+      diskType: nbs-pl2
+      storageMedia: ssd
+      storageInterface: nvme
+      storageTopology: network
+      nativeBillingStepIops: 100
+      nativeHourlyAmountPerStep: '0.0339'
+      includedIops: 1000
+      maximumIops: 10000
+      futureRateFrom: '2026-08-01'
+      futureHourlyAmountPerStep: '0.0339'
+    pricing:
+      rate:
+        amount: '0.000339'
+        currency: RUB
+        unit:
+          quantity: IOPS
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.000339'
+        unit:
+          currency: RUB
+          quantity: IOPS
+          period: hour
+        formula: 0.0339 RUB per 100 IOPS-hour / 100
+        vat: included
+    notes: Базовые 1000 IOPS включены в цену емкости; ставка применяется только к заказанным дополнительным
+      IOPS.
+  - sku: mws.compute.image.capacity
+    name: Объем образов виртуальных машин
+    meter: storage.image.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - mws.all-prices
+    - mws.compute
+    dimensions:
+      publishedMonth: 3.07
+      futureRateFrom: '2026-08-01'
+      futureHourlyAmount: '0.00488'
+      futurePublishedMonth: '3.5136'
+    pricing:
+      rate:
+        amount: '0.0042'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: hour
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.0042'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: hour
+        formula: native hourly rate
+        vat: included
+    notes: MWS считает 1 ГБ равным 2^30 байт; месячная цена рассчитана провайдером для 720 часов.
+  - sku: mws.compute.backup.capacity
+    name: Объем резервных копий дисков
+    meter: storage.backup.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - mws.all-prices
+    - mws.compute
+    dimensions:
+      publishedMonth: 3.07
+      futureRateFrom: '2026-08-01'
+      futureHourlyAmount: '0.00488'
+      futurePublishedMonth: '3.5136'
+      billingBasis: actual-stored-data
+    pricing:
+      rate:
+        amount: '0.0042'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: hour
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.0042'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: hour
+        formula: native hourly rate
+        vat: included
+    notes: Оплачивается фактический объем инкрементальных резервных копий; MWS считает 1 ГБ равным 2^30
+      байт.

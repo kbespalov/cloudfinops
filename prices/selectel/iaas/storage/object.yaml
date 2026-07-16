@@ -1,0 +1,88 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: selectel
+  layer: iaas
+  service: storage
+  category: iaas.storage.object
+  title: Object storage
+spec:
+  meters:
+  - sku: selectel.object-storage.standard
+    name: Стандартное хранение
+    meter: storage.object.capacity
+    status: available
+    pricingMode: unit
+    region: Санкт-Петербург / ru-3
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - selectel.prices
+    - selectel.calculator
+    - selectel.s3-rules
+    dimensions:
+      storageClass: standard
+      poolDependent: true
+      verificationStatus: verified
+      verificationMethod: official-prices-and-calculator
+      verifiedAt: '2026-07-13'
+      vatRatePercent: 22
+      nativeCalculatedMonthlyAmount: '2.5654491186'
+    pricing:
+      rate:
+        amount: '2.57'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: month
+        vat: included
+        byteBasis: binary
+  - sku: selectel.object-storage.cold
+    name: Холодное хранение
+    meter: storage.object.capacity
+    status: available
+    pricingMode: unit
+    region: Санкт-Петербург / ru-3
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - selectel.prices
+    - selectel.calculator
+    - selectel.s3-rules
+    dimensions:
+      storageClass: cold
+      poolDependent: true
+    pricing:
+      rate:
+        amount: '1.26'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: month
+        vat: included
+        byteBasis: binary
+  - sku: selectel.object-storage.ice
+    name: Ледяное хранение
+    meter: storage.object.capacity
+    status: available
+    pricingMode: unit
+    region: Санкт-Петербург / ru-3
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - selectel.prices
+    - selectel.calculator
+    - selectel.s3-rules
+    dimensions:
+      storageClass: ice
+      poolDependent: true
+    pricing:
+      rate:
+        amount: '0.89'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: month
+        vat: included
+        byteBasis: binary
+    notes: Ставки зависят от выбранного пула; зафиксирован публичный выбор ru-3.

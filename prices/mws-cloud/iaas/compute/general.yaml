@@ -1,0 +1,155 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: mws-cloud
+  layer: iaas
+  service: compute
+  category: iaas.compute.general
+  title: General compute
+spec:
+  meters:
+  - sku: mws.compute.vcpu
+    name: Intel Sapphire Rapids, 100% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - mws.all-prices
+    - mws.compute
+    - mws.vm-types
+    dimensions:
+      publishedMonth: 829.65
+      futureRateFrom: '2026-08-01'
+      futureHourlyAmount: '1.267458'
+      futurePublishedMonth: '912.56976'
+      cpuPlatformFamily: intel-sapphire-rapids
+      cpuPlatformNative: Intel Xeon Gold 6448H (Sapphire Rapids)
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      availableVmTypes:
+      - id: gen-2-4
+        vcpu: 2
+        ramGb: 4
+      - id: gen-2-8
+        vcpu: 2
+        ramGb: 8
+      - id: gen-2-16
+        vcpu: 2
+        ramGb: 16
+      - id: gen-4-8
+        vcpu: 4
+        ramGb: 8
+      - id: gen-4-16
+        vcpu: 4
+        ramGb: 16
+      - id: gen-4-32
+        vcpu: 4
+        ramGb: 32
+      - id: gen-8-16
+        vcpu: 8
+        ramGb: 16
+      - id: gen-8-32
+        vcpu: 8
+        ramGb: 32
+      - id: gen-8-64
+        vcpu: 8
+        ramGb: 64
+      - id: gen-12-24
+        vcpu: 12
+        ramGb: 24
+      - id: gen-12-48
+        vcpu: 12
+        ramGb: 48
+      - id: gen-12-96
+        vcpu: 12
+        ramGb: 96
+      - id: gen-16-32
+        vcpu: 16
+        ramGb: 32
+      - id: gen-16-64
+        vcpu: 16
+        ramGb: 64
+      - id: gen-16-128
+        vcpu: 16
+        ramGb: 128
+      - id: gen-24-48
+        vcpu: 24
+        ramGb: 48
+      - id: gen-24-96
+        vcpu: 24
+        ramGb: 96
+      - id: gen-24-192
+        vcpu: 24
+        ramGb: 192
+      - id: gen-32-64
+        vcpu: 32
+        ramGb: 64
+      - id: gen-32-128
+        vcpu: 32
+        ramGb: 128
+      - id: gen-48-96
+        vcpu: 48
+        ramGb: 96
+      - id: gen-48-192
+        vcpu: 48
+        ramGb: 192
+    pricing:
+      rate:
+        amount: '1.1522'
+        currency: RUB
+        unit:
+          quantity: vCPU
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '1.1522'
+        unit:
+          currency: RUB
+          quantity: vCPU
+          period: hour
+        formula: native hourly rate
+        vat: included
+    notes: Все опубликованные типы VM MWS используют полноценные vCPU с гарантированной долей 100%.
+  - sku: mws.compute.ram
+    name: Intel Sapphire Rapids, RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - mws.all-prices
+    - mws.compute
+    - mws.vm-types
+    dimensions:
+      publishedMonth: 220.83
+      futureRateFrom: '2026-08-01'
+      futureHourlyAmount: '0.33733'
+      futurePublishedMonth: '242.8776'
+      cpuPlatformFamily: intel-sapphire-rapids
+      cpuPlatformNative: Intel Xeon Gold 6448H (Sapphire Rapids)
+      purchaseModel: on-demand
+    pricing:
+      rate:
+        amount: '0.3067'
+        currency: RUB
+        unit:
+          quantity: GiB-RAM
+          period: hour
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.3067'
+        unit:
+          currency: RUB
+          quantity: GiB-RAM
+          period: hour
+        formula: native hourly rate
+        vat: included
+    notes: Конфигурация VM должна соответствовать одному из опубликованных типов gen-*; сочетание 4 vCPU
+      / 16 GB доступно как gen-4-16.

@@ -1,0 +1,284 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: yandex-cloud
+  layer: iaas
+  service: compute
+  category: iaas.compute.general
+  title: General compute
+spec:
+  meters:
+  - sku: yc.compute.ice-lake-100.vcpu
+    name: Intel Ice Lake, 100% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      platform: Intel Ice Lake
+      cpuPlatformFamily: intel-ice-lake
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      yandexSkuId: dn2k3vqlk9snp1jv351u
+      serviceId: dn22pas77ftg9h3f2djj
+    pricing:
+      rate:
+        amount: '1.24'
+        currency: RUB
+        unit:
+          quantity: vCPU
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '1.24'
+        unit:
+          currency: RUB
+          quantity: vCPU
+          period: hour
+        formula: native hourly rate
+        vat: included
+    notes: Другие платформы и гарантированные доли vCPU опубликованы как отдельные SKU.
+  - sku: yc.compute.ice-lake.ram
+    name: Intel Ice Lake, RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      platform: Intel Ice Lake
+      cpuPlatformFamily: intel-ice-lake
+      cpuPlatformNative: Intel Ice Lake
+      purchaseModel: on-demand
+      yandexSkuId: dn2ilq72mjc3bej6j74p
+      serviceId: dn22pas77ftg9h3f2djj
+    pricing:
+      rate:
+        amount: '0.33'
+        currency: RUB
+        unit:
+          quantity: GiB-RAM
+          period: hour
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.33'
+        unit:
+          currency: RUB
+          quantity: GiB-RAM
+          period: hour
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.ice-lake-20.vcpu
+    name: Intel Ice Lake, 20% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: intel-ice-lake
+      cpuPlatformNative: Intel Ice Lake
+      guaranteedVcpuShare: 20%
+      purchaseModel: on-demand
+      yandexSkuId: dn2r8aklo79bmpkd87l3
+    pricing:
+      rate:
+        amount: '0.52'
+        currency: RUB
+        unit:
+          quantity: vCPU
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.52'
+        unit:
+          currency: RUB
+          quantity: vCPU
+          period: hour
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.ice-lake-50.vcpu
+    name: Intel Ice Lake, 50% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: intel-ice-lake
+      cpuPlatformNative: Intel Ice Lake
+      guaranteedVcpuShare: 50%
+      purchaseModel: on-demand
+      yandexSkuId: dn2f0q0d6gtpcom4b1p6
+    pricing:
+      rate:
+        amount: '0.75'
+        currency: RUB
+        unit:
+          quantity: vCPU
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.75'
+        unit:
+          currency: RUB
+          quantity: vCPU
+          period: hour
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.ice-lake-20.preemptible-vcpu
+    name: Intel Ice Lake, 20% preemptible vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: intel-ice-lake
+      cpuPlatformNative: Intel Ice Lake
+      guaranteedVcpuShare: 20%
+      purchaseModel: preemptible
+      yandexSkuId: dn2pdedm5fon78kbl0fh
+    pricing:
+      rate:
+        amount: '0.166'
+        currency: RUB
+        unit:
+          quantity: vCPU
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.166'
+        unit:
+          currency: RUB
+          quantity: vCPU
+          period: hour
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.ice-lake-50.preemptible-vcpu
+    name: Intel Ice Lake, 50% preemptible vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: intel-ice-lake
+      cpuPlatformNative: Intel Ice Lake
+      guaranteedVcpuShare: 50%
+      purchaseModel: preemptible
+      yandexSkuId: dn2333h2iv190t06bon8
+    pricing:
+      rate:
+        amount: '0.2371'
+        currency: RUB
+        unit:
+          quantity: vCPU
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.2371'
+        unit:
+          currency: RUB
+          quantity: vCPU
+          period: hour
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.ice-lake-100.preemptible-vcpu
+    name: Intel Ice Lake, 100% preemptible vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: intel-ice-lake
+      cpuPlatformNative: Intel Ice Lake
+      guaranteedVcpuShare: 100%
+      purchaseModel: preemptible
+      yandexSkuId: dn2e2fphfupugm21k4hv
+    pricing:
+      rate:
+        amount: '0.34'
+        currency: RUB
+        unit:
+          quantity: vCPU
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.34'
+        unit:
+          currency: RUB
+          quantity: vCPU
+          period: hour
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.ice-lake.preemptible-ram
+    name: Intel Ice Lake, preemptible RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: intel-ice-lake
+      cpuPlatformNative: Intel Ice Lake
+      purchaseModel: preemptible
+      yandexSkuId: dn26ur5frjbgdek2a0g5
+    pricing:
+      rate:
+        amount: '0.083'
+        currency: RUB
+        unit:
+          quantity: GiB-RAM
+          period: hour
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.083'
+        unit:
+          currency: RUB
+          quantity: GiB-RAM
+          period: hour
+        formula: native hourly rate
+        vat: included

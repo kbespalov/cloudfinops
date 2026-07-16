@@ -1,0 +1,95 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: t1-cloud
+  layer: iaas
+  service: storage
+  category: iaas.storage.object
+  title: Object storage
+spec:
+  meters:
+  - sku: t1.object-storage.single-zone
+    name: Однозонное хранение
+    meter: storage.object.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    - t1.s3
+    dimensions:
+      calculated30Days: 1.649808
+      storageClass: standard
+      availability: zonal
+      topology: single-zone
+      redundancy: zonal
+      copies: 3
+      verificationStatus: verified
+      verificationMethod: official-tariff-pdf
+      verifiedAt: '2026-07-13'
+      vatRatePercent: 22
+      storageClassNative: S3 single-zone
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.00003819'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: minute
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '0.0027955'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: hour
+        formula: 0.00003819 × 60 × 1.22 VAT
+        vat: included
+    notes: Операции и скачивание тарифицируются отдельно.
+  - sku: t1.object-storage.multi-zone
+    name: Мультизональное хранение
+    meter: storage.object.capacity
+    status: available
+    pricingMode: unit
+    region: Москва / MZ1
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    - t1.s3
+    dimensions:
+      calculated30Days: 2.983392
+      storageClass: standard
+      availability: multi-zone
+      topology: multi-zone
+      redundancy: multi-zone
+      copiesPerDatacenter: 3
+      datacenterCount: 2
+      verificationStatus: verified
+      verificationMethod: official-tariff-pdf
+      verifiedAt: '2026-07-13'
+      vatRatePercent: 22
+      storageClassNative: S3 multi-zone
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.00006906'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: minute
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '0.0050552'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: hour
+        formula: 0.00006906 × 60 × 1.22 VAT
+        vat: included
+    notes: Репликация выполняется между двумя ЦОД; операции и скачивание тарифицируются отдельно.

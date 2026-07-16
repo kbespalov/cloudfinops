@@ -1,0 +1,45 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: cloud-ru
+  layer: paas
+  service: containers
+  category: paas.containers.managed-kubernetes
+  title: Managed Kubernetes
+spec:
+  meters:
+  - sku: cloudru.kubernetes.master-zonal-2-4
+    name: Зональный мастер 2 vCPU/4 GB RAM
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.k8s-pdf
+    dimensions:
+      vcpu: 2
+      ramGb: 4
+      availability: zonal
+      ramGiB: 4
+      comparabilityClass: native-bundle
+      comparableTier: basic
+      masterCount: 1
+    pricing:
+      rate:
+        amount: '8.601'
+        currency: RUB
+        unit:
+          quantity: master
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '8.601'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: native hourly master rate
+        vat: included

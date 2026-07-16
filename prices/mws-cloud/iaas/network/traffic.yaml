@@ -1,0 +1,120 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: mws-cloud
+  layer: iaas
+  service: network
+  category: iaas.network.traffic
+  title: Internet traffic
+spec:
+  meters:
+  - sku: mws.traffic.internet.ingress
+    name: Входящий интернет-трафик
+    meter: network.traffic.ingress
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs: [mws.all-prices, mws.vpc]
+    dimensions: {sourceService: compute, trafficScope: public-internet}
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: included
+        byteBasis: binary
+  - sku: mws.traffic.internet.egress
+    name: Исходящий интернет-трафик VPC
+    meter: network.traffic.egress
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs: [mws.all-prices, mws.vpc]
+    dimensions: {sourceService: compute, trafficScope: public-internet}
+    pricing:
+      rate:
+        amount: '1.525'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: included
+        byteBasis: binary
+  - sku: mws.object-storage.traffic.egress
+    name: Исходящий интернет-трафик Object Storage
+    meter: network.traffic.egress
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs: [mws.all-prices, mws.object-storage]
+    dimensions:
+      sourceService: object-storage
+      trafficScope: public-internet
+      storageClassScope: all
+    pricing:
+      rate:
+        amount: '1.3212'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: included
+        byteBasis: binary
+  - sku: mws.traffic.interzone.ingress
+    name: Входящий межзональный трафик
+    meter: network.traffic.ingress
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs: [mws.all-prices, mws.vpc]
+    dimensions:
+      sourceService: vpc
+      trafficScope: inter-zone
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: included
+        byteBasis: binary
+  - sku: mws.traffic.interzone.egress
+    name: Исходящий межзональный трафик
+    meter: network.traffic.egress
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs: [mws.all-prices, mws.vpc]
+    dimensions:
+      sourceService: vpc
+      trafficScope: inter-zone
+    pricing:
+      rate:
+        amount: '0.1952'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: included
+        byteBasis: binary
+  - sku: mws.egress-nat.gateway
+    name: Egress NAT-шлюз
+    meter: network.nat.gateway
+    status: available
+    pricingMode: fixed
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-13'
+    sourceRefs: [mws.all-prices, mws.vpc]
+    dimensions:
+      publishedMonth: 365.4144
+    pricing:
+      rate:
+        amount: '0.5075'
+        currency: RUB
+        unit: {quantity: gateway, period: hour}
+        vat: included
+        byteBasis: not-applicable

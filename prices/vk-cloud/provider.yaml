@@ -1,0 +1,73 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: Provider
+metadata:
+  id: vk-cloud
+  name: VK Cloud
+spec:
+  platform: Cloud Servers
+  homepage: https://cloud.vk.com
+  sources:
+  - id: vk.pricelist
+    title: Прайс-лист VK Cloud
+    url: https://cloud.vk.com/pricelist/
+    type: html
+    access: public
+    priority: 1
+    effectiveFrom: '2026-01-12'
+    covers:
+    - compute.flavor
+    - compute.gpu
+    - compute.ram
+    - compute.vcpu
+    - containers.kubernetes.control-plane
+    - containers.kubernetes.control-plane.vcpu
+    - network.ipv4.attached
+    - network.ipv4.reserved
+    - network.traffic.ingress
+    - network.traffic.egress
+    - storage.block.capacity
+    - storage.object.capacity
+  - id: vk.iaas-rules
+    title: Тарификация Cloud Servers
+    url: https://cloud.vk.com/docs/ru/computing/iaas/tariffication
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - compute.ram
+    - compute.vcpu
+    - network.ipv4.attached
+    - network.ipv4.reserved
+    - network.traffic.ingress
+    - network.traffic.egress
+    - storage.block.capacity
+  - id: vk.k8s-rules
+    title: Тарификация Cloud Containers
+    url: https://cloud.vk.com/docs/ru/kubernetes/k8s/tariffication
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - containers.kubernetes.control-plane
+    - containers.kubernetes.control-plane.vcpu
+  - id: vk.s3-rules
+    title: Тарификация VK Object Storage
+    url: https://cloud.vk.com/docs/ru/storage/s3/tariffication
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - storage.object.capacity
+    - network.traffic.ingress
+    - network.traffic.egress
+  - id: vk.network-rules
+    title: Тарификация Cloud Networks
+    url: https://cloud.vk.com/docs/ru/networks/vnet/tariffication
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - network.ipv4.attached
+    - network.ipv4.reserved
+    - network.traffic.ingress
+    - network.traffic.egress

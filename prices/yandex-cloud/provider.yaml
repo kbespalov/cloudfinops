@@ -1,0 +1,69 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: Provider
+metadata:
+  id: yandex-cloud
+  name: Yandex Cloud
+spec:
+  platform: Yandex Cloud, регион Россия
+  homepage: https://yandex.cloud/ru
+  sources:
+  - id: yc.billing-api
+    title: Billing API — Sku.List
+    url: https://billing.api.cloud.yandex.net/billing/v1/skus
+    type: api
+    access: login
+    priority: 1
+    covers:
+    - compute.gpu
+    - compute.ram
+    - compute.vcpu
+    - containers.kubernetes.control-plane
+    - containers.kubernetes.control-plane.ram
+    - containers.kubernetes.control-plane.vcpu
+    - network.ipv4.attached
+    - network.ipv4.reserved
+    - network.traffic.egress
+    - storage.block.capacity
+    - storage.object.capacity
+  - id: yc.compute
+    title: Правила тарификации Compute Cloud
+    url: https://yandex.cloud/ru/docs/compute/pricing
+    type: html
+    access: public
+    priority: 1
+    covers:
+    - compute.gpu
+    - compute.ram
+    - compute.vcpu
+    - storage.block.capacity
+  - id: yc.object-storage
+    title: Правила тарификации Object Storage
+    url: https://yandex.cloud/ru/docs/storage/pricing
+    type: html
+    access: public
+    priority: 1
+    covers:
+    - storage.object.capacity
+    - network.traffic.ingress
+    - network.traffic.egress
+  - id: yc.kubernetes
+    title: Правила тарификации Managed Service for Kubernetes
+    url: https://yandex.cloud/ru/docs/managed-kubernetes/pricing
+    type: html
+    access: public
+    priority: 1
+    covers:
+    - containers.kubernetes.control-plane
+    - containers.kubernetes.control-plane.ram
+    - containers.kubernetes.control-plane.vcpu
+  - id: yc.vpc
+    title: Правила тарификации Virtual Private Cloud
+    url: https://yandex.cloud/ru/docs/vpc/pricing
+    type: html
+    access: public
+    priority: 1
+    covers:
+    - network.ipv4.attached
+    - network.ipv4.reserved
+    - network.traffic.ingress
+    - network.traffic.egress

@@ -1,0 +1,158 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: selectel
+  layer: iaas
+  service: network
+  category: iaas.network.traffic
+  title: Internet traffic
+spec:
+  meters:
+  - sku: selectel.traffic.internet.ingress
+    name: Входящий внешний трафик
+    meter: network.traffic.ingress
+    status: available
+    pricingMode: tiered
+    region: Российские пулы
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-13'
+    sourceRefs: [selectel.calculator, selectel.compute-rules]
+    dimensions:
+      sourceService: compute
+      trafficScope: public-internet
+      sharedBidirectionalPool: true
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: included
+        byteBasis: binary
+      tiers:
+      - from: '0'
+        to: '3072'
+        rate:
+          amount: '0'
+          currency: RUB
+          unit: {quantity: GiB, period: usage}
+          vat: included
+          byteBasis: binary
+      - from: '3072'
+        to: null
+        rate:
+          amount: '0.89616384'
+          currency: RUB
+          unit: {quantity: GiB, period: usage}
+          vat: included
+          byteBasis: binary
+    notes: Бесплатный пул 3 ТБ общий для входящего и исходящего трафика; порог учитывается через SKU selectel.traffic.internet.egress.
+  - sku: selectel.traffic.internet.egress
+    name: Исходящий внешний трафик
+    meter: network.traffic.egress
+    status: available
+    pricingMode: tiered
+    region: Российские пулы
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-13'
+    sourceRefs: [selectel.calculator, selectel.compute-rules]
+    dimensions:
+      sourceService: compute
+      trafficScope: public-internet
+      sharedBidirectionalPool: true
+      freeTierGiBMonth: 3072
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: included
+        byteBasis: binary
+      tiers:
+      - from: '0'
+        to: '3072'
+        rate:
+          amount: '0'
+          currency: RUB
+          unit: {quantity: GiB, period: usage}
+          vat: included
+          byteBasis: binary
+      - from: '3072'
+        to: null
+        rate:
+          amount: '0.89616384'
+          currency: RUB
+          unit: {quantity: GiB, period: usage}
+          vat: included
+          byteBasis: binary
+    notes: Бесплатный пул 3 ТБ общий для входящего и исходящего внешнего трафика всех проектов аккаунта.
+  - sku: selectel.object-storage.traffic.ingress
+    name: Входящий интернет-трафик S3
+    meter: network.traffic.ingress
+    status: available
+    pricingMode: unit
+    region: Россия / ru-1, ru-3, ru-7
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-13'
+    sourceRefs: [selectel.prices, selectel.s3-rules]
+    dimensions:
+      sourceService: object-storage
+      trafficScope: public-internet
+      storageClassScope: all
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: included
+        byteBasis: binary
+  - sku: selectel.object-storage.standard.traffic.egress
+    name: Исходящий интернет-трафик S3 Standard
+    meter: network.traffic.egress
+    status: available
+    pricingMode: unit
+    region: Россия / ru-1, ru-3, ru-7
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-13'
+    sourceRefs: [selectel.prices, selectel.s3-rules]
+    dimensions: {sourceService: object-storage, storageClass: standard}
+    pricing:
+      rate:
+        amount: '1.377'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: included
+        byteBasis: binary
+  - sku: selectel.object-storage.cold.traffic.egress
+    name: Исходящий интернет-трафик S3 Cold
+    meter: network.traffic.egress
+    status: available
+    pricingMode: unit
+    region: Россия / ru-1, ru-3, ru-7
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-13'
+    sourceRefs: [selectel.prices, selectel.s3-rules]
+    dimensions: {sourceService: object-storage, storageClass: cold}
+    pricing:
+      rate:
+        amount: '1.9584'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: included
+        byteBasis: binary
+  - sku: selectel.object-storage.ice.traffic.egress
+    name: Исходящий интернет-трафик S3 Glacier
+    meter: network.traffic.egress
+    status: available
+    pricingMode: unit
+    region: Россия / ru-3
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-13'
+    sourceRefs: [selectel.prices, selectel.s3-rules]
+    dimensions: {sourceService: object-storage, storageClass: ice}
+    pricing:
+      rate:
+        amount: '1.9584'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: included
+        byteBasis: binary

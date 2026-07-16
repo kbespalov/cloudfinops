@@ -1,0 +1,95 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: Provider
+metadata:
+  id: t1-cloud
+  name: T1 Cloud
+spec:
+  platform: Cloud Engine
+  homepage: https://t1-cloud.ru
+  sources:
+  - id: t1.rates
+    title: Действующее тарифное приложение
+    url: https://t1-cloud.ru/documents/rates
+    type: dynamic-pdf-entry
+    access: public
+    priority: 1
+    effectiveFrom: '2026-07-13'
+    covers:
+    - compute.gpu
+    - compute.ram
+    - compute.vcpu
+    - containers.kubernetes.control-plane
+    - network.ipv4.attached
+    - network.ipv4.reserved
+    - network.traffic.egress
+    - storage.block.capacity
+    - storage.object.capacity
+  - id: t1.rates-pdf-2026-07-13
+    title: Тарифное приложение от 08.07.2026
+    url: https://t1-cloud.ru/media-files/T1Cloud/sitepages/Prilozhenie_1_Tarifnoe_prilozhenie_08_07_2026.pdf
+    type: pdf
+    access: public
+    priority: 1
+    effectiveFrom: '2026-07-13'
+    covers:
+    - compute.gpu
+    - compute.ram
+    - compute.vcpu
+    - containers.kubernetes.control-plane
+    - network.ipv4.attached
+    - network.ipv4.reserved
+    - network.traffic.egress
+    - storage.block.capacity
+    - storage.object.capacity
+  - id: t1.calculator
+    title: Калькулятор ресурсов
+    url: https://t1-cloud.ru/calculator
+    type: calculator
+    access: public
+    priority: 2
+    covers:
+    - compute.ram
+    - compute.vcpu
+    - storage.block.capacity
+  - id: t1.portal-rates
+    title: Тарифы услуг в портале
+    url: https://t1-cloud.ru/docs/article/portal-t1-oblako/billing/tarifi-uslug
+    type: authenticated-portal
+    access: login
+    priority: 3
+    covers:
+    - compute.gpu
+    - compute.ram
+    - compute.vcpu
+    - containers.kubernetes.control-plane
+    - network.ipv4.attached
+    - network.ipv4.reserved
+    - storage.block.capacity
+    - storage.object.capacity
+  - id: t1.s3
+    title: Объектное хранилище S3
+    url: https://t1-cloud.ru/service/s3
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - storage.object.capacity
+    - network.traffic.ingress
+    - network.traffic.egress
+  - id: t1.network-traffic
+    title: Интернет-трафик облачных сервисов
+    url: https://t1-cloud.ru/service/network-load-balancer
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - network.traffic.ingress
+    - network.traffic.egress
+  - id: t1.kubernetes
+    title: Kubernetes as a Service
+    url: https://t1-cloud.ru/service/kubernetes
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - containers.kubernetes.control-plane

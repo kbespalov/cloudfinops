@@ -1,0 +1,81 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: cloud-ru
+  layer: iaas
+  service: storage
+  category: iaas.storage.block
+  title: Block storage
+spec:
+  meters:
+  - sku: cloudru.disk.hdd
+    name: Диск HDD
+    meter: storage.block.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    dimensions:
+      diskType: hdd
+      performanceTier: hdd
+      storageMedia: hdd
+      storageInterface: unknown
+      storageTopology: network
+      netHourlyAmount: '0.0035'
+      vatHourlyAmount: '0.00077'
+    pricing:
+      rate:
+        amount: '0.00427'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: hour
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.00427'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: hour
+        formula: native hourly rate
+        vat: included
+  - sku: cloudru.disk.ssd-nvme
+    name: Диск SSD NVMe
+    meter: storage.block.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    dimensions:
+      diskType: ssd-nvme
+      performanceTier: nvme
+      storageMedia: ssd
+      storageInterface: nvme
+      storageTopology: network
+      nativeMediaLabel: SSD NVMe
+      netHourlyAmount: '0.013'
+      vatHourlyAmount: '0.00286'
+    pricing:
+      rate:
+        amount: '0.01586'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: hour
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.01586'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: hour
+        formula: native hourly rate
+        vat: included
