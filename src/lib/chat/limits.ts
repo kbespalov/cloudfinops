@@ -7,11 +7,11 @@ import type {ChatMessage} from './gigachat';
 
 export const CHAT_LIMITS = {
   /** Max user/assistant turns kept from the client (system prompt is separate). */
-  maxMessages: 16,
+  maxMessages: 50,
   /** Max characters per single message. */
   maxContentLen: 3000,
   /** Max total characters across the sanitized history (excl. system). */
-  maxTotalChars: 24_000,
+  maxTotalChars: 80_000,
   maxToolRounds: 4,
   /** Soft cap on completion output (must stay in sync with gigachat COMMON_PARAMS). */
   maxOutputTokens: 2500,

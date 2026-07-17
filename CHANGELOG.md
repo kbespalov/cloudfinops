@@ -11,7 +11,7 @@
 - SEO: metadata, JSON-LD, запись в `sitemap.xml`.
 - Eval-харнесс `scripts/eval/` для проверки галлюцинаций провайдеров/цен (локально, с ключом API).
 - Логи `/api/chat`: JSON в stdout (IP, preview вопроса, tool-calls, длительность).
-- Базовые лимиты: длина сообщения/диалога, 20 req/IP·мин, ~100k estimated tokens/мин глобально (429 + Retry-After).
+- Базовые лимиты: до 50 сообщений в истории / 80k символов, 20 req/IP·мин, ~100k estimated tokens/мин глобально (429 + Retry-After).
 
 ### SEO / IndexNow
 
