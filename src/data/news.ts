@@ -513,6 +513,19 @@ export const newsItems: NewsItem[] = [
     sourceLabel: 'Блог VK Cloud',
   },
   {
+    id: 'vk-2026-07-external-secrets-operator',
+    date: '2026-07-01',
+    provider: 'vk-cloud',
+    providerName: 'VK Cloud',
+    title: 'External Secrets Operator в Managed Kubernetes',
+    summary:
+      'Аддон ESO синхронизирует секреты из менеджера секретов VK Cloud в обычные Kubernetes Secret: SecretStore + ExternalSecret, периодический refresh. Секреты не лежат в Git и не копируются руками в кластер — удобно для GitOps рядом с Argo CD.',
+    tags: ['kubernetes', 'security'],
+    sourceUrl:
+      'https://cloud.vk.com/docs/ru/kubernetes/k8s/how-to-guides/external-secrets-operator',
+    sourceLabel: 'Документация VK Cloud · Cloud Containers',
+  },
+  {
     id: 'cloudru-2026-07-airflow-flink',
     date: '2026-07-06',
     provider: 'cloud-ru',
