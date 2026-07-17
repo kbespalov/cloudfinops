@@ -8,4 +8,7 @@ node_modules/
 .next/
 out/
 *.tsbuildinfo
+.env
+.env.*
+!.env.example
 src/data/catalog.generated.json
