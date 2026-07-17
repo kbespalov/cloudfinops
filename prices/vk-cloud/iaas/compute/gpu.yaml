@@ -15,7 +15,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -53,7 +53,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -91,7 +91,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -129,7 +129,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -169,7 +169,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -209,7 +209,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -247,7 +247,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -285,7 +285,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -323,7 +323,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -361,7 +361,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -399,7 +399,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -437,7 +437,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -475,7 +475,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -513,7 +513,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -551,7 +551,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -589,7 +589,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -629,7 +629,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -669,7 +669,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -709,7 +709,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -749,7 +749,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -787,7 +787,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -825,7 +825,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -863,7 +863,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -901,7 +901,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -940,7 +940,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -979,7 +979,7 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     dimensions:

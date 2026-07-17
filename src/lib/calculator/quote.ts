@@ -4,14 +4,16 @@ import {
   type CatalogMeter,
   type PeriodMode,
 } from '@/lib/catalog';
+import {buildGpuFlavorPresets, perGpuMemoryGb} from '@/lib/calculator/gpu-shapes';
 import {
   COMPUTE_PRESETS,
-  GPU_PRESETS,
   type CalculatorPreset,
   type ComputePreset,
   type GpuPreset,
 } from '@/lib/calculator/presets';
 import {
+  formatGiBCapacity,
+  formatPlatformLabel,
   formatQuoteAmount,
   periodShortLabel,
   partTone,
@@ -19,6 +21,7 @@ import {
   type CostPartId,
   type QuoteScope,
   type QuotesByPeriod,
+  type ViewHostConfig,
   type ViewPresetQuote,
   type ViewProviderQuote,
 } from '@/lib/calculator/quote-view';
@@ -41,6 +44,8 @@ export type ProviderQuote = {
   /** Short caveat shown under the quote. */
   note: string | null;
   meters: CatalogMeter[];
+  /** Optional precomputed host summary (synthetic GPU). */
+  hostConfig?: ViewHostConfig;
 };
 
 export type PresetQuoteResult = {
@@ -167,8 +172,16 @@ function ramCompatible(vcpu: CatalogMeter, ram: CatalogMeter): boolean {
   return true;
 }
 
+function diskHay(meter: CatalogMeter): string {
+  return `${meter.dimensions.performanceTier || ''} ${meter.dimensions.storageMedia || ''} ${meter.dimensions.storageInterface || ''} ${meter.dimensions.diskType || ''} ${meter.name}`.toLowerCase();
+}
+
+function isNvme(meter: CatalogMeter): boolean {
+  return /nvme/.test(diskHay(meter));
+}
+
 function isSsd(meter: CatalogMeter): boolean {
-  const hay = `${meter.dimensions.performanceTier || ''} ${meter.dimensions.storageMedia || ''} ${meter.name}`.toLowerCase();
+  const hay = diskHay(meter);
   return /ssd|nvme/.test(hay) && !/hdd/.test(hay);
 }
 
@@ -218,10 +231,19 @@ function pickDiskForRegion(
   period: PeriodMode,
   lowCost: boolean,
   region: string,
+  preferNvme = false,
 ): PricedMeter | null {
   const componentPred = lowCost ? () => true : (m: CatalogMeter) => isOnDemand(m);
   const disks = pricedList(provider, 'storage.block.capacity', period, componentPred);
   const sameRegion = disks.filter((disk) => regionKey(disk.m) === region);
+  if (preferNvme) {
+    return (
+      sameRegion.find((disk) => isNvme(disk.m)) ??
+      sameRegion.find((disk) => isSsd(disk.m)) ??
+      sameRegion[0] ??
+      null
+    );
+  }
   return sameRegion.find((disk) => isSsd(disk.m)) ?? sameRegion[0] ?? null;
 }
 
@@ -257,7 +279,13 @@ function pickUnitComputeCombo(
   for (const vcpu of vcpus) {
     const ram = rams.find((r) => ramCompatible(vcpu.m, r.m));
     if (!ram) continue;
-    const disk = pickDiskForRegion(provider, period, lowCost, regionKey(vcpu.m));
+    const disk = pickDiskForRegion(
+      provider,
+      period,
+      lowCost,
+      regionKey(vcpu.m),
+      Boolean(preset.preferNvme),
+    );
     // A real VM needs a boot disk: if the provider sells block storage but none is
     // available in this vCPU's region, the combo is not orderable — skip it.
     if (providerHasDisks && !disk) continue;
@@ -301,7 +329,13 @@ function pickFlavorComputeCombo(
     period,
     lowCost ? () => true : (m) => isOnDemand(m),
   );
-  const disk = pickDiskForRegion(provider, period, lowCost, regionKey(flavor.m));
+  const disk = pickDiskForRegion(
+    provider,
+    period,
+    lowCost,
+    regionKey(flavor.m),
+    Boolean(preset.preferNvme),
+  );
   if (disks.length > 0 && !disk) return null;
 
   const total = flavor.unit + (disk ? disk.unit * preset.diskGiB : 0);
@@ -366,9 +400,10 @@ function quoteCompute(preset: ComputePreset, period: PeriodMode): ProviderQuote[
       ];
       meters = [combo.flavor.m];
       if (combo.disk) {
+        const diskMedia = diskMediaLabel(combo.disk.m, preset.preferNvme);
         parts.push({
           id: 'disk',
-          label: `${preset.diskGiB} GiB SSD`,
+          label: `${formatGiBCapacity(preset.diskGiB)} ${diskMedia}`,
           amount: combo.disk.unit * preset.diskGiB,
         });
         meters.push(combo.disk.m);
@@ -377,13 +412,14 @@ function quoteCompute(preset: ComputePreset, period: PeriodMode): ProviderQuote[
       noteMeter = combo.vcpu.m;
       parts = [
         {id: 'vcpu', label: `${preset.vcpu} vCPU`, amount: combo.vcpu.unit * preset.vcpu},
-        {id: 'ram', label: `${preset.ramGiB} GiB RAM`, amount: combo.ram.unit * preset.ramGiB},
+        {id: 'ram', label: `${formatGiBCapacity(preset.ramGiB)} RAM`, amount: combo.ram.unit * preset.ramGiB},
       ];
       meters = [combo.vcpu.m, combo.ram.m];
       if (combo.disk) {
+        const diskMedia = diskMediaLabel(combo.disk.m, preset.preferNvme);
         parts.push({
           id: 'disk',
-          label: `${preset.diskGiB} GiB SSD`,
+          label: `${formatGiBCapacity(preset.diskGiB)} ${diskMedia}`,
           amount: combo.disk.unit * preset.diskGiB,
         });
         meters.push(combo.disk.m);
@@ -408,93 +444,274 @@ function quoteCompute(preset: ComputePreset, period: PeriodMode): ProviderQuote[
 function gpuModelMatches(meter: CatalogMeter, match: string): boolean {
   const model = String(meter.dimensions.gpuModel || meter.name || '');
   if (match.toUpperCase() === 'L4') {
-    // Avoid L40 / L40S
     return /\bL4\b/i.test(model) && !/L40/i.test(model) && !/vGPU/i.test(model);
   }
   if (match.toUpperCase() === 'H100') {
     return /H100/i.test(model) && !/H200/i.test(model);
   }
-  return new RegExp(match, 'i').test(model);
+  if (match.toUpperCase() === 'A100') {
+    return /A100/i.test(model);
+  }
+  // Escape tokens like "RTX 6000 Pro" for safe match
+  const escaped = match.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
+  return new RegExp(escaped, 'i').test(model);
 }
 
 function isGpuBundle(meter: CatalogMeter): boolean {
   return meter.pricingMode === 'bundle' || meter.unitQuantity === 'flavor';
 }
 
-function buildGpuQuote(
+function diskMediaLabel(meter: CatalogMeter, preferNvme?: boolean): string {
+  if (isNvme(meter)) return 'NVMe';
+  if (preferNvme) return 'SSD';
+  return 'SSD';
+}
+
+function meterGpuCount(meter: CatalogMeter): number {
+  return typeof meter.dimensions.gpuCount === 'number' ? meter.dimensions.gpuCount : 1;
+}
+
+function gpuMemoryMatches(meter: CatalogMeter, preset: GpuPreset): boolean {
+  if (preset.gpuMemoryGb == null) return true;
+  const mem = perGpuMemoryGb(meter);
+  // Shape declares a specific card memory (40/80/94…) — do not substitute another size.
+  if (mem == null) return false;
+  return mem === preset.gpuMemoryGb;
+}
+
+function bundleMatchesShape(meter: CatalogMeter, preset: GpuPreset): boolean {
+  if (!gpuModelMatches(meter, preset.gpuModelMatch)) return false;
+  if (meterGpuCount(meter) !== preset.gpuCount) return false;
+  if (preset.dedicated) return isGpuBundle(meter);
+
+  if (preset.vcpu == null || preset.ramGiB == null) return false;
+  const vcpu = Number(meter.dimensions.vcpu ?? NaN);
+  const ram = Number(meter.dimensions.ramGiB ?? meter.dimensions.ramGb ?? NaN);
+  if (vcpu !== preset.vcpu || ram !== preset.ramGiB) return false;
+  if (!gpuMemoryMatches(meter, preset)) return false;
+  return true;
+}
+
+function unitGpuAmount(
+  meter: CatalogMeter,
+  period: PeriodMode,
+  preset: GpuPreset,
+): number | null {
+  const amount = meterHourlyOrPeriodAmount(meter, period);
+  if (amount == null || amount <= 0) return null;
+  const meterCount = meterGpuCount(meter);
+  if (meterCount === preset.gpuCount) return amount;
+  if (meterCount === 1 && preset.gpuCount >= 1) return amount * preset.gpuCount;
+  return null;
+}
+
+function hostPresetForGpu(preset: GpuPreset): ComputePreset | null {
+  if (preset.vcpu == null || preset.ramGiB == null) return null;
+  return {
+    id: `gpu-host-${preset.id}`,
+    kind: 'compute',
+    family: 'high-memory',
+    title: 'GPU host',
+    subtitle: `${preset.vcpu} vCPU · ${preset.ramGiB} GiB`,
+    vcpu: preset.vcpu,
+    ramGiB: preset.ramGiB,
+    diskGiB: preset.diskGiB ?? 100,
+  };
+}
+
+function buildBundleQuote(
   provider: {id: string; name: string},
   preset: GpuPreset,
   meter: CatalogMeter,
   amount: number,
-  bundle: boolean,
 ): ProviderQuote {
   return {
     provider: provider.id,
     providerName: provider.name,
     total: amount,
-    scope: bundle ? 'bundle' : 'gpu-only',
-    parts: bundle
-      ? [{id: 'bundle', label: 'Конфигурация (vCPU+RAM+GPU)', amount}]
-      : [{id: 'gpu', label: `${preset.title} GPU`, amount}],
-    note: bundle
-      ? 'Цена flavor целиком (ядра и память включены).'
-      : 'Только GPU; vCPU и RAM у провайдера обычно отдельно.',
+    scope: 'bundle',
+    parts: [{id: 'bundle', label: 'Flavor целиком (vCPU + RAM + GPU)', amount}],
+    note: preset.dedicated
+      ? 'Выделенный узел (не облачная GPU-ВМ).'
+      : 'Цена flavor целиком (ядра и память включены).',
     meters: [meter],
+    hostConfig: {
+      scope: 'bundle',
+      vcpu: preset.vcpu,
+      ramGiB: preset.ramGiB,
+      diskGiB: preset.diskGiB,
+      diskLabel: preset.diskGiB ? 'SSD' : null,
+      platformLabel: null,
+    },
+  };
+}
+
+function buildComposedGpuQuote(
+  provider: {id: string; name: string},
+  preset: GpuPreset,
+  gpu: {m: CatalogMeter; amount: number},
+  host: ComputeCombo,
+): ProviderQuote {
+  const vcpu = preset.vcpu!;
+  const ramGiB = preset.ramGiB!;
+  const diskGiB = preset.diskGiB ?? 100;
+  const parts: CostPart[] = [
+    {id: 'gpu', label: `${preset.title} GPU`, amount: gpu.amount},
+  ];
+  const meters: CatalogMeter[] = [gpu.m];
+  let platformMeter: CatalogMeter = gpu.m;
+
+  if (host.kind === 'flavor') {
+    platformMeter = host.flavor.m;
+    parts.push({
+      id: 'bundle',
+      label: `${vcpu} vCPU + ${formatGiBCapacity(ramGiB)} RAM`,
+      amount: host.flavor.unit,
+    });
+    meters.push(host.flavor.m);
+    if (host.disk) {
+      const diskMedia = diskMediaLabel(host.disk.m);
+      parts.push({
+        id: 'disk',
+        label: `${formatGiBCapacity(diskGiB)} ${diskMedia}`,
+        amount: host.disk.unit * diskGiB,
+      });
+      meters.push(host.disk.m);
+    }
+  } else {
+    platformMeter = host.vcpu.m;
+    parts.push(
+      {id: 'vcpu', label: `${vcpu} vCPU`, amount: host.vcpu.unit * vcpu},
+      {id: 'ram', label: `${formatGiBCapacity(ramGiB)} RAM`, amount: host.ram.unit * ramGiB},
+    );
+    meters.push(host.vcpu.m, host.ram.m);
+    if (host.disk) {
+      const diskMedia = diskMediaLabel(host.disk.m);
+      parts.push({
+        id: 'disk',
+        label: `${formatGiBCapacity(diskGiB)} ${diskMedia}`,
+        amount: host.disk.unit * diskGiB,
+      });
+      meters.push(host.disk.m);
+    }
+  }
+
+  const total = parts.reduce((s, p) => s + p.amount, 0);
+  const native =
+    typeof platformMeter.dimensions.cpuPlatformNative === 'string'
+      ? platformMeter.dimensions.cpuPlatformNative
+      : null;
+  const family =
+    platformMeter.cpuPlatformFamily ??
+    (typeof platformMeter.dimensions.cpuPlatformFamily === 'string'
+      ? platformMeter.dimensions.cpuPlatformFamily
+      : null);
+  const diskMedia = host.disk ? diskMediaLabel(host.disk.m) : 'SSD';
+
+  return {
+    provider: provider.id,
+    providerName: provider.name,
+    total,
+    scope: 'gpu-synthetic',
+    parts,
+    note: `Сборка под форму flavor: ${preset.title} + ${vcpu} vCPU + ${formatGiBCapacity(ramGiB)} RAM + ${formatGiBCapacity(diskGiB)} ${diskMedia}.`,
+    meters,
+    hostConfig: {
+      scope: 'gpu-synthetic',
+      vcpu,
+      ramGiB,
+      diskGiB,
+      diskLabel: diskMedia,
+      platformLabel: formatPlatformLabel(family, native),
+    },
+  };
+}
+
+function buildBareGpuQuote(
+  provider: {id: string; name: string},
+  preset: GpuPreset,
+  meter: CatalogMeter,
+  amount: number,
+): ProviderQuote {
+  return {
+    provider: provider.id,
+    providerName: provider.name,
+    total: amount,
+    scope: 'gpu-only',
+    parts: [{id: 'gpu', label: `${preset.title} GPU`, amount}],
+    note: 'Только GPU; vCPU/RAM у провайдера отдельно или форма без хоста.',
+    meters: [meter],
+    hostConfig: {
+      scope: 'gpu-only',
+      vcpu: preset.vcpu,
+      ramGiB: preset.ramGiB,
+      diskGiB: preset.diskGiB,
+    },
   };
 }
 
 /**
- * GPU quotes are split by scope: primary list never mixes gpu-only with bundle,
- * so Best offer compares like with like. The other scope lands in alternateQuotes.
+ * Primary: exact flavor bundle when it matches the shape, else GPU unit + host
+ * composed to the shape's vCPU/RAM (+ boot disk). Bare GPU / other scopes → alternate.
  */
 function quoteGpu(
   preset: GpuPreset,
   period: PeriodMode,
 ): {primary: ProviderQuote[]; alternate: ProviderQuote[]} {
-  const unitQuotes: ProviderQuote[] = [];
-  const bundleQuotes: ProviderQuote[] = [];
+  const primary: ProviderQuote[] = [];
+  const alternate: ProviderQuote[] = [];
   const index = getMeterIndex();
+  const hostShape = hostPresetForGpu(preset);
 
   for (const provider of catalog.providers) {
     const candidates = (index.gpuByProvider.get(provider.id) ?? []).filter((m) => {
       if (m.status !== 'available') return false;
       if (!isConfirmedAvailable(m)) return false;
-      if (!isOnDemand(m)) return false;
-      if (!gpuModelMatches(m, preset.gpuModelMatch)) return false;
-      const count =
-        typeof m.dimensions.gpuCount === 'number' ? m.dimensions.gpuCount : preset.gpuCount;
-      return count === preset.gpuCount;
+      if (!isOnDemand(m) && !preset.dedicated) return false;
+      return gpuModelMatches(m, preset.gpuModelMatch);
     });
 
-    let bestUnit: {m: CatalogMeter; amount: number} | null = null;
     let bestBundle: {m: CatalogMeter; amount: number} | null = null;
+    let bestUnit: {m: CatalogMeter; amount: number} | null = null;
 
     for (const m of candidates) {
-      const amount = meterHourlyOrPeriodAmount(m, period);
-      if (amount == null || amount <= 0) continue;
       if (isGpuBundle(m)) {
+        if (!bundleMatchesShape(m, preset)) continue;
+        const amount = meterHourlyOrPeriodAmount(m, period);
+        if (amount == null || amount <= 0) continue;
         if (!bestBundle || amount < bestBundle.amount) bestBundle = {m, amount};
-      } else if (!bestUnit || amount < bestUnit.amount) {
-        bestUnit = {m, amount};
+        continue;
       }
+      if (preset.dedicated) continue;
+      if (meterGpuCount(m) !== 1 && meterGpuCount(m) !== preset.gpuCount) continue;
+      if (!gpuMemoryMatches(m, preset)) continue;
+      const amount = unitGpuAmount(m, period, preset);
+      if (amount == null) continue;
+      if (!bestUnit || amount < bestUnit.amount) bestUnit = {m, amount};
     }
 
-    if (bestUnit) {
-      unitQuotes.push(buildGpuQuote(provider, preset, bestUnit.m, bestUnit.amount, false));
-    }
     if (bestBundle) {
-      bundleQuotes.push(buildGpuQuote(provider, preset, bestBundle.m, bestBundle.amount, true));
+      primary.push(buildBundleQuote(provider, preset, bestBundle.m, bestBundle.amount));
+      continue;
+    }
+
+    if (preset.dedicated) continue;
+
+    if (bestUnit && hostShape) {
+      const host = pickComputeCombo(provider.id, hostShape, period, false);
+      if (host) {
+        primary.push(buildComposedGpuQuote(provider, preset, bestUnit, host));
+      } else {
+        alternate.push(buildBareGpuQuote(provider, preset, bestUnit.m, bestUnit.amount));
+      }
+    } else if (bestUnit) {
+      primary.push(buildBareGpuQuote(provider, preset, bestUnit.m, bestUnit.amount));
     }
   }
 
-  unitQuotes.sort((a, b) => a.total - b.total);
-  bundleQuotes.sort((a, b) => a.total - b.total);
-
-  if (preset.preferBundle) {
-    return {primary: bundleQuotes, alternate: unitQuotes};
-  }
-  // Default GPU cards: rank unit rates; keep flavors as a separate shelf.
-  return {primary: unitQuotes, alternate: bundleQuotes};
+  primary.sort((a, b) => a.total - b.total);
+  alternate.sort((a, b) => a.total - b.total);
+  return {primary, alternate};
 }
 
 export function quotePreset(
@@ -526,16 +743,50 @@ export function quotePreset(
 }
 
 /** Quote every calculator preset once for a period (page-level batch). */
-export function quoteAllPresets(period: PeriodMode = 'month'): Map<string, PresetQuoteResult> {
+export function quoteAllPresets(
+  period: PeriodMode = 'month',
+  gpuPresets: GpuPreset[] = buildGpuFlavorPresets(),
+): Map<string, PresetQuoteResult> {
   getMeterIndex();
   const map = new Map<string, PresetQuoteResult>();
   for (const preset of COMPUTE_PRESETS) {
     map.set(preset.id, quotePreset(preset, period));
   }
-  for (const preset of GPU_PRESETS) {
+  for (const preset of gpuPresets) {
     map.set(preset.id, quotePreset(preset, period));
   }
   return map;
+}
+
+export function listGpuPresets(): GpuPreset[] {
+  return buildGpuFlavorPresets();
+}
+
+function finiteDim(value: unknown): number | undefined {
+  const n = typeof value === 'number' ? value : Number(value);
+  return Number.isFinite(n) && n > 0 ? n : undefined;
+}
+
+/** Pull vCPU / RAM / platform from the primary meter for table config labels. */
+export function hostConfigFromQuote(q: ProviderQuote): ViewHostConfig {
+  const meter = q.meters[0];
+  if (!meter) return {scope: q.scope};
+
+  const dims = meter.dimensions;
+  const vcpu = finiteDim(dims.vcpu);
+  const ramGiB = finiteDim(dims.ramGiB ?? dims.ramGb);
+  const native =
+    typeof dims.cpuPlatformNative === 'string' ? dims.cpuPlatformNative : null;
+  const family =
+    meter.cpuPlatformFamily ??
+    (typeof dims.cpuPlatformFamily === 'string' ? dims.cpuPlatformFamily : null);
+
+  return {
+    scope: q.scope,
+    vcpu,
+    ramGiB,
+    platformLabel: formatPlatformLabel(family, native),
+  };
 }
 
 function stripMeters(q: ProviderQuote): ViewProviderQuote {
@@ -546,6 +797,7 @@ function stripMeters(q: ProviderQuote): ViewProviderQuote {
     scope: q.scope,
     parts: q.parts,
     note: q.note,
+    hostConfig: q.hostConfig ?? hostConfigFromQuote(q),
   };
 }
 
@@ -558,17 +810,24 @@ export function toViewQuote(result: PresetQuoteResult): ViewPresetQuote {
   };
 }
 
-/** Precompute all periods on the server so the client never loads the catalog. */
+let cachedQuotesByPeriod: QuotesByPeriod | null = null;
+
+/** Precompute all periods on the server so the client never loads the catalog. Cached per process. */
 export function buildQuotesByPeriod(): QuotesByPeriod {
+  if (cachedQuotesByPeriod) return cachedQuotesByPeriod;
+
   const periods: PeriodMode[] = ['unit', 'month', 'year'];
   const out = {} as QuotesByPeriod;
+  // Build GPU shape list once — quoteAllPresets would otherwise rebuild 3×.
+  const gpuPresets = buildGpuFlavorPresets();
   for (const period of periods) {
-    const map = quoteAllPresets(period);
+    const map = quoteAllPresets(period, gpuPresets);
     const record: Record<string, ViewPresetQuote> = {};
     for (const [id, result] of map) {
       record[id] = toViewQuote(result);
     }
     out[period] = record;
   }
+  cachedQuotesByPeriod = out;
   return out;
 }

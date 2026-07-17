@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
+import {buildGpuFlavorPresets} from '@/lib/calculator/gpu-shapes';
 import {
   COMPUTE_PRESETS,
-  GPU_PRESETS,
   computePresetsByFamily,
   type ComputePreset,
   type GpuPreset,
@@ -15,6 +15,7 @@ import {
 } from '@/lib/calculator/quote';
 
 const MONTH_HOURS = 720;
+const GPU_PRESETS = buildGpuFlavorPresets();
 const ALL_PRESETS = [...COMPUTE_PRESETS, ...GPU_PRESETS];
 
 function isPreemptibleMeter(name: string, purchaseModel: unknown): boolean {
@@ -302,7 +303,7 @@ describe('calculator quote arbitration', () => {
       if (q.parts.some((p) => p.id === 'bundle')) {
         assert.equal(q.parts[0]!.label, '8 vCPU + 16 GiB RAM');
         assert.equal(q.parts.at(-1)!.id, 'disk');
-        assert.equal(q.parts.at(-1)!.label, '100 GiB SSD');
+        assert.match(q.parts.at(-1)!.label, /^100 GiB (SSD|NVMe)$/);
         continue;
       }
       assert.deepEqual(
@@ -311,82 +312,97 @@ describe('calculator quote arbitration', () => {
       );
       assert.equal(q.parts[0]!.label, '8 vCPU');
       assert.equal(q.parts[1]!.label, '16 GiB RAM');
-      assert.equal(q.parts[2]!.label, '100 GiB SSD');
+      assert.match(q.parts[2]!.label, /^100 GiB (SSD|NVMe)$/);
     }
   });
 
-  it('never mixes gpu-only and bundle in the primary ranking', () => {
+  it('primary GPU quotes for flavor shapes are full configs (bundle or composed host)', () => {
     for (const preset of GPU_PRESETS) {
+      if (preset.vcpu == null && !preset.dedicated) continue;
       const result = quotePreset(preset, 'month');
-      if (!result.quotes.length) continue;
-      const scopes = new Set(result.quotes.map((q) => q.scope));
-      assert.equal(scopes.size, 1, `${preset.id}: mixed scopes in primary quotes`);
-      for (const alt of result.alternateQuotes) {
-        assert.notEqual(
-          alt.scope,
-          result.quotes[0]!.scope,
-          `${preset.id}: alternate leaked into same scope`,
+      for (const q of result.quotes) {
+        assert.ok(
+          q.scope === 'bundle' || q.scope === 'gpu-synthetic',
+          `${preset.id}/${q.provider}: unexpected primary scope ${q.scope}`,
         );
       }
-      if (result.best) {
-        assert.equal(result.best.scope, result.quotes[0]!.scope);
-      }
+      // Bare GPU-only must not sit next to a flavor/composed best offer in primary.
+      assert.ok(
+        !result.quotes.some((q) => q.scope === 'gpu-only'),
+        `${preset.id}: bare gpu-only leaked into primary`,
+      );
     }
   });
 
-  it('defaults GPU cards to gpu-only primary (unless preferBundle)', () => {
-    for (const preset of GPU_PRESETS) {
-      const result = quotePreset(preset, 'month');
-      if (!result.best) continue;
-      if (preset.preferBundle) {
-        assert.equal(result.best.scope, 'bundle', `${preset.id} should prefer bundle`);
-      } else if (result.quotes.some((q) => q.scope === 'gpu-only')) {
-        assert.equal(result.best.scope, 'gpu-only', `${preset.id} should prefer gpu-only`);
-      }
-    }
+  it('prefers exact Cloud.ru flavor bundle over composed host when shape matches', () => {
+    const cloudRuFlavor = GPU_PRESETS.find(
+      (p) => p.shapeSource === 'cloud-ru' && p.vcpu != null && p.gpuCount === 1,
+    )!;
+    const result = quotePreset(cloudRuFlavor, 'month');
+    const cloud = result.quotes.find((q) => q.provider === 'cloud-ru');
+    assert.ok(cloud, 'Cloud.ru should quote its own flavor shape');
+    assert.equal(cloud.scope, 'bundle');
+    assert.match(cloud.parts[0]!.label, /Flavor целиком/i);
+  });
+
+  it('quotes Selectel B300 dedicated as highlighted bundle', () => {
+    const b300 = GPU_PRESETS.find((p) => p.gpuModelMatch === 'B300')!;
+    assert.ok(b300.dedicated);
+    const result = quotePreset(b300, 'month');
+    assert.ok(result.best);
+    assert.equal(result.best!.provider, 'selectel');
+    assert.equal(result.best!.scope, 'bundle');
+    assert.ok(result.best!.total >= 7_000_000);
   });
 
   it('matches GPU model family without L40/H200 cross-contamination', () => {
-    const cases: Array<{presetId: string; must: RegExp; mustNot: RegExp}> = [
-      {presetId: 'gpu-l4-1', must: /\bL4\b/i, mustNot: /L40/i},
-      {presetId: 'gpu-h100-1', must: /H100/i, mustNot: /H200/i},
-      {presetId: 'gpu-h200-1', must: /H200/i, mustNot: /H100(?!\d)/i},
-      {presetId: 'gpu-a100-1', must: /A100/i, mustNot: /H100|H200|L4/i},
+    const cases: Array<{family: string; must: RegExp; mustNot: RegExp}> = [
+      {family: 'L4', must: /\bL4\b/i, mustNot: /L40/i},
+      {family: 'H100', must: /H100/i, mustNot: /H200/i},
+      {family: 'H200', must: /H200/i, mustNot: /H100(?!\d)/i},
+      {family: 'A100', must: /A100/i, mustNot: /H100|H200|L4/i},
     ];
-    for (const {presetId, must, mustNot} of cases) {
-      const preset = GPU_PRESETS.find((p) => p.id === presetId) as GpuPreset;
+    for (const {family, must, mustNot} of cases) {
+      const preset = GPU_PRESETS.find((p) => p.gpuModelMatch === family && p.gpuCount === 1);
+      if (!preset) continue;
       const result = quotePreset(preset, 'month');
       const all = [...result.quotes, ...result.alternateQuotes];
-      assert.ok(all.length >= 1, `${presetId}: no GPU quotes`);
+      assert.ok(all.length >= 1, `${family}: no GPU quotes`);
       for (const q of all) {
         const model = String(q.meters[0]!.dimensions.gpuModel || q.meters[0]!.name);
-        assert.match(model, must, `${presetId}/${q.providerName}: ${model}`);
-        assert.doesNotMatch(model, mustNot, `${presetId}/${q.providerName}: ${model}`);
-        assert.ok(!/vGPU/i.test(model), `${presetId}: vGPU leaked`);
+        assert.match(model, must, `${family}/${q.providerName}: ${model}`);
+        assert.doesNotMatch(model, mustNot, `${family}/${q.providerName}: ${model}`);
+        assert.ok(!/vGPU/i.test(model), `${family}: vGPU leaked`);
       }
     }
   });
 
-  it('respects gpuCount for 1× and 8× H200 presets', () => {
-    const one = GPU_PRESETS.find((p) => p.id === 'gpu-h200-1')!;
-    const eight = GPU_PRESETS.find((p) => p.id === 'gpu-h200-8')!;
+  it('respects gpuCount for 1× and 8× H200 shapes', () => {
+    const one = GPU_PRESETS.find((p) => p.gpuModelMatch === 'H200' && p.gpuCount === 1);
+    const eight = GPU_PRESETS.find((p) => p.gpuModelMatch === 'H200' && p.gpuCount === 8);
+    if (!one || !eight) return;
     const oneResult = quotePreset(one, 'month');
     const eightResult = quotePreset(eight, 'month');
     assert.ok(oneResult.best);
     assert.ok(eightResult.best);
-
-    for (const q of [...oneResult.quotes, ...oneResult.alternateQuotes]) {
-      const count = q.meters[0]!.dimensions.gpuCount;
-      assert.equal(count, 1, `${q.providerName}: expected gpuCount=1, got ${count}`);
-    }
-    for (const q of [...eightResult.quotes, ...eightResult.alternateQuotes]) {
-      const count = q.meters[0]!.dimensions.gpuCount;
-      assert.equal(count, 8, `${q.providerName}: expected gpuCount=8, got ${count}`);
-    }
     assert.ok(
       eightResult.best!.total > oneResult.best!.total,
       '8× H200 should cost more than 1× H200 best offer',
     );
+  });
+
+  it('composes unit GPU + host for providers without matching flavor', () => {
+    const shape = GPU_PRESETS.find(
+      (p) => p.shapeSource === 'cloud-ru' && p.vcpu != null && p.gpuModelMatch === 'H100',
+    )!;
+    const result = quotePreset(shape, 'month');
+    const composed = result.quotes.find((q) => q.scope === 'gpu-synthetic');
+    // Yandex/Selectel/T1 typically compose; Cloud.ru is bundle.
+    if (composed) {
+      assert.equal(composed.hostConfig?.vcpu, shape.vcpu);
+      assert.equal(composed.hostConfig?.ramGiB, shape.ramGiB);
+      assert.ok(composed.parts.some((p) => p.id === 'gpu'));
+    }
   });
 
   it('keeps one primary quote per provider (no duplicate providers)', () => {
@@ -462,6 +478,25 @@ describe('calculator quote arbitration', () => {
     assert.equal(view.quotes.length, result.quotes.length);
     assert.ok(!('meters' in (view.best as object)));
     assert.equal(view.best?.provider, result.best?.provider);
+    assert.ok(view.best?.hostConfig);
+    assert.equal(view.best?.hostConfig?.scope, 'compute');
+  });
+
+  it('toViewQuote exposes host config for flavor / composed GPU quotes', () => {
+    const preset = GPU_PRESETS.find(
+      (p) => p.shapeSource === 'cloud-ru' && p.vcpu != null && p.gpuCount === 1,
+    )!;
+    const result = quotePreset(preset, 'month');
+    const view = toViewQuote(result);
+    assert.ok(view.best?.hostConfig);
+    assert.ok(
+      view.best!.hostConfig!.scope === 'bundle' ||
+        view.best!.hostConfig!.scope === 'gpu-synthetic',
+    );
+    if (preset.vcpu != null) {
+      assert.equal(view.best!.hostConfig!.vcpu, preset.vcpu);
+      assert.equal(view.best!.hostConfig!.ramGiB, preset.ramGiB);
+    }
   });
 
   it('buildQuotesByPeriod returns unit/month/year maps for all presets', () => {

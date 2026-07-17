@@ -1,7 +1,14 @@
 import type {Metadata} from 'next';
 import {CalculatorPage} from '@/components/calculator/CalculatorPage';
 import {CalculatorSeo, calculatorJsonLd} from '@/components/calculator/CalculatorSeo';
-import {buildQuotesByPeriod} from '@/lib/calculator/quote';
+import {
+  getGpuCardPresets,
+  getGpuFlavorPresets,
+  getQuotesByPeriodSlim,
+} from '@/lib/calculator/quotes-cache';
+
+/** Static catalog-derived page — no per-request dynamic data. */
+export const dynamic = 'force-static';
 
 export const metadata: Metadata = {
   title: 'Калькулятор облаков и GPU — цены ВМ, H100, H200, A100',
@@ -71,7 +78,9 @@ export const metadata: Metadata = {
 };
 
 export default function CalculatorRoute() {
-  const quotesByPeriod = buildQuotesByPeriod();
+  const gpuPresets = getGpuFlavorPresets();
+  const gpuCardPresets = getGpuCardPresets();
+  const quotesByPeriod = getQuotesByPeriodSlim();
   const jsonLd = calculatorJsonLd();
 
   return (
@@ -80,8 +89,12 @@ export default function CalculatorRoute() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{__html: JSON.stringify(jsonLd)}}
       />
-      <CalculatorPage quotesByPeriod={quotesByPeriod} />
-      <CalculatorSeo />
+      <CalculatorPage
+        quotesByPeriod={quotesByPeriod}
+        gpuPresets={gpuPresets}
+        gpuCardPresets={gpuCardPresets}
+      />
+      <CalculatorSeo gpuPresets={gpuCardPresets} gpuShapeCount={gpuPresets.length} />
     </>
   );
 }

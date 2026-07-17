@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - t1.rates-pdf-2026-07-13
     dimensions:
@@ -57,7 +57,7 @@ spec:
     pricingMode: unit
     region: ru-central1-a
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - t1.rates-pdf-2026-07-13
     dimensions:
@@ -98,7 +98,7 @@ spec:
     pricingMode: unit
     region: ru-central2-a
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - t1.rates-pdf-2026-07-13
     dimensions:
@@ -136,7 +136,7 @@ spec:
     pricingMode: unit
     region: ru-central2-a
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - t1.rates-pdf-2026-07-13
     dimensions:
@@ -177,7 +177,7 @@ spec:
     pricingMode: unit
     region: ru-central2-a
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - t1.rates-pdf-2026-07-13
     dimensions:
@@ -218,7 +218,7 @@ spec:
     pricingMode: status-only
     region: ru-central3-a
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - t1.rates-pdf-2026-07-13
     dimensions:
@@ -239,7 +239,7 @@ spec:
     pricingMode: status-only
     region: ru-central3-a
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - t1.rates-pdf-2026-07-13
     dimensions:

@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: Москва
     effectiveFrom: null
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.traffic-rules
     dimensions:
@@ -38,7 +38,7 @@ spec:
     pricingMode: unit
     region: Москва
     effectiveFrom: null
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.traffic-rules
     - cloudru.compute-pdf
@@ -65,7 +65,7 @@ spec:
     pricingMode: unit
     region: Москва
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.s3-pdf
     - cloudru.s3-rules
@@ -89,7 +89,7 @@ spec:
     pricingMode: tiered
     region: Москва
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.s3-pdf
     - cloudru.s3-rules

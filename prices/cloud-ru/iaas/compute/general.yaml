@@ -20,7 +20,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     - cloudru.compute-rules
@@ -108,7 +108,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     dimensions:
@@ -141,7 +141,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     dimensions:
@@ -174,7 +174,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     dimensions:
@@ -208,7 +208,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     dimensions:
@@ -241,7 +241,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     dimensions:
@@ -1138,7 +1138,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     - cloudru.compute-rules
@@ -1174,7 +1174,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     - cloudru.compute-rules
@@ -1210,7 +1210,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     - cloudru.compute-rules
@@ -1246,7 +1246,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     - cloudru.compute-rules
@@ -1282,7 +1282,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     - cloudru.compute-rules
@@ -1318,7 +1318,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     - cloudru.compute-rules
@@ -1354,7 +1354,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     - cloudru.compute-rules
@@ -1390,7 +1390,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     - cloudru.compute-rules
@@ -1426,7 +1426,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     - cloudru.compute-rules
@@ -1462,7 +1462,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     - cloudru.compute-rules
@@ -1498,7 +1498,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     - cloudru.compute-rules
@@ -1534,7 +1534,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     - cloudru.compute-rules
@@ -1570,7 +1570,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     - cloudru.compute-rules
@@ -1606,7 +1606,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     - cloudru.compute-rules
@@ -1642,7 +1642,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     - cloudru.compute-rules
@@ -1678,7 +1678,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     - cloudru.compute-rules
@@ -1714,7 +1714,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     - cloudru.compute-rules
@@ -1750,7 +1750,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     - cloudru.compute-rules
@@ -1786,7 +1786,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     - cloudru.compute-rules
@@ -1822,7 +1822,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     - cloudru.compute-rules
@@ -1858,7 +1858,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     - cloudru.compute-rules
@@ -1894,7 +1894,7 @@ spec:
       label: Москва
     priceProvenance: published
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     - cloudru.compute-rules
@@ -1925,7 +1925,7 @@ spec:
     pricingMode: status-only
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     dimensions:
@@ -1942,7 +1942,7 @@ spec:
     pricingMode: status-only
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     dimensions:

@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.iaas-rules
     - vk.network-rules
@@ -41,7 +41,7 @@ spec:
     pricingMode: unit
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     - vk.iaas-rules
@@ -68,7 +68,7 @@ spec:
     pricingMode: unit
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     - vk.s3-rules
@@ -92,7 +92,7 @@ spec:
     pricingMode: unit
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     - vk.s3-rules
@@ -122,7 +122,7 @@ spec:
     pricingMode: unit
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - vk.pricelist
     - vk.s3-rules

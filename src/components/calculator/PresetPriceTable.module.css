@@ -1,0 +1,183 @@
+.tableCard {
+  border: 1px solid var(--g-color-line-generic);
+  border-radius: var(--g-border-radius-l);
+  overflow: hidden;
+  background: var(--g-color-base-background);
+}
+
+.tableWrap {
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+
+.tableWrap :global(table) {
+  table-layout: fixed;
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.tableWrap tbody tr {
+  cursor: pointer;
+}
+
+.typeCol {
+  width: 140px;
+  max-width: 140px;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--g-color-base-background);
+  box-shadow: 1px 0 0 var(--g-color-line-generic);
+}
+
+.configCol,
+.configColWide {
+  position: sticky;
+  left: 140px;
+  z-index: 2;
+  background: var(--g-color-base-background);
+  box-shadow: 1px 0 0 var(--g-color-line-generic);
+}
+
+.configCol {
+  width: 240px;
+  max-width: 240px;
+}
+
+.configColWide {
+  width: 340px;
+  max-width: 340px;
+}
+
+.tableWrap :global(thead) .typeCol,
+.tableWrap :global(thead) .configCol,
+.tableWrap :global(thead) .configColWide {
+  z-index: 3;
+  background: var(--g-color-base-generic);
+}
+
+.typeCell {
+  min-width: 0;
+}
+
+.typeIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--g-border-radius-m);
+  flex-shrink: 0;
+}
+
+.typeIcon[data-tone='info'] {
+  background: var(--g-color-base-info-light);
+  color: var(--g-color-text-info);
+}
+
+.typeIcon[data-tone='warning'] {
+  background: var(--g-color-base-warning-light);
+  color: var(--g-color-text-warning);
+}
+
+.typeIcon[data-tone='utility'] {
+  background: var(--g-color-base-utility-light);
+  color: var(--g-color-text-utility);
+}
+
+.typeIcon[data-tone='success'] {
+  background: var(--g-color-base-positive-light);
+  color: var(--g-color-text-positive);
+}
+
+.typeIcon[data-highlight='true'] {
+  outline: 2px solid var(--g-color-line-warning);
+  outline-offset: 1px;
+}
+
+.configChips {
+  min-width: 0;
+  flex-wrap: nowrap;
+}
+
+.configChip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.configChipIcon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--g-color-text-hint);
+  transform: translateY(1px);
+}
+
+.configChipIcon[data-tone='info'] {
+  color: var(--g-color-text-info);
+}
+
+.configChipIcon[data-tone='utility'] {
+  color: var(--g-color-text-utility);
+}
+
+.configChipIcon[data-tone='success'] {
+  color: var(--g-color-text-positive);
+}
+
+.configChipIcon[data-tone='warning'] {
+  color: var(--g-color-text-warning);
+}
+
+.configChipValue {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+.providerCol {
+  width: 112px;
+  max-width: 112px;
+  text-align: right;
+}
+
+.providerHead {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.priceCell {
+  display: block;
+  width: 100%;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  white-space: nowrap;
+  font-family: var(--g-font-family-monospace);
+}
+
+.priceBest {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  width: 100%;
+  padding: 4px 8px;
+  margin: -4px -8px;
+  border-radius: var(--g-border-radius-m);
+  background: var(--g-color-base-positive-light);
+  color: var(--g-color-text-positive);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  white-space: nowrap;
+  font-family: var(--g-font-family-monospace);
+}
+
+.muted {
+  color: var(--g-color-text-hint);
+}

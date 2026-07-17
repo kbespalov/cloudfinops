@@ -24,6 +24,10 @@
   grid-template-columns: 1fr;
 }
 
+.headerStats[data-cols='4'] {
+  grid-template-columns: repeat(4, 1fr);
+}
+
 .headerStat {
   display: flex;
   align-items: center;

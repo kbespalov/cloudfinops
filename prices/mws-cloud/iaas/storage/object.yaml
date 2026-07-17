@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - mws.all-prices
     - mws.object-storage
@@ -54,7 +54,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - mws.all-prices
     - mws.object-storage
@@ -88,7 +88,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: standard
@@ -113,7 +113,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: standard
@@ -138,7 +138,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: standard
@@ -163,7 +163,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: standard
@@ -188,7 +188,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: standard
@@ -213,7 +213,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: standard
@@ -238,7 +238,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: standard
@@ -263,7 +263,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: warm
@@ -285,7 +285,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: warm
@@ -307,7 +307,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: warm
@@ -329,7 +329,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: warm
@@ -351,7 +351,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: warm
@@ -373,7 +373,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: warm
@@ -395,7 +395,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: warm

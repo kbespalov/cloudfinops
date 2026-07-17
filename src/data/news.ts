@@ -487,6 +487,56 @@ export const newsItems: NewsItem[] = [
 
   // ——— Июль 2026 ———
   {
+    id: 'mws-2026-07-glm-52',
+    date: '2026-07-17',
+    provider: 'mws-cloud',
+    providerName: 'MWS Cloud',
+    title: 'GLM 5.2 в GPT Model Hub: инференс в российском контуре',
+    summary:
+      'MWS Cloud первой в России развернула GLM 5.2 (Z.AI) на собственных GPU: запросы обрабатываются внутри MWS Cloud Platform и не уходят разработчику модели. Вместе с обновлением каталога доступны Kimi K2.6, Qwen 3.6, Gemma 4 и другие LLM через OpenAI-совместимый API — удобно сравнивать TCO инференса без своей GPU-фермы.',
+    tags: ['ai', 'finops'],
+    sourceUrl:
+      'https://mws.ru/news/mws-cloud-pervoj-v-rossii-razvernula-glm-5-2-v-sobstvennom-oblake/',
+    sourceLabel: 'Новости MWS',
+  },
+  {
+    id: 'market-2026-07-kimi-k3',
+    date: '2026-07-16',
+    provider: 'market',
+    providerName: 'Рынок РФ',
+    title: 'Moonshot выпустила Kimi K3 — open frontier на 2,8T параметров',
+    summary:
+      'Kimi K3: multimodal MoE ~2,8 трлн параметров, контекст до 1M токенов, доступ через kimi.com и API (`kimi-k3`). Полные веса обещают к 27 июля 2026. Для облачного рынка это сигнал к гонке инференса крупных open-моделей — в РФ уже есть хостинг предыдущего поколения (Kimi K2.6) у MWS и Cloud.ru.',
+    tags: ['ai'],
+    sourceUrl: 'https://www.kimi.com/blog/kimi-k3',
+    sourceLabel: 'Kimi Blog · Moonshot AI',
+  },
+  {
+    id: 'yc-2026-07-ai-studio-agents',
+    date: '2026-07-14',
+    provider: 'yandex-cloud',
+    providerName: 'Yandex Cloud',
+    title: 'ИИ-агенты-исследователи в Yandex AI Studio',
+    summary:
+      'В AI Studio усилили Web Search: бизнес может собирать агентов, которые сами ищут источники, анализируют материалы и готовят структурированный ответ — от быстрого мониторинга до глубокого разбора. Полезно для внутренних research-пайплайнов рядом с остальным стеком Yandex B2B Tech.',
+    tags: ['ai'],
+    sourceUrl:
+      'https://www.comnews.ru/content/246396/2026-07-14/2026-w29/1009/yandeks-otkryl-biznesu-dostup-k-sozdaniyu-agentov-issledovateley',
+    sourceLabel: 'ComNews / Yandex B2B Tech',
+  },
+  {
+    id: 'selectel-2026-07-fstec-117',
+    date: '2026-07-07',
+    provider: 'selectel',
+    providerName: 'Selectel',
+    title: 'Аттестат ФСТЭК по приказу №117 (К1)',
+    summary:
+      'Selectel первым публично подтвердил соответствие обновлённым требованиям приказа ФСТЭК №117: облако готово к размещению ИС первого класса защищённости (К1). Для ГИС и подрядчиков госсектора это упрощает выбор контура и ускоряет собственную аттестацию заказчика.',
+    tags: ['security'],
+    sourceUrl: 'https://selectel.ru/blog/new-fstec-standards/',
+    sourceLabel: 'Блог Selectel',
+  },
+  {
     id: 'vk-2026-07-gpu-operator',
     date: '2026-07-08',
     provider: 'vk-cloud',

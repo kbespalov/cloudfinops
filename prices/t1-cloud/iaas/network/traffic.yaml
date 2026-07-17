@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - t1.network-traffic
     dimensions:
@@ -47,7 +47,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - t1.network-traffic
     dimensions:
@@ -83,7 +83,7 @@ spec:
     priceProvenance: derived
     region: Москва
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - t1.rates-pdf-2026-07-13
     - t1.s3
@@ -121,7 +121,7 @@ spec:
     pricingMode: unit
     region: Москва
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - t1.rates-pdf-2026-07-13
     - t1.s3
@@ -156,7 +156,7 @@ spec:
     pricingMode: unit
     region: Москва
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - t1.rates-pdf-2026-07-13
     - t1.s3

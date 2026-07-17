@@ -10,8 +10,10 @@ export type ComputePreset = {
   subtitle: string;
   vcpu: number;
   ramGiB: number;
-  /** Assumed system disk for composition bar (GiB SSD). */
+  /** Assumed system disk for composition bar (GiB SSD / NVMe). */
   diskGiB: number;
+  /** Prefer NVMe block storage when composing the disk line. */
+  preferNvme?: boolean;
 };
 
 export type GpuPreset = {
@@ -19,11 +21,24 @@ export type GpuPreset = {
   kind: 'gpu';
   title: string;
   subtitle: string;
-  /** Substring match against dimensions.gpuModel (case-insensitive). */
+  /** Family token for matching (H100, L4, B300…). */
   gpuModelMatch: string;
   gpuCount: number;
-  /** Prefer bundle flavors (VK / Cloud.ru) when true. */
-  preferBundle?: boolean;
+  /** Flavor host — when set, quotes match/compose this vCPU+RAM. */
+  vcpu?: number;
+  ramGiB?: number;
+  /** Boot disk for composed (non-bundle) quotes, GiB. */
+  diskGiB?: number;
+  /** Provider that defined this shape (cloud-ru, vk-cloud, selectel…). */
+  shapeSource?: string;
+  /** Stable dedupe key from catalog meter. */
+  shapeKey?: string;
+  /** Emphasize in UI (e.g. Selectel B300). */
+  highlight?: boolean;
+  /** Dedicated / non-cloud node — no host composition. */
+  dedicated?: boolean;
+  gpuInterconnect?: string | null;
+  gpuMemoryGb?: number | null;
 };
 
 export type CalculatorPreset = ComputePreset | GpuPreset;
@@ -100,51 +115,6 @@ export const COMPUTE_PRESETS: ComputePreset[] = [
   computePreset('high-memory', 8, 64),
   computePreset('high-memory', 16, 128),
   computePreset('high-memory', 32, 256),
-];
-
-/** GPU shelf — card configurations (physical GPUs). */
-export const GPU_PRESETS: GpuPreset[] = [
-  {
-    id: 'gpu-l4-1',
-    kind: 'gpu',
-    title: '1× L4',
-    subtitle: 'Inference · mid-range',
-    gpuModelMatch: 'L4',
-    gpuCount: 1,
-  },
-  {
-    id: 'gpu-a100-1',
-    kind: 'gpu',
-    title: '1× A100',
-    subtitle: 'Training / heavy inference',
-    gpuModelMatch: 'A100',
-    gpuCount: 1,
-  },
-  {
-    id: 'gpu-h100-1',
-    kind: 'gpu',
-    title: '1× H100',
-    subtitle: 'Top training',
-    gpuModelMatch: 'H100',
-    gpuCount: 1,
-  },
-  {
-    id: 'gpu-h200-1',
-    kind: 'gpu',
-    title: '1× H200',
-    subtitle: 'Long-context / large models',
-    gpuModelMatch: 'H200',
-    gpuCount: 1,
-  },
-  {
-    id: 'gpu-h200-8',
-    kind: 'gpu',
-    title: '8× H200',
-    subtitle: 'Full GPU node',
-    gpuModelMatch: 'H200',
-    gpuCount: 8,
-    preferBundle: true,
-  },
 ];
 
 export function computePresetsByFamily(family: ComputeFamily): ComputePreset[] {

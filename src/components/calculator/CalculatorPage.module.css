@@ -7,6 +7,14 @@
   gap: 48px;
 }
 
+.page[data-view='table'] {
+  max-width: 1400px;
+}
+
+.heroControls {
+  flex-shrink: 0;
+}
+
 .hero {
   display: flex;
   flex-direction: column;
@@ -105,6 +113,10 @@
   height: 100%;
 }
 
+.cardHighlight {
+  box-shadow: inset 0 0 0 2px var(--g-color-line-warning);
+}
+
 .cardInner {
   display: flex;
   flex-direction: column;
@@ -114,23 +126,19 @@
   padding: 16px;
 }
 
+.gpuIdentity {
+  min-width: 0;
+}
+
+.gpuIdentityText {
+  min-width: 0;
+}
+
 .statGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   border-radius: var(--g-border-radius-l);
   background: var(--g-color-base-generic);
-}
-
-.statGrid[data-cols='2'] {
-  grid-template-columns: repeat(2, 1fr);
-}
-
-.statGrid[data-cols='1'] {
-  grid-template-columns: 1fr;
-}
-
-.statGrid[data-cols='1'] .stat {
-  padding: 18px 12px;
 }
 
 .stat {
@@ -175,18 +183,18 @@
 }
 
 .statValue {
-  line-height: 1.05;
+  line-height: 1.15;
   letter-spacing: -0.01em;
   font-weight: 600;
   color: var(--g-color-text-secondary);
   max-width: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
 }
 
 .statUnit {
   max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .spacer {

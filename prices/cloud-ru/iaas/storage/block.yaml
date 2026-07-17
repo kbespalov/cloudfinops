@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     dimensions:
@@ -50,7 +50,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     dimensions:
@@ -86,7 +86,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.images-rules
     dimensions:
@@ -117,7 +117,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - cloudru.compute-pdf
     dimensions:

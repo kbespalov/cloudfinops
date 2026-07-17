@@ -10,6 +10,7 @@ import {
   type GpuPreset,
 } from '@/lib/calculator/presets';
 import {
+  formatGiBCapacity,
   formatQuoteAmount,
   partTone,
   periodShortLabel,
@@ -68,14 +69,30 @@ function PresetHeaderSpecs({preset}: {preset: CalculatorPreset}) {
     );
   }
   const p = preset as GpuPreset;
+  if (p.dedicated || p.vcpu == null || p.ramGiB == null) {
+    return (
+      <div className={styles.headerStats} data-cols="1">
+        <HeaderStat
+          icon={Gpu}
+          tone="warning"
+          value={`${p.gpuCount}×`}
+          unit={p.dedicated ? `${p.gpuModelMatch} · dedicated` : p.gpuModelMatch}
+        />
+      </div>
+    );
+  }
+  const ramLabel = formatGiBCapacity(p.ramGiB);
   return (
-    <div className={styles.headerStats} data-cols="1">
+    <div className={styles.headerStats} data-cols="4">
+      <HeaderStat icon={Gpu} tone="warning" value={`${p.gpuCount}×`} unit={p.gpuModelMatch} />
+      <HeaderStat icon={Cpu} tone="info" value={p.vcpu} unit="vCPU" />
       <HeaderStat
-        icon={Gpu}
-        tone="warning"
-        value={`${p.gpuCount}× ${p.gpuModelMatch}`}
-        unit={p.preferBundle ? 'flavor' : 'только GPU'}
+        icon={Layers3Diagonal}
+        tone="utility"
+        value={ramLabel.includes('TiB') ? ramLabel.replace(' TiB', '') : String(p.ramGiB)}
+        unit={ramLabel.includes('TiB') ? 'TiB' : 'GiB'}
       />
+      <HeaderStat icon={HardDrive} tone="success" value={p.diskGiB ?? 100} unit="SSD" />
     </div>
   );
 }
@@ -150,21 +167,51 @@ function ProviderList({
 export function PresetDrawer({
   preset,
   period,
-  result,
   open,
   onClose,
 }: {
   preset: CalculatorPreset | null;
   period: PeriodMode;
-  result: ViewPresetQuote | null;
   open: boolean;
   onClose: () => void;
 }) {
+  const [result, setResult] = useState<ViewPresetQuote | null>(null);
+  const [loading, setLoading] = useState(false);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
   useEffect(() => {
-    setSelectedKey(result?.best ? quoteKey(result.best) : null);
-  }, [preset?.id, period, result?.best]);
+    if (!open || !preset) {
+      setResult(null);
+      setSelectedKey(null);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+    setResult(null);
+
+    const url = `/api/calculator/preset-quote?presetId=${encodeURIComponent(preset.id)}&period=${period}`;
+    fetch(url)
+      .then((res) => {
+        if (!res.ok) throw new Error(`quote ${res.status}`);
+        return res.json() as Promise<ViewPresetQuote>;
+      })
+      .then((data) => {
+        if (cancelled) return;
+        setResult(data);
+        setSelectedKey(data.best ? quoteKey(data.best) : null);
+      })
+      .catch(() => {
+        if (!cancelled) setResult(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, preset?.id, period]);
 
   const selected: ViewProviderQuote | null =
     [...(result?.quotes ?? []), ...(result?.alternateQuotes ?? [])].find(
@@ -192,6 +239,26 @@ export function PresetDrawer({
       contentOverflow="auto"
       aria-label={preset ? presetHeadline(preset) : 'Пресет калькулятора'}
     >
+      {preset && loading ? (
+        <div className={styles.root}>
+          <div className={styles.header}>
+            <Flex justifyContent="space-between" alignItems="center" gap={3}>
+              <Label size="s" theme="utility">
+                Загрузка…
+              </Label>
+              <Button view="flat-secondary" size="m" onClick={onClose} aria-label="Закрыть">
+                <Icon data={Xmark} size={18} />
+              </Button>
+            </Flex>
+            <PresetHeaderSpecs preset={preset} />
+          </div>
+          <div className={styles.body}>
+            <Text variant="body-2" color="secondary">
+              Подтягиваем разбивку стоимости…
+            </Text>
+          </div>
+        </div>
+      ) : null}
       {preset && result ? (
         <div className={styles.root}>
           <div className={styles.header}>

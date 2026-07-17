@@ -15,7 +15,7 @@ spec:
     pricingMode: tiered
     region: Российские пулы
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs: [selectel.calculator, selectel.compute-rules]
     dimensions:
       sourceService: compute
@@ -55,7 +55,7 @@ spec:
     pricingMode: tiered
     region: Российские пулы
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs: [selectel.calculator, selectel.compute-rules]
     dimensions:
       sourceService: compute
@@ -94,7 +94,7 @@ spec:
     pricingMode: unit
     region: Россия / ru-1, ru-3, ru-7
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs: [selectel.prices, selectel.s3-rules]
     dimensions:
       sourceService: object-storage
@@ -114,7 +114,7 @@ spec:
     pricingMode: unit
     region: Россия / ru-1, ru-3, ru-7
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs: [selectel.prices, selectel.s3-rules]
     dimensions: {sourceService: object-storage, storageClass: standard}
     pricing:
@@ -131,7 +131,7 @@ spec:
     pricingMode: unit
     region: Россия / ru-1, ru-3, ru-7
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs: [selectel.prices, selectel.s3-rules]
     dimensions: {sourceService: object-storage, storageClass: cold}
     pricing:
@@ -148,7 +148,7 @@ spec:
     pricingMode: unit
     region: Россия / ru-3
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs: [selectel.prices, selectel.s3-rules]
     dimensions: {sourceService: object-storage, storageClass: ice}
     pricing:

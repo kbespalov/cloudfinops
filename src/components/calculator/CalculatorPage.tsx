@@ -1,7 +1,8 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import {startTransition, useMemo, useState} from 'react';
-import {Button, Card, Flex, Icon, SegmentedRadioGroup, Text} from '@gravity-ui/uikit';
+import {Button, Card, Flex, Icon, Label, SegmentedRadioGroup, Text} from '@gravity-ui/uikit';
 import {
   Calculator,
   ChevronRight,
@@ -10,6 +11,8 @@ import {
   Gpu,
   HardDrive,
   Layers3Diagonal,
+  LayoutCells,
+  LayoutList,
   Pulse,
   Server,
   Wallet,
@@ -20,7 +23,7 @@ import {PresetDrawer} from '@/components/calculator/PresetDrawer';
 import {
   COMPUTE_FAMILY_HINT,
   COMPUTE_FAMILY_TITLE,
-  GPU_PRESETS,
+  COMPUTE_PRESETS,
   computePresetsByFamily,
   type CalculatorPreset,
   type ComputeFamily,
@@ -28,13 +31,24 @@ import {
   type GpuPreset,
 } from '@/lib/calculator/presets';
 import {
+  formatGiBCapacity,
   formatQuoteAmount,
   periodShortLabel,
   type PeriodMode,
-  type QuotesByPeriod,
-  type ViewPresetQuote,
+  type QuotesByPeriodSlim,
+  type ViewPresetQuoteSlim,
 } from '@/lib/calculator/quote-view';
 import styles from './CalculatorPage.module.css';
+
+const PresetPriceTable = dynamic(
+  () =>
+    import('@/components/calculator/PresetPriceTable').then((m) => ({
+      default: m.PresetPriceTable,
+    })),
+  {ssr: false},
+);
+
+type ViewMode = 'cards' | 'table';
 
 const FAMILIES: ComputeFamily[] = ['low-cost', 'general', 'high-cpu', 'high-memory'];
 
@@ -88,16 +102,48 @@ function ComputeSpecs({preset}: {preset: ComputePreset}) {
   );
 }
 
-function GpuSpecs({preset}: {preset: GpuPreset}) {
+function GpuHostSpecs({preset}: {preset: GpuPreset}) {
+  if (preset.vcpu == null || preset.ramGiB == null) return null;
+
+  const ramLabel = formatGiBCapacity(preset.ramGiB);
+  const ramIsTiB = ramLabel.includes('TiB');
+  const ramValue = ramIsTiB ? ramLabel.replace(' TiB', '') : String(preset.ramGiB);
   return (
-    <div className={styles.statGrid} data-cols="1">
+    <div className={styles.statGrid}>
+      <Stat icon={Cpu} tone="info" value={preset.vcpu} unit="vCPU" />
       <Stat
-        icon={Gpu}
-        tone="warning"
-        value={`${preset.gpuCount}× ${preset.gpuModelMatch}`}
-        unit={preset.preferBundle ? 'Flavor целиком · vCPU+RAM+GPU' : 'только GPU · без vCPU/RAM'}
+        icon={Layers3Diagonal}
+        tone="utility"
+        value={ramValue}
+        unit={ramIsTiB ? 'TiB' : 'GiB'}
       />
+      <Stat icon={HardDrive} tone="success" value={preset.diskGiB ?? 100} unit="SSD" />
     </div>
+  );
+}
+
+function GpuIdentity({preset}: {preset: GpuPreset}) {
+  const memPart = preset.gpuMemoryGb ? ` ${preset.gpuMemoryGb}GB` : '';
+  const linkPart = preset.gpuInterconnect ? ` ${preset.gpuInterconnect}` : '';
+  const name = `${preset.gpuModelMatch}${memPart}${linkPart}`.trim();
+  const hint = preset.dedicated ? 'Выделенный узел' : null;
+
+  return (
+    <Flex alignItems="center" gap={2} className={styles.gpuIdentity}>
+      <Label theme="warning" size="s">
+        {preset.gpuCount}×
+      </Label>
+      <Flex direction="column" gap={0} className={styles.gpuIdentityText}>
+        <Text variant="body-2" ellipsis title={name}>
+          {name}
+        </Text>
+        {hint ? (
+          <Text variant="caption-2" color="secondary" ellipsis>
+            {hint}
+          </Text>
+        ) : null}
+      </Flex>
+    </Flex>
   );
 }
 
@@ -109,19 +155,28 @@ function PresetCard({
 }: {
   preset: CalculatorPreset;
   period: PeriodMode;
-  result: ViewPresetQuote | undefined;
+  result: ViewPresetQuoteSlim | undefined;
   onOpen: () => void;
 }) {
   const best = result?.best ?? null;
 
+  const highlight = preset.kind === 'gpu' && preset.highlight;
+
   return (
-    <Card className={styles.card} type="action" size="l" onClick={onOpen}>
+    <Card
+      className={highlight ? `${styles.card} ${styles.cardHighlight}` : styles.card}
+      type="action"
+      size="l"
+      onClick={onOpen}
+    >
       <div className={styles.cardInner}>
         {preset.kind === 'compute' ? (
           <ComputeSpecs preset={preset} />
         ) : (
-          <GpuSpecs preset={preset} />
+          <GpuHostSpecs preset={preset} />
         )}
+
+        {preset.kind === 'gpu' ? <GpuIdentity preset={preset} /> : null}
 
         <div className={styles.spacer} />
 
@@ -163,8 +218,8 @@ function PresetCard({
                   {best.providerName}
                 </Text>
                 <Text variant="caption-2" color="secondary">
-                  {result.quotes.length > 1
-                    ? `лучшая из ${result.quotes.length}`
+                  {result.quoteCount > 1
+                    ? `лучшая из ${result.quoteCount}`
                     : 'единственный оффер'}
                 </Text>
               </Flex>
@@ -185,7 +240,7 @@ function FamilyShelf({
 }: {
   family: ComputeFamily;
   period: PeriodMode;
-  quotesById: Record<string, ViewPresetQuote>;
+  quotesById: Record<string, ViewPresetQuoteSlim>;
   onOpen: (preset: CalculatorPreset) => void;
 }) {
   return (
@@ -216,15 +271,24 @@ function FamilyShelf({
   );
 }
 
-export function CalculatorPage({quotesByPeriod}: {quotesByPeriod: QuotesByPeriod}) {
+export function CalculatorPage({
+  quotesByPeriod,
+  gpuPresets,
+  gpuCardPresets,
+}: {
+  quotesByPeriod: QuotesByPeriodSlim;
+  gpuPresets: GpuPreset[];
+  gpuCardPresets: GpuPreset[];
+}) {
   const [period, setPeriod] = useState<PeriodMode>('month');
+  const [viewMode, setViewMode] = useState<ViewMode>('cards');
   const [active, setActive] = useState<CalculatorPreset | null>(null);
   const quotesById = useMemo(() => quotesByPeriod[period], [quotesByPeriod, period]);
 
   return (
     <>
       <AppHeader />
-      <main className={styles.page}>
+      <main className={styles.page} data-view={viewMode}>
         <header className={styles.hero}>
           <Flex justifyContent="space-between" alignItems="flex-end" gap={4} wrap>
             <Flex direction="column" gap={3}>
@@ -239,17 +303,33 @@ export function CalculatorPage({quotesByPeriod}: {quotesByPeriod: QuotesByPeriod
                 Selectel, Cloud.ru, MWS и T1 — Best offer по публичным тарифам и разбивка стоимости.
               </Text>
             </Flex>
-            <SegmentedRadioGroup
-              size="l"
-              value={period}
-              onUpdate={(v) => {
-                startTransition(() => setPeriod(v as PeriodMode));
-              }}
-            >
-              <SegmentedRadioGroup.Option value="unit">Час</SegmentedRadioGroup.Option>
-              <SegmentedRadioGroup.Option value="month">Месяц</SegmentedRadioGroup.Option>
-              <SegmentedRadioGroup.Option value="year">Год</SegmentedRadioGroup.Option>
-            </SegmentedRadioGroup>
+            <Flex alignItems="center" gap={3} wrap className={styles.heroControls}>
+              <SegmentedRadioGroup
+                size="l"
+                value={viewMode}
+                onUpdate={(v) => {
+                  startTransition(() => setViewMode(v as ViewMode));
+                }}
+              >
+                <SegmentedRadioGroup.Option value="cards" title="Плашки">
+                  <Icon data={LayoutCells} size={16} />
+                </SegmentedRadioGroup.Option>
+                <SegmentedRadioGroup.Option value="table" title="Таблица">
+                  <Icon data={LayoutList} size={16} />
+                </SegmentedRadioGroup.Option>
+              </SegmentedRadioGroup>
+              <SegmentedRadioGroup
+                size="l"
+                value={period}
+                onUpdate={(v) => {
+                  startTransition(() => setPeriod(v as PeriodMode));
+                }}
+              >
+                <SegmentedRadioGroup.Option value="unit">Час</SegmentedRadioGroup.Option>
+                <SegmentedRadioGroup.Option value="month">Месяц</SegmentedRadioGroup.Option>
+                <SegmentedRadioGroup.Option value="year">Год</SegmentedRadioGroup.Option>
+              </SegmentedRadioGroup>
+            </Flex>
           </Flex>
         </header>
 
@@ -264,15 +344,25 @@ export function CalculatorPage({quotesByPeriod}: {quotesByPeriod: QuotesByPeriod
             </Text>
           </Flex>
 
-          {FAMILIES.map((family) => (
-            <FamilyShelf
-              key={family}
-              family={family}
-              period={period}
+          {viewMode === 'table' ? (
+            <PresetPriceTable
+              presets={COMPUTE_PRESETS}
               quotesById={quotesById}
+              period={period}
+              mode="compute"
               onOpen={setActive}
             />
-          ))}
+          ) : (
+            FAMILIES.map((family) => (
+              <FamilyShelf
+                key={family}
+                family={family}
+                period={period}
+                quotesById={quotesById}
+                onOpen={setActive}
+              />
+            ))
+          )}
         </section>
 
         <section className={styles.section}>
@@ -283,21 +373,32 @@ export function CalculatorPage({quotesByPeriod}: {quotesByPeriod: QuotesByPeriod
                 <Text variant="header-1">GPU</Text>
               </Flex>
               <Text variant="body-2" color="secondary">
-                Полки по картам. Best offer — только GPU; flavor — отдельный список в карточке.
+                Формы Cloud.ru + уникальные VK/Selectel (B300). Сравнение: flavor или сборка GPU +
+                vCPU + RAM. {gpuPresets.length} конфигураций.
               </Text>
             </Flex>
           </Flex>
-          <div className={styles.grid}>
-            {GPU_PRESETS.map((preset) => (
-              <PresetCard
-                key={preset.id}
-                preset={preset}
-                period={period}
-                result={quotesById[preset.id]}
-                onOpen={() => setActive(preset)}
-              />
-            ))}
-          </div>
+          {viewMode === 'table' ? (
+            <PresetPriceTable
+              presets={gpuPresets}
+              quotesById={quotesById}
+              period={period}
+              mode="gpu"
+              onOpen={setActive}
+            />
+          ) : (
+            <div className={styles.grid}>
+              {gpuCardPresets.map((preset) => (
+                <PresetCard
+                  key={preset.id}
+                  preset={preset}
+                  period={period}
+                  result={quotesById[preset.id]}
+                  onOpen={() => setActive(preset)}
+                />
+              ))}
+            </div>
+          )}
         </section>
 
         <Flex justifyContent="center">
@@ -311,7 +412,6 @@ export function CalculatorPage({quotesByPeriod}: {quotesByPeriod: QuotesByPeriod
       <PresetDrawer
         preset={active}
         period={period}
-        result={active ? quotesById[active.id] ?? null : null}
         open={Boolean(active)}
         onClose={() => setActive(null)}
       />

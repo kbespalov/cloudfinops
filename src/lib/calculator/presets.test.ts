@@ -1,10 +1,13 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import {
+  buildGpuCardPresets,
+  buildGpuFlavorPresets,
+} from '@/lib/calculator/gpu-shapes';
+import {
   COMPUTE_FAMILY_HINT,
   COMPUTE_FAMILY_TITLE,
   COMPUTE_PRESETS,
-  GPU_PRESETS,
   computePresetsByFamily,
   type ComputeFamily,
 } from '@/lib/calculator/presets';
@@ -22,13 +25,13 @@ describe('calculator presets', () => {
     assert.equal(COMPUTE_PRESETS.length, 20);
   });
 
-  it('keeps unique preset ids across compute and GPU', () => {
-    const ids = [...COMPUTE_PRESETS, ...GPU_PRESETS].map((p) => p.id);
+  it('keeps unique preset ids across compute and GPU shapes', () => {
+    const gpu = buildGpuFlavorPresets();
+    const ids = [...COMPUTE_PRESETS, ...gpu].map((p) => p.id);
     assert.equal(ids.length, new Set(ids).size);
   });
 
   it('uses expected vCPU:RAM ratios inside each compute family', () => {
-    // Aligned with MWS Cloud: Balanced 1:4, CPU optimized 1:2, Memory optimized 1:8.
     for (const p of computePresetsByFamily('general')) {
       assert.equal(p.ramGiB, p.vcpu * 4, p.id);
     }
@@ -58,16 +61,17 @@ describe('calculator presets', () => {
     }
   });
 
-  it('defines GPU presets with positive counts and model matchers', () => {
-    assert.ok(GPU_PRESETS.length >= 4);
-    for (const p of GPU_PRESETS) {
-      assert.equal(p.kind, 'gpu');
-      assert.ok(p.gpuCount >= 1);
-      assert.ok(p.gpuModelMatch.length >= 2);
-      assert.ok(p.title.includes(String(p.gpuCount)) || p.title.includes('×'));
-    }
-    const fullNode = GPU_PRESETS.find((p) => p.id === 'gpu-h200-8');
-    assert.ok(fullNode?.preferBundle);
-    assert.equal(fullNode?.gpuCount, 8);
+  it('builds GPU flavor shapes from Cloud.ru plus unique others', () => {
+    const all = buildGpuFlavorPresets();
+    assert.ok(all.length >= 40, `expected many shapes, got ${all.length}`);
+    const cloudRu = all.filter((p) => p.shapeSource === 'cloud-ru');
+    assert.ok(cloudRu.length >= 30, `expected Cloud.ru flavors, got ${cloudRu.length}`);
+    const b300 = all.find((p) => p.gpuModelMatch === 'B300');
+    assert.ok(b300, 'Selectel B300 must be present');
+    assert.ok(b300.dedicated);
+    assert.ok(b300.highlight);
+    const cards = buildGpuCardPresets(all);
+    assert.ok(cards.length >= 4);
+    assert.ok(cards.some((p) => p.gpuModelMatch === 'B300'));
   });
 });

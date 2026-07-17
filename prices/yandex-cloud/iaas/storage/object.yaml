@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - yc.billing-api
     - yc.object-storage
@@ -53,7 +53,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - yc.billing-api
     - yc.object-storage
@@ -85,7 +85,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - yc.billing-api
     - yc.object-storage
@@ -118,7 +118,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-17'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - yc.billing-api
     - yc.object-storage
@@ -142,7 +142,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-17'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - yc.billing-api
     - yc.object-storage
@@ -166,7 +166,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-17'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - yc.billing-api
     - yc.object-storage
@@ -195,7 +195,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-04-30'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - yc.object-storage
     dimensions:
@@ -218,7 +218,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-04-30'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - yc.object-storage
     dimensions:
@@ -241,7 +241,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-04-30'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - yc.object-storage
     dimensions:
@@ -264,7 +264,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-04-30'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - yc.object-storage
     dimensions:
@@ -287,7 +287,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-04-30'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - yc.object-storage
     dimensions:
@@ -310,7 +310,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-04-30'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - yc.object-storage
     dimensions:

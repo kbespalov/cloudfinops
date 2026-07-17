@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - selectel.prices
     - selectel.calculator
@@ -43,7 +43,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - selectel.prices
     - selectel.calculator
@@ -71,7 +71,7 @@ spec:
     pricingMode: unit
     region: Санкт-Петербург / ru-9a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - selectel.prices
     - selectel.calculator
@@ -98,7 +98,7 @@ spec:
     pricingMode: unit
     region: Санкт-Петербург / ru-9a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - selectel.prices
     - selectel.calculator

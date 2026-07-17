@@ -1,9 +1,9 @@
 import {
   COMPUTE_FAMILY_TITLE,
   COMPUTE_PRESETS,
-  GPU_PRESETS,
   computePresetsByFamily,
   type ComputeFamily,
+  type GpuPreset,
 } from '@/lib/calculator/presets';
 import styles from './CalculatorSeo.module.css';
 
@@ -22,7 +22,13 @@ const PROVIDERS = [
  * Server-rendered SEO copy: real content for crawlers (not cloaked),
  * calm footer block so the interactive calculator stays the focus.
  */
-export function CalculatorSeo() {
+export function CalculatorSeo({
+  gpuPresets,
+  gpuShapeCount,
+}: {
+  gpuPresets: GpuPreset[];
+  gpuShapeCount: number;
+}) {
   return (
     <section className={styles.seo} aria-labelledby="calculator-seo-title">
       <h2 id="calculator-seo-title" className={styles.title}>
@@ -62,8 +68,9 @@ export function CalculatorSeo() {
           unit-ядра Yandex (5%/20%/50%) не используем: на них нельзя честно собрать «8 vCPU».
         </li>
         <li>
-          <strong>GPU</strong> — unit-цена «только карта» и flavor «vCPU + RAM + GPU» считаются в
-          разных списках. Best offer не смешивает «голую» H100 с целой ВМ с H100.
+          <strong>GPU</strong> — строки таблицы = flavor Cloud.ru + уникальные формы VK/Selectel
+          (в т.ч. B300). У провайдера без flavor собираем GPU + те же vCPU/RAM (+ SSD). Exact flavor
+          имеет приоритет над сборкой.
         </li>
         <li>
           <strong>Что отбрасываем</strong> — SKU с пометкой «наличие не подтверждено», снятые с
@@ -96,15 +103,15 @@ export function CalculatorSeo() {
         <div>
           <h3 className={styles.subtitle}>Пресеты GPU</h3>
           <ul className={styles.list}>
-            {GPU_PRESETS.map((p) => (
+            {gpuPresets.map((p) => (
               <li key={p.id}>
                 <strong>{p.title}</strong> — {p.subtitle}
-                {p.preferBundle ? ' · в Best offer приоритет у flavor целиком' : ' · Best offer по unit GPU'}
+                {p.highlight ? ' · выделено' : ''}
               </li>
             ))}
           </ul>
           <p className={styles.meta}>
-            NVIDIA L4, A100, H100, H200 · аренда GPU в облаке · сравнение unit и flavor
+            {gpuShapeCount} GPU-форм · Cloud.ru flavors + уникальные VK/Selectel · B300 dedicated
           </p>
         </div>
       </div>
@@ -169,7 +176,7 @@ export function calculatorJsonLd() {
     {
       question: 'Какие GPU можно сравнить в калькуляторе?',
       answer:
-        'Пресеты NVIDIA L4, A100, H100, H200 (1× и 8×). Unit-цены GPU и flavor-конфигурации показываются отдельно и не смешиваются в Best offer.',
+        'Строки GPU = flavor Cloud.ru (vCPU+RAM+GPU) плюс уникальные формы VK и Selectel, включая выделенный B300. У провайдеров без flavor цена собирается как GPU + те же vCPU/RAM.',
     },
     {
       question: 'Какие облачные провайдеры России есть в калькуляторе?',
