@@ -235,8 +235,8 @@ export function CalculatorPage({quotesByPeriod}: {quotesByPeriod: QuotesByPeriod
                 <Text variant="display-1">Калькулятор</Text>
               </Flex>
               <Text variant="body-1" color="secondary" className={styles.heroLead}>
-                Выберите готовую конфигурацию — сравним публичные цены провайдеров и покажем, из
-                чего складывается Best offer.
+                Сравните цены ВМ и аренды GPU (L4, A100, H100, H200) у Yandex Cloud, VK Cloud,
+                Selectel, Cloud.ru, MWS и T1 — Best offer по публичным тарифам и разбивка стоимости.
               </Text>
             </Flex>
             <SegmentedRadioGroup

@@ -2,11 +2,12 @@
 
 import {useEffect, useState} from 'react';
 import {Button, Drawer, Flex, Icon, Label, Text} from '@gravity-ui/uikit';
-import {Xmark} from '@gravity-ui/icons';
+import {Cpu, Gpu, HardDrive, Layers3Diagonal, Xmark} from '@gravity-ui/icons';
 import {
   COMPUTE_FAMILY_TITLE,
   type CalculatorPreset,
   type ComputePreset,
+  type GpuPreset,
 } from '@/lib/calculator/presets';
 import {
   formatQuoteAmount,
@@ -23,9 +24,60 @@ import styles from './PresetDrawer.module.css';
 
 function presetHeadline(preset: CalculatorPreset): string {
   if (preset.kind === 'compute') {
-    return `${COMPUTE_FAMILY_TITLE[preset.family]} · ${preset.title}`;
+    const p = preset as ComputePreset;
+    return `${COMPUTE_FAMILY_TITLE[p.family]} · ${p.vcpu}/${p.ramGiB}`;
   }
   return preset.title;
+}
+
+function HeaderStat({
+  icon,
+  tone,
+  value,
+  unit,
+}: {
+  icon: typeof Cpu;
+  tone: string;
+  value: string | number;
+  unit: string;
+}) {
+  return (
+    <div className={styles.headerStat}>
+      <span className={styles.headerStatIcon} data-tone={tone}>
+        <Icon data={icon} size={14} />
+      </span>
+      <Text variant="subheader-2" className={styles.headerStatValue}>
+        {value}
+      </Text>
+      <Text variant="caption-2" color="secondary">
+        {unit}
+      </Text>
+    </div>
+  );
+}
+
+function PresetHeaderSpecs({preset}: {preset: CalculatorPreset}) {
+  if (preset.kind === 'compute') {
+    const p = preset as ComputePreset;
+    return (
+      <div className={styles.headerStats}>
+        <HeaderStat icon={Cpu} tone="info" value={p.vcpu} unit="vCPU" />
+        <HeaderStat icon={Layers3Diagonal} tone="utility" value={p.ramGiB} unit="GiB" />
+        <HeaderStat icon={HardDrive} tone="success" value={p.diskGiB} unit="SSD" />
+      </div>
+    );
+  }
+  const p = preset as GpuPreset;
+  return (
+    <div className={styles.headerStats} data-cols="1">
+      <HeaderStat
+        icon={Gpu}
+        tone="warning"
+        value={`${p.gpuCount}× ${p.gpuModelMatch}`}
+        unit={p.preferBundle ? 'flavor' : 'только GPU'}
+      />
+    </div>
+  );
 }
 
 function quoteKey(q: ViewProviderQuote): string {
@@ -143,26 +195,21 @@ export function PresetDrawer({
       {preset && result ? (
         <div className={styles.root}>
           <div className={styles.header}>
-            <Flex justifyContent="space-between" alignItems="flex-start" gap={3}>
-              <Flex direction="column" gap={2} className={styles.titleBlock}>
-                {preset.kind === 'compute' ? (
-                  <Label size="s" theme="info">
-                    {COMPUTE_FAMILY_TITLE[(preset as ComputePreset).family]}
-                  </Label>
-                ) : (
-                  <Label size="s" theme="warning">
-                    GPU
-                  </Label>
-                )}
-                <Text variant="header-1">{presetHeadline(preset)}</Text>
-                <Text variant="body-2" color="secondary">
-                  {preset.subtitle}
-                </Text>
-              </Flex>
+            <Flex justifyContent="space-between" alignItems="center" gap={3}>
+              {preset.kind === 'compute' ? (
+                <Label size="s" theme="info">
+                  {COMPUTE_FAMILY_TITLE[(preset as ComputePreset).family]}
+                </Label>
+              ) : (
+                <Label size="s" theme="warning">
+                  GPU
+                </Label>
+              )}
               <Button view="flat-secondary" size="m" onClick={onClose} aria-label="Закрыть">
                 <Icon data={Xmark} size={18} />
               </Button>
             </Flex>
+            <PresetHeaderSpecs preset={preset} />
           </div>
 
           <div className={styles.body}>

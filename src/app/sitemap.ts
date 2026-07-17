@@ -16,6 +16,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.9,
     },
     {
+      url: 'https://cloudfinops.ru/calculator',
+      lastModified,
+      changeFrequency: 'daily',
+      priority: 0.9,
+    },
+    {
       url: 'https://cloudfinops.ru/news',
       lastModified,
       changeFrequency: 'daily',
