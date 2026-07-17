@@ -7,6 +7,7 @@
 import type {CategoryKey, PeriodMode} from '@/lib/catalog';
 import {searchPricesDetailed, type PriceRow, type SearchParams} from './search';
 import {quotePreset, listGpuPresets} from '@/lib/calculator/quote';
+import {compareUnitPrice, type UnitComponent} from './analytics';
 import type {ComputePreset, GpuPreset, CalculatorPreset} from '@/lib/calculator/presets';
 
 export type ChatToolCall = {
@@ -104,6 +105,26 @@ export const CHAT_TOOLS = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'compare_unit_price',
+      description:
+        'Кросс-провайдерная аналитика цены за единицу базового ресурса на СОПОСТАВИМОЙ базе. Используй для вопросов «средняя цена ядра/памяти/диска по провайдерам», «в среднем по больнице», «кто дешевле в среднем и на сколько %», «какой разброс цен между провайдерами». Возвращает по каждому провайдеру сопоставимую цену (₽/час и ₽/мес) и агрегаты: минимум, максимум, среднее, медиану, самого дешёвого/дорогого, разброс max/min и отклонение каждого провайдера от среднего в %. ВАЖНО: не смешивает типы — для vCPU берётся строго on-demand 100% выделенное ядро; preemptible/долевые ядра вынесены отдельно (preemptibleFloor) как контекст. Провайдеры, которые продают только флейворы (напр. Cloud.ru), попадают в derivedFromFlavors с ОЦЕНОЧНОЙ ценой за единицу (декомпозиция флейворов) — показывай их с пометкой «оценка» и не включай в среднее. Среднее/медиану/разброс считай только по providers[].',
+      parameters: {
+        type: 'object',
+        properties: {
+          component: {
+            type: 'string',
+            enum: ['vcpu', 'ram', 'ssd'],
+            description:
+              'Ресурс для сравнения: vcpu — цена 1 ядра (on-demand, 100%); ram — цена 1 GiB RAM; ssd — цена 1 GiB SSD-диска в месяц.',
+          },
+        },
+        required: ['component'],
+      },
+    },
+  },
 ] as const;
 
 /** Distinguish a whole-VM/GPU flavor price from a GPU-only accelerator rate. */
@@ -148,7 +169,7 @@ function runSearch(args: Record<string, unknown>): unknown {
     totalMatches,
     currency: 'RUB',
     vatIncluded: true,
-    note: 'Цены с НДС; месяц = 720 ч. hour/month/year — нормализованные значения; для usage-позиций (GiB, 1M токенов) число одинаково для всех периодов, ориентируйся на unit. ВАЖНО: услугу предлагают ТОЛЬКО провайдеры из providersMatched — не добавляй других и не копируй цену одного провайдера другим. priceKind различает «только GPU» и «конфигурацию целиком».',
+    note: 'Цены с НДС; месяц = 720 ч. hour/month/year — нормализованные значения; для usage-позиций (GiB, 1M токенов) число одинаково для всех периодов, ориентируйся на unit. ВАЖНО: услугу предлагают ТОЛЬКО провайдеры из providersMatched — не добавляй других и не копируй цену одного провайдера другим. priceKind различает «только GPU» и «конфигурацию целиком». ВНИМАНИЕ для vCPU/ВМ: providersMatched.cheapest часто = preemptible или долевое ядро (<100%) — это НЕ сопоставимая база для «цены 1 vCPU». Для сравнения/среднего по ядрам бери у каждого провайдера строку одного типа (on-demand, 100% выделенное ядро; см. config/note), не смешивай и не усредняй разные типы.',
     // Точный список провайдеров, у которых реально есть совпадение, с их СОБСТВЕННОЙ минимальной ценой.
     providersMatched: providers.map((p) => ({
       provider: p.providerName,
@@ -325,6 +346,13 @@ function round(n: number | null | undefined): number | null {
   return Math.round(n * 100) / 100;
 }
 
+function runCompareUnitPrice(args: Record<string, unknown>): unknown {
+  const raw = typeof args.component === 'string' ? args.component.toLowerCase() : '';
+  const component: UnitComponent =
+    raw === 'ram' ? 'ram' : raw === 'ssd' || raw === 'disk' ? 'ssd' : 'vcpu';
+  return compareUnitPrice(component);
+}
+
 /** Execute a tool call by name; always returns a JSON string for the tool message. */
 export function runTool(name: string, rawArgs: string): string {
   let args: Record<string, unknown> = {};
@@ -336,6 +364,7 @@ export function runTool(name: string, rawArgs: string): string {
   try {
     if (name === 'search_prices') return JSON.stringify(runSearch(args));
     if (name === 'get_quote') return JSON.stringify(runQuote(args));
+    if (name === 'compare_unit_price') return JSON.stringify(runCompareUnitPrice(args));
     return JSON.stringify({error: `Неизвестный инструмент: ${name}`});
   } catch (err) {
     return JSON.stringify({

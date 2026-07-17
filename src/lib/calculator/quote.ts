@@ -97,7 +97,7 @@ export function resetMeterIndexForTests(): void {
   meterIndex = null;
 }
 
-function isOnDemand(meter: CatalogMeter): boolean {
+export function isOnDemand(meter: CatalogMeter): boolean {
   const pm = String(meter.purchaseModel || meter.dimensions.purchaseModel || 'on-demand');
   return !/preempt/i.test(pm);
 }
@@ -107,7 +107,7 @@ function isOnDemand(meter: CatalogMeter): boolean {
  * confirmed (e.g. T1 "b4" series) — quoting them would advertise a price the
  * user may not actually be able to order.
  */
-function isConfirmedAvailable(meter: CatalogMeter): boolean {
+export function isConfirmedAvailable(meter: CatalogMeter): boolean {
   const note = String(meter.notes ?? '');
   if (!note) return true;
   return !/не\s+подтвержд|not\s+confirmed|недоступ|снят[аоы]?\s+с/i.test(note);
@@ -118,7 +118,7 @@ function isConfirmedAvailable(meter: CatalogMeter): boolean {
  * head-to-head with a guaranteed 100% core. Some providers (e.g. T1) express the
  * ratio only in the SKU name ("1:3 vCPU") and leave guaranteedVcpuShare empty.
  */
-function isSharedVcpu(meter: CatalogMeter): boolean {
+export function isSharedVcpu(meter: CatalogMeter): boolean {
   const share = String(meter.dimensions.guaranteedVcpuShare ?? '');
   const pct = share.match(/(\d+)\s*%/);
   if (pct && Number(pct[1]) < 100) return true;
@@ -128,7 +128,7 @@ function isSharedVcpu(meter: CatalogMeter): boolean {
   return false;
 }
 
-function isDedicatedVcpu(meter: CatalogMeter): boolean {
+export function isDedicatedVcpu(meter: CatalogMeter): boolean {
   if (isSharedVcpu(meter)) return false;
   const share = String(meter.dimensions.guaranteedVcpuShare ?? '100%');
   return share === '100%' || share === '1' || share === 'dedicated' || share === '';
@@ -140,7 +140,7 @@ function isDedicatedVcpu(meter: CatalogMeter): boolean {
  * counts, so quoting "8 vCPU" on a 5% core would be misleading — excluded even from
  * the low-cost tier, which still relies on 100% preemptible / oversubscribed cores.
  */
-function isFractionalGuarantee(meter: CatalogMeter): boolean {
+export function isFractionalGuarantee(meter: CatalogMeter): boolean {
   const share = String(meter.dimensions.guaranteedVcpuShare ?? '');
   const pct = share.match(/(\d+)\s*%/);
   return Boolean(pct) && Number(pct![1]) < 100;
