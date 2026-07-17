@@ -145,7 +145,7 @@ export function displayAmount(meter: CatalogMeter, period: PeriodMode): string |
 export function periodLabel(period: PeriodMode): string {
   if (period === 'month') return 'в месяц';
   if (period === 'year') return 'в год';
-  return 'за единицу';
+  return 'в час';
 }
 
 export function meterPriceLabel(meter: CatalogMeter, period: PeriodMode): string {

@@ -11,4 +11,8 @@ out/
 .env
 .env.*
 !.env.example
+certificates/
+*.pem
+*.key
+*.crt
 src/data/catalog.generated.json

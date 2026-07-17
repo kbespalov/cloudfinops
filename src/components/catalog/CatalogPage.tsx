@@ -240,7 +240,7 @@ function parseSort(v: string | null): SortKey {
 function priceColumnTitle(period: PeriodMode): string {
   if (period === 'month') return 'Цена / мес';
   if (period === 'year') return 'Цена / год';
-  return 'Цена';
+  return 'Цена / час';
 }
 
 export function CatalogPage() {
@@ -723,7 +723,7 @@ export function CatalogPage() {
               value={period}
               onUpdate={(v) => setPeriod(v as PeriodMode)}
             >
-              <SegmentedRadioGroup.Option value="unit">Единица</SegmentedRadioGroup.Option>
+              <SegmentedRadioGroup.Option value="unit">Час</SegmentedRadioGroup.Option>
               <SegmentedRadioGroup.Option value="month">Месяц</SegmentedRadioGroup.Option>
               <SegmentedRadioGroup.Option value="year">Год</SegmentedRadioGroup.Option>
             </SegmentedRadioGroup>
