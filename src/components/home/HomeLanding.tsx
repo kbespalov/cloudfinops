@@ -36,7 +36,7 @@ export function HomeLanding() {
               <Icon data={SquareListUl} size={20} />
               Каталог
             </Button>
-            <Button view="outlined-contrast" size="xl" href="/chat">
+            <Button view="outlined-action" size="xl" href="/chat">
               <Icon data={Sparkles} size={20} />
               Спросить ИИ-ассистента
             </Button>
