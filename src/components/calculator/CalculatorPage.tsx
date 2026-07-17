@@ -1,7 +1,7 @@
 'use client';
 
-import {useMemo, useState} from 'react';
-import {Button, Card, Flex, Icon, Label, SegmentedRadioGroup, Text} from '@gravity-ui/uikit';
+import {startTransition, useMemo, useState} from 'react';
+import {Button, Card, Flex, Icon, SegmentedRadioGroup, Text} from '@gravity-ui/uikit';
 import {
   Calculator,
   ChevronRight,
@@ -30,9 +30,10 @@ import {
 import {
   formatQuoteAmount,
   periodShortLabel,
-  quotePreset,
-} from '@/lib/calculator/quote';
-import type {PeriodMode} from '@/lib/catalog';
+  type PeriodMode,
+  type QuotesByPeriod,
+  type ViewPresetQuote,
+} from '@/lib/calculator/quote-view';
 import styles from './CalculatorPage.module.css';
 
 const FAMILIES: ComputeFamily[] = ['low-cost', 'general', 'high-cpu', 'high-memory'];
@@ -103,14 +104,15 @@ function GpuSpecs({preset}: {preset: GpuPreset}) {
 function PresetCard({
   preset,
   period,
+  result,
   onOpen,
 }: {
   preset: CalculatorPreset;
   period: PeriodMode;
+  result: ViewPresetQuote | undefined;
   onOpen: () => void;
 }) {
-  const result = useMemo(() => quotePreset(preset, period), [preset, period]);
-  const best = result.best;
+  const best = result?.best ?? null;
 
   return (
     <Card className={styles.card} type="action" size="l" onClick={onOpen}>
@@ -145,7 +147,7 @@ function PresetCard({
           </div>
         )}
 
-        {best ? (
+        {best && result ? (
           <Flex
             alignItems="center"
             justifyContent="space-between"
@@ -178,10 +180,12 @@ function PresetCard({
 function FamilyShelf({
   family,
   period,
+  quotesById,
   onOpen,
 }: {
   family: ComputeFamily;
   period: PeriodMode;
+  quotesById: Record<string, ViewPresetQuote>;
   onOpen: (preset: CalculatorPreset) => void;
 }) {
   return (
@@ -203,6 +207,7 @@ function FamilyShelf({
             key={preset.id}
             preset={preset}
             period={period}
+            result={quotesById[preset.id]}
             onOpen={() => onOpen(preset)}
           />
         ))}
@@ -211,9 +216,10 @@ function FamilyShelf({
   );
 }
 
-export function CalculatorPage() {
+export function CalculatorPage({quotesByPeriod}: {quotesByPeriod: QuotesByPeriod}) {
   const [period, setPeriod] = useState<PeriodMode>('month');
   const [active, setActive] = useState<CalculatorPreset | null>(null);
+  const quotesById = useMemo(() => quotesByPeriod[period], [quotesByPeriod, period]);
 
   return (
     <>
@@ -236,7 +242,9 @@ export function CalculatorPage() {
             <SegmentedRadioGroup
               size="l"
               value={period}
-              onUpdate={(v) => setPeriod(v as PeriodMode)}
+              onUpdate={(v) => {
+                startTransition(() => setPeriod(v as PeriodMode));
+              }}
             >
               <SegmentedRadioGroup.Option value="unit">Час</SegmentedRadioGroup.Option>
               <SegmentedRadioGroup.Option value="month">Месяц</SegmentedRadioGroup.Option>
@@ -261,6 +269,7 @@ export function CalculatorPage() {
               key={family}
               family={family}
               period={period}
+              quotesById={quotesById}
               onOpen={setActive}
             />
           ))}
@@ -274,7 +283,7 @@ export function CalculatorPage() {
                 <Text variant="header-1">GPU</Text>
               </Flex>
               <Text variant="body-2" color="secondary">
-                Полки по картам. Unit = только GPU; flavor = вся ВМ.
+                Полки по картам. Best offer — только GPU; flavor — отдельный список в карточке.
               </Text>
             </Flex>
           </Flex>
@@ -284,6 +293,7 @@ export function CalculatorPage() {
                 key={preset.id}
                 preset={preset}
                 period={period}
+                result={quotesById[preset.id]}
                 onOpen={() => setActive(preset)}
               />
             ))}
@@ -301,6 +311,7 @@ export function CalculatorPage() {
       <PresetDrawer
         preset={active}
         period={period}
+        result={active ? quotesById[active.id] ?? null : null}
         open={Boolean(active)}
         onClose={() => setActive(null)}
       />

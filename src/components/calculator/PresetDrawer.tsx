@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect, useMemo, useState} from 'react';
+import {useEffect, useState} from 'react';
 import {Button, Drawer, Flex, Icon, Label, Text} from '@gravity-ui/uikit';
 import {Xmark} from '@gravity-ui/icons';
 import {
@@ -12,11 +12,11 @@ import {
   formatQuoteAmount,
   partTone,
   periodShortLabel,
-  quotePreset,
   scopeLabel,
-  type ProviderQuote,
-} from '@/lib/calculator/quote';
-import type {PeriodMode} from '@/lib/catalog';
+  type PeriodMode,
+  type ViewPresetQuote,
+  type ViewProviderQuote,
+} from '@/lib/calculator/quote-view';
 import {CostBreakdownBar} from '@/components/calculator/CostBreakdownBar';
 import {ProviderMark} from '@/components/catalog/ProviderMark';
 import styles from './PresetDrawer.module.css';
@@ -28,29 +28,106 @@ function presetHeadline(preset: CalculatorPreset): string {
   return preset.title;
 }
 
+function quoteKey(q: ViewProviderQuote): string {
+  return `${q.scope}|${q.provider}`;
+}
+
+function ProviderList({
+  quotes,
+  best,
+  selectedKey,
+  period,
+  onSelect,
+}: {
+  quotes: ViewProviderQuote[];
+  best: ViewProviderQuote | null;
+  selectedKey: string | null;
+  period: PeriodMode;
+  onSelect: (key: string) => void;
+}) {
+  return (
+    <Flex direction="column" gap={2} className={styles.providerList}>
+      {quotes.map((q, index) => {
+        const key = quoteKey(q);
+        const active = key === selectedKey;
+        const delta =
+          best && index > 0 && best.total > 0
+            ? Math.round((q.total / best.total - 1) * 100)
+            : 0;
+        return (
+          <button
+            key={key}
+            type="button"
+            className={styles.providerRow}
+            data-active={active ? 'true' : 'false'}
+            onClick={() => onSelect(key)}
+          >
+            <span className={styles.sellerMark}>
+              <ProviderMark providerId={q.provider} size={16} />
+            </span>
+            <Flex direction="column" gap={1} className={styles.providerMeta}>
+              <Flex alignItems="center" gap={2} className={styles.providerName}>
+                <Text variant="body-2" ellipsis>
+                  {q.providerName}
+                </Text>
+                {q.scope !== 'compute' ? (
+                  <Label size="xs" theme={q.scope === 'bundle' ? 'warning' : 'utility'}>
+                    {scopeLabel(q.scope)}
+                  </Label>
+                ) : null}
+              </Flex>
+              <Text variant="caption-2" color={index === 0 ? 'positive' : 'secondary'}>
+                {index === 0 ? 'лучшая цена' : `+${delta}% к лучшей`}
+              </Text>
+            </Flex>
+            <Text variant="subheader-2" className={styles.providerAmount}>
+              {formatQuoteAmount(q.total, period)}
+            </Text>
+          </button>
+        );
+      })}
+      {quotes.length === 0 ? (
+        <Text variant="body-2" color="secondary">
+          Пока не из чего сравнивать
+        </Text>
+      ) : null}
+    </Flex>
+  );
+}
+
 export function PresetDrawer({
   preset,
   period,
+  result,
   open,
   onClose,
 }: {
   preset: CalculatorPreset | null;
   period: PeriodMode;
+  result: ViewPresetQuote | null;
   open: boolean;
   onClose: () => void;
 }) {
-  const result = useMemo(
-    () => (preset ? quotePreset(preset, period) : null),
-    [preset, period],
-  );
-  const [selectedProvider, setSelectedProvider] = useState<string | null>(null);
+  const [selectedKey, setSelectedKey] = useState<string | null>(null);
 
   useEffect(() => {
-    setSelectedProvider(result?.best?.provider ?? null);
-  }, [preset?.id, period, result?.best?.provider]);
+    setSelectedKey(result?.best ? quoteKey(result.best) : null);
+  }, [preset?.id, period, result?.best]);
 
-  const selected: ProviderQuote | null =
-    result?.quotes.find((q) => q.provider === selectedProvider) ?? result?.best ?? null;
+  const selected: ViewProviderQuote | null =
+    [...(result?.quotes ?? []), ...(result?.alternateQuotes ?? [])].find(
+      (q) => quoteKey(q) === selectedKey,
+    ) ??
+    result?.best ??
+    null;
+
+  const alternateScope = result?.alternateQuotes[0]?.scope;
+  const alternateTitle =
+    alternateScope === 'bundle'
+      ? 'Flavor целиком (vCPU + RAM + GPU)'
+      : alternateScope === 'gpu-only'
+        ? 'Только GPU (без vCPU / RAM)'
+        : 'Другие офферы';
 
   return (
     <Drawer
@@ -93,6 +170,7 @@ export function PresetDrawer({
               <div className={styles.bestLine}>
                 <Text variant="caption-2" color="secondary" className={styles.eyebrow}>
                   Best offer · {result.best.providerName}
+                  {result.best.scope !== 'compute' ? ` · ${scopeLabel(result.best.scope)}` : ''}
                 </Text>
                 <Flex alignItems="baseline" gap={2}>
                   <Text variant="display-2" className={styles.bestPriceValue}>
@@ -169,63 +247,50 @@ export function PresetDrawer({
 
             <div className={styles.section}>
               <Flex justifyContent="space-between" alignItems="baseline" gap={3}>
-                <Text variant="subheader-2">Все провайдеры</Text>
+                <Text variant="subheader-2">
+                  {result.best?.scope === 'bundle'
+                    ? 'Flavor целиком'
+                    : result.best?.scope === 'gpu-only'
+                      ? 'Только GPU'
+                      : 'Все провайдеры'}
+                </Text>
                 {result.quotes.length > 0 ? (
                   <Text variant="caption-2" color="secondary">
                     {result.quotes.length} оффер(ов)
                   </Text>
                 ) : null}
               </Flex>
-              <Flex direction="column" gap={2} className={styles.providerList}>
-                {result.quotes.map((q, index) => {
-                  const active = q.provider === selected?.provider;
-                  const best = result.best;
-                  const delta =
-                    best && index > 0 && best.total > 0
-                      ? Math.round((q.total / best.total - 1) * 100)
-                      : 0;
-                  return (
-                    <button
-                      key={q.provider}
-                      type="button"
-                      className={styles.providerRow}
-                      data-active={active ? 'true' : 'false'}
-                      onClick={() => setSelectedProvider(q.provider)}
-                    >
-                      <span className={styles.sellerMark}>
-                        <ProviderMark providerId={q.provider} size={16} />
-                      </span>
-                      <Flex direction="column" gap={1} className={styles.providerMeta}>
-                        <Flex alignItems="center" gap={2} className={styles.providerName}>
-                          <Text variant="body-2" ellipsis>
-                            {q.providerName}
-                          </Text>
-                          {q.scope !== 'compute' ? (
-                            <Label size="xs" theme={q.scope === 'bundle' ? 'warning' : 'utility'}>
-                              {scopeLabel(q.scope)}
-                            </Label>
-                          ) : null}
-                        </Flex>
-                        <Text
-                          variant="caption-2"
-                          color={index === 0 ? 'positive' : 'secondary'}
-                        >
-                          {index === 0 ? 'лучшая цена' : `+${delta}% к лучшей`}
-                        </Text>
-                      </Flex>
-                      <Text variant="subheader-2" className={styles.providerAmount}>
-                        {formatQuoteAmount(q.total, period)}
-                      </Text>
-                    </button>
-                  );
-                })}
-                {result.quotes.length === 0 ? (
-                  <Text variant="body-2" color="secondary">
-                    Пока не из чего сравнивать
-                  </Text>
-                ) : null}
-              </Flex>
+              <ProviderList
+                quotes={result.quotes}
+                best={result.best}
+                selectedKey={selectedKey}
+                period={period}
+                onSelect={setSelectedKey}
+              />
             </div>
+
+            {result.alternateQuotes.length > 0 ? (
+              <div className={styles.section}>
+                <Flex justifyContent="space-between" alignItems="baseline" gap={3}>
+                  <Flex direction="column" gap={1}>
+                    <Text variant="subheader-2">{alternateTitle}</Text>
+                    <Text variant="caption-2" color="secondary">
+                      Другой состав цены — не сравниваем с Best offer выше
+                    </Text>
+                  </Flex>
+                  <Text variant="caption-2" color="secondary">
+                    {result.alternateQuotes.length}
+                  </Text>
+                </Flex>
+                <ProviderList
+                  quotes={result.alternateQuotes}
+                  best={result.alternateQuotes[0] ?? null}
+                  selectedKey={selectedKey}
+                  period={period}
+                  onSelect={setSelectedKey}
+                />
+              </div>
+            ) : null}
           </div>
         </div>
       ) : null}

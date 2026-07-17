@@ -1,5 +1,6 @@
 import type {Metadata} from 'next';
 import {CalculatorPage} from '@/components/calculator/CalculatorPage';
+import {buildQuotesByPeriod} from '@/lib/calculator/quote';
 
 export const metadata: Metadata = {
   title: 'Калькулятор',
@@ -18,5 +19,7 @@ export const metadata: Metadata = {
 };
 
 export default function CalculatorRoute() {
-  return <CalculatorPage />;
+  // Server-side: one pass over the catalog for all periods. Client gets lean JSON only.
+  const quotesByPeriod = buildQuotesByPeriod();
+  return <CalculatorPage quotesByPeriod={quotesByPeriod} />;
 }

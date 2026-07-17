@@ -1,15 +1,14 @@
 'use client';
 
 import {Flex, Text} from '@gravity-ui/uikit';
-import type {CostPart} from '@/lib/calculator/quote';
-import {partTone} from '@/lib/calculator/quote';
+import {partTone, type ViewCostPart} from '@/lib/calculator/quote-view';
 import styles from './CostBreakdownBar.module.css';
 
 export function CostBreakdownBar({
   parts,
   showLegend = true,
 }: {
-  parts: CostPart[];
+  parts: ViewCostPart[];
   showLegend?: boolean;
 }) {
   const total = parts.reduce((s, p) => s + p.amount, 0);

@@ -1,22 +1,36 @@
 import {
   amountNumber,
   catalog,
-  formatRub,
   type CatalogMeter,
   type PeriodMode,
 } from '@/lib/catalog';
-import type {CalculatorPreset, ComputePreset, GpuPreset} from '@/lib/calculator/presets';
+import {
+  COMPUTE_PRESETS,
+  GPU_PRESETS,
+  type CalculatorPreset,
+  type ComputePreset,
+  type GpuPreset,
+} from '@/lib/calculator/presets';
+import {
+  formatQuoteAmount,
+  periodShortLabel,
+  partTone,
+  scopeLabel,
+  type CostPartId,
+  type QuoteScope,
+  type QuotesByPeriod,
+  type ViewPresetQuote,
+  type ViewProviderQuote,
+} from '@/lib/calculator/quote-view';
 
-export type CostPartId = 'vcpu' | 'ram' | 'disk' | 'gpu' | 'bundle';
+export type {CostPartId, QuoteScope};
+export {formatQuoteAmount, periodShortLabel, partTone, scopeLabel};
 
 export type CostPart = {
   id: CostPartId;
   label: string;
   amount: number;
 };
-
-/** What a quote's price actually includes, so mixed offers stay comparable. */
-export type QuoteScope = 'compute' | 'gpu-only' | 'bundle';
 
 export type ProviderQuote = {
   provider: string;
@@ -29,18 +43,54 @@ export type ProviderQuote = {
   meters: CatalogMeter[];
 };
 
-export function scopeLabel(scope: QuoteScope): string {
-  if (scope === 'bundle') return 'vCPU + RAM + GPU';
-  if (scope === 'gpu-only') return 'только GPU';
-  return 'vCPU + RAM + диск';
-}
-
 export type PresetQuoteResult = {
   preset: CalculatorPreset;
   period: PeriodMode;
+  /**
+   * Primary ranking used for Best offer — always one comparable scope.
+   * For GPU: either gpu-only or bundle (never mixed).
+   */
   quotes: ProviderQuote[];
+  /**
+   * GPU only: offers of the other scope (bundle vs unit), kept out of the
+   * primary sort so we never crown a gpu-only SKU as "cheaper" than a full VM.
+   */
+  alternateQuotes: ProviderQuote[];
   best: ProviderQuote | null;
 };
+
+type MeterIndex = {
+  /** `${providerId}|${meter}` → meters */
+  byKey: Map<string, CatalogMeter[]>;
+  /** providerId → GPU category meters */
+  gpuByProvider: Map<string, CatalogMeter[]>;
+};
+
+let meterIndex: MeterIndex | null = null;
+
+function getMeterIndex(): MeterIndex {
+  if (meterIndex) return meterIndex;
+  const byKey = new Map<string, CatalogMeter[]>();
+  const gpuByProvider = new Map<string, CatalogMeter[]>();
+  for (const m of catalog.meters) {
+    const key = `${m.provider}|${m.meter}`;
+    const bucket = byKey.get(key);
+    if (bucket) bucket.push(m);
+    else byKey.set(key, [m]);
+    if (m.categoryKey === 'gpu') {
+      const gpuBucket = gpuByProvider.get(m.provider);
+      if (gpuBucket) gpuBucket.push(m);
+      else gpuByProvider.set(m.provider, [m]);
+    }
+  }
+  meterIndex = {byKey, gpuByProvider};
+  return meterIndex;
+}
+
+/** Test / hot-reload helper. */
+export function resetMeterIndexForTests(): void {
+  meterIndex = null;
+}
 
 function isOnDemand(meter: CatalogMeter): boolean {
   const pm = String(meter.purchaseModel || meter.dimensions.purchaseModel || 'on-demand');
@@ -130,15 +180,9 @@ function pricedList(
   period: PeriodMode,
   predicate: (m: CatalogMeter) => boolean,
 ): PricedMeter[] {
-  return catalog.meters
-    .filter(
-      (m) =>
-        m.provider === provider &&
-        m.meter === meter &&
-        m.status === 'available' &&
-        isConfirmedAvailable(m) &&
-        predicate(m),
-    )
+  const rows = getMeterIndex().byKey.get(`${provider}|${meter}`) ?? [];
+  return rows
+    .filter((m) => m.status === 'available' && isConfirmedAvailable(m) && predicate(m))
     .map((m) => ({m, unit: meterHourlyOrPeriodAmount(m, period) ?? NaN}))
     .filter((x) => Number.isFinite(x.unit) && x.unit > 0)
     .sort((a, b) => a.unit - b.unit);
@@ -195,7 +239,8 @@ function pickComputeCombo(
 
 /** Note describing what the chosen vCPU actually is, so the price is not oversold. */
 function computeNote(vcpu: CatalogMeter, lowCost: boolean): string {
-  const preemptible = /preempt/i.test(String(vcpu.dimensions.purchaseModel ?? '')) ||
+  const preemptible =
+    /preempt/i.test(String(vcpu.dimensions.purchaseModel ?? '')) ||
     /preempt/i.test(vcpu.name);
   if (preemptible) {
     return 'Preemptible: цена ниже, но инстанс может быть вытеснен провайдером. Диск — SSD.';
@@ -259,12 +304,46 @@ function gpuModelMatches(meter: CatalogMeter, match: string): boolean {
   return new RegExp(match, 'i').test(model);
 }
 
-function quoteGpu(preset: GpuPreset, period: PeriodMode): ProviderQuote[] {
-  const quotes: ProviderQuote[] = [];
+function isGpuBundle(meter: CatalogMeter): boolean {
+  return meter.pricingMode === 'bundle' || meter.unitQuantity === 'flavor';
+}
+
+function buildGpuQuote(
+  provider: {id: string; name: string},
+  preset: GpuPreset,
+  meter: CatalogMeter,
+  amount: number,
+  bundle: boolean,
+): ProviderQuote {
+  return {
+    provider: provider.id,
+    providerName: provider.name,
+    total: amount,
+    scope: bundle ? 'bundle' : 'gpu-only',
+    parts: bundle
+      ? [{id: 'bundle', label: 'Конфигурация (vCPU+RAM+GPU)', amount}]
+      : [{id: 'gpu', label: `${preset.title} GPU`, amount}],
+    note: bundle
+      ? 'Цена flavor целиком (ядра и память включены).'
+      : 'Только GPU; vCPU и RAM у провайдера обычно отдельно.',
+    meters: [meter],
+  };
+}
+
+/**
+ * GPU quotes are split by scope: primary list never mixes gpu-only with bundle,
+ * so Best offer compares like with like. The other scope lands in alternateQuotes.
+ */
+function quoteGpu(
+  preset: GpuPreset,
+  period: PeriodMode,
+): {primary: ProviderQuote[]; alternate: ProviderQuote[]} {
+  const unitQuotes: ProviderQuote[] = [];
+  const bundleQuotes: ProviderQuote[] = [];
+  const index = getMeterIndex();
 
   for (const provider of catalog.providers) {
-    const candidates = catalog.meters.filter((m) => {
-      if (m.provider !== provider.id || m.categoryKey !== 'gpu') return false;
+    const candidates = (index.gpuByProvider.get(provider.id) ?? []).filter((m) => {
       if (m.status !== 'available') return false;
       if (!isConfirmedAvailable(m)) return false;
       if (!isOnDemand(m)) return false;
@@ -274,69 +353,109 @@ function quoteGpu(preset: GpuPreset, period: PeriodMode): ProviderQuote[] {
       return count === preset.gpuCount;
     });
 
-    const priced = candidates
-      .map((m) => ({m, amount: meterHourlyOrPeriodAmount(m, period)}))
-      .filter((x): x is {m: CatalogMeter; amount: number} => x.amount != null && x.amount > 0)
-      .sort((a, b) => {
-        // Prefer bundles when requested (full node), else prefer unit GPU rates
-        const aBundle = a.m.pricingMode === 'bundle' ? 0 : 1;
-        const bBundle = b.m.pricingMode === 'bundle' ? 0 : 1;
-        if (preset.preferBundle && aBundle !== bBundle) return aBundle - bBundle;
-        if (!preset.preferBundle && aBundle !== bBundle) return bBundle - aBundle;
-        return a.amount - b.amount;
-      });
+    let bestUnit: {m: CatalogMeter; amount: number} | null = null;
+    let bestBundle: {m: CatalogMeter; amount: number} | null = null;
 
-    const best = priced[0];
-    if (!best) continue;
+    for (const m of candidates) {
+      const amount = meterHourlyOrPeriodAmount(m, period);
+      if (amount == null || amount <= 0) continue;
+      if (isGpuBundle(m)) {
+        if (!bestBundle || amount < bestBundle.amount) bestBundle = {m, amount};
+      } else if (!bestUnit || amount < bestUnit.amount) {
+        bestUnit = {m, amount};
+      }
+    }
 
-    const isBundle = best.m.pricingMode === 'bundle' || best.m.unitQuantity === 'flavor';
-    const parts: CostPart[] = isBundle
-      ? [{id: 'bundle', label: 'Конфигурация (vCPU+RAM+GPU)', amount: best.amount}]
-      : [{id: 'gpu', label: `${preset.title} GPU`, amount: best.amount}];
-
-    quotes.push({
-      provider: provider.id,
-      providerName: provider.name,
-      total: best.amount,
-      scope: isBundle ? 'bundle' : 'gpu-only',
-      parts,
-      note: isBundle
-        ? 'Цена flavor целиком (ядра и память включены).'
-        : 'Только GPU; vCPU и RAM у провайдера обычно отдельно.',
-      meters: [best.m],
-    });
+    if (bestUnit) {
+      unitQuotes.push(buildGpuQuote(provider, preset, bestUnit.m, bestUnit.amount, false));
+    }
+    if (bestBundle) {
+      bundleQuotes.push(buildGpuQuote(provider, preset, bestBundle.m, bestBundle.amount, true));
+    }
   }
 
-  return quotes.sort((a, b) => a.total - b.total);
+  unitQuotes.sort((a, b) => a.total - b.total);
+  bundleQuotes.sort((a, b) => a.total - b.total);
+
+  if (preset.preferBundle) {
+    return {primary: bundleQuotes, alternate: unitQuotes};
+  }
+  // Default GPU cards: rank unit rates; keep flavors as a separate shelf.
+  return {primary: unitQuotes, alternate: bundleQuotes};
 }
 
 export function quotePreset(
   preset: CalculatorPreset,
   period: PeriodMode = 'month',
 ): PresetQuoteResult {
-  const quotes = preset.kind === 'compute' ? quoteCompute(preset, period) : quoteGpu(preset, period);
+  if (preset.kind === 'compute') {
+    const quotes = quoteCompute(preset, period);
+    return {
+      preset,
+      period,
+      quotes,
+      alternateQuotes: [],
+      best: quotes[0] ?? null,
+    };
+  }
+
+  const {primary, alternate} = quoteGpu(preset, period);
+  // If the preferred scope is empty, fall back so the card is not blank.
+  const quotes = primary.length ? primary : alternate;
+  const alternateQuotes = primary.length ? alternate : [];
   return {
     preset,
     period,
     quotes,
+    alternateQuotes,
     best: quotes[0] ?? null,
   };
 }
 
-export function formatQuoteAmount(amount: number, period: PeriodMode): string {
-  return formatRub(amount, period === 'unit' ? 2 : 0);
+/** Quote every calculator preset once for a period (page-level batch). */
+export function quoteAllPresets(period: PeriodMode = 'month'): Map<string, PresetQuoteResult> {
+  getMeterIndex();
+  const map = new Map<string, PresetQuoteResult>();
+  for (const preset of COMPUTE_PRESETS) {
+    map.set(preset.id, quotePreset(preset, period));
+  }
+  for (const preset of GPU_PRESETS) {
+    map.set(preset.id, quotePreset(preset, period));
+  }
+  return map;
 }
 
-export function periodShortLabel(period: PeriodMode): string {
-  if (period === 'month') return 'мес';
-  if (period === 'year') return 'год';
-  return 'час';
+function stripMeters(q: ProviderQuote): ViewProviderQuote {
+  return {
+    provider: q.provider,
+    providerName: q.providerName,
+    total: q.total,
+    scope: q.scope,
+    parts: q.parts,
+    note: q.note,
+  };
 }
 
-export function partTone(id: CostPartId): string {
-  if (id === 'vcpu') return 'info';
-  if (id === 'ram') return 'utility';
-  if (id === 'disk') return 'success';
-  if (id === 'gpu' || id === 'bundle') return 'warning';
-  return 'unknown';
+export function toViewQuote(result: PresetQuoteResult): ViewPresetQuote {
+  return {
+    presetId: result.preset.id,
+    quotes: result.quotes.map(stripMeters),
+    alternateQuotes: result.alternateQuotes.map(stripMeters),
+    best: result.best ? stripMeters(result.best) : null,
+  };
+}
+
+/** Precompute all periods on the server so the client never loads the catalog. */
+export function buildQuotesByPeriod(): QuotesByPeriod {
+  const periods: PeriodMode[] = ['unit', 'month', 'year'];
+  const out = {} as QuotesByPeriod;
+  for (const period of periods) {
+    const map = quoteAllPresets(period);
+    const record: Record<string, ViewPresetQuote> = {};
+    for (const [id, result] of map) {
+      record[id] = toViewQuote(result);
+    }
+    out[period] = record;
+  }
+  return out;
 }

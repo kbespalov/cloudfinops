@@ -9,7 +9,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "tsx --test src/lib/calculator/**/*.test.ts"
   },
   "dependencies": {
     "@gravity-ui/icons": "^2.20.0",
