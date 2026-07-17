@@ -46,3 +46,6 @@ spec:
           period: hour
         formula: 0.12539352 × 60 × 1.22 VAT
         vat: included
+    notes: >
+      Master Small — зональный control plane. Размер ноды в публичном прайсе
+      не раскрыт; с конфигурациями 2 vCPU / 4 ГиБ сравнивайте только по ₽/час.

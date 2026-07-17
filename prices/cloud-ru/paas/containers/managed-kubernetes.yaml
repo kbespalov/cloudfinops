@@ -9,7 +9,7 @@ metadata:
 spec:
   meters:
   - sku: cloudru.kubernetes.master-zonal-2-4
-    name: Зональный мастер 2 vCPU/4 GB RAM
+    name: Зональный мастер 2 vCPU / 4 ГиБ
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle

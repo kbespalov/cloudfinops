@@ -40,6 +40,7 @@ spec:
           period: hour
         formula: native hourly rate
         vat: included
+    notes: Покомпонентная ставка; для сравнения смотрите расчётный мастер 2 vCPU / 4 ГиБ.
   - sku: yc.kubernetes.master-ram
     name: Master RAM
     meter: containers.kubernetes.control-plane.ram
@@ -72,8 +73,9 @@ spec:
           period: hour
         formula: native hourly rate
         vat: included
+    notes: Покомпонентная ставка; для сравнения смотрите расчётный мастер 2 vCPU / 4 ГиБ.
   - sku: yc.kubernetes.master-zonal
-    name: Zonal master fixed component
+    name: Зональный мастер — фикс
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: fixed
@@ -100,9 +102,12 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Фиксированная плата за зональный мастер — 0 ₽; оплачиваются vCPU и RAM мастера.
+    notes: >
+      Фиксированная плата за зональный мастер — 0 ₽. Сами ресурсы мастера
+      (vCPU и RAM) оплачиваются отдельно; для сравнения используйте
+      «Зональный мастер 2 vCPU / 4 ГиБ».
   - sku: yc.kubernetes.master-regional
-    name: Regional master fixed component
+    name: Региональный мастер — фикс
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: fixed
@@ -129,9 +134,12 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Фиксированная плата за региональный мастер — 0 ₽; оплачиваются vCPU и RAM мастера.
+    notes: >
+      Фиксированная плата за региональный мастер — 0 ₽. Сами ресурсы мастера
+      (vCPU и RAM) оплачиваются отдельно; для сравнения используйте
+      «Региональный мастер 3×(2 vCPU / 4 ГиБ)».
   - sku: yc.kubernetes.master-basic-2-4.synthetic
-    name: Synthetic basic master 2 vCPU / 4 GiB RAM (zonal)
+    name: Зональный мастер 2 vCPU / 4 ГиБ
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -177,9 +185,9 @@ spec:
     notes: >
       Расчётная конфигурация зонального мастера 2 vCPU / 4 ГиБ для сравнения с другими
       провайдерами. Собрана из отдельных ставок vCPU и RAM; размер мастера в Yandex Cloud
-      выбирается при создании кластера.
+      выбирается при создании кластера. Фиксированная плата за зональный мастер — 0 ₽.
   - sku: yc.kubernetes.master-ha-2-4.synthetic
-    name: Synthetic HA master 3×(2 vCPU / 4 GiB RAM)
+    name: Региональный мастер 3×(2 vCPU / 4 ГиБ)
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -225,4 +233,4 @@ spec:
     notes: >
       Расчётная конфигурация отказоустойчивого мастера: 3×(2 vCPU / 4 ГиБ) для сравнения
       с региональными тарифами других провайдеров. Реальный размер мастера в Yandex Cloud
-      выбирается при создании кластера.
+      выбирается при создании кластера. Фиксированная плата за региональный мастер — 0 ₽.

@@ -21,6 +21,7 @@ spec:
     - vk.k8s-rules
     dimensions:
       component: master vCPU
+      cpuPlatformFamily: intel-cascade-lake
       published30Days: 983.51
     pricing:
       rate:
@@ -39,9 +40,45 @@ spec:
           period: hour
         formula: 0.022766 × 60
         vat: included
-    notes: В публичном прайсе тарифицируется только vCPU мастера; отдельной ставки за RAM мастера нет.
-  - sku: vk.kubernetes.master-basic-2vcpu.synthetic
-    name: Synthetic basic master 2 vCPU
+    notes: >
+      Ставка за vCPU master-узла Cloud Containers (Intel Cascade Lake).
+      Для сравнения смотрите расчётный мастер 2 vCPU / 4 ГиБ.
+  - sku: vk.kubernetes.master-ram
+    name: Master RAM
+    meter: containers.kubernetes.control-plane.ram
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    - vk.k8s-rules
+    dimensions:
+      component: master-ram
+      published30Days: 267.18
+    pricing:
+      rate:
+        amount: '0.006185'
+        currency: RUB
+        unit:
+          quantity: GiB-RAM
+          period: minute
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.3711'
+        unit:
+          currency: RUB
+          quantity: GiB-RAM
+          period: hour
+        formula: 0.006185 × 60
+        vat: included
+    notes: >
+      Ставка за RAM master-узла Cloud Containers (0,006185 ₽/ГиБ·мин).
+      Для сравнения смотрите расчётный мастер 2 vCPU / 4 ГиБ.
+  - sku: vk.kubernetes.master-basic-2-4.synthetic
+    name: Зональный мастер 2 vCPU / 4 ГиБ
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -60,16 +97,15 @@ spec:
       topology: zonal
       masterCount: 1
       vcpu: 2
-      ramGiB: null
-      ramPricedSeparately: false
+      ramGiB: 4
       synthetic: true
       syntheticFrom:
       - vk.kubernetes.master-vcpu
+      - vk.kubernetes.master-ram
       vatRatePercent: 22
-      coverageNote: ram-not-published
     pricing:
       rate:
-        amount: '2.73192'
+        amount: '4.21632'
         currency: RUB
         unit:
           quantity: master
@@ -77,19 +113,19 @@ spec:
         vat: included
         byteBasis: not-applicable
       normalized:
-        amount: '2.73192'
+        amount: '4.21632'
         unit:
           currency: RUB
           quantity: master
           period: hour
-        formula: 2 × 1.36596 (master vCPU-hour)
+        formula: 2 × 1.36596 (vCPU) + 4 × 0.3711 (GiB-RAM)
         vat: included
     notes: >
-      Расчётная конфигурация зонального мастера на 2 vCPU для сравнения. В публичном прайсе
-      VK Cloud нет ставки за RAM мастера, поэтому в расчёт входят только ядра — сравнение
-      с конфигурациями 2 vCPU / 4 ГиБ у других провайдеров неполное.
-  - sku: vk.kubernetes.master-ha-2vcpu.synthetic
-    name: Synthetic HA master 3×2 vCPU
+      Расчётная конфигурация зонального мастера 2 vCPU / 4 ГиБ для сравнения
+      с другими провайдерами. Собрана из опубликованных ставок vCPU и RAM
+      master-узлов; размер мастера в VK Cloud выбирается при создании кластера.
+  - sku: vk.kubernetes.master-ha-2-4.synthetic
+    name: Региональный мастер 3×(2 vCPU / 4 ГиБ)
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -108,16 +144,15 @@ spec:
       topology: regional
       masterCount: 3
       vcpu: 2
-      ramGiB: null
-      ramPricedSeparately: false
+      ramGiB: 4
       synthetic: true
       syntheticFrom:
       - vk.kubernetes.master-vcpu
+      - vk.kubernetes.master-ram
       vatRatePercent: 22
-      coverageNote: ram-not-published
     pricing:
       rate:
-        amount: '8.19576'
+        amount: '12.64896'
         currency: RUB
         unit:
           quantity: master
@@ -125,13 +160,14 @@ spec:
         vat: included
         byteBasis: not-applicable
       normalized:
-        amount: '8.19576'
+        amount: '12.64896'
         unit:
           currency: RUB
           quantity: master
           period: hour
-        formula: 3 × 2 × 1.36596 (master vCPU-hour)
+        formula: 3 × (2 × 1.36596 + 4 × 0.3711)
         vat: included
     notes: >
-      Расчётная конфигурация отказоустойчивого мастера: 3×2 vCPU. Отдельной ставки за RAM
-      мастера в публичном прайсе VK Cloud нет.
+      Расчётная конфигурация отказоустойчивого мастера: 3×(2 vCPU / 4 ГиБ).
+      Собрана из опубликованных ставок vCPU и RAM; в публичном прайсе VK Cloud
+      нет отдельной фиксированной платы за HA — умножаем ресурсы на три master-узла.

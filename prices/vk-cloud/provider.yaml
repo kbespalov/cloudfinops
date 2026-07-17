@@ -21,6 +21,7 @@ spec:
     - compute.vcpu
     - containers.kubernetes.control-plane
     - containers.kubernetes.control-plane.vcpu
+    - containers.kubernetes.control-plane.ram
     - network.ipv4.attached
     - network.ipv4.reserved
     - network.traffic.ingress
@@ -54,6 +55,7 @@ spec:
     covers:
     - containers.kubernetes.control-plane
     - containers.kubernetes.control-plane.vcpu
+    - containers.kubernetes.control-plane.ram
   - id: vk.s3-rules
     title: Тарификация VK Object Storage
     url: https://cloud.vk.com/docs/ru/storage/s3/tariffication

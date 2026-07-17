@@ -45,6 +45,10 @@ spec:
           period: hour
         formula: native hourly master rate
         vat: included
+    notes: >
+      Worker-ноды оплачиваются отдельно. Ставка для пула ru-9. Размер master-нод
+      в публичном прайсе не раскрыт — сравнивать с конфигурациями 2 vCPU / 4 ГиБ
+      у VK/Yandex/Cloud.ru можно только по итоговому ₽/час, не по железу.
   - sku: selectel.kubernetes.master-ha
     name: Отказоустойчивый кластер, 3 master
     meter: containers.kubernetes.control-plane
@@ -82,4 +86,7 @@ spec:
           period: hour
         formula: native hourly master rate
         vat: included
-    notes: Worker-ноды оплачиваются отдельно. В каталоге указана ставка для пула ru-9.
+    notes: >
+      Worker-ноды оплачиваются отдельно. Ставка для пула ru-9. Размер master-нод
+      в публичном прайсе не раскрыт — сравнивать с конфигурациями 2 vCPU / 4 ГиБ
+      у VK/Yandex/Cloud.ru можно только по итоговому ₽/час, не по железу.
