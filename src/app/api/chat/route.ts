@@ -5,35 +5,71 @@ import {
   hasApiKey,
   type ChatMessage,
 } from '@/lib/chat/gigachat';
+import {
+  CHAT_LIMITS,
+  chatRateLimiter,
+  estimateMessagesTokens,
+  reserveTokensForRequest,
+} from '@/lib/chat/limits';
+import {chatLog, clientIp} from '@/lib/chat/log';
 import {SYSTEM_PROMPT} from '@/lib/chat/system-prompt';
 import {CHAT_TOOLS, runTool} from '@/lib/chat/tools';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const MAX_MESSAGES = 20;
-const MAX_CONTENT_LEN = 4000;
-const MAX_TOOL_ROUNDS = 4;
-
 type ClientMessage = {role: 'user' | 'assistant'; content: string};
 
-function sanitize(messages: unknown): ChatMessage[] | null {
-  if (!Array.isArray(messages)) return null;
-  const trimmed = messages.slice(-MAX_MESSAGES);
+type SanitizeResult =
+  | {ok: true; messages: ChatMessage[]; totalChars: number; truncated: boolean}
+  | {ok: false; error: string};
+
+function sanitize(messages: unknown): SanitizeResult {
+  if (!Array.isArray(messages)) return {ok: false, error: 'Пустой или некорректный список сообщений.'};
+
+  const trimmed = messages.slice(-CHAT_LIMITS.maxMessages);
+  const truncated = trimmed.length < messages.length;
   const out: ChatMessage[] = [];
+  let totalChars = 0;
+
   for (const m of trimmed) {
     if (!m || typeof m !== 'object') continue;
     const {role, content} = m as ClientMessage;
     if (role !== 'user' && role !== 'assistant') continue;
     if (typeof content !== 'string' || !content.trim()) continue;
-    out.push({role, content: content.slice(0, MAX_CONTENT_LEN)});
+    const sliced = content.slice(0, CHAT_LIMITS.maxContentLen);
+    totalChars += sliced.length;
+    out.push({role, content: sliced});
   }
-  if (!out.length || out[out.length - 1].role !== 'user') return null;
-  return out;
+
+  if (!out.length || out[out.length - 1].role !== 'user') {
+    return {ok: false, error: 'Пустой или некорректный список сообщений.'};
+  }
+  if (totalChars > CHAT_LIMITS.maxTotalChars) {
+    return {
+      ok: false,
+      error: `Слишком длинный диалог (лимит ${CHAT_LIMITS.maxTotalChars} символов). Начните новый чат или сократите историю.`,
+    };
+  }
+  return {ok: true, messages: out, totalChars, truncated};
+}
+
+function lastUserText(messages: ChatMessage[]): string {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+    if (m.role === 'user' && typeof m.content === 'string') return m.content;
+  }
+  return '';
 }
 
 export async function POST(req: Request) {
+  const ip = clientIp(req);
+  const ua = req.headers.get('user-agent')?.slice(0, 160) ?? '';
+  const started = Date.now();
+  const requestId = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+
   if (!hasApiKey()) {
+    chatLog('chat.unavailable', {requestId, ip, reason: 'missing_api_key'});
     return NextResponse.json(
       {error: 'AI-ассистент временно недоступен: не настроен ключ API на сервере.'},
       {status: 503},
@@ -44,15 +80,58 @@ export async function POST(req: Request) {
   try {
     body = await req.json();
   } catch {
+    chatLog('chat.bad_request', {requestId, ip, reason: 'invalid_json'});
     return NextResponse.json({error: 'Некорректный запрос.'}, {status: 400});
   }
 
-  const history = sanitize((body as {messages?: unknown})?.messages);
-  if (!history) {
-    return NextResponse.json({error: 'Пустой или некорректный список сообщений.'}, {status: 400});
+  const sanitized = sanitize((body as {messages?: unknown})?.messages);
+  if (!sanitized.ok) {
+    chatLog('chat.bad_request', {requestId, ip, reason: 'sanitize', error: sanitized.error});
+    return NextResponse.json({error: sanitized.error}, {status: 400});
   }
 
+  const history = sanitized.messages;
+  const userText = lastUserText(history);
   const messages: ChatMessage[] = [{role: 'system', content: SYSTEM_PROMPT}, ...history];
+  const inputTokens = estimateMessagesTokens(messages);
+  const reservedTokens = reserveTokensForRequest(inputTokens);
+  const budget = chatRateLimiter.tryAcquire(ip, reservedTokens);
+
+  if (!budget.ok) {
+    chatLog('chat.rate_limited', {
+      requestId,
+      ip,
+      reason: budget.reason,
+      retryAfterSec: budget.retryAfterSec,
+      reservedTokens,
+      ...chatRateLimiter.snapshot(),
+    });
+    return NextResponse.json(
+      {error: budget.detail},
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(budget.retryAfterSec),
+          'Cache-Control': 'no-store',
+        },
+      },
+    );
+  }
+
+  chatLog('chat.request', {
+    requestId,
+    ip,
+    ua,
+    action: 'ask',
+    messageCount: history.length,
+    totalChars: sanitized.totalChars,
+    userChars: userText.length,
+    userPreview: userText.slice(0, 240),
+    inputTokensEst: inputTokens,
+    reservedTokens,
+    historyTruncated: sanitized.truncated,
+    ...chatRateLimiter.snapshot(),
+  });
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
@@ -60,17 +139,20 @@ export async function POST(req: Request) {
       const abort = new AbortController();
       req.signal.addEventListener('abort', () => abort.abort());
 
+      let toolRounds = 0;
+      let toolCallsTotal = 0;
+      let outputChars = 0;
+      let status: 'ok' | 'empty' | 'error' | 'aborted' = 'ok';
+
       try {
-        // Tool-calling loop: let the model request data, execute, feed back.
-        for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
+        for (let round = 0; round < CHAT_LIMITS.maxToolRounds; round++) {
           const reply = await chatCompletion(messages, CHAT_TOOLS, abort.signal);
           const toolCalls = reply.tool_calls ?? [];
 
-          if (!toolCalls.length) {
-            // No tools requested — done with the loop, stream the final answer.
-            break;
-          }
+          if (!toolCalls.length) break;
 
+          toolRounds += 1;
+          toolCallsTotal += toolCalls.length;
           messages.push({
             role: 'assistant',
             content: reply.content ?? '',
@@ -78,6 +160,13 @@ export async function POST(req: Request) {
           });
 
           for (const call of toolCalls) {
+            chatLog('chat.tool', {
+              requestId,
+              ip,
+              action: 'tool_call',
+              tool: call.function.name,
+              argsPreview: call.function.arguments.slice(0, 200),
+            });
             const result = runTool(call.function.name, call.function.arguments);
             messages.push({
               role: 'tool',
@@ -88,26 +177,47 @@ export async function POST(req: Request) {
           }
         }
 
-        // Final answer, streamed to the client as plain text chunks.
         let streamedAny = false;
         for await (const delta of chatCompletionStream(messages, abort.signal)) {
           streamedAny = true;
+          outputChars += delta.length;
           controller.enqueue(encoder.encode(delta));
         }
 
         if (!streamedAny) {
+          status = 'empty';
           controller.enqueue(
             encoder.encode('Не удалось получить ответ. Попробуйте переформулировать вопрос.'),
           );
         }
       } catch (err) {
         if (abort.signal.aborted) {
-          controller.close();
-          return;
+          status = 'aborted';
+        } else {
+          status = 'error';
+          const detail = err instanceof Error ? err.message : 'Неизвестная ошибка.';
+          chatLog('chat.error', {
+            requestId,
+            ip,
+            error: detail.slice(0, 300),
+            durationMs: Date.now() - started,
+            toolRounds,
+            toolCallsTotal,
+          });
+          controller.enqueue(encoder.encode(`\n\n⚠️ Ошибка обращения к модели: ${detail}`));
         }
-        const detail = err instanceof Error ? err.message : 'Неизвестная ошибка.';
-        controller.enqueue(encoder.encode(`\n\n⚠️ Ошибка обращения к модели: ${detail}`));
       } finally {
+        chatLog('chat.done', {
+          requestId,
+          ip,
+          status,
+          durationMs: Date.now() - started,
+          toolRounds,
+          toolCallsTotal,
+          outputChars,
+          outputTokensEst: outputChars ? Math.ceil(outputChars / 2) : 0,
+          ...chatRateLimiter.snapshot(),
+        });
         controller.close();
       }
     },
@@ -118,6 +228,7 @@ export async function POST(req: Request) {
       'Content-Type': 'text/plain; charset=utf-8',
       'Cache-Control': 'no-store',
       'X-Accel-Buffering': 'no',
+      'X-Request-Id': requestId,
     },
   });
 }
