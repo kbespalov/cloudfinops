@@ -1,22 +1,16 @@
 'use client';
 
-import {useMemo, useState} from 'react';
-import {
-  Button,
-  Flex,
-  Icon,
-  Label,
-  PlaceholderContainer,
-  SegmentedRadioGroup,
-  Text,
-} from '@gravity-ui/uikit';
-import {BookOpen, ChevronRight, Layers3Diagonal, Magnifier} from '@gravity-ui/icons';
+import {useEffect, useMemo, useState, type ReactNode} from 'react';
+import {Button, Flex, Icon, Label, Link, PlaceholderContainer, Text} from '@gravity-ui/uikit';
+import {ArrowUpRightFromSquare, BookOpen, ChevronRight, Magnifier} from '@gravity-ui/icons';
 import {AppHeader} from '@/components/AppHeader';
 import {NewsDrawer} from '@/components/news/NewsDrawer';
 import {
   NEWS_PROVIDER_TITLE,
   NEWS_TAG_TITLE,
   formatNewsDate,
+  formatNewsMonth,
+  listNewsMonths,
   newsItems,
   newsMonthKey,
   sortNewsNewestFirst,
@@ -28,13 +22,12 @@ import styles from './NewsPage.module.css';
 
 type ProviderFilter = 'all' | NewsProviderId;
 type MonthFilter = 'all' | string;
+type TagFilter = 'all' | NewsTag;
 
-const MONTH_OPTIONS: {value: MonthFilter; title: string}[] = [
-  {value: 'all', title: 'Все'},
-  {value: '2026-06', title: 'Июнь 2026'},
-];
+const PAGE_SIZE = 10;
 
 const PROVIDER_ORDER: NewsProviderId[] = [
+  'market',
   'yandex-cloud',
   'selectel',
   'cloud-ru',
@@ -46,6 +39,17 @@ const PROVIDER_ORDER: NewsProviderId[] = [
   'google-cloud',
 ];
 
+const TAG_ORDER: NewsTag[] = [
+  'finops',
+  'ai',
+  'compute',
+  'storage',
+  'network',
+  'kubernetes',
+  'data',
+  'security',
+];
+
 function tagTheme(tag: NewsTag): 'info' | 'success' | 'warning' | 'utility' | 'normal' {
   if (tag === 'ai') return 'utility';
   if (tag === 'security') return 'warning';
@@ -54,164 +58,268 @@ function tagTheme(tag: NewsTag): 'info' | 'success' | 'warning' | 'utility' | 'n
   return 'normal';
 }
 
+function FilterChip({
+  active,
+  children,
+  onClick,
+}: {
+  active: boolean;
+  children: ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <Button view={active ? 'outlined-action' : 'outlined'} size="m" onClick={onClick}>
+      {children}
+    </Button>
+  );
+}
+
 export function NewsPage() {
-  const [month, setMonth] = useState<MonthFilter>('2026-06');
+  const [month, setMonth] = useState<MonthFilter>('all');
   const [provider, setProvider] = useState<ProviderFilter>('all');
+  const [tag, setTag] = useState<TagFilter>('all');
+  const [page, setPage] = useState(1);
   const [activeItem, setActiveItem] = useState<NewsItem | null>(null);
+
+  const monthOptions = useMemo(() => {
+    return [
+      {value: 'all' as const, title: 'Все'},
+      ...listNewsMonths().map((value) => ({value, title: formatNewsMonth(value)})),
+    ];
+  }, []);
 
   const providerOptions = useMemo(() => {
     const present = new Set(newsItems.map((n) => n.provider));
-    return [
-      {value: 'all' as const, title: 'Все'},
-      ...PROVIDER_ORDER.filter((id) => present.has(id)).map((id) => ({
-        value: id,
-        title: NEWS_PROVIDER_TITLE[id],
-      })),
-    ];
+    return PROVIDER_ORDER.filter((id) => present.has(id));
+  }, []);
+
+  const tagOptions = useMemo(() => {
+    const present = new Set(newsItems.flatMap((n) => n.tags));
+    return TAG_ORDER.filter((id) => present.has(id));
   }, []);
 
   const filtered = useMemo(() => {
     const list = newsItems.filter((item) => {
       if (month !== 'all' && newsMonthKey(item.date) !== month) return false;
       if (provider !== 'all' && item.provider !== provider) return false;
+      if (tag !== 'all' && !item.tags.includes(tag)) return false;
       return true;
     });
     return sortNewsNewestFirst(list);
-  }, [month, provider]);
+  }, [month, provider, tag]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+
+  useEffect(() => {
+    setPage(1);
+  }, [month, provider, tag]);
+
+  useEffect(() => {
+    if (page > pageCount) setPage(pageCount);
+  }, [page, pageCount]);
+
+  const pageItems = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, page]);
 
   const reset = () => {
-    setMonth('2026-06');
+    setMonth('all');
     setProvider('all');
+    setTag('all');
+    setPage(1);
   };
 
-  const hasFilters = month !== '2026-06' || provider !== 'all';
+  const hasFilters = month !== 'all' || provider !== 'all' || tag !== 'all';
+  const rangeFrom = filtered.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
+  const rangeTo = Math.min(page * PAGE_SIZE, filtered.length);
 
   return (
     <>
       <AppHeader />
       <div className={styles.page}>
-        <Flex direction="column" gap={4}>
-          <Flex direction="column" gap={1}>
-            <Flex alignItems="center" gap={2}>
-              <Icon data={BookOpen} size={24} />
-              <Text variant="header-1">Новости</Text>
+        <div className={styles.layout}>
+          <div className={styles.main}>
+            <Flex direction="column" gap={1}>
+              <Flex alignItems="center" gap={2}>
+                <Icon data={BookOpen} size={24} />
+                <Text variant="header-1">Новости</Text>
+              </Flex>
+              <Text color="secondary" variant="body-1">
+                Новые возможности облаков и FinOps · {filtered.length}{' '}
+                {filtered.length === 1 ? 'материал' : 'материалов'}
+                {filtered.length > 0
+                  ? ` · ${rangeFrom}–${rangeTo} на странице`
+                  : null}
+              </Text>
             </Flex>
-            <Text color="secondary" variant="body-1">
-              Новые возможности облаков · {filtered.length}{' '}
-              {filtered.length === 1 ? 'материал' : 'материалов'}
-            </Text>
-          </Flex>
 
-          <div className={styles.filters}>
-            <div className={styles.facetRow}>
-              <div className={styles.facetControl} title="Период">
-                <Text variant="caption-2" color="complementary" className={styles.facetLabel}>
-                  Период
-                </Text>
-                <SegmentedRadioGroup
-                  size="m"
-                  value={month}
-                  onUpdate={(v) => setMonth(v as MonthFilter)}
-                >
-                  {MONTH_OPTIONS.map((o) => (
-                    <SegmentedRadioGroup.Option key={o.value} value={o.value}>
-                      {o.title}
-                    </SegmentedRadioGroup.Option>
+            {filtered.length === 0 ? (
+              <PlaceholderContainer
+                title="Пока пусто"
+                description="Нет новостей по выбранным фильтрам. Сбросьте фильтры или загляните позже."
+                size="m"
+                align="center"
+                image={<Icon data={Magnifier} size={28} />}
+                actions={[
+                  {
+                    text: 'Сбросить фильтры',
+                    view: 'action',
+                    size: 'm',
+                    onClick: reset,
+                  },
+                ]}
+              />
+            ) : (
+              <>
+                <div className={styles.feed}>
+                  {pageItems.map((item) => (
+                    <article key={item.id} className={styles.item}>
+                      <button
+                        type="button"
+                        className={styles.itemButton}
+                        onClick={() => setActiveItem(item)}
+                      >
+                        <div className={styles.itemBody}>
+                          <div className={styles.itemMeta}>
+                            <Label size="s" theme="unknown">
+                              {item.providerName}
+                            </Label>
+                            <Text variant="caption-2" color="secondary">
+                              {formatNewsDate(item.date)}
+                            </Text>
+                          </div>
+
+                          <Text variant="subheader-2" className={styles.itemTitle}>
+                            {item.title}
+                          </Text>
+                          <Text variant="body-1" color="secondary" className={styles.itemSummary}>
+                            {item.summary}
+                          </Text>
+
+                          <div className={styles.itemTags}>
+                            {item.tags.map((t) => (
+                              <Label key={t} size="xs" theme={tagTheme(t)}>
+                                {NEWS_TAG_TITLE[t]}
+                              </Label>
+                            ))}
+                          </div>
+                        </div>
+                        <Icon data={ChevronRight} size={16} className={styles.itemChevron} />
+                      </button>
+
+                      <div className={styles.itemSource}>
+                        <Text variant="caption-2" color="secondary">
+                          Источник:
+                        </Text>
+                        <Link
+                          href={item.sourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          view="secondary"
+                          className={styles.sourceLink}
+                        >
+                          {item.sourceLabel}
+                          <Icon data={ArrowUpRightFromSquare} size={12} />
+                        </Link>
+                      </div>
+                    </article>
                   ))}
-                </SegmentedRadioGroup>
-              </div>
+                </div>
 
-              <div className={styles.facetControl} title="Провайдер">
-                <Text variant="caption-2" color="complementary" className={styles.facetLabel}>
-                  Провайдер
-                </Text>
-                <SegmentedRadioGroup
-                  size="m"
-                  value={provider}
-                  onUpdate={(v) => setProvider(v as ProviderFilter)}
-                >
-                  {providerOptions.map((o) => (
-                    <SegmentedRadioGroup.Option key={o.value} value={o.value}>
-                      <Flex alignItems="center" gap={1}>
-                        {o.value === 'all' ? <Icon data={Layers3Diagonal} size={14} /> : null}
-                        <span>{o.title}</span>
-                      </Flex>
-                    </SegmentedRadioGroup.Option>
-                  ))}
-                </SegmentedRadioGroup>
-              </div>
-
-              <Button view="flat-secondary" size="m" onClick={reset} disabled={!hasFilters}>
-                Сбросить
-              </Button>
-            </div>
+                {pageCount > 1 ? (
+                  <Flex
+                    alignItems="center"
+                    justifyContent="space-between"
+                    gap={3}
+                    className={styles.pagination}
+                  >
+                    <Text variant="caption-2" color="secondary">
+                      Страница {page} из {pageCount}
+                    </Text>
+                    <Flex gap={2}>
+                      <Button
+                        view="outlined"
+                        size="m"
+                        disabled={page <= 1}
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      >
+                        Назад
+                      </Button>
+                      <Button
+                        view="outlined"
+                        size="m"
+                        disabled={page >= pageCount}
+                        onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+                      >
+                        Дальше
+                      </Button>
+                    </Flex>
+                  </Flex>
+                ) : null}
+              </>
+            )}
           </div>
 
-          {filtered.length === 0 ? (
-            <PlaceholderContainer
-              title="Пока пусто"
-              description="Нет новостей по выбранным фильтрам. Сбросьте фильтры или загляните позже."
-              size="m"
-              align="center"
-              image={<Icon data={Magnifier} size={28} />}
-              actions={[
-                {
-                  text: 'Сбросить фильтры',
-                  view: 'action',
-                  size: 'm',
-                  onClick: reset,
-                },
-              ]}
-            />
-          ) : (
-            <div className={styles.feed}>
-              {filtered.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={styles.item}
-                  onClick={() => setActiveItem(item)}
-                >
-                  <div className={styles.itemBody}>
-                    <div className={styles.itemMeta}>
-                      <Label size="s" theme="unknown">
-                        {item.providerName}
-                      </Label>
-                      <Text variant="caption-2" color="secondary">
-                        {formatNewsDate(item.date)}
-                      </Text>
-                    </div>
-
-                    <Text variant="subheader-2" className={styles.itemTitle}>
-                      {item.title}
-                    </Text>
-                    <Text
-                      variant="body-1"
-                      color="secondary"
-                      className={styles.itemSummary}
-                      ellipsisLines={2}
-                    >
-                      {item.summary}
-                    </Text>
-
-                    <div className={styles.itemTags}>
-                      {item.tags.map((tag) => (
-                        <Label key={tag} size="xs" theme={tagTheme(tag)}>
-                          {NEWS_TAG_TITLE[tag]}
-                        </Label>
-                      ))}
-                    </div>
-                  </div>
-                  <Icon data={ChevronRight} size={16} className={styles.itemChevron} />
-                </button>
-              ))}
+          <aside className={styles.sidebar} aria-label="Фильтры новостей">
+            <div className={styles.filterBlock}>
+              <Text variant="caption-2" color="complementary" className={styles.filterLabel}>
+                Период
+              </Text>
+              <div className={styles.filterOptions}>
+                {monthOptions.map((o) => (
+                  <FilterChip
+                    key={o.value}
+                    active={month === o.value}
+                    onClick={() => setMonth(o.value)}
+                  >
+                    {o.title}
+                  </FilterChip>
+                ))}
+              </div>
             </div>
-          )}
 
-          <Text variant="caption-2" color="secondary">
-            Клик по строке — описание и ссылка на источник.
-          </Text>
-        </Flex>
+            <div className={styles.filterBlock}>
+              <Text variant="caption-2" color="complementary" className={styles.filterLabel}>
+                Категория
+              </Text>
+              <div className={styles.filterOptions}>
+                <FilterChip active={tag === 'all'} onClick={() => setTag('all')}>
+                  Все
+                </FilterChip>
+                {tagOptions.map((id) => (
+                  <FilterChip key={id} active={tag === id} onClick={() => setTag(id)}>
+                    {NEWS_TAG_TITLE[id]}
+                  </FilterChip>
+                ))}
+              </div>
+            </div>
+
+            <div className={styles.filterBlock}>
+              <Text variant="caption-2" color="complementary" className={styles.filterLabel}>
+                Провайдер
+              </Text>
+              <div className={styles.filterOptions}>
+                <FilterChip active={provider === 'all'} onClick={() => setProvider('all')}>
+                  Все
+                </FilterChip>
+                {providerOptions.map((id) => (
+                  <FilterChip
+                    key={id}
+                    active={provider === id}
+                    onClick={() => setProvider(id)}
+                  >
+                    {NEWS_PROVIDER_TITLE[id]}
+                  </FilterChip>
+                ))}
+              </div>
+            </div>
+
+            <Button view="flat-secondary" size="m" width="max" onClick={reset} disabled={!hasFilters}>
+              Сбросить фильтры
+            </Button>
+          </aside>
+        </div>
       </div>
 
       <NewsDrawer
