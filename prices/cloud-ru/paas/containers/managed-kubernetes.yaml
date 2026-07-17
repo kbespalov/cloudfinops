@@ -45,3 +45,6 @@ spec:
           period: hour
         formula: native hourly master rate
         vat: included
+    notes: >
+      Опубликованный тариф зонального мастера 2 vCPU / 4 ГиБ.
+      Worker-ноды оплачиваются отдельно.

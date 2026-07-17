@@ -41,8 +41,8 @@ spec:
         formula: 0.022766 × 60
         vat: included
     notes: >
-      Ставка за vCPU master-узла Cloud Containers (Intel Cascade Lake).
-      Для сравнения смотрите расчётный мастер 2 vCPU / 4 ГиБ.
+      Цена за один vCPU мастера (Intel Cascade Lake). Чтобы сравнить с другими
+      облаками, смотрите «Зональный мастер 2 vCPU / 4 ГиБ».
   - sku: vk.kubernetes.master-ram
     name: Master RAM
     meter: containers.kubernetes.control-plane.ram
@@ -75,8 +75,8 @@ spec:
         formula: 0.006185 × 60
         vat: included
     notes: >
-      Ставка за RAM master-узла Cloud Containers (0,006185 ₽/ГиБ·мин).
-      Для сравнения смотрите расчётный мастер 2 vCPU / 4 ГиБ.
+      Цена за 1 ГиБ RAM мастера. Чтобы сравнить с другими облаками, смотрите
+      «Зональный мастер 2 vCPU / 4 ГиБ».
   - sku: vk.kubernetes.master-basic-2-4.synthetic
     name: Зональный мастер 2 vCPU / 4 ГиБ
     meter: containers.kubernetes.control-plane
@@ -121,9 +121,8 @@ spec:
         formula: 2 × 1.36596 (vCPU) + 4 × 0.3711 (GiB-RAM)
         vat: included
     notes: >
-      Расчётная конфигурация зонального мастера 2 vCPU / 4 ГиБ для сравнения
-      с другими провайдерами. Собрана из опубликованных ставок vCPU и RAM
-      master-узлов; размер мастера в VK Cloud выбирается при создании кластера.
+      Собрали из ставок vCPU и RAM для сравнения с другими облаками.
+      Размер мастера выбираете при создании кластера; worker-ноды — отдельно.
   - sku: vk.kubernetes.master-ha-2-4.synthetic
     name: Региональный мастер 3×(2 vCPU / 4 ГиБ)
     meter: containers.kubernetes.control-plane
@@ -168,6 +167,5 @@ spec:
         formula: 3 × (2 × 1.36596 + 4 × 0.3711)
         vat: included
     notes: >
-      Расчётная конфигурация отказоустойчивого мастера: 3×(2 vCPU / 4 ГиБ).
-      Собрана из опубликованных ставок vCPU и RAM; в публичном прайсе VK Cloud
-      нет отдельной фиксированной платы за HA — умножаем ресурсы на три master-узла.
+      Собрали из ставок vCPU и RAM для трёх master-нод (отказоустойчивый вариант).
+      Отдельной фиксированной платы за HA в прайсе нет; worker-ноды — отдельно.
