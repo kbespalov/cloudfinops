@@ -146,7 +146,18 @@ describe('calculator quote arbitration', () => {
 
   it('includes Cloud.ru via exact compute.flavor when unit vCPU/RAM are not public', () => {
     // Cloud.ru publishes VM flavors, not unit compute.vcpu/ram rates.
-    const withExactFlavor = ['gen-2-4', 'gen-4-8', 'gen-8-16', 'low-2-4', 'low-4-8', 'low-8-16'];
+    const withExactFlavor = [
+      'gen-2-4',
+      'gen-4-8',
+      'gen-8-16',
+      'gen-16-32',
+      'gen-32-64',
+      'low-2-4',
+      'low-4-8',
+      'low-8-16',
+      'mem-4-32',
+      'mem-16-128',
+    ];
     for (const id of withExactFlavor) {
       const preset = COMPUTE_PRESETS.find((p) => p.id === id);
       assert.ok(preset, id);
@@ -161,6 +172,17 @@ describe('calculator quote arbitration', () => {
       assert.ok(
         cloudRu.parts.some((p) => p.id === 'disk'),
         `${id}: Cloud.ru flavor quote must still include SSD`,
+      );
+    }
+
+    // Large General presets must use 100% flavors from the PDF (not only share30).
+    for (const id of ['gen-16-32', 'gen-32-64']) {
+      const preset = COMPUTE_PRESETS.find((p) => p.id === id)!;
+      const cloudRu = quotePreset(preset, 'month').quotes.find((q) => q.provider === 'cloud-ru')!;
+      assert.equal(
+        cloudRu.meters[0]!.dimensions.guaranteedVcpuShare,
+        '100%',
+        `${id}: expected dedicated 100% Cloud.ru flavor`,
       );
     }
   });

@@ -262,6 +262,870 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
+  - sku: cloudru.compute.1vcpu-1gb
+    name: Виртуальная машина 1vCPU/1GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 1
+      ramGb: 1
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      publishedTariffRow: 11
+      ramGiB: 1
+    pricing:
+      rate:
+        amount: '1.2444'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 11 тарифа Evolution Compute).
+  - sku: cloudru.compute.2vcpu-8gb
+    name: Виртуальная машина 2vCPU/8GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 2
+      ramGb: 8
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      publishedTariffRow: 19
+      ramGiB: 8
+    pricing:
+      rate:
+        amount: '5.5022'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 19 тарифа Evolution Compute).
+  - sku: cloudru.compute.2vcpu-16gb
+    name: Виртуальная машина 2vCPU/16GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 2
+      ramGb: 16
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      publishedTariffRow: 17
+      ramGiB: 16
+    pricing:
+      rate:
+        amount: '8.2228'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 17 тарифа Evolution Compute).
+  - sku: cloudru.compute.4vcpu-32gb
+    name: Виртуальная машина 4vCPU/32GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 4
+      ramGb: 32
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      publishedTariffRow: 25
+      ramGiB: 32
+    pricing:
+      rate:
+        amount: '12.0414'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 25 тарифа Evolution Compute).
+  - sku: cloudru.compute.4vcpu-64gb
+    name: Виртуальная машина 4vCPU/64GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 4
+      ramGb: 64
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      publishedTariffRow: 26
+      ramGiB: 64
+    pricing:
+      rate:
+        amount: '20.1788'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 26 тарифа Evolution Compute).
+  - sku: cloudru.compute.8vcpu-64gb
+    name: Виртуальная машина 8vCPU/64GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 8
+      ramGb: 64
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      publishedTariffRow: 33
+      ramGiB: 64
+    pricing:
+      rate:
+        amount: '24.0828'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 33 тарифа Evolution Compute).
+  - sku: cloudru.compute.8vcpu-128gb
+    name: Виртуальная машина 8vCPU/128GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 8
+      ramGb: 128
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      publishedTariffRow: 30
+      ramGiB: 128
+    pricing:
+      rate:
+        amount: '40.3576'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 30 тарифа Evolution Compute).
+  - sku: cloudru.compute.12vcpu-24gb
+    name: Виртуальная машина 12vCPU/24GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 12
+      ramGb: 24
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      publishedTariffRow: 4
+      ramGiB: 24
+    pricing:
+      rate:
+        amount: '23.7534'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 4 тарифа Evolution Compute).
+  - sku: cloudru.compute.12vcpu-48gb
+    name: Виртуальная машина 12vCPU/48GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 12
+      ramGb: 48
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      publishedTariffRow: 5
+      ramGiB: 48
+    pricing:
+      rate:
+        amount: '32.025'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 5 тарифа Evolution Compute).
+  - sku: cloudru.compute.12vcpu-96gb
+    name: Виртуальная машина 12vCPU/96GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 12
+      ramGb: 96
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      publishedTariffRow: 6
+      ramGiB: 96
+    pricing:
+      rate:
+        amount: '52.0208'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 6 тарифа Evolution Compute).
+  - sku: cloudru.compute.16vcpu-32gb
+    name: Виртуальная машина 16vCPU/32GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 16
+      ramGb: 32
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      publishedTariffRow: 9
+      ramGiB: 32
+    pricing:
+      rate:
+        amount: '23.7656'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 9 тарифа Evolution Compute).
+  - sku: cloudru.compute.16vcpu-64gb
+    name: Виртуальная машина 16vCPU/64GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 16
+      ramGb: 64
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      publishedTariffRow: 10
+      ramGiB: 64
+    pricing:
+      rate:
+        amount: '31.9152'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 10 тарифа Evolution Compute).
+  - sku: cloudru.compute.16vcpu-128gb
+    name: Виртуальная машина 16vCPU/128GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 16
+      ramGb: 128
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      publishedTariffRow: 7
+      ramGiB: 128
+    pricing:
+      rate:
+        amount: '48.1656'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 7 тарифа Evolution Compute).
+  - sku: cloudru.compute.16vcpu-256gb
+    name: Виртуальная машина 16vCPU/256GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 16
+      ramGb: 256
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      publishedTariffRow: 8
+      ramGiB: 256
+    pricing:
+      rate:
+        amount: '80.7152'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 8 тарифа Evolution Compute).
+  - sku: cloudru.compute.24vcpu-32gb
+    name: Виртуальная машина 24vCPU/32GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 24
+      ramGb: 32
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      publishedTariffRow: 14
+      ramGiB: 32
+    pricing:
+      rate:
+        amount: '31.48576'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 14 тарифа Evolution Compute).
+  - sku: cloudru.compute.24vcpu-48gb
+    name: Виртуальная машина 24vCPU/48GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 24
+      ramGb: 48
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      publishedTariffRow: 15
+      ramGiB: 48
+    pricing:
+      rate:
+        amount: '35.6484'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 15 тарифа Evolution Compute).
+  - sku: cloudru.compute.24vcpu-96gb
+    name: Виртуальная машина 24vCPU/96GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 24
+      ramGb: 96
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      publishedTariffRow: 16
+      ramGiB: 96
+    pricing:
+      rate:
+        amount: '47.8728'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 16 тарифа Evolution Compute).
+  - sku: cloudru.compute.24vcpu-192gb
+    name: Виртуальная машина 24vCPU/192GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 24
+      ramGb: 192
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      publishedTariffRow: 13
+      ramGiB: 192
+    pricing:
+      rate:
+        amount: '72.2484'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 13 тарифа Evolution Compute).
+  - sku: cloudru.compute.32vcpu-64gb
+    name: Виртуальная машина 32vCPU/64GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 32
+      ramGb: 64
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      publishedTariffRow: 22
+      ramGiB: 64
+    pricing:
+      rate:
+        amount: '47.5312'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 22 тарифа Evolution Compute).
+  - sku: cloudru.compute.32vcpu-128gb
+    name: Виртуальная машина 32vCPU/128GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 32
+      ramGb: 128
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      publishedTariffRow: 20
+      ramGiB: 128
+    pricing:
+      rate:
+        amount: '63.8304'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 20 тарифа Evolution Compute).
+  - sku: cloudru.compute.32vcpu-256gb
+    name: Виртуальная машина 32vCPU/256GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 32
+      ramGb: 256
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      publishedTariffRow: 21
+      ramGiB: 256
+    pricing:
+      rate:
+        amount: '96.3312'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 21 тарифа Evolution Compute).
+  - sku: cloudru.compute.40vcpu-320gb
+    name: Виртуальная машина 40vCPU/320GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 40
+      ramGb: 320
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      publishedTariffRow: 23
+      ramGiB: 320
+    pricing:
+      rate:
+        amount: '120.414'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 23 тарифа Evolution Compute).
+  - sku: cloudru.compute.64vcpu-128gb
+    name: Виртуальная машина 64vCPU/128GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 64
+      ramGb: 128
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      publishedTariffRow: 28
+      ramGiB: 128
+    pricing:
+      rate:
+        amount: '95.0624'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 28 тарифа Evolution Compute).
+  - sku: cloudru.compute.64vcpu-256gb
+    name: Виртуальная машина 64vCPU/256GB RAM
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: published
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      vcpu: 64
+      ramGb: 256
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      workloadFamily: balanced
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      publishedTariffRow: 29
+      ramGiB: 256
+    pricing:
+      rate:
+        amount: '127.6608'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 29 тарифа Evolution Compute).
   - sku: cloudru.compute.share10.1vcpu-1gb
     name: Виртуальная машина 1vCPU/1GB RAM — 10% vCPU
     meter: compute.flavor
