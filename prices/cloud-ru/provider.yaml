@@ -21,6 +21,7 @@ spec:
     - network.ipv4.reserved
     - network.traffic.egress
     - storage.block.capacity
+    - storage.snapshot.capacity
   - id: cloudru.compute-rules
     title: Тарификация сервиса Виртуальные машины
     url: https://cloud.ru/docs/virtual-machines/ug/topics/pricing
@@ -36,6 +37,14 @@ spec:
     - network.traffic.ingress
     - network.traffic.egress
     - storage.block.capacity
+  - id: cloudru.images-rules
+    title: Тарификация сервиса Образы
+    url: https://cloud.ru/docs/images/ug/topics/pricing
+    type: html
+    access: public
+    priority: 1
+    covers:
+    - storage.image.capacity
   - id: cloudru.compute-gpu-pdf
     title: Тарифы Evolution Compute GPU
     url: https://cdn.cloud.ru/docs/legal/tariffs/evolution/current-version/evolution-compute-gpu.pdf

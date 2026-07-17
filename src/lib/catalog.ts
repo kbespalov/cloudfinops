@@ -12,7 +12,7 @@ export type {CatalogData, CatalogMeter, CatalogSource, CategoryKey};
 export type CategoryFilter = 'all' | Exclude<CategoryKey, 'other'>;
 
 /** Optional refine facets — not peer categories; can nest under Compute. */
-export type ComputeFacet = 'all' | 'vcpu' | 'ram' | 'flavor' | 'disk';
+export type ComputeFacet = 'all' | 'vcpu' | 'ram' | 'flavor' | 'disk' | 'image' | 'snapshot';
 
 /** Block disk media — shown only when Compute → Диск is selected. */
 export type DiskFacet = 'all' | 'hdd' | 'ssd' | 'nvme';
@@ -150,7 +150,14 @@ export function periodLabel(period: PeriodMode): string {
 
 export function meterPriceLabel(meter: CatalogMeter, period: PeriodMode): string {
   if (isRequestMeter(meter)) return 'за 10 000 запросов';
-  return periodLabel(period);
+  const periodRu = periodLabel(period);
+  const q = meter.unitQuantity;
+  if (q && !['flavor', 'master', 'address', 'vCPU', 'GiB-RAM', 'GB-RAM'].includes(q)) {
+    return `за ${q} · ${periodRu}`;
+  }
+  if (q === 'vCPU') return `за vCPU · ${periodRu}`;
+  if (q === 'GiB-RAM' || q === 'GB-RAM') return `за GiB RAM · ${periodRu}`;
+  return periodRu;
 }
 
 export function formatRub(value: number, fractionDigits = 2): string {
@@ -202,6 +209,15 @@ export function isDiskMeter(meter: CatalogMeter): boolean {
   return meter.meter.startsWith('storage.block');
 }
 
+export function isImageMeter(meter: CatalogMeter): boolean {
+  return meter.meter.startsWith('storage.image');
+}
+
+/** Disk snapshot capacity (taxonomy: storage.snapshot.*). */
+export function isSnapshotMeter(meter: CatalogMeter): boolean {
+  return meter.meter.startsWith('storage.snapshot');
+}
+
 export function meterMatchesCategory(meter: CatalogMeter, category: CategoryFilter): boolean {
   if (category === 'all') return true;
   return meter.categoryKey === category;
@@ -214,7 +230,30 @@ export function meterMatchesComputeFacet(meter: CatalogMeter, facet: ComputeFace
   if (facet === 'ram') return isRamMeter(meter);
   if (facet === 'flavor') return isFlavorMeter(meter);
   if (facet === 'disk') return isDiskMeter(meter);
+  if (facet === 'image') return isImageMeter(meter);
+  if (facet === 'snapshot') return isSnapshotMeter(meter);
   return true;
+}
+
+/** Human-readable billing unit for the specs column (e.g. «GiB · час»). */
+export function billingUnitLabel(meter: CatalogMeter): string {
+  // Prefer normalized unit so catalog rows share one period (hour) across providers
+  const q = meter.unitQuantity;
+  const p = meter.normalizedPeriod || meter.unitPeriod;
+  const periodRu =
+    p === 'hour'
+      ? 'час'
+      : p === 'month'
+        ? 'мес'
+        : p === 'year'
+          ? 'год'
+          : p === 'minute'
+            ? 'мин'
+            : p || null;
+  if (q && periodRu) return `${q} · ${periodRu}`;
+  if (q) return q;
+  if (periodRu) return periodRu;
+  return '—';
 }
 
 export function meterMatchesDiskFacet(meter: CatalogMeter, facet: DiskFacet): boolean {
@@ -373,7 +412,10 @@ export function displayMeterName(meter: CatalogMeter): string {
     return displayBlockDiskName(meter);
   }
 
-  if (meter.categoryKey === 'storage') {
+  if (isImageMeter(meter)) return 'Образ ВМ';
+  if (isSnapshotMeter(meter)) return 'Снимок диска';
+
+  if (meter.categoryKey === 'storage' || meter.meter.startsWith('storage.object.')) {
     const cls = extractStorageClass(meter);
     const clsTitle = cls ? STORAGE_CLASS_TITLE[cls] || cls : null;
     const op =
@@ -417,13 +459,9 @@ export function meterMatchesStorageFacet(meter: CatalogMeter, facet: StorageFace
 }
 
 export function extractStorageKind(meter: CatalogMeter): 'capacity' | 'operations' | null {
+  if (meter.categoryKey !== 'storage') return null;
   if (meter.meter === 'storage.object.requests' || isRequestMeter(meter)) return 'operations';
-  if (
-    meter.meter === 'storage.object.capacity' ||
-    meter.meter === 'storage.image.capacity' ||
-    meter.meter === 'storage.backup.capacity' ||
-    meter.meter.endsWith('.capacity')
-  ) {
+  if (meter.meter === 'storage.object.capacity' || meter.meter.endsWith('.capacity')) {
     return 'capacity';
   }
   return null;

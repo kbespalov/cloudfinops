@@ -22,7 +22,7 @@ spec:
     - network.ipv4.reserved
     - network.traffic.ingress
     - network.traffic.egress
-    - storage.backup.capacity
+    - storage.snapshot.capacity
     - storage.block.capacity
     - storage.block.iops
     - storage.image.capacity
@@ -37,7 +37,7 @@ spec:
     covers:
     - compute.ram
     - compute.vcpu
-    - storage.backup.capacity
+    - storage.snapshot.capacity
     - storage.block.capacity
     - storage.block.iops
     - storage.image.capacity

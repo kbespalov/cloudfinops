@@ -16,10 +16,13 @@ import {
 import {ArrowUpRightFromSquare, Xmark} from '@gravity-ui/icons';
 import {
   CATEGORY_TITLE,
+  billingUnitLabel,
   displayAmount,
   displayMeterName,
   formatAsOf,
   formatPlatform,
+  isImageMeter,
+  isSnapshotMeter,
   meterPriceLabel,
   paramsLabel,
   resolveMeterSources,
@@ -56,6 +59,10 @@ export function SkuDrawer({
   const platform = meter ? formatPlatform(meter.cpuPlatformFamily) : null;
   const showPlatform = Boolean(platform && platform !== 'Платформа не указана');
   const params = meter ? paramsLabel(meter) : '';
+  const billingUnit =
+    meter && (isImageMeter(meter) || isSnapshotMeter(meter) || meter.unitQuantity === 'GiB')
+      ? billingUnitLabel(meter)
+      : null;
   const sources = meter ? resolveMeterSources(meter) : [];
 
   return (
@@ -119,6 +126,9 @@ export function SkuDrawer({
               ) : null}
               {params && params !== '—' ? (
                 <DefinitionList.Item name="Конфигурация">{params}</DefinitionList.Item>
+              ) : null}
+              {billingUnit ? (
+                <DefinitionList.Item name="Единица биллинга">{billingUnit}</DefinitionList.Item>
               ) : null}
               {showPlatform ? (
                 <DefinitionList.Item name="Платформа">{platform}</DefinitionList.Item>

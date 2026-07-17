@@ -23,6 +23,7 @@ spec:
     - network.traffic.ingress
     - network.traffic.egress
     - storage.block.capacity
+    - storage.image.capacity
     - storage.object.capacity
     - storage.object.requests
   - id: selectel.prices
@@ -41,6 +42,8 @@ spec:
     - network.traffic.ingress
     - network.traffic.egress
     - storage.block.capacity
+    - storage.image.capacity
+    - storage.snapshot.capacity
     - storage.object.capacity
     - storage.object.requests
   - id: selectel.compute-rules
@@ -58,6 +61,8 @@ spec:
     - network.traffic.ingress
     - network.traffic.egress
     - storage.block.capacity
+    - storage.image.capacity
+    - storage.snapshot.capacity
   - id: selectel.k8s-rules
     title: Модель оплаты Managed Kubernetes
     url: https://docs.selectel.ru/managed-kubernetes/about/payment/

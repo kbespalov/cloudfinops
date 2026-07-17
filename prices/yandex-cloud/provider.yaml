@@ -24,6 +24,8 @@ spec:
     - network.ipv4.reserved
     - network.traffic.egress
     - storage.block.capacity
+    - storage.image.capacity
+    - storage.snapshot.capacity
     - storage.object.capacity
   - id: yc.compute
     title: Правила тарификации Compute Cloud
@@ -36,6 +38,8 @@ spec:
     - compute.ram
     - compute.vcpu
     - storage.block.capacity
+    - storage.image.capacity
+    - storage.snapshot.capacity
   - id: yc.object-storage
     title: Правила тарификации Object Storage
     url: https://yandex.cloud/ru/docs/storage/pricing

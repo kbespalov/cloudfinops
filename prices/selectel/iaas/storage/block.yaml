@@ -176,3 +176,75 @@ spec:
         vat: included
         byteBasis: not-applicable
     notes: Ставки зависят от выбранного пула; зафиксирован публичный выбор ru-6a.
+  - sku: selectel.compute.image.capacity
+    name: Образ ВМ
+    meter: storage.image.capacity
+    status: available
+    pricingMode: unit
+    region: Москва / ru-6a
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - selectel.prices
+    - selectel.calculator
+    - selectel.compute-rules
+    dimensions:
+      poolDependent: true
+      billingBasis: stored-size
+      nativeName: Хранение пользовательских образов
+    pricing:
+      rate:
+        amount: '0.0112'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: hour
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.0112'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: hour
+        formula: native hourly rate
+        vat: included
+    notes: >
+      Публичная строка «Хранение пользовательских образов, 1 ГБ» на selectel.ru/prices
+      (ru-6a: 0,0112 ₽/час · 8,16 ₽/мес).
+  - sku: selectel.compute.snapshot.capacity
+    name: Снимок диска
+    meter: storage.snapshot.capacity
+    status: available
+    pricingMode: unit
+    region: Москва / ru-6a
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - selectel.prices
+    - selectel.compute-rules
+    dimensions:
+      poolDependent: true
+      billingBasis: provisioned-source-size
+      nativeName: Снапшот базового HDD диска
+      sourceDiskType: network-hdd
+    pricing:
+      rate:
+        amount: '0.0112'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: hour
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.0112'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: hour
+        formula: native hourly rate
+        vat: included
+    notes: >
+      У Selectel цена снапшота равна цене исходного сетевого диска. В каталоге зафиксирован
+      базовый HDD (0,0112 ₽/ГиБ·час); SSD 0,0138, универсальный SSD 0,0285, быстрый SSD 0,0602.

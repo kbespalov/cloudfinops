@@ -84,8 +84,14 @@ function categoryKey(category: string, meter: string, service: string): Category
   if (category.includes('.gpu') || /\/gpu\.yaml$/.test(category)) return 'gpu';
   if (service === 'compute' && (meter.startsWith('compute.gpu') || category.endsWith('.gpu'))) return 'gpu';
   if (category.includes('kubernetes') || meter.includes('kubernetes')) return 'kubernetes';
-  // Block disks live with Compute (VM / vCPU / RAM / disk); object storage stays Storage
-  if (meter.startsWith('storage.block')) return 'compute';
+  // Block disks, VM images and disk snapshots live with Compute; object storage stays Storage
+  if (
+    meter.startsWith('storage.block') ||
+    meter.startsWith('storage.image') ||
+    meter.startsWith('storage.snapshot')
+  ) {
+    return 'compute';
+  }
   if (service === 'storage' || category.includes('storage')) return 'storage';
   if (service === 'network' || category.includes('network')) return 'network';
   if (service === 'compute' || category.includes('compute')) return 'compute';
@@ -98,7 +104,13 @@ function categoryFromFile(filePath: string, meta: Record<string, string>, meter:
     return 'kubernetes';
   }
   if (filePath.includes('/storage/') || meta.service === 'storage') {
-    if (meter.startsWith('storage.block')) return 'compute';
+    if (
+      meter.startsWith('storage.block') ||
+      meter.startsWith('storage.image') ||
+      meter.startsWith('storage.snapshot')
+    ) {
+      return 'compute';
+    }
     return 'storage';
   }
   if (filePath.includes('/network/') || meta.service === 'network') return 'network';

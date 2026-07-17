@@ -26,6 +26,8 @@ spec:
     - network.traffic.ingress
     - network.traffic.egress
     - storage.block.capacity
+    - storage.image.capacity
+    - storage.snapshot.capacity
     - storage.object.capacity
   - id: vk.iaas-rules
     title: Тарификация Cloud Servers
@@ -41,6 +43,8 @@ spec:
     - network.traffic.ingress
     - network.traffic.egress
     - storage.block.capacity
+    - storage.image.capacity
+    - storage.snapshot.capacity
   - id: vk.k8s-rules
     title: Тарификация Cloud Containers
     url: https://cloud.vk.com/docs/ru/kubernetes/k8s/tariffication

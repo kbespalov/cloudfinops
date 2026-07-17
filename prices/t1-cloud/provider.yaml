@@ -23,6 +23,8 @@ spec:
     - network.ipv4.reserved
     - network.traffic.egress
     - storage.block.capacity
+    - storage.image.capacity
+    - storage.snapshot.capacity
     - storage.object.capacity
   - id: t1.rates-pdf-2026-07-13
     title: Тарифное приложение от 08.07.2026
@@ -40,6 +42,8 @@ spec:
     - network.ipv4.reserved
     - network.traffic.egress
     - storage.block.capacity
+    - storage.image.capacity
+    - storage.snapshot.capacity
     - storage.object.capacity
   - id: t1.calculator
     title: Калькулятор ресурсов
@@ -65,6 +69,8 @@ spec:
     - network.ipv4.attached
     - network.ipv4.reserved
     - storage.block.capacity
+    - storage.image.capacity
+    - storage.snapshot.capacity
     - storage.object.capacity
   - id: t1.s3
     title: Объектное хранилище S3

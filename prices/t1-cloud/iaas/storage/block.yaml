@@ -172,3 +172,75 @@ spec:
         formula: 0.00042292 × 60 × 1.22 VAT
         vat: included
     notes: Нативный класс High T1; до 15 000 IOPS включено в ставку.
+  - sku: t1.compute.image.capacity
+    name: Образ ВМ
+    meter: storage.image.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    dimensions:
+      published30Days: 3.66
+      billingBasis: stored-size
+      nativeName: Образ диска
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.00008472'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: minute
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '0.0062015'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: hour
+        formula: 0.00008472 × 60 × 1.22 VAT
+        vat: included
+    notes: Строка «Образ диска» в тарифном приложении T1 Cloud от 08.07.2026 (без НДС → с НДС 22%).
+  - sku: t1.compute.snapshot.capacity
+    name: Снимок диска
+    meter: storage.snapshot.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    dimensions:
+      published30Days: 3.66
+      billingBasis: stored-size
+      nativeName: Снимок диска Light
+      nativePerformanceTier: light
+      performanceTier: hdd
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.00008472'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: minute
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '0.0062015'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: hour
+        formula: 0.00008472 × 60 × 1.22 VAT
+        vat: included
+    notes: >
+      В каталоге зафиксирован «Снимок диска Light» (= цена диска Light). Basic/Average/High
+      и Encrypted — отдельные строки в PDF с теми же ставками, что и у дисков.

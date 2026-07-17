@@ -122,3 +122,65 @@ spec:
           period: hour
         vat: included
         byteBasis: binary
+  - sku: yc.compute.image.capacity
+    name: Образ ВМ
+    meter: storage.image.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.compute
+    dimensions:
+      billingBasis: stored-size
+      nativeName: Образ
+    pricing:
+      rate:
+        amount: '0.0051'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: hour
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.0051'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: hour
+        formula: native hourly rate
+        vat: included
+    notes: Публичная ставка «Образ» в тарифах Compute Cloud; оплачивается объём хранимого образа.
+  - sku: yc.compute.snapshot.capacity
+    name: Снимок диска
+    meter: storage.snapshot.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.compute
+    dimensions:
+      billingBasis: stored-size
+      nativeName: Снимок
+    pricing:
+      rate:
+        amount: '0.0051'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: hour
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.0051'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: hour
+        formula: native hourly rate
+        vat: included
+    notes: Публичная ставка «Снимок» в тарифах Compute Cloud (storage.snapshot.capacity).

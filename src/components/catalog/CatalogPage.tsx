@@ -26,6 +26,7 @@ import {
   TextInput,
 } from '@gravity-ui/uikit';
 import {
+  Copy,
   Cpu,
   Database,
   Globe,
@@ -33,6 +34,7 @@ import {
   HardDrive,
   Layers3Diagonal,
   Magnifier,
+  Picture,
   Server,
   SquareDashed,
   SquareListUl,
@@ -40,6 +42,7 @@ import {
 import {usePathname, useRouter, useSearchParams} from 'next/navigation';
 import {
   CATEGORY_TITLE,
+  billingUnitLabel,
   catalog,
   displayAmount,
   displayMeterName,
@@ -50,6 +53,8 @@ import {
   extractStorageClass,
   extractVcpu,
   isDiskMeter,
+  isImageMeter,
+  isSnapshotMeter,
   formatAsOf,
   formatPlatform,
   meterMatchesCategory,
@@ -105,6 +110,8 @@ const FACET_OPTIONS: {
   {value: 'vcpu', title: 'Ядра', icon: Cpu},
   {value: 'ram', title: 'RAM', icon: SquareDashed},
   {value: 'disk', title: 'Диск', icon: HardDrive},
+  {value: 'image', title: 'Образ', icon: Picture},
+  {value: 'snapshot', title: 'Снимок', icon: Copy},
 ];
 
 const GPU_FACET_OPTIONS: {value: GpuFacet; title: string}[] = [
@@ -166,7 +173,17 @@ function parseCategory(v: string | null): CategoryFilter {
 }
 
 function parseFacet(v: string | null): ComputeFacet {
-  if (v === 'vcpu' || v === 'ram' || v === 'flavor' || v === 'disk' || v === 'all') return v;
+  if (
+    v === 'vcpu' ||
+    v === 'ram' ||
+    v === 'flavor' ||
+    v === 'disk' ||
+    v === 'image' ||
+    v === 'snapshot' ||
+    v === 'all'
+  ) {
+    return v;
+  }
   return 'all';
 }
 
@@ -377,6 +394,8 @@ export function CatalogPage() {
       ram: compute.filter((m) => meterMatchesComputeFacet(m, 'ram')).length,
       flavor: compute.filter((m) => meterMatchesComputeFacet(m, 'flavor')).length,
       disk: compute.filter((m) => meterMatchesComputeFacet(m, 'disk')).length,
+      image: compute.filter((m) => meterMatchesComputeFacet(m, 'image')).length,
+      snapshot: compute.filter((m) => meterMatchesComputeFacet(m, 'snapshot')).length,
     };
   }, [baseMeters]);
 
@@ -605,7 +624,9 @@ export function CatalogPage() {
           category === 'gpu'
             ? 'GPU'
             : category === 'compute'
-              ? 'Конфиг'
+              ? facet === 'image' || facet === 'snapshot'
+                ? 'Единица'
+                : 'Конфиг'
               : category === 'storage'
                 ? 'Класс'
                 : 'Параметры',
@@ -616,21 +637,28 @@ export function CatalogPage() {
           if (category === 'gpu') {
             label = extractGpuModel(m) || label;
           } else if (category === 'storage') {
+            // Only object storage class — never show bare GiB as «Класс»
             const cls = extractStorageClass(m);
-            const clsTitle = cls ? cls.charAt(0).toUpperCase() + cls.slice(1) : null;
+            const clsTitle = cls
+              ? cls.charAt(0).toUpperCase() + cls.slice(1)
+              : null;
             const op =
               typeof m.dimensions.operation === 'string' ? m.dimensions.operation : null;
             if (clsTitle && op) label = `${clsTitle} · ${op}`;
             else if (clsTitle) label = clsTitle;
+            else if (op) label = op;
+            else label = '—';
           } else if (category === 'compute') {
-            if (isDiskMeter(m)) {
+            if (isImageMeter(m) || isSnapshotMeter(m)) {
+              label = billingUnitLabel(m);
+            } else if (isDiskMeter(m)) {
               const media = extractDiskMedia(m);
               const variant = extractDiskVariant(m);
               const parts: string[] = [];
               if (media) parts.push(media);
               if (variant) parts.push(variant);
               if (m.meter === 'storage.block.iops') parts.push('IOPS');
-              else if (m.unitQuantity) parts.push(m.unitQuantity);
+              else parts.push(billingUnitLabel(m));
               if (parts.length) label = parts.join(' · ');
             } else {
               const vcpu = extractVcpu(m);
@@ -643,7 +671,11 @@ export function CatalogPage() {
               if (parts.length) label = parts.join(' · ');
             }
           } else if (category === 'all') {
-            label = `${CATEGORY_TITLE[m.categoryKey]} · ${paramsLabel(m)}`;
+            if (isImageMeter(m) || isSnapshotMeter(m)) {
+              label = `${CATEGORY_TITLE.compute} · ${displayMeterName(m)} · ${billingUnitLabel(m)}`;
+            } else {
+              label = `${CATEGORY_TITLE[m.categoryKey]} · ${paramsLabel(m)}`;
+            }
           }
           return (
             <Text variant="body-1" color="secondary" ellipsis title={label}>
@@ -660,8 +692,9 @@ export function CatalogPage() {
         className: styles.priceCol,
         template: (m) => {
           const amount = displayAmount(m, period);
+          const unitHint = meterPriceLabel(m, period);
           return (
-            <span className={styles.priceCell} title={meterPriceLabel(m, period)}>
+            <span className={styles.priceCell} title={unitHint}>
               {amount ?? '—'}
             </span>
           );
@@ -1106,7 +1139,7 @@ export function CatalogPage() {
           </div>
 
           <Text variant="caption-2" color="secondary">
-            Цены {periodLabel(period)}
+            Цены {periodLabel(period)}; ёмкость — за GiB
             {category === 'storage' || filtered.some(isRequestMeter)
               ? '; запросы — за 10 000 операций'
               : ''}

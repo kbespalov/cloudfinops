@@ -1,9 +1,14 @@
+import type {Metadata} from 'next';
 import {NewsPage} from '@/components/news/NewsPage';
 
-export const metadata = {
-  title: 'Новости · Cloud FinOps',
+export const metadata: Metadata = {
+  title: 'Новости облаков и FinOps',
   description:
-    'Новые возможности облачных провайдеров: Yandex, Selectel, Cloud.ru, MWS, VK, AWS, Azure, Google Cloud.',
+    'Новости облачного рынка и FinOps: обновления Yandex Cloud, Selectel, Cloud.ru, MWS, VK Cloud, цены и новые сервисы.',
+  keywords: ['новости облаков', 'FinOps новости', 'Yandex Cloud', 'Selectel', 'Cloud.ru'],
+  alternates: {
+    canonical: '/news',
+  },
 };
 
 export default function NewsRoute() {

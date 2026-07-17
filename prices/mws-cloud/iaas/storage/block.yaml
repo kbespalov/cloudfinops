@@ -96,7 +96,7 @@ spec:
     notes: Базовые 1000 IOPS включены в цену емкости; ставка применяется только к заказанным дополнительным
       IOPS.
   - sku: mws.compute.image.capacity
-    name: Объем образов виртуальных машин
+    name: Образ ВМ
     meter: storage.image.capacity
     status: available
     pricingMode: unit
@@ -129,9 +129,9 @@ spec:
         formula: native hourly rate
         vat: included
     notes: MWS считает 1 ГБ равным 2^30 байт; месячная цена рассчитана провайдером для 720 часов.
-  - sku: mws.compute.backup.capacity
-    name: Объем резервных копий дисков
-    meter: storage.backup.capacity
+  - sku: mws.compute.snapshot.capacity
+    name: Снимок диска
+    meter: storage.snapshot.capacity
     status: available
     pricingMode: unit
     region: Россия
@@ -146,6 +146,7 @@ spec:
       futureHourlyAmount: '0.00488'
       futurePublishedMonth: '3.5136'
       billingBasis: actual-stored-data
+      nativeName: Объем резервных копий дисков
     pricing:
       rate:
         amount: '0.0042'
@@ -163,5 +164,6 @@ spec:
           period: hour
         formula: native hourly rate
         vat: included
-    notes: Оплачивается фактический объем инкрементальных резервных копий; MWS считает 1 ГБ равным 2^30
-      байт.
+    notes: >
+      Нативно у MWS — «Объем резервных копий дисков»; в каталоге — «Снимок диска»
+      (storage.snapshot.capacity). Оплачивается фактический объём; 1 ГБ = 2^30 байт.

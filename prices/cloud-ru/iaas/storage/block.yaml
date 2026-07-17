@@ -79,3 +79,69 @@ spec:
           period: hour
         formula: native hourly rate
         vat: included
+  - sku: cloudru.compute.image.capacity
+    name: Образ ВМ
+    meter: storage.image.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.images-rules
+    dimensions:
+      billingBasis: free
+      nativeName: Образы
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: hour
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: hour
+        formula: free of charge
+        vat: included
+    notes: Сервис «Образы» Evolution предоставляется бесплатно (официальные правила тарификации).
+  - sku: cloudru.compute.snapshot.capacity
+    name: Снимок диска
+    meter: storage.snapshot.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - cloudru.compute-pdf
+    dimensions:
+      billingBasis: stored-size
+      nativeName: Хранение резервных копий
+      netHourlyAmount: '0.0048'
+      vatHourlyAmount: '0.001056'
+    pricing:
+      rate:
+        amount: '0.005856'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: hour
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.005856'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: hour
+        formula: native hourly rate
+        vat: included
+    notes: >
+      Строка «Хранение резервных копий» в PDF тарифов Evolution Compute; в каталоге
+      отображается как «Снимок диска» (единая таксономия storage.snapshot.capacity).

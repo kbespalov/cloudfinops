@@ -110,3 +110,75 @@ spec:
           period: month
         formula: published 30-day rate
         vat: included
+  - sku: vk.compute.image.capacity
+    name: Образ ВМ
+    meter: storage.image.capacity
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    - vk.iaas-rules
+    dimensions:
+      publishedPerMinute: 0.000102
+      billingBasis: stored-size
+      storagePlacement: block-hdd
+      nativeName: Образ диска (блочное хранилище)
+    pricing:
+      rate:
+        amount: '4'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: month
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.00612'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: hour
+        formula: 0.000102 ₽/мин × 60
+        vat: included
+    notes: >
+      По умолчанию пользовательские образы могут храниться в Object Storage (Icebox);
+      для каталога зафиксирована ставка блочного хранения = HDD (0,000102 ₽/ГиБ·мин → 0,00612 ₽/час).
+      Публичные преднастроенные образы VK Cloud не тарифицируются.
+  - sku: vk.compute.snapshot.capacity
+    name: Снимок диска
+    meter: storage.snapshot.capacity
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    - vk.iaas-rules
+    dimensions:
+      publishedPerMinute: 0.000061
+      billingBasis: stored-size
+      nativeName: Snapshot
+    pricing:
+      rate:
+        amount: '2.64'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: month
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.00366'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: hour
+        formula: 0.000061 ₽/мин × 60
+        vat: included
+    notes: >
+      В прайс-листе одна ставка Snapshot для всех типов дисков
+      (0,000061 ₽/ГиБ·мин / 2,64 ₽ за 30 дней → 0,00366 ₽/час).

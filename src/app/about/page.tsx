@@ -1,9 +1,14 @@
+import type {Metadata} from 'next';
 import {AboutPage} from '@/components/about/AboutPage';
 
-export const metadata = {
-  title: 'О нас · Cloud FinOps',
+export const metadata: Metadata = {
+  title: 'О нас',
   description:
-    'Открытое сообщество практиков FinOps: сравниваем публичные облака в России проще и прозрачнее.',
+    'Cloud FinOps — открытое сообщество и FinOps-инструменты для сравнения цен облаков в России: каталог SKU, калькулятор и новости рынка.',
+  keywords: ['FinOps', 'FinOps инструменты', 'сообщество FinOps', 'Cloud FinOps'],
+  alternates: {
+    canonical: '/about',
+  },
 };
 
 export default function AboutRoute() {
