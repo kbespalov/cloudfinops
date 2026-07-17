@@ -109,6 +109,18 @@
   animation: rise 1s ease-out 0.12s both;
 }
 
+/* Keep secondary CTA readable on the honey hero (Gravity action yellow washes out). */
+.ctaSecondary {
+  color: var(--cf-ink) !important;
+  background: rgba(255, 252, 245, 0.82) !important;
+  box-shadow: inset 0 0 0 1px rgba(26, 18, 12, 0.4) !important;
+}
+
+.ctaSecondary:hover {
+  background: rgba(255, 252, 245, 0.95) !important;
+  box-shadow: inset 0 0 0 1px rgba(26, 18, 12, 0.55) !important;
+}
+
 @keyframes rise {
   from {
     opacity: 0;
