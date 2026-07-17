@@ -423,6 +423,30 @@ export function extractGpuModel(meter: CatalogMeter): string | null {
   return null;
 }
 
+export function extractGpuCount(meter: CatalogMeter): number | null {
+  const n = meter.dimensions.gpuCount;
+  return typeof n === 'number' && Number.isFinite(n) && n > 0 ? n : null;
+}
+
+/** GPU column / short label: "NVIDIA H200 · ×8" when card count is known. */
+export function formatGpuLabel(meter: CatalogMeter): string | null {
+  const model = extractGpuModel(meter);
+  if (!model) return null;
+  const dims = meter.dimensions;
+  if (dims.virtualGpu === true) {
+    const profile = typeof dims.vgpuProfile === 'string' ? dims.vgpuProfile : null;
+    return profile ? `${model} · ${profile}` : model;
+  }
+  const count = extractGpuCount(meter);
+  return count != null ? `${model} · ×${count}` : model;
+}
+
+/** Flavor codes like GPU-44-256-H200-1 / vGPU-2-8-L4-1Q — count buried in SKU string. */
+function looksLikeGpuFlavorCode(name: string): boolean {
+  const n = name.trim();
+  return /^GPU\d*[-_]/i.test(n) || /^vGPU[-_]/i.test(n);
+}
+
 export function extractStorageClass(meter: CatalogMeter): string | null {
   const cls = meter.dimensions.storageClass;
   if (typeof cls === 'string' && cls) return cls;
@@ -509,6 +533,15 @@ export function displayMeterName(meter: CatalogMeter): string {
     const direction = extractAiTokenDirection(meter);
     if (model && direction) return `${model} · ${direction}`;
     if (model) return model;
+  }
+
+  // VK-style flavor codes hide ×1/×8 in the SKU — surface the card count in the title.
+  if (
+    (meter.categoryKey === 'gpu' || meter.meter === 'compute.flavor') &&
+    looksLikeGpuFlavorCode(meter.name) 
+  ) {
+    const gpuLabel = formatGpuLabel(meter);
+    if (gpuLabel) return gpuLabel;
   }
 
   if (meter.meter.startsWith('storage.block.')) {

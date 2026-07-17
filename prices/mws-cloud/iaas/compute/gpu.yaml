@@ -20,6 +20,7 @@ spec:
     - mws.gpu-docs
     dimensions:
       gpuModel: NVIDIA A100
+      gpuCount: 1
       gpuMemoryGb: 80
       purchaseModel: on-demand
     notes: >

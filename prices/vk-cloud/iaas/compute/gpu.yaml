@@ -906,6 +906,7 @@ spec:
     - vk.pricelist
     dimensions:
       gpuModel: NVIDIA L4 vGPU
+      gpuCount: 1
       virtualGpu: true
       vgpuProfile: 1Q
       vcpu: 2
@@ -944,6 +945,7 @@ spec:
     - vk.pricelist
     dimensions:
       gpuModel: NVIDIA L4 vGPU
+      gpuCount: 1
       virtualGpu: true
       vgpuProfile: 4Q
       vcpu: 4
@@ -982,6 +984,7 @@ spec:
     - vk.pricelist
     dimensions:
       gpuModel: NVIDIA L4 vGPU
+      gpuCount: 1
       virtualGpu: true
       vgpuProfile: 8Q
       vcpu: 8

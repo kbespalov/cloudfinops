@@ -21,6 +21,7 @@ spec:
     - yc.compute
     dimensions:
       gpuModel: NVIDIA V100
+      gpuCount: 1
       gpuMemoryGb: 32
       cpuPlatformFamily: intel-broadwell
       cpuPlatformNative: Intel Broadwell
@@ -51,6 +52,7 @@ spec:
     - yc.compute
     dimensions:
       gpuModel: NVIDIA V100
+      gpuCount: 1
       gpuMemoryGb: 32
       cpuPlatformFamily: intel-cascade-lake
       cpuPlatformNative: Intel Cascade Lake
@@ -81,6 +83,7 @@ spec:
     - yc.compute
     dimensions:
       gpuModel: NVIDIA A100
+      gpuCount: 1
       gpuMemoryGb: 80
       cpuPlatformFamily: unknown
       cpuPlatformNative: AMD EPYC
@@ -111,6 +114,7 @@ spec:
     - yc.compute
     dimensions:
       gpuModel: unknown
+      gpuCount: 1
       gpuMemoryGb: 80
       platformId: gpu-standard-v3i
       purchaseModel: on-demand
@@ -140,6 +144,7 @@ spec:
     - yc.compute
     dimensions:
       gpuModel: NVIDIA H200
+      gpuCount: 1
       gpuMemoryGb: 141
       platformId: gpu-standard-v4
       purchaseModel: on-demand
@@ -171,6 +176,7 @@ spec:
     - yc.compute
     dimensions:
       gpuModel: NVIDIA T4
+      gpuCount: 1
       gpuMemoryGb: 16
       cpuPlatformFamily: intel-ice-lake
       cpuPlatformNative: Intel Ice Lake
@@ -202,6 +208,7 @@ spec:
     - yc.compute
     dimensions:
       gpuModel: unknown
+      gpuCount: 1
       gpuMemoryGb: 24
       cpuPlatformFamily: intel-ice-lake
       cpuPlatformNative: Intel Ice Lake
@@ -234,6 +241,7 @@ spec:
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       gpuModel: NVIDIA A100
+      gpuCount: 1
       gpuMemoryGb: 80
       cpuPlatformFamily: unknown
       cpuPlatformNative: AMD EPYC
@@ -261,6 +269,7 @@ spec:
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       gpuModel: NVIDIA V100
+      gpuCount: 1
       gpuMemoryGb: 32
       cpuPlatformFamily: intel-cascade-lake
       cpuPlatformNative: Intel Cascade Lake
@@ -288,6 +297,7 @@ spec:
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       gpuModel: NVIDIA T4
+      gpuCount: 1
       gpuMemoryGb: 16
       cpuPlatformFamily: intel-ice-lake
       cpuPlatformNative: Intel Ice Lake
@@ -316,6 +326,7 @@ spec:
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       gpuModel: NVIDIA H200
+      gpuCount: 1
       gpuMemoryGb: 141
       platformId: gpu-standard-v4
       purchaseModel: preemptible

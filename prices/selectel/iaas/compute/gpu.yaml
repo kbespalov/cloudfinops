@@ -23,6 +23,7 @@ spec:
     dimensions:
       poolDependent: true
       gpuModel: NVIDIA A100
+      gpuCount: 1
       gpuMemoryGb: 80
       purchaseModel: on-demand
     pricing:
@@ -49,6 +50,7 @@ spec:
     dimensions:
       poolDependent: true
       gpuModel: NVIDIA H200
+      gpuCount: 1
       gpuMemoryGb: 141
       purchaseModel: on-demand
     pricing:
@@ -75,6 +77,7 @@ spec:
     dimensions:
       poolDependent: true
       gpuModel: NVIDIA L4
+      gpuCount: 1
       gpuMemoryGb: 24
       purchaseModel: on-demand
     pricing:
@@ -101,6 +104,7 @@ spec:
     dimensions:
       poolDependent: true
       gpuModel: NVIDIA RTX 6000 Pro
+      gpuCount: 1
       gpuMemoryGb: 96
       purchaseModel: on-demand
     pricing:
@@ -127,6 +131,7 @@ spec:
     dimensions:
       poolDependent: true
       gpuModel: NVIDIA A100
+      gpuCount: 1
       gpuMemoryGb: 40
       purchaseModel: on-demand
     pricing:
@@ -148,7 +153,7 @@ spec:
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-13'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
-    dimensions: {poolDependent: true, gpuModel: NVIDIA A100, gpuMemoryGb: 80, purchaseModel: preemptible, publishedMonthlyAmount: 106590.00}
+    dimensions: {poolDependent: true, gpuModel: NVIDIA A100, gpuCount: 1, gpuMemoryGb: 80, purchaseModel: preemptible, publishedMonthlyAmount: 106590.00}
     pricing:
       rate: {amount: '146.0137', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
@@ -161,7 +166,7 @@ spec:
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-13'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
-    dimensions: {poolDependent: true, gpuModel: NVIDIA H200, gpuMemoryGb: 141, purchaseModel: preemptible, publishedMonthlyAmount: 321750.00}
+    dimensions: {poolDependent: true, gpuModel: NVIDIA H200, gpuCount: 1, gpuMemoryGb: 141, purchaseModel: preemptible, publishedMonthlyAmount: 321750.00}
     pricing:
       rate: {amount: '440.7534', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
@@ -174,7 +179,7 @@ spec:
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-13'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
-    dimensions: {poolDependent: true, gpuModel: NVIDIA L4, gpuMemoryGb: 24, purchaseModel: preemptible, publishedMonthlyAmount: 18156.60}
+    dimensions: {poolDependent: true, gpuModel: NVIDIA L4, gpuCount: 1, gpuMemoryGb: 24, purchaseModel: preemptible, publishedMonthlyAmount: 18156.60}
     pricing:
       rate: {amount: '24.8721', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
@@ -187,7 +192,7 @@ spec:
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-13'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
-    dimensions: {poolDependent: true, gpuModel: NVIDIA RTX 6000 Pro, gpuMemoryGb: 96, purchaseModel: preemptible, publishedMonthlyAmount: 118095.45}
+    dimensions: {poolDependent: true, gpuModel: NVIDIA RTX 6000 Pro, gpuCount: 1, gpuMemoryGb: 96, purchaseModel: preemptible, publishedMonthlyAmount: 118095.45}
     pricing:
       rate: {amount: '161.7746', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
@@ -200,7 +205,7 @@ spec:
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-13'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
-    dimensions: {poolDependent: true, gpuModel: NVIDIA A100, gpuMemoryGb: 40, purchaseModel: preemptible, publishedMonthlyAmount: 64566.83}
+    dimensions: {poolDependent: true, gpuModel: NVIDIA A100, gpuCount: 1, gpuMemoryGb: 40, purchaseModel: preemptible, publishedMonthlyAmount: 64566.83}
     pricing:
       rate: {amount: '88.4477', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
@@ -213,7 +218,7 @@ spec:
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-13'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
-    dimensions: {poolDependent: true, gpuModel: NVIDIA A30, gpuMemoryGb: 24, purchaseModel: on-demand, publishedMonthlyAmount: 42075.11}
+    dimensions: {poolDependent: true, gpuModel: NVIDIA A30, gpuCount: 1, gpuMemoryGb: 24, purchaseModel: on-demand, publishedMonthlyAmount: 42075.11}
     pricing:
       rate: {amount: '57.6371', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
@@ -226,7 +231,7 @@ spec:
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-13'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
-    dimensions: {poolDependent: true, gpuModel: NVIDIA A30, gpuMemoryGb: 24, purchaseModel: preemptible, publishedMonthlyAmount: 22630.63}
+    dimensions: {poolDependent: true, gpuModel: NVIDIA A30, gpuCount: 1, gpuMemoryGb: 24, purchaseModel: preemptible, publishedMonthlyAmount: 22630.63}
     pricing:
       rate: {amount: '31.0009', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
@@ -239,7 +244,7 @@ spec:
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-13'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
-    dimensions: {poolDependent: true, gpuModel: NVIDIA A5000, gpuMemoryGb: 24, purchaseModel: on-demand, publishedMonthlyAmount: 44000.00}
+    dimensions: {poolDependent: true, gpuModel: NVIDIA A5000, gpuCount: 1, gpuMemoryGb: 24, purchaseModel: on-demand, publishedMonthlyAmount: 44000.00}
     pricing:
       rate: {amount: '60.2740', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
@@ -252,7 +257,7 @@ spec:
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-13'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
-    dimensions: {poolDependent: true, gpuModel: NVIDIA A5000, gpuMemoryGb: 24, purchaseModel: preemptible, publishedMonthlyAmount: 22000.00}
+    dimensions: {poolDependent: true, gpuModel: NVIDIA A5000, gpuCount: 1, gpuMemoryGb: 24, purchaseModel: preemptible, publishedMonthlyAmount: 22000.00}
     pricing:
       rate: {amount: '30.1370', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
@@ -265,7 +270,7 @@ spec:
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-13'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
-    dimensions: {poolDependent: true, gpuModel: NVIDIA RTX 2080 Ti, gpuMemoryGb: 11, purchaseModel: on-demand, publishedMonthlyAmount: 14087.83}
+    dimensions: {poolDependent: true, gpuModel: NVIDIA RTX 2080 Ti, gpuCount: 1, gpuMemoryGb: 11, purchaseModel: on-demand, publishedMonthlyAmount: 14087.83}
     pricing:
       rate: {amount: '19.2984', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
@@ -278,7 +283,7 @@ spec:
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-13'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
-    dimensions: {poolDependent: true, gpuModel: NVIDIA RTX 2080 Ti, gpuMemoryGb: 11, purchaseModel: preemptible, publishedMonthlyAmount: 4226.35}
+    dimensions: {poolDependent: true, gpuModel: NVIDIA RTX 2080 Ti, gpuCount: 1, gpuMemoryGb: 11, purchaseModel: preemptible, publishedMonthlyAmount: 4226.35}
     pricing:
       rate: {amount: '5.7895', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
@@ -291,7 +296,7 @@ spec:
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-13'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
-    dimensions: {poolDependent: true, gpuModel: NVIDIA RTX 4090, gpuMemoryGb: 24, purchaseModel: on-demand, publishedMonthlyAmount: 55040.83}
+    dimensions: {poolDependent: true, gpuModel: NVIDIA RTX 4090, gpuCount: 1, gpuMemoryGb: 24, purchaseModel: on-demand, publishedMonthlyAmount: 55040.83}
     pricing:
       rate: {amount: '75.3984', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
@@ -304,7 +309,7 @@ spec:
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-13'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
-    dimensions: {poolDependent: true, gpuModel: NVIDIA RTX 4090, gpuMemoryGb: 24, purchaseModel: preemptible, publishedMonthlyAmount: 27520.42}
+    dimensions: {poolDependent: true, gpuModel: NVIDIA RTX 4090, gpuCount: 1, gpuMemoryGb: 24, purchaseModel: preemptible, publishedMonthlyAmount: 27520.42}
     pricing:
       rate: {amount: '37.6992', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
@@ -317,7 +322,7 @@ spec:
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-13'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
-    dimensions: {poolDependent: true, gpuModel: NVIDIA RTX 6000 Ada, gpuMemoryGb: 48, purchaseModel: on-demand, publishedMonthlyAmount: 88088.00}
+    dimensions: {poolDependent: true, gpuModel: NVIDIA RTX 6000 Ada, gpuCount: 1, gpuMemoryGb: 48, purchaseModel: on-demand, publishedMonthlyAmount: 88088.00}
     pricing:
       rate: {amount: '120.6685', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
@@ -330,7 +335,7 @@ spec:
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-13'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
-    dimensions: {poolDependent: true, gpuModel: NVIDIA RTX 6000 Ada, gpuMemoryGb: 48, purchaseModel: preemptible, publishedMonthlyAmount: 44044.00}
+    dimensions: {poolDependent: true, gpuModel: NVIDIA RTX 6000 Ada, gpuCount: 1, gpuMemoryGb: 48, purchaseModel: preemptible, publishedMonthlyAmount: 44044.00}
     pricing:
       rate: {amount: '60.3342', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
@@ -343,7 +348,7 @@ spec:
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-13'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
-    dimensions: {poolDependent: true, gpuModel: NVIDIA Tesla T4, gpuMemoryGb: 16, purchaseModel: on-demand, publishedMonthlyAmount: 31451.90}
+    dimensions: {poolDependent: true, gpuModel: NVIDIA Tesla T4, gpuCount: 1, gpuMemoryGb: 16, purchaseModel: on-demand, publishedMonthlyAmount: 31451.90}
     pricing:
       rate: {amount: '43.0848', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
@@ -356,7 +361,7 @@ spec:
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-13'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
-    dimensions: {poolDependent: true, gpuModel: NVIDIA Tesla T4, gpuMemoryGb: 16, purchaseModel: preemptible, publishedMonthlyAmount: 9435.57}
+    dimensions: {poolDependent: true, gpuModel: NVIDIA Tesla T4, gpuCount: 1, gpuMemoryGb: 16, purchaseModel: preemptible, publishedMonthlyAmount: 9435.57}
     pricing:
       rate: {amount: '12.9254', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
@@ -369,7 +374,7 @@ spec:
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-13'
     sourceRefs: [selectel.prices, selectel.compute-rules]
-    dimensions: {poolDependent: true, poolId: ru-1a, gpuModel: NVIDIA GTX 1080, gpuMemoryGb: 8, purchaseModel: on-demand}
+    dimensions: {poolDependent: true, poolId: ru-1a, gpuModel: NVIDIA GTX 1080, gpuCount: 1, gpuMemoryGb: 8, purchaseModel: on-demand}
     pricing:
       rate: {amount: '16.2476', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
@@ -382,7 +387,7 @@ spec:
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-13'
     sourceRefs: [selectel.prices, selectel.compute-rules]
-    dimensions: {poolDependent: true, poolId: ru-1a, gpuModel: NVIDIA GTX 1080, gpuMemoryGb: 8, purchaseModel: preemptible}
+    dimensions: {poolDependent: true, poolId: ru-1a, gpuModel: NVIDIA GTX 1080, gpuCount: 1, gpuMemoryGb: 8, purchaseModel: preemptible}
     pricing:
       rate: {amount: '4.8743', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
@@ -395,7 +400,7 @@ spec:
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-13'
     sourceRefs: [selectel.prices, selectel.compute-rules]
-    dimensions: {poolDependent: true, poolId: ru-7a, gpuModel: NVIDIA A2, gpuMemoryGb: 16, purchaseModel: on-demand}
+    dimensions: {poolDependent: true, poolId: ru-7a, gpuModel: NVIDIA A2, gpuCount: 1, gpuMemoryGb: 16, purchaseModel: on-demand}
     pricing:
       rate: {amount: '31.9770', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
@@ -408,7 +413,7 @@ spec:
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-13'
     sourceRefs: [selectel.prices, selectel.compute-rules]
-    dimensions: {poolDependent: true, poolId: ru-7a, gpuModel: NVIDIA A2, gpuMemoryGb: 16, purchaseModel: preemptible}
+    dimensions: {poolDependent: true, poolId: ru-7a, gpuModel: NVIDIA A2, gpuCount: 1, gpuMemoryGb: 16, purchaseModel: preemptible}
     pricing:
       rate: {amount: '9.5931', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
@@ -421,7 +426,7 @@ spec:
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-13'
     sourceRefs: [selectel.prices, selectel.compute-rules]
-    dimensions: {poolDependent: true, poolId: ru-7a, gpuModel: NVIDIA A2000, gpuMemoryGb: 6, purchaseModel: on-demand}
+    dimensions: {poolDependent: true, poolId: ru-7a, gpuModel: NVIDIA A2000, gpuCount: 1, gpuMemoryGb: 6, purchaseModel: on-demand}
     pricing:
       rate: {amount: '19.0740', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
@@ -434,7 +439,7 @@ spec:
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-13'
     sourceRefs: [selectel.prices, selectel.compute-rules]
-    dimensions: {poolDependent: true, poolId: ru-7a, gpuModel: NVIDIA A2000, gpuMemoryGb: 6, purchaseModel: preemptible}
+    dimensions: {poolDependent: true, poolId: ru-7a, gpuModel: NVIDIA A2000, gpuCount: 1, gpuMemoryGb: 6, purchaseModel: preemptible}
     pricing:
       rate: {amount: '5.7222', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
@@ -447,7 +452,7 @@ spec:
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-13'
     sourceRefs: [selectel.prices, selectel.compute-rules]
-    dimensions: {poolDependent: true, poolId: ru-7b, gpuModel: NVIDIA H100, gpuMemoryGb: 80, purchaseModel: on-demand}
+    dimensions: {poolDependent: true, poolId: ru-7b, gpuModel: NVIDIA H100, gpuCount: 1, gpuMemoryGb: 80, purchaseModel: on-demand}
     pricing:
       rate: {amount: '410.9589', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
@@ -460,7 +465,7 @@ spec:
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-13'
     sourceRefs: [selectel.prices, selectel.compute-rules]
-    dimensions: {poolDependent: true, poolId: ru-7b, gpuModel: NVIDIA H100, gpuMemoryGb: 80, purchaseModel: preemptible}
+    dimensions: {poolDependent: true, poolId: ru-7b, gpuModel: NVIDIA H100, gpuCount: 1, gpuMemoryGb: 80, purchaseModel: preemptible}
     pricing:
       rate: {amount: '205.4795', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.

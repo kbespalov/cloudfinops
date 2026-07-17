@@ -54,7 +54,7 @@ import {
   meterMatchesAiModel,
   extractDiskMedia,
   extractDiskVariant,
-  extractGpuModel,
+  formatGpuLabel,
   extractKubernetesAvailability,
   extractRamGiB,
   extractStorageClass,
@@ -896,7 +896,7 @@ export function CatalogPage() {
           let label = paramsLabel(m);
           let title = label;
           if (category === 'gpu') {
-            label = extractGpuModel(m) || label;
+            label = formatGpuLabel(m) || label;
             title = label;
           } else if (category === 'ai') {
             label = billingUnitLabel(m);

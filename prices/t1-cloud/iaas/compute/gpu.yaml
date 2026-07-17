@@ -20,6 +20,7 @@ spec:
     - t1.rates-pdf-2026-07-13
     dimensions:
       gpuModel: NVIDIA A100 40GB PCIe
+      gpuCount: 1
       gpuMemoryGb: 40
       series: g2
       cpuPlatformFamily: intel-cascade-lake
@@ -62,6 +63,7 @@ spec:
     dimensions:
       series: g1
       gpuModel: NVIDIA H100 80GB PCIe
+      gpuCount: 1
       gpuMemoryGb: 80
       cpuPlatformFamily: amd-zen4
       purchaseModel: on-demand
@@ -102,6 +104,7 @@ spec:
     dimensions:
       series: g3
       gpuModel: NVIDIA H100 80GB SXM5
+      gpuCount: 1
       gpuMemoryGb: 80
       cpuPlatformFamily: intel-sapphire-rapids
       purchaseModel: on-demand
@@ -139,6 +142,7 @@ spec:
     dimensions:
       series: g6
       gpuModel: NVIDIA L40S 48GB PCIe
+      gpuCount: 1
       gpuMemoryGb: 48
       cpuPlatformFamily: amd-zen4
       purchaseModel: on-demand
@@ -179,6 +183,7 @@ spec:
     dimensions:
       series: g7
       gpuModel: NVIDIA H200 141GB SXM
+      gpuCount: 1
       gpuMemoryGb: 141
       cpuPlatformFamily: intel-sapphire-rapids
       purchaseModel: on-demand
@@ -219,6 +224,7 @@ spec:
     dimensions:
       series: g4
       gpuModel: Metax C500
+      gpuCount: 1
       cpuPlatformFamily: intel-ice-lake
       purchaseModel: on-demand
       availableGpuCounts:
@@ -239,6 +245,7 @@ spec:
     dimensions:
       series: g5
       gpuModel: Metax C550 64GB
+      gpuCount: 1
       gpuMemoryGb: 64
       cpuPlatformFamily: intel-sapphire-rapids
       purchaseModel: on-demand
