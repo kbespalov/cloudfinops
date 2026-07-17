@@ -91,8 +91,27 @@ import {
   type VcpuShareFacet,
 } from '@/lib/catalog';
 import {SkuDrawer} from '@/components/catalog/SkuDrawer';
+import {ProviderMark} from '@/components/catalog/ProviderMark';
 import {AppHeader} from '@/components/AppHeader';
 import styles from './CatalogPage.module.css';
+
+const PROVIDER_FACET_ORDER = [
+  'yandex-cloud',
+  'vk-cloud',
+  'selectel',
+  'cloud-ru',
+  'mws-cloud',
+  't1-cloud',
+] as const;
+
+const PROVIDER_SHORT_TITLE: Record<string, string> = {
+  'yandex-cloud': 'Yandex',
+  'vk-cloud': 'VK',
+  selectel: 'Selectel',
+  'cloud-ru': 'Cloud.ru',
+  'mws-cloud': 'MWS',
+  't1-cloud': 'T1',
+};
 
 const PAGE_SIZE = 40;
 
@@ -395,10 +414,37 @@ export function CatalogPage() {
     [],
   );
 
+  const providerFacetOptions = useMemo(() => {
+    const byId = new Map(catalog.providers.map((p) => [p.id, p]));
+    return PROVIDER_FACET_ORDER.filter((id) => byId.has(id)).map((id) => ({
+      value: id,
+      title: PROVIDER_SHORT_TITLE[id] || byId.get(id)!.name,
+    }));
+  }, []);
+
+  /** Single-select mirror of providers[] for the All-tab chip row. */
+  const providerFacet = providers.length === 1 ? providers[0]! : 'all';
+
+  // Deep-link ?providers=a,b on All is not representable by chips — keep the first.
+  useEffect(() => {
+    if (category === 'all' && providers.length > 1) {
+      setProviders([providers[0]!]);
+    }
+  }, [category, providers]);
+
   const baseMeters = useMemo(
     () => catalog.meters.filter((m) => m.status === 'available'),
     [],
   );
+
+  const providerFacetCounts = useMemo(() => {
+    const counts: Record<string, number> = {all: baseMeters.length};
+    for (const id of PROVIDER_FACET_ORDER) counts[id] = 0;
+    for (const m of baseMeters) {
+      if (m.provider in counts) counts[m.provider] += 1;
+    }
+    return counts;
+  }, [baseMeters]);
 
   const categoryCounts = useMemo(() => {
     const counts: Record<CategoryFilter, number> = {
@@ -837,20 +883,25 @@ export function CatalogPage() {
             value={category}
             onUpdate={(v) => {
               startTransition(() => {
-                setCategory(v as CategoryFilter);
-                if (v !== 'compute') {
+                const next = v as CategoryFilter;
+                setCategory(next);
+                // All-tab chips are single-select; multi from other tabs collapses to first.
+                if (next === 'all') {
+                  setProviders((prev) => (prev.length > 1 ? [prev[0]!] : prev));
+                }
+                if (next !== 'compute') {
                   setFacet('all');
                   setDiskFacet('all');
                   setVcpuShareFacet('all');
                   setVcpuPlatformFacet('all');
                 }
-                if (v !== 'gpu') setGpuFacet('all');
-                if (v !== 'storage') {
+                if (next !== 'gpu') setGpuFacet('all');
+                if (next !== 'storage') {
                   setStorageFacet('all');
                   setStorageKindFacet('all');
                 }
-                if (v !== 'network') setNetworkFacet('all');
-                if (v !== 'kubernetes') setKubernetesAvailabilityFacet('all');
+                if (next !== 'network') setNetworkFacet('all');
+                if (next !== 'kubernetes') setKubernetesAvailabilityFacet('all');
               });
             }}
           >
@@ -881,17 +932,19 @@ export function CatalogPage() {
                 />
               </div>
 
-              <Select
-                size="m"
-                multiple
-                filterable
-                hasClear
-                placeholder="Провайдер"
-                value={providers}
-                options={providerOptions}
-                onUpdate={setProviders}
-                className={styles.controlSelect}
-              />
+              {category !== 'all' ? (
+                <Select
+                  size="m"
+                  multiple
+                  filterable
+                  hasClear
+                  placeholder="Провайдер"
+                  value={providers}
+                  options={providerOptions}
+                  onUpdate={setProviders}
+                  className={styles.controlSelect}
+                />
+              ) : null}
 
               <Select
                 size="m"
@@ -919,6 +972,44 @@ export function CatalogPage() {
 
             {/* Reserved row — keeps table from jumping across tabs */}
             <div className={styles.facetRow} ref={facetRowRef}>
+              {category === 'all' ? (
+                <div className={styles.facetControl} title="Провайдер облака">
+                  <Text variant="caption-2" color="complementary" className={styles.facetLabel}>
+                    Провайдер
+                  </Text>
+                  <SegmentedRadioGroup
+                    size="m"
+                    value={providerFacet}
+                    onUpdate={(v) => {
+                      setProviders(v === 'all' ? [] : [v]);
+                      setPage(1);
+                    }}
+                  >
+                    {[
+                      {value: 'all' as const, title: 'Все'},
+                      ...providerFacetOptions,
+                    ].map((o) => (
+                      <SegmentedRadioGroup.Option key={o.value} value={o.value}>
+                        <span className={styles.facetOption}>
+                          {o.value === 'all' ? (
+                            <Icon data={Layers3Diagonal} size={14} />
+                          ) : (
+                            <ProviderMark
+                              providerId={o.value}
+                              size={14}
+                              className={styles.providerMark}
+                            />
+                          )}
+                          <span>
+                            {o.title} {providerFacetCounts[o.value] ?? 0}
+                          </span>
+                        </span>
+                      </SegmentedRadioGroup.Option>
+                    ))}
+                  </SegmentedRadioGroup>
+                </div>
+              ) : null}
+
               {category === 'compute' ? (
                 <>
                   <div className={styles.facetControl} title="Тип compute-ресурса">

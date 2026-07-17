@@ -68,6 +68,14 @@
   gap: 6px;
 }
 
+.providerMark {
+  display: block;
+  flex: 0 0 auto;
+  /* Match facet label color; muted so marks don't compete with orange accent */
+  color: var(--g-color-text-secondary);
+  opacity: 0.9;
+}
+
 .tableCard {
   border: 1px solid var(--g-color-line-generic);
   border-radius: var(--g-border-radius-l);
