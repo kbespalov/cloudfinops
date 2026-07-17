@@ -43,7 +43,7 @@ describe('calculator presets', () => {
     }
     for (const p of computePresetsByFamily('low-cost')) {
       assert.ok(p.ramGiB >= p.vcpu, p.id);
-      assert.ok(p.diskGiB === 100, p.id);
+      assert.ok(p.diskGiB === 10, p.id);
     }
   });
 

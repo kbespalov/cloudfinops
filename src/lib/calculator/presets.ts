@@ -91,12 +91,12 @@ function computePreset(
  *   Memory optimized → 1 : 8
  */
 export const COMPUTE_PRESETS: ComputePreset[] = [
-  // Low-cost — preemptible + shared vCPU, cheapest hosting
-  computePreset('low-cost', 1, 1),
-  computePreset('low-cost', 2, 2),
-  computePreset('low-cost', 2, 4),
-  computePreset('low-cost', 4, 8),
-  computePreset('low-cost', 8, 16),
+  // Low-cost — preemptible + shared vCPU, cheapest hosting (10 GiB system disk)
+  computePreset('low-cost', 1, 1, 10),
+  computePreset('low-cost', 2, 2, 10),
+  computePreset('low-cost', 2, 4, 10),
+  computePreset('low-cost', 4, 8, 10),
+  computePreset('low-cost', 8, 16, 10),
   // General / Balanced — ratio 1 : 4
   computePreset('general', 2, 8),
   computePreset('general', 4, 16),
