@@ -195,15 +195,16 @@ export const newsItems: NewsItem[] = [
   },
   {
     id: 'cloudru-2026-06-multicloud-mws',
-    date: '2026-06-01',
+    date: '2026-05-19',
     provider: 'cloud-ru',
     providerName: 'Cloud.ru',
     title: 'Мультиоблачная связь с MWS Cloud',
     summary:
-      'Прямая сетевая связность Cloud.ru ↔ MWS Cloud: выделенный канал между облаками для DR, обмена данными и мультиоблачных архитектур. На старте подключение идёт через поддержку — полезно закладывать в архитектуру, если площадки уже распределены.',
+      'Прямая сетевая связность Cloud.ru ↔ MWS Cloud (и Beeline Cloud): выделенный канал между облаками для DR, обмена данными и мультиоблачных архитектур. На старте подключение идёт через поддержку — полезно закладывать в архитектуру, если площадки уже распределены.',
     tags: ['network'],
-    sourceUrl: 'https://cloud.ru/blog/cloud-ru-servis-multioblachnoy-svyazi-c-mws-cloud-i-beeline-cloud',
-    sourceLabel: 'Блог Cloud.ru',
+    sourceUrl:
+      'https://www.comnews.ru/content/245355/2026-05-19/2026-w21/1018/cloudru-anonsiroval-servis-multioblachnoy-svyazi-c-mws-cloud-i-beeline-cloud',
+    sourceLabel: 'ComNews · анонс Cloud.ru',
   },
 
   // ——— MWS ———
@@ -244,6 +245,30 @@ export const newsItems: NewsItem[] = [
     tags: ['security'],
     sourceUrl: 'https://www.cnews.ru/news/line/2026-06-17_vk_tech_attestoval_vk_secure_cloud',
     sourceLabel: 'CNews / VK Tech',
+  },
+  {
+    id: 'vk-2026-06-object-versioning',
+    date: '2026-06-03',
+    provider: 'vk-cloud',
+    providerName: 'VK Cloud',
+    title: 'Версионирование объектов в VK Object Storage',
+    summary:
+      'В S3-совместимом хранилище появилось версионирование: каждое изменение объекта сохраняется, можно откатиться после перезаписи или удаления. В связке с Object Lock (WORM) закрывает типичный набор для корпоративных бэкапов и требований к восстановлению данных.',
+    tags: ['storage', 'security'],
+    sourceUrl: 'https://cloud.vk.com/blog/versionirovanie-obektov-v-vk-object-storage/',
+    sourceLabel: 'Блог VK Cloud',
+  },
+  {
+    id: 'vk-2026-06-static-site-hosting',
+    date: '2026-06-01',
+    provider: 'vk-cloud',
+    providerName: 'VK Cloud',
+    title: 'Хостинг статических сайтов в Object Storage',
+    summary:
+      'Бакет можно перевести в режим static site hosting: index/error-страницы, routing rules и отдельный website-endpoint вида hb-website.*. Подходит для лендингов, документации и простых SPA без отдельного веб-сервера; свой домен и SSL — через панель и поддержку.',
+    tags: ['storage'],
+    sourceUrl: 'https://cloud.vk.com/docs/ru/storage/s3/concepts/static-site-hosting',
+    sourceLabel: 'Документация VK Cloud · Object Storage',
   },
 
   // ——— AWS ———
@@ -461,6 +486,32 @@ export const newsItems: NewsItem[] = [
   },
 
   // ——— Июль 2026 ———
+  {
+    id: 'vk-2026-07-gpu-operator',
+    date: '2026-07-08',
+    provider: 'vk-cloud',
+    providerName: 'VK Cloud',
+    title: 'GPU Operator в Managed Kubernetes',
+    summary:
+      'Аддон для кластеров второго поколения ставит NVIDIA GPU Operator без ручной настройки драйверов и device plugin на каждой ноде. После включения кластер готов принимать поды с nvidia.com/gpu — удобно для обучения, инференса и рендеринга в привычном K8s-контуре.',
+    tags: ['kubernetes', 'ai', 'compute'],
+    sourceUrl:
+      'https://cloud.vk.com/blog/gpu-operator-v-managed-kubernetes-zapusk-gpu-vichislenii-bez-ruchnoi-nastroiki-draiverov/',
+    sourceLabel: 'Блог VK Cloud',
+  },
+  {
+    id: 'vk-2026-07-argo-cd',
+    date: '2026-07-07',
+    provider: 'vk-cloud',
+    providerName: 'VK Cloud',
+    title: 'Argo CD как аддон Managed Kubernetes',
+    summary:
+      'GitOps из панели: Argo CD подключается аддоном, желаемое состояние живёт в Git, а контроллер синхронизирует кластер. Меньше дрейфа от ручных kubectl и проще единый путь релизов для test/stage/prod без сборки CD-стека с нуля.',
+    tags: ['kubernetes'],
+    sourceUrl:
+      'https://cloud.vk.com/blog/argo-cd-v-managed-kubernetes-avtomatizatsiya-relizov-po-gitops/',
+    sourceLabel: 'Блог VK Cloud',
+  },
   {
     id: 'cloudru-2026-07-airflow-flink',
     date: '2026-07-06',
