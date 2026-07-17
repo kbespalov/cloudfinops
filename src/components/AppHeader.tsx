@@ -1,7 +1,15 @@
 'use client';
 
 import {Flex, Text, Button, Icon} from '@gravity-ui/uikit';
-import {BookOpen, Calculator, LogoTelegram, Moon, SquareListUl, Sun} from '@gravity-ui/icons';
+import {
+  BookOpen,
+  Calculator,
+  CircleInfo,
+  LogoTelegram,
+  Moon,
+  SquareListUl,
+  Sun,
+} from '@gravity-ui/icons';
 import Link from 'next/link';
 import {usePathname} from 'next/navigation';
 import {useAppTheme} from '@/components/AppProviders';
@@ -17,6 +25,7 @@ const NAV = [
     icon: Calculator,
     badge: 'coming soon',
   },
+  {href: '/about', label: 'О нас', icon: CircleInfo},
   {
     href: 'https://t.me/cloudfinopsru',
     label: 'Сообщество',

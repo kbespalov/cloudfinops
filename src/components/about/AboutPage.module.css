@@ -1,0 +1,59 @@
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 28px 24px 96px;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 40px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--g-color-line-generic);
+}
+
+.lead {
+  max-width: 40em;
+  line-height: 1.55;
+}
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.section p {
+  margin: 0;
+  max-width: 40em;
+  line-height: 1.6;
+  color: var(--g-color-text-secondary);
+}
+
+.section p strong {
+  color: var(--g-color-text-primary);
+  font-weight: 600;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.footerNote {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--g-color-line-generic);
+  color: var(--g-color-text-secondary);
+  line-height: 1.55;
+  max-width: 40em;
+}
