@@ -1,0 +1,346 @@
+/**
+ * Function-calling tools exposed to GigaChat: `search_prices` (lexical catalog
+ * search) and `get_quote` (calculator engine). JSON-schema definitions plus a
+ * dispatcher that runs the tool and returns a compact JSON string for the model.
+ */
+
+import type {CategoryKey, PeriodMode} from '@/lib/catalog';
+import {searchPricesDetailed, type PriceRow, type SearchParams} from './search';
+import {quotePreset, listGpuPresets} from '@/lib/calculator/quote';
+import type {ComputePreset, GpuPreset, CalculatorPreset} from '@/lib/calculator/presets';
+
+export type ChatToolCall = {
+  id: string;
+  name: string;
+  arguments: string;
+};
+
+const CATEGORIES: CategoryKey[] = [
+  'compute',
+  'gpu',
+  'storage',
+  'network',
+  'kubernetes',
+  'ai',
+  'other',
+];
+
+const PROVIDER_IDS = [
+  'yandex-cloud',
+  'vk-cloud',
+  'cloud-ru',
+  't1-cloud',
+  'selectel',
+  'mws-cloud',
+];
+
+/** OpenAI-compatible tool schema array sent with every completion request. */
+export const CHAT_TOOLS = [
+  {
+    type: 'function',
+    function: {
+      name: 'search_prices',
+      description:
+        'Найти позиции прайс-листа российских облаков (Yandex Cloud, VK Cloud, Cloud.ru, T1 Cloud, Selectel, MWS) по ключевым словам и фильтрам. Возвращает список SKU с ценами (₽ с НДС) за час/месяц/год. Используй для вопросов о ценах конкретных услуг, GPU, AI-моделей, дисков, трафика и т.п.',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: {
+            type: 'string',
+            description:
+              'Поисковый запрос на русском или английском: название услуги, модель GPU/AI, класс диска и т.д. Например: «H100», «GLM 5.2», «объектное хранилище», «egress трафик».',
+          },
+          category: {
+            type: 'string',
+            enum: CATEGORIES,
+            description: 'Ограничить категорией: compute, gpu, storage, network, kubernetes, ai.',
+          },
+          provider: {
+            type: 'string',
+            enum: PROVIDER_IDS,
+            description: 'Ограничить провайдером по id.',
+          },
+          gpuModel: {
+            type: 'string',
+            description: 'Фильтр по модели GPU, например H100, A100, B300, L40S, V100.',
+          },
+          aiModel: {
+            type: 'string',
+            description: 'Фильтр по семейству AI-модели, например GLM, GigaChat, Qwen, DeepSeek, Kimi.',
+          },
+          limit: {
+            type: 'integer',
+            description: 'Максимум строк в ответе (1–40, по умолчанию 12).',
+          },
+        },
+        required: ['query'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_quote',
+      description:
+        'Рассчитать и сравнить стоимость конфигурации ВМ или GPU-инстанса по провайдерам через движок калькулятора «конфигурация целиком». Для GPU это ПРАВИЛЬНЫЙ инструмент сравнения «по провайдерам с паритетом по конфигурации»: у каждого провайдера возвращается полная конфигурация (GPU + хост vCPU/RAM/диск), card-only тарифы дополняются хостом. Если не задать vcpu/ramGiB для GPU — подберётся типовой хост для этого класса GPU (это будет отражено в assumedHost). Возвращает цену у каждого провайдера и самый дешёвый вариант.',
+      parameters: {
+        type: 'object',
+        properties: {
+          vcpu: {type: 'integer', description: 'Количество vCPU (для GPU можно опустить).'},
+          ramGiB: {type: 'integer', description: 'Объём RAM в GiB (для GPU можно опустить).'},
+          diskGiB: {type: 'integer', description: 'Системный диск в GiB (по умолчанию 100).'},
+          gpuModel: {
+            type: 'string',
+            description: 'Модель GPU для GPU-инстанса, например H100, A100, L40S. Опустить для обычной ВМ.',
+          },
+          gpuCount: {type: 'integer', description: 'Число GPU (по умолчанию 1).'},
+          period: {
+            type: 'string',
+            enum: ['unit', 'month', 'year'],
+            description: 'Период расчёта: unit (час), month, year. По умолчанию month.',
+          },
+        },
+        required: [],
+      },
+    },
+  },
+] as const;
+
+/** Distinguish a whole-VM/GPU flavor price from a GPU-only accelerator rate. */
+function priceKind(r: PriceRow): string {
+  if (r.unit.includes('flavor') || /vCPU/i.test(r.config)) {
+    return 'конфигурация целиком (vCPU+RAM+GPU в цене)';
+  }
+  if (r.category === 'gpu') return 'только GPU (vCPU/RAM/диск оплачиваются отдельно)';
+  return r.unit;
+}
+
+function serializeRow(r: PriceRow) {
+  return {
+    provider: r.providerName,
+    category: r.categoryTitle,
+    name: r.name,
+    config: r.config,
+    unit: r.unit,
+    priceKind: priceKind(r),
+    hour: round(r.hour),
+    month: round(r.month),
+    year: round(r.year),
+    sku: r.sku,
+    note: r.note,
+  };
+}
+
+function runSearch(args: Record<string, unknown>): unknown {
+  const params: SearchParams = {
+    query: typeof args.query === 'string' ? args.query : undefined,
+    category: CATEGORIES.includes(args.category as CategoryKey)
+      ? (args.category as CategoryKey)
+      : undefined,
+    provider: typeof args.provider === 'string' ? args.provider : undefined,
+    gpuModel: typeof args.gpuModel === 'string' ? args.gpuModel : undefined,
+    aiModel: typeof args.aiModel === 'string' ? args.aiModel : undefined,
+    limit: typeof args.limit === 'number' ? args.limit : undefined,
+  };
+  const {rows, providers, totalMatches} = searchPricesDetailed(params);
+  return {
+    count: rows.length,
+    totalMatches,
+    currency: 'RUB',
+    vatIncluded: true,
+    note: 'Цены с НДС; месяц = 720 ч. hour/month/year — нормализованные значения; для usage-позиций (GiB, 1M токенов) число одинаково для всех периодов, ориентируйся на unit. ВАЖНО: услугу предлагают ТОЛЬКО провайдеры из providersMatched — не добавляй других и не копируй цену одного провайдера другим. priceKind различает «только GPU» и «конфигурацию целиком».',
+    // Точный список провайдеров, у которых реально есть совпадение, с их СОБСТВЕННОЙ минимальной ценой.
+    providersMatched: providers.map((p) => ({
+      provider: p.providerName,
+      offerings: p.count,
+      cheapest: serializeRow(p.cheapest),
+    })),
+    rows: rows.map(serializeRow),
+  };
+}
+
+function num(v: unknown): number | undefined {
+  const n = typeof v === 'number' ? v : Number(v);
+  return Number.isFinite(n) && n > 0 ? n : undefined;
+}
+
+export type AssumedHost = {vcpu: number; ramGiB: number; diskGiB: number; source: string};
+
+export type BuiltPreset = {preset: CalculatorPreset; assumedHost: AssumedHost | null};
+
+/**
+ * Pick a representative host (vCPU/RAM/disk) for a GPU class from the site's real
+ * GPU flavor shapes, so every provider can be compared at configuration parity.
+ * Prefers a Cloud.ru flavor (bundle) so its bundle price matches exactly.
+ */
+function defaultGpuHost(gpuModel: string, gpuCount: number): AssumedHost | null {
+  const q = gpuModel.toLowerCase();
+  const candidates = listGpuPresets().filter(
+    (p) =>
+      p.gpuCount === gpuCount &&
+      p.vcpu != null &&
+      p.ramGiB != null &&
+      (q.includes(p.gpuModelMatch.toLowerCase()) || p.gpuModelMatch.toLowerCase().includes(q)),
+  );
+  if (!candidates.length) return null;
+  const chosen =
+    candidates.find((p) => p.shapeSource === 'cloud-ru') ??
+    candidates.slice().sort((a, b) => (a.vcpu ?? 0) - (b.vcpu ?? 0))[0];
+  return {
+    vcpu: chosen.vcpu as number,
+    ramGiB: chosen.ramGiB as number,
+    diskGiB: chosen.diskGiB ?? 100,
+    source: chosen.shapeSource ?? 'catalog',
+  };
+}
+
+function buildPreset(args: Record<string, unknown>): BuiltPreset {
+  const vcpu = num(args.vcpu);
+  const ramGiB = num(args.ramGiB);
+  const diskGiB = num(args.diskGiB) ?? 100;
+  const gpuModel = typeof args.gpuModel === 'string' ? args.gpuModel.trim() : '';
+
+  if (gpuModel) {
+    const gpuCount = num(args.gpuCount) ?? 1;
+
+    // Configuration parity: if the caller gave a host, use it; otherwise apply a
+    // sensible default host for the GPU class so card-only providers get a
+    // composed host and every provider is a comparable whole-config.
+    let hostVcpu = vcpu;
+    let hostRam = ramGiB;
+    let assumedHost: AssumedHost | null = null;
+    if (!hostVcpu || !hostRam) {
+      const def = defaultGpuHost(gpuModel, gpuCount);
+      if (def) {
+        hostVcpu = def.vcpu;
+        hostRam = def.ramGiB;
+        assumedHost = def;
+      }
+    }
+
+    const useDisk = hostVcpu && hostRam ? (num(args.diskGiB) ?? assumedHost?.diskGiB ?? 100) : undefined;
+    const preset: GpuPreset = {
+      id: `chat-gpu-${gpuModel}-${gpuCount}`,
+      kind: 'gpu',
+      title: `${gpuModel} ×${gpuCount}`,
+      subtitle: 'AI-ассистент',
+      gpuModelMatch: gpuModel,
+      gpuCount,
+      vcpu: hostVcpu,
+      ramGiB: hostRam,
+      diskGiB: useDisk,
+    };
+    return {preset, assumedHost};
+  }
+
+  const preset: ComputePreset = {
+    id: `chat-compute-${vcpu ?? 0}-${ramGiB ?? 0}`,
+    kind: 'compute',
+    family: 'general',
+    title: `${vcpu ?? 0} / ${ramGiB ?? 0}`,
+    subtitle: 'AI-ассистент',
+    vcpu: vcpu ?? 1,
+    ramGiB: ramGiB ?? 1,
+    diskGiB,
+  };
+  return {preset, assumedHost: null};
+}
+
+function runQuote(args: Record<string, unknown>): unknown {
+  const period: PeriodMode =
+    args.period === 'unit' || args.period === 'year' ? args.period : 'month';
+  const {preset, assumedHost} = buildPreset(args);
+  const result = quotePreset(preset, period);
+
+  const toQuote = (q: (typeof result.quotes)[number]) => ({
+    provider: q.providerName,
+    total: round(q.total),
+    scope: q.scope,
+    scopeNote:
+      q.scope === 'gpu-only'
+        ? 'только GPU (vCPU/RAM отдельно)'
+        : q.scope === 'bundle'
+          ? 'конфигурация целиком (vCPU+RAM+GPU)'
+          : q.scope === 'gpu-synthetic'
+            ? 'GPU + собранный хост'
+            : 'vCPU+RAM+диск',
+    parts: q.parts.map((p) => ({label: p.label, amount: round(p.amount)})),
+    note: q.note,
+  });
+
+  // For GPU, primary quotes are one comparable scope; alternates are the other
+  // scope (e.g. Cloud.ru bundles). Merge so the model sees every provider, but
+  // keep them tagged by scope so it never treats bundle == gpu-only.
+  const quotes = [...result.quotes, ...result.alternateQuotes].map(toQuote);
+  const providerCount = new Set(quotes.map((q) => q.provider)).size;
+
+  const hostVcpu = preset.kind === 'gpu' ? preset.vcpu ?? null : preset.vcpu;
+  const hostRam = preset.kind === 'gpu' ? preset.ramGiB ?? null : preset.ramGiB;
+  const parityHost =
+    preset.kind === 'gpu' && hostVcpu && hostRam
+      ? `${hostVcpu} vCPU + ${hostRam} GiB RAM + ${preset.diskGiB ?? 100} GiB диск`
+      : null;
+
+  const gpuNote =
+    preset.kind !== 'gpu'
+      ? ''
+      : parityHost
+        ? ` Все строки — конфигурация целиком (GPU + хост ${parityHost}); для card-only провайдеров хост добавлен (композиция), для флейворных — их бандл.${
+            assumedHost
+              ? ` Хост подобран по умолчанию (источник формы: ${assumedHost.source}) — обязательно укажи пользователю принятую конфигурацию хоста.`
+              : ''
+          } Провайдер, который продаёт этот GPU только флейвором иной формы, может отсутствовать — его родную цену смотри через search_prices (providersMatched).`
+        : ' Внимание: хост не задан — строки могут быть «только GPU»; для сравнения по конфигурации задай vcpu и ramGiB.';
+
+  return {
+    request: {
+      kind: preset.kind,
+      vcpu: hostVcpu,
+      ramGiB: hostRam,
+      diskGiB: preset.diskGiB ?? null,
+      gpuModel: preset.kind === 'gpu' ? preset.gpuModelMatch : null,
+      gpuCount: preset.kind === 'gpu' ? preset.gpuCount : null,
+      period,
+    },
+    ...(parityHost ? {assumedHost: parityHost, comparison: 'configuration-parity'} : {}),
+    currency: 'RUB',
+    vatIncluded: true,
+    periodNote: period === 'month' ? 'месяц = 720 ч' : period === 'year' ? 'год = 8640 ч' : 'цена за час',
+    providerCount,
+    note:
+      'Каждая строка quotes — реальная цена конкретного провайдера. Показывай только этих провайдеров, не добавляй отсутствующих и не копируй цену между провайдерами. Учитывай scope.' +
+      gpuNote,
+    best: result.best
+      ? {provider: result.best.providerName, total: round(result.best.total)}
+      : null,
+    quotes,
+    ...(quotes.length === 0
+      ? {warning: 'Ни один провайдер не покрывает такую конфигурацию в каталоге.'}
+      : {}),
+  };
+}
+
+function round(n: number | null | undefined): number | null {
+  if (n == null || !Number.isFinite(n)) return null;
+  return Math.round(n * 100) / 100;
+}
+
+/** Execute a tool call by name; always returns a JSON string for the tool message. */
+export function runTool(name: string, rawArgs: string): string {
+  let args: Record<string, unknown> = {};
+  try {
+    args = rawArgs ? (JSON.parse(rawArgs) as Record<string, unknown>) : {};
+  } catch {
+    return JSON.stringify({error: 'Некорректный JSON в аргументах инструмента.'});
+  }
+  try {
+    if (name === 'search_prices') return JSON.stringify(runSearch(args));
+    if (name === 'get_quote') return JSON.stringify(runQuote(args));
+    return JSON.stringify({error: `Неизвестный инструмент: ${name}`});
+  } catch (err) {
+    return JSON.stringify({
+      error: 'Ошибка выполнения инструмента.',
+      detail: err instanceof Error ? err.message : String(err),
+    });
+  }
+}

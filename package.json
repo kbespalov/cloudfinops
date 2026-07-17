@@ -9,10 +9,12 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
+    "seo:indexnow": "tsx scripts/indexnow.ts",
     "lint": "next lint",
     "test": "tsx --test src/lib/calculator/**/*.test.ts"
   },
   "dependencies": {
+    "@gravity-ui/aikit": "^2.11.0",
     "@gravity-ui/icons": "^2.20.0",
     "@gravity-ui/uikit": "^7.46.0",
     "@react-three/fiber": "^9.6.1",

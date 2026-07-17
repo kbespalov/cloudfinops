@@ -8,6 +8,7 @@ import {
   Code,
   LogoTelegram,
   Moon,
+  Sparkles,
   SquareListUl,
   Sun,
 } from '@gravity-ui/icons';
@@ -23,12 +24,14 @@ type NavItem = {
   external?: boolean;
   disabled?: boolean;
   badge?: string;
+  accent?: boolean;
 };
 
 const NAV: NavItem[] = [
   {href: '/catalog', label: 'Каталог SKU', icon: SquareListUl},
   {href: '/news', label: 'Новости', icon: BookOpen},
   {href: '/calculator', label: 'Калькулятор', icon: Calculator},
+  {href: '/chat', label: 'AI-ассистент', icon: Sparkles, accent: true},
   {href: '/api', label: 'API', icon: Code, disabled: true, badge: 'planned'},
   {href: '/about', label: 'О нас', icon: CircleInfo},
   {
@@ -69,7 +72,11 @@ export function AppHeader() {
                     rel={external ? 'noopener noreferrer' : undefined}
                     selected={active}
                   >
-                    <Icon data={item.icon} size={16} />
+                    <Icon
+                      data={item.icon}
+                      size={16}
+                      className={item.accent ? styles.accentIcon : undefined}
+                    />
                     {item.label}
                     {item.badge ? (
                       <Text variant="caption-2" color="secondary" className={styles.navBadge}>

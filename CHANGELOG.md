@@ -2,10 +2,25 @@
 
 ## 2026-07-17
 
+### ИИ-ассистент FinOps
+
+- Страница `/chat`: чат по ценам облаков РФ (Gravity UI AI Kit), история в `localStorage`.
+- API `POST /api/chat`: Cloud.ru Foundation Models (OpenAI-compatible), tool-calling по каталогу (`search_prices`, `get_quote`), стриминг ответа.
+- Без `CLOUDRU_FM_API_KEY` чат отвечает 503; остальной сайт и сборка не зависят от ключа (см. `.env.example`).
+- Пункт «AI-ассистент» в навигации; CTA на главной.
+- SEO: metadata, JSON-LD, запись в `sitemap.xml`.
+- Eval-харнесс `scripts/eval/` для проверки галлюцинаций провайдеров/цен (локально, с ключом API).
+
+### SEO / IndexNow
+
+- Скрипт `npm run seo:indexnow` — ping Yandex/Bing после деплоя (`scripts/indexnow.ts`).
+- Публичный ключ IndexNow: `public/<key>.txt` (по протоколу должен быть доступен с сайта).
+
 ### Главная
 
 - Короткий лендинг на `/`: Cloud FinOps, подзаголовок и кнопка в каталог.
 - Фон — анимированный Shader Gradient (тёплый honey/cream); статичный fallback при reduced-motion.
+- В lead и CTA добавлен ИИ-ассистент FinOps.
 
 ### Kubernetes
 
@@ -46,6 +61,8 @@
 
 ### Новости
 
+- Карточки открываются на отдельных URL `/news/[id]` (drawer убран).
+- Related-ссылки между материалами; JSON-LD ItemList / Article; URL новостей в sitemap.
 - Фильтры справа: период, категория, провайдер.
 - Пагинация: по 10 материалов на страницу.
 - В каждой строке — ссылка на источник; материалы за май / июнь / июль 2026 и FinOps по рынку РФ.

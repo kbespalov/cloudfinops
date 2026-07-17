@@ -102,6 +102,10 @@
 
 .cta {
   margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
   animation: rise 1s ease-out 0.12s both;
 }
 

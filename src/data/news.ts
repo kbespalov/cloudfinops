@@ -752,3 +752,26 @@ export function sortNewsNewestFirst(items: NewsItem[]): NewsItem[] {
     return a.providerName.localeCompare(b.providerName, 'ru');
   });
 }
+
+export function getNewsById(id: string): NewsItem | undefined {
+  return newsItems.find((n) => n.id === id);
+}
+
+/**
+ * Related items for a news detail page: same provider first, then same tag,
+ * newest first, excluding the current item. Used for internal linking (helps
+ * crawlers discover and connect news pages).
+ */
+export function getRelatedNews(item: NewsItem, limit = 4): NewsItem[] {
+  const others = newsItems.filter((n) => n.id !== item.id);
+  const sameProvider = others.filter((n) => n.provider === item.provider);
+  const sameTag = others.filter(
+    (n) => n.provider !== item.provider && n.tags.some((t) => item.tags.includes(t)),
+  );
+  const picked = new Map<string, NewsItem>();
+  for (const n of [...sortNewsNewestFirst(sameProvider), ...sortNewsNewestFirst(sameTag)]) {
+    if (picked.size >= limit) break;
+    picked.set(n.id, n);
+  }
+  return [...picked.values()];
+}

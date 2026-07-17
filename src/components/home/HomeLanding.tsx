@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import {Button, Icon} from '@gravity-ui/uikit';
-import {SquareListUl} from '@gravity-ui/icons';
+import {Sparkles, SquareListUl} from '@gravity-ui/icons';
 import {AppHeader} from '@/components/AppHeader';
 import styles from './HomeLanding.module.css';
 
@@ -27,11 +27,18 @@ export function HomeLanding() {
       <main className={styles.stage}>
         <div className={styles.core}>
           <h1 className={styles.brand}>Cloud FinOps</h1>
-          <p className={styles.lead}>Цены облаков России — просто и прозрачно</p>
+          <p className={styles.lead}>
+            Цены облаков России — просто и прозрачно. Каталог SKU, калькулятор и ИИ-ассистент
+            FinOps, который ответит на вопросы о стоимости облаков.
+          </p>
           <div className={styles.cta}>
             <Button view="action" size="xl" href="/catalog">
               <Icon data={SquareListUl} size={20} />
               Каталог
+            </Button>
+            <Button view="outlined-contrast" size="xl" href="/chat">
+              <Icon data={Sparkles} size={20} />
+              Спросить ИИ-ассистента
             </Button>
           </div>
         </div>

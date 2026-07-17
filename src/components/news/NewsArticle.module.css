@@ -1,0 +1,147 @@
+.page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 28px 24px 80px;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 0.8125rem;
+  color: var(--g-color-text-secondary);
+}
+
+.breadcrumbs a {
+  color: var(--g-color-text-secondary);
+  text-decoration: none;
+}
+
+.breadcrumbs a:hover {
+  color: var(--g-color-text-link-hover);
+}
+
+.breadcrumbs span[aria-current] {
+  color: var(--g-color-text-primary);
+}
+
+.article {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.date {
+  font-size: 0.875rem;
+  color: var(--g-color-text-secondary);
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(1.6rem, 4vw, 2.1rem);
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--g-color-text-primary);
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.summary {
+  margin: 4px 0;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: var(--g-color-text-primary);
+}
+
+.sourceBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--g-color-line-generic);
+  border-radius: 12px;
+  align-items: flex-start;
+}
+
+.cta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px;
+  border-radius: 14px;
+  background: var(--g-color-base-generic-ultralight);
+  border: 1px solid var(--g-color-line-generic);
+}
+
+.ctaButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.related {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-top: 1px solid var(--g-color-line-generic);
+  padding-top: 24px;
+}
+
+.relatedTitle {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--g-color-text-primary);
+}
+
+.relatedList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.relatedLink {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.relatedLink:hover {
+  background: var(--g-color-base-generic-ultralight);
+}
+
+.relatedMeta {
+  font-size: 0.75rem;
+  color: var(--g-color-text-secondary);
+}
+
+.relatedName {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--g-color-text-primary);
+}

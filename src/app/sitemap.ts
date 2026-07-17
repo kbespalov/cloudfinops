@@ -1,37 +1,56 @@
 import type {MetadataRoute} from 'next';
+import {newsItems} from '@/data/news';
+
+const SITE_URL = 'https://cloudfinops.ru';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
-  return [
+
+  const staticRoutes: MetadataRoute.Sitemap = [
     {
-      url: 'https://cloudfinops.ru/',
+      url: `${SITE_URL}/`,
       lastModified,
       changeFrequency: 'weekly',
       priority: 1,
     },
     {
-      url: 'https://cloudfinops.ru/catalog',
+      url: `${SITE_URL}/catalog`,
       lastModified,
       changeFrequency: 'daily',
       priority: 0.9,
     },
     {
-      url: 'https://cloudfinops.ru/calculator',
+      url: `${SITE_URL}/calculator`,
       lastModified,
       changeFrequency: 'daily',
       priority: 0.9,
     },
     {
-      url: 'https://cloudfinops.ru/news',
+      url: `${SITE_URL}/chat`,
+      lastModified,
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: `${SITE_URL}/news`,
       lastModified,
       changeFrequency: 'daily',
       priority: 0.8,
     },
     {
-      url: 'https://cloudfinops.ru/about',
+      url: `${SITE_URL}/about`,
       lastModified,
       changeFrequency: 'monthly',
       priority: 0.5,
     },
   ];
+
+  const newsRoutes: MetadataRoute.Sitemap = newsItems.map((item) => ({
+    url: `${SITE_URL}/news/${item.id}`,
+    lastModified: new Date(`${item.date}T00:00:00Z`),
+    changeFrequency: 'monthly',
+    priority: 0.6,
+  }));
+
+  return [...staticRoutes, ...newsRoutes];
 }

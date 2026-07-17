@@ -49,6 +49,10 @@
   background: var(--g-color-base-info-light);
 }
 
+.accentIcon {
+  color: var(--g-color-text-utility);
+}
+
 @media (max-width: 900px) {
   .nav {
     display: none;

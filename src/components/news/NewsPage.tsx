@@ -1,10 +1,10 @@
 'use client';
 
 import {useEffect, useMemo, useState, type ReactNode} from 'react';
+import NextLink from 'next/link';
 import {Button, Flex, Icon, Label, Link, PlaceholderContainer, Text} from '@gravity-ui/uikit';
 import {ArrowUpRightFromSquare, BookOpen, ChevronRight, Magnifier} from '@gravity-ui/icons';
 import {AppHeader} from '@/components/AppHeader';
-import {NewsDrawer} from '@/components/news/NewsDrawer';
 import {
   NEWS_PROVIDER_TITLE,
   NEWS_TAG_TITLE,
@@ -79,7 +79,6 @@ export function NewsPage() {
   const [provider, setProvider] = useState<ProviderFilter>('all');
   const [tag, setTag] = useState<TagFilter>('all');
   const [page, setPage] = useState(1);
-  const [activeItem, setActiveItem] = useState<NewsItem | null>(null);
 
   const monthOptions = useMemo(() => {
     return [
@@ -175,11 +174,7 @@ export function NewsPage() {
                 <div className={styles.feed}>
                   {pageItems.map((item) => (
                     <article key={item.id} className={styles.item}>
-                      <button
-                        type="button"
-                        className={styles.itemButton}
-                        onClick={() => setActiveItem(item)}
-                      >
+                      <NextLink href={`/news/${item.id}`} className={styles.itemButton}>
                         <div className={styles.itemBody}>
                           <div className={styles.itemMeta}>
                             <Label size="s" theme="unknown">
@@ -206,7 +201,7 @@ export function NewsPage() {
                           </div>
                         </div>
                         <Icon data={ChevronRight} size={16} className={styles.itemChevron} />
-                      </button>
+                      </NextLink>
 
                       <div className={styles.itemSource}>
                         <Text variant="caption-2" color="secondary">
@@ -321,12 +316,6 @@ export function NewsPage() {
           </aside>
         </div>
       </div>
-
-      <NewsDrawer
-        item={activeItem}
-        open={Boolean(activeItem)}
-        onClose={() => setActiveItem(null)}
-      />
     </>
   );
 }

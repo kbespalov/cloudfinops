@@ -2,6 +2,7 @@ import type {Metadata} from 'next';
 import {Suspense} from 'react';
 import '@gravity-ui/uikit/styles/fonts.css';
 import '@gravity-ui/uikit/styles/styles.css';
+import '@gravity-ui/aikit/styles';
 import './globals.css';
 import {AppProviders} from '@/components/AppProviders';
 import {YandexMetrika} from '@/components/YandexMetrika';
@@ -15,11 +16,13 @@ export const metadata: Metadata = {
     template: '%s · Cloud FinOps',
   },
   description:
-    'Сравнение цен публичных облаков России: каталог SKU Yandex Cloud, VK Cloud, Selectel, Cloud.ru, MWS и T1. Цены на vCPU, GPU, диски, хранилище. FinOps-инструменты и калькулятор облаков.',
+    'Сравнение цен публичных облаков России: каталог SKU Yandex Cloud, VK Cloud, Selectel, Cloud.ru, MWS и T1. Цены на vCPU, GPU, диски, хранилище. FinOps-инструменты, калькулятор облаков и ИИ-ассистент FinOps, который отвечает на вопросы о стоимости облаков.',
   applicationName: 'Cloud FinOps',
   keywords: [
     'FinOps',
     'FinOps инструменты',
+    'ИИ-ассистент FinOps',
+    'ИИ FinOps',
     'каталог SKU',
     'SKU облако',
     'цена облака',
