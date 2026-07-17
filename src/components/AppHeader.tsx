@@ -42,7 +42,7 @@ export function AppHeader() {
     <header className={styles.header}>
       <Flex alignItems="center" justifyContent="space-between" gap={4} className={styles.inner}>
         <Flex alignItems="center" gap={3}>
-          <Link href="/catalog" className={styles.brand}>
+          <Link href="/" className={styles.brand}>
             <span className={styles.mark}>CF</span>
             <Text variant="subheader-2">Cloud FinOps</Text>
           </Link>

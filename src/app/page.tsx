@@ -1,5 +1,5 @@
-import {redirect} from 'next/navigation';
+import {HomeLanding} from '@/components/home/HomeLanding';
 
 export default function HomePage() {
-  redirect('/catalog');
+  return <HomeLanding />;
 }

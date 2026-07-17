@@ -4,10 +4,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
   return [
     {
+      url: 'https://cloudfinops.ru/',
+      lastModified,
+      changeFrequency: 'weekly',
+      priority: 1,
+    },
+    {
       url: 'https://cloudfinops.ru/catalog',
       lastModified,
       changeFrequency: 'daily',
-      priority: 1,
+      priority: 0.9,
     },
     {
       url: 'https://cloudfinops.ru/news',

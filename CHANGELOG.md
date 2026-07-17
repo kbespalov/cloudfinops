@@ -2,6 +2,11 @@
 
 ## 2026-07-17
 
+### Главная
+
+- Короткий лендинг на `/`: Cloud FinOps, подзаголовок и кнопка в каталог.
+- Фон — анимированный Shader Gradient (тёплый honey/cream); статичный fallback при reduced-motion.
+
 ### Kubernetes
 
 - Мастера размечены как **зональный** / **региональный** (`availability`, `faultTolerant`); названия SKU не менялись.
