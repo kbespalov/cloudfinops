@@ -28,11 +28,12 @@ describe('calculator presets', () => {
   });
 
   it('uses expected vCPU:RAM ratios inside each compute family', () => {
+    // Aligned with MWS Cloud: Balanced 1:4, CPU optimized 1:2, Memory optimized 1:8.
     for (const p of computePresetsByFamily('general')) {
-      assert.equal(p.ramGiB, p.vcpu * 2, p.id);
+      assert.equal(p.ramGiB, p.vcpu * 4, p.id);
     }
     for (const p of computePresetsByFamily('high-cpu')) {
-      assert.equal(p.ramGiB, p.vcpu, p.id);
+      assert.equal(p.ramGiB, p.vcpu * 2, p.id);
     }
     for (const p of computePresetsByFamily('high-memory')) {
       assert.equal(p.ramGiB, p.vcpu * 8, p.id);

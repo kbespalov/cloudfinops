@@ -37,9 +37,9 @@ export const COMPUTE_FAMILY_TITLE: Record<ComputeFamily, string> = {
 
 export const COMPUTE_FAMILY_HINT: Record<ComputeFamily, string> = {
   'low-cost': 'Preemptible + shared vCPU — дешевле всего, но с прерываниями и без гарантий',
-  general: 'Классический баланс ядер и памяти',
-  'high-cpu': 'Больше CPU на гигабайт — API, CI, batch',
-  'high-memory': 'Больше RAM на ядро — БД, кэш, аналитика',
+  general: 'Balanced — 1 vCPU : 4 GiB RAM',
+  'high-cpu': 'CPU optimized — 1 vCPU : 2 GiB RAM (как у MWS Cloud)',
+  'high-memory': 'Memory optimized — 1 vCPU : 8 GiB RAM',
 };
 
 function computePreset(
@@ -68,7 +68,13 @@ function computePreset(
   };
 }
 
-/** Five examples per compute family (steady progression within each class). */
+/**
+ * Five examples per compute family.
+ * Ratios aligned with MWS Cloud VM types:
+ *   CPU optimized  → 1 : 2
+ *   Balanced       → 1 : 4  (our General)
+ *   Memory optimized → 1 : 8
+ */
 export const COMPUTE_PRESETS: ComputePreset[] = [
   // Low-cost — preemptible + shared vCPU, cheapest hosting
   computePreset('low-cost', 1, 1),
@@ -76,19 +82,19 @@ export const COMPUTE_PRESETS: ComputePreset[] = [
   computePreset('low-cost', 2, 4),
   computePreset('low-cost', 4, 8),
   computePreset('low-cost', 8, 16),
-  // General — ratio 1 : 2
-  computePreset('general', 2, 4),
-  computePreset('general', 4, 8),
-  computePreset('general', 8, 16),
-  computePreset('general', 16, 32),
-  computePreset('general', 32, 64),
-  // High CPU — ratio 1 : 1
-  computePreset('high-cpu', 2, 2),
-  computePreset('high-cpu', 4, 4),
-  computePreset('high-cpu', 8, 8),
-  computePreset('high-cpu', 16, 16),
-  computePreset('high-cpu', 32, 32),
-  // High Memory — ratio 1 : 8
+  // General / Balanced — ratio 1 : 4
+  computePreset('general', 2, 8),
+  computePreset('general', 4, 16),
+  computePreset('general', 8, 32),
+  computePreset('general', 16, 64),
+  computePreset('general', 32, 128),
+  // High CPU / CPU optimized — ratio 1 : 2 (MWS Cloud presets)
+  computePreset('high-cpu', 2, 4),
+  computePreset('high-cpu', 4, 8),
+  computePreset('high-cpu', 8, 16),
+  computePreset('high-cpu', 16, 32),
+  computePreset('high-cpu', 32, 64),
+  // High Memory / Memory optimized — ratio 1 : 8
   computePreset('high-memory', 2, 16),
   computePreset('high-memory', 4, 32),
   computePreset('high-memory', 8, 64),

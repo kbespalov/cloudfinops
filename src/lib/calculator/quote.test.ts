@@ -147,11 +147,18 @@ describe('calculator quote arbitration', () => {
   it('includes Cloud.ru via exact compute.flavor when unit vCPU/RAM are not public', () => {
     // Cloud.ru publishes VM flavors, not unit compute.vcpu/ram rates.
     const withExactFlavor = [
-      'gen-2-4',
-      'gen-4-8',
-      'gen-8-16',
-      'gen-16-32',
-      'gen-32-64',
+      // Balanced 1:4
+      'gen-2-8',
+      'gen-4-16',
+      'gen-8-32',
+      'gen-16-64',
+      'gen-32-128',
+      // CPU optimized 1:2
+      'cpu-2-4',
+      'cpu-4-8',
+      'cpu-8-16',
+      'cpu-16-32',
+      'cpu-32-64',
       'low-2-4',
       'low-4-8',
       'low-8-16',
@@ -175,8 +182,8 @@ describe('calculator quote arbitration', () => {
       );
     }
 
-    // Large General presets must use 100% flavors from the PDF (not only share30).
-    for (const id of ['gen-16-32', 'gen-32-64']) {
+    // Large CPU-optimized presets must use 100% flavors from the PDF (not only share30).
+    for (const id of ['cpu-16-32', 'cpu-32-64']) {
       const preset = COMPUTE_PRESETS.find((p) => p.id === id)!;
       const cloudRu = quotePreset(preset, 'month').quotes.find((q) => q.provider === 'cloud-ru')!;
       assert.equal(
@@ -203,15 +210,15 @@ describe('calculator quote arbitration', () => {
     }
   });
 
-  it('low-cost is cheaper than general for the same 4/8 shape', () => {
+  it('low-cost is cheaper than dedicated CPU-optimized for the same 4/8 shape', () => {
     const low = COMPUTE_PRESETS.find((p) => p.id === 'low-4-8');
-    const gen = COMPUTE_PRESETS.find((p) => p.id === 'gen-4-8');
-    assert.ok(low && gen);
+    const cpu = COMPUTE_PRESETS.find((p) => p.id === 'cpu-4-8');
+    assert.ok(low && cpu);
     const lowBest = quotePreset(low, 'month').best!;
-    const genBest = quotePreset(gen, 'month').best!;
+    const cpuBest = quotePreset(cpu, 'month').best!;
     assert.ok(
-      lowBest.total < genBest.total,
-      `expected low-cost ${lowBest.total} < general ${genBest.total}`,
+      lowBest.total < cpuBest.total,
+      `expected low-cost ${lowBest.total} < high-cpu ${cpuBest.total}`,
     );
   });
 
@@ -241,7 +248,7 @@ describe('calculator quote arbitration', () => {
   });
 
   it('scales period amounts with 720h month (hour ↔ month ↔ year)', () => {
-    const sample: ComputePreset = COMPUTE_PRESETS.find((p) => p.id === 'gen-4-8')!;
+    const sample: ComputePreset = COMPUTE_PRESETS.find((p) => p.id === 'cpu-4-8')!;
     const hour = quotePreset(sample, 'unit');
     const month = quotePreset(sample, 'month');
     const year = quotePreset(sample, 'year');
@@ -288,7 +295,7 @@ describe('calculator quote arbitration', () => {
   });
 
   it('compute parts include vCPU, RAM and disk with expected labels', () => {
-    const preset = COMPUTE_PRESETS.find((p) => p.id === 'gen-8-16')!;
+    const preset = COMPUTE_PRESETS.find((p) => p.id === 'cpu-8-16')!;
     const result = quotePreset(preset, 'month');
     for (const q of result.quotes) {
       assert.equal(q.scope, 'compute');
@@ -473,7 +480,7 @@ describe('calculator quote arbitration', () => {
       }
     }
     // Month totals should dominate unit totals for the same preset/provider.
-    const sampleId = 'gen-4-8';
+    const sampleId = 'cpu-4-8';
     const unitBest = byPeriod.unit[sampleId]!.best!;
     const monthBest = byPeriod.month[sampleId]!.best!;
     assert.ok(monthBest.total > unitBest.total * 100);
