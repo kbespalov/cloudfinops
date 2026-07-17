@@ -118,12 +118,13 @@ const GPU_FACET_OPTIONS: {value: GpuFacet; title: string}[] = [
   {value: 'all', title: 'Все'},
   {value: 'h100', title: 'H100'},
   {value: 'h200', title: 'H200'},
+  {value: 'b300', title: 'B300'},
   {value: 'a100', title: 'A100'},
+  {value: 'l40s', title: 'L40S'},
   {value: 'v100', title: 'V100'},
   {value: 'l4', title: 'L4'},
   {value: 'a30', title: 'A30'},
   {value: 't4', title: 'T4'},
-  {value: 'l40s', title: 'L40S'},
 ];
 
 const STORAGE_KIND_OPTIONS: {value: StorageKindFacet; title: string}[] = [
@@ -191,12 +192,13 @@ function parseGpuFacet(v: string | null): GpuFacet {
   if (
     v === 'h100' ||
     v === 'h200' ||
+    v === 'b300' ||
     v === 'a100' ||
+    v === 'l40s' ||
     v === 'v100' ||
     v === 'l4' ||
     v === 'a30' ||
     v === 't4' ||
-    v === 'l40s' ||
     v === 'all'
   ) {
     return v;
@@ -405,12 +407,13 @@ export function CatalogPage() {
       all: gpus.length,
       h100: gpus.filter((m) => meterMatchesGpuFacet(m, 'h100')).length,
       h200: gpus.filter((m) => meterMatchesGpuFacet(m, 'h200')).length,
+      b300: gpus.filter((m) => meterMatchesGpuFacet(m, 'b300')).length,
       a100: gpus.filter((m) => meterMatchesGpuFacet(m, 'a100')).length,
+      l40s: gpus.filter((m) => meterMatchesGpuFacet(m, 'l40s')).length,
       v100: gpus.filter((m) => meterMatchesGpuFacet(m, 'v100')).length,
       l4: gpus.filter((m) => meterMatchesGpuFacet(m, 'l4')).length,
       a30: gpus.filter((m) => meterMatchesGpuFacet(m, 'a30')).length,
       t4: gpus.filter((m) => meterMatchesGpuFacet(m, 't4')).length,
-      l40s: gpus.filter((m) => meterMatchesGpuFacet(m, 'l40s')).length,
     };
   }, [baseMeters]);
 

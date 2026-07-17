@@ -128,18 +128,19 @@ spec:
         byteBasis: not-applicable
     notes: Yandex Cloud не раскрывает модель GPU для платформы Gen2; gpuModel установлен в unknown для корректного межпровайдерного матчинга.
   - sku: yc.gpu.platform-v4
-    name: GPU Platform V4
+    name: NVIDIA H200 (GPU Platform V4)
     meter: compute.gpu
     status: available
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-01-23'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs:
     - yc.billing-api
     - yc.compute
     dimensions:
-      gpuModel: unknown
+      gpuModel: NVIDIA H200
+      gpuMemoryGb: 141
       platformId: gpu-standard-v4
       purchaseModel: on-demand
       availableGpuCounts: [1, 2, 4, 8]
@@ -154,7 +155,9 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Yandex Cloud не раскрывает модель GPU для платформы V4; gpuModel установлен в unknown для корректного межпровайдерного матчинга.
+    notes: >
+      В прайсе платформа — GPU Platform V4 без названия чипа; 141 ГБ VRAM на GPU → NVIDIA H200.
+      vCPU и RAM тарифицируются отдельно.
   - sku: yc.gpu.t4
     name: NVIDIA T4
     meter: compute.gpu
@@ -301,16 +304,17 @@ spec:
         byteBasis: not-applicable
     notes: Требуемые vCPU и RAM тарифицируются отдельно; ВМ может быть остановлена провайдером.
   - sku: yc.gpu.platform-v4.preemptible
-    name: GPU Platform V4, прерываемый
+    name: NVIDIA H200 (GPU Platform V4), прерываемый
     meter: compute.gpu
     status: available
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-01-23'
-    checkedAt: '2026-07-13'
+    checkedAt: '2026-07-17'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
-      gpuModel: unknown
+      gpuModel: NVIDIA H200
+      gpuMemoryGb: 141
       platformId: gpu-standard-v4
       purchaseModel: preemptible
       availableGpuCounts: [1, 2, 4, 8]
@@ -323,4 +327,6 @@ spec:
         unit: {quantity: GPU, period: hour}
         vat: included
         byteBasis: not-applicable
-    notes: Ставка Billing API совпадает с on-demand на дату проверки; в отличие от других GPU-платформ Yandex, preemptible-скидка для V4 не применяется. vCPU и RAM тарифицируются отдельно. Yandex Cloud не раскрывает модель GPU для платформы V4; gpuModel установлен в unknown.
+    notes: >
+      В прайсе — GPU Platform V4; 141 ГБ VRAM → NVIDIA H200. Ставка Billing API совпадает
+      с on-demand (скидки preemptible для V4 нет). vCPU и RAM тарифицируются отдельно.

@@ -41,6 +41,14 @@ spec:
     - storage.block.capacity
     - storage.block.iops
     - storage.image.capacity
+  - id: mws.gpu-docs
+    title: GPU в Compute Cloud
+    url: https://mws.ru/docs/computecloud/gpu-quickstart.html
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - compute.gpu
   - id: mws.vm-types
     title: Типы виртуальных машин Compute
     url: https://mws.ru/docs/cloud-platform/compute/general/vm-types.html

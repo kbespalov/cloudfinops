@@ -1,0 +1,27 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: mws-cloud
+  layer: iaas
+  service: compute
+  category: iaas.compute.gpu
+  title: GPU compute
+spec:
+  meters:
+  - sku: mws.gpu.a100-80
+    name: NVIDIA A100 80 ГБ
+    meter: compute.gpu
+    status: not-publicly-disclosed
+    pricingMode: status-only
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - mws.gpu-docs
+    dimensions:
+      gpuModel: NVIDIA A100
+      gpuMemoryGb: 80
+      purchaseModel: on-demand
+    notes: >
+      В документации MWS Compute Cloud подтверждены ВМ с NVIDIA A100 80 ГБ (до 2 GPU),
+      но публичной ставки в прайсе Cloud Platform нет.

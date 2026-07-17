@@ -464,3 +464,40 @@ spec:
     pricing:
       rate: {amount: '205.4795', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
+  - sku: selectel.dedicated.hgx-b300-8
+    name: NVIDIA B300 · выделенный HGX (8×GPU)
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Санкт-Петербург
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-17'
+    sourceRefs:
+    - selectel.prices
+    dimensions:
+      gpuModel: NVIDIA B300
+      gpuCount: 8
+      gpuMemoryGb: 288
+      nativeSku: GL8-B300-HGX-25GE
+      deployment: dedicated
+      purchaseModel: reserved-monthly
+    pricing:
+      rate:
+        amount: '8000000'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: month
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '8000000'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: month
+        formula: published dedicated monthly rate
+        vat: included
+    notes: >
+      Выделенный сервер GL8-B300-HGX-25GE (не Cloud GPU). Публичная цена на
+      selectel.ru/prices — 8 000 000 ₽/мес за конфигурацию 8×B300.

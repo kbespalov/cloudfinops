@@ -2,6 +2,13 @@
 
 ## 2026-07-17
 
+### GPU
+
+- Yandex Platform V4 (141 ГБ) размечен как **NVIDIA H200**.
+- Selectel: выделенный **HGX B300** (`GL8-B300-HGX-25GE`, 8×GPU, 8 млн ₽/мес).
+- В фильтре GPU каталога добавлен **B300**.
+- MWS: зафиксирован **A100 80 ГБ** без публичной ставки (status-only).
+
 ### SEO / сайт
 
 - Favicon (CF-марка): `.ico`, `.svg`, PNG, Apple touch icon, `site.webmanifest`.

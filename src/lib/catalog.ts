@@ -33,12 +33,13 @@ export type GpuFacet =
   | 'all'
   | 'h100'
   | 'h200'
+  | 'b300'
   | 'a100'
+  | 'l40s'
   | 'v100'
   | 'l4'
   | 'a30'
-  | 't4'
-  | 'l40s';
+  | 't4';
 
 /** Object storage classes from SKU dimensions.storageClass. */
 export type StorageFacet = 'all' | 'standard' | 'warm' | 'cold' | 'ice';
@@ -310,14 +311,15 @@ export function meterMatchesGpuFacet(meter: CatalogMeter, facet: GpuFacet): bool
   const hay = gpuHaystack(meter);
   if (facet === 'h100') return /H100/i.test(hay);
   if (facet === 'h200') return /H200/i.test(hay);
+  if (facet === 'b300') return /B300/i.test(hay);
   if (facet === 'a100') return /A100/i.test(hay);
+  if (facet === 'l40s') return /L40S/i.test(hay);
   // Include V100S in the V100 quick-filter bucket
   if (facet === 'v100') return /V100/i.test(hay);
   // L4 / L4 vGPU, but not L40 / L40S
   if (facet === 'l4') return !/L40/i.test(hay) && /\bL4\b|L4 vGPU/i.test(hay);
   if (facet === 'a30') return /A30/i.test(hay);
   if (facet === 't4') return /\bT4\b|Tesla T4/i.test(hay);
-  if (facet === 'l40s') return /L40S/i.test(hay);
   return true;
 }
 
