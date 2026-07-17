@@ -5,6 +5,7 @@ import {
   BookOpen,
   Calculator,
   CircleInfo,
+  Code,
   LogoTelegram,
   Moon,
   SquareListUl,
@@ -15,16 +16,20 @@ import {usePathname} from 'next/navigation';
 import {useAppTheme} from '@/components/AppProviders';
 import styles from './AppHeader.module.css';
 
-const NAV = [
+type NavItem = {
+  href: string;
+  label: string;
+  icon: typeof SquareListUl;
+  external?: boolean;
+  disabled?: boolean;
+  badge?: string;
+};
+
+const NAV: NavItem[] = [
   {href: '/catalog', label: 'Каталог SKU', icon: SquareListUl},
   {href: '/news', label: 'Новости', icon: BookOpen},
-  {
-    href: '/calculator',
-    label: 'Калькулятор',
-    disabled: true,
-    icon: Calculator,
-    badge: 'coming soon',
-  },
+  {href: '/calculator', label: 'Калькулятор', icon: Calculator},
+  {href: '/api', label: 'API', icon: Code, disabled: true, badge: 'planned'},
   {href: '/about', label: 'О нас', icon: CircleInfo},
   {
     href: 'https://t.me/cloudfinopsru',
@@ -49,7 +54,7 @@ export function AppHeader() {
           <nav className={styles.nav}>
             <Flex gap={1} alignItems="center">
               {NAV.map((item) => {
-                const external = 'external' in item && item.external;
+                const external = Boolean(item.external);
                 const active =
                   !external &&
                   (pathname === item.href || pathname.startsWith(`${item.href}/`));
@@ -58,15 +63,15 @@ export function AppHeader() {
                     key={item.href}
                     view={active ? 'flat-action' : 'flat'}
                     size="l"
-                    disabled={'disabled' in item ? item.disabled : false}
-                    href={'disabled' in item && item.disabled ? undefined : item.href}
+                    disabled={Boolean(item.disabled)}
+                    href={item.disabled ? undefined : item.href}
                     target={external ? '_blank' : undefined}
                     rel={external ? 'noopener noreferrer' : undefined}
                     selected={active}
                   >
                     <Icon data={item.icon} size={16} />
                     {item.label}
-                    {'badge' in item && item.badge ? (
+                    {item.badge ? (
                       <Text variant="caption-2" color="secondary" className={styles.navBadge}>
                         {item.badge}
                       </Text>

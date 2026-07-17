@@ -38,11 +38,15 @@
 
 .navBadge {
   margin-inline-start: 6px;
-  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 10px;
   line-height: 1;
-  letter-spacing: 0.02em;
-  text-transform: lowercase;
-  opacity: 0.75;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--g-color-text-info);
+  background: var(--g-color-base-info-light);
 }
 
 @media (max-width: 900px) {
