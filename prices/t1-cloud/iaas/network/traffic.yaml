@@ -72,8 +72,9 @@ spec:
           period: usage
         formula: 0 × 1.22 VAT
         vat: included
-    notes: Общий Cloud Engine traffic SKU в тарифном PDF отсутствует; бесплатность подтверждена сервисной
-      страницей и требует договорной сверки.
+    notes: >
+      Отдельной строки трафика Cloud Engine в тарифном PDF нет; на сервисной странице трафик
+      указан как не тарифицируемый — имеет смысл сверить с договором.
   - sku: t1.object-storage.traffic.ingress
     name: Входящий интернет-трафик Object Storage
     meter: network.traffic.ingress
@@ -110,8 +111,9 @@ spec:
           period: usage
         formula: 0 × 1.22 VAT
         vat: included
-    notes: Нулевая ставка следует из отсутствия ingress SKU в исчерпывающем тарифном приложении; это аналитический
-      вывод, а не опубликованная строка тарифа.
+    notes: >
+      В тарифном приложении нет отдельной строки входящего трафика Object Storage —
+      в каталоге стоит 0 ₽ как вывод из отсутствия ставки, не как явная строка прайса.
   - sku: t1.object-storage.single-zone.traffic.egress
     name: Скачивание из однозонного S3
     meter: network.traffic.egress

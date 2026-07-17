@@ -732,7 +732,9 @@ export function CatalogPage() {
                 ? 'Класс'
                 : category === 'kubernetes'
                   ? 'Мастер'
-                  : 'Параметры',
+                  : category === 'network'
+                    ? 'Единица'
+                    : 'Параметры',
         width: 220,
         className: styles.specsCol,
         template: (m) => {
@@ -762,6 +764,15 @@ export function CatalogPage() {
             else if (clsTitle) label = clsTitle;
             else if (op) label = op;
             else label = '—';
+          } else if (category === 'network') {
+            label = billingUnitLabel(m);
+            if (m.meter === 'network.ipv4.attached') {
+              title = `Активный · ${label}`;
+            } else if (m.meter === 'network.ipv4.reserved') {
+              title = `Резерв · ${label}`;
+            } else {
+              title = label;
+            }
           } else if (category === 'compute') {
             if (isImageMeter(m) || isSnapshotMeter(m)) {
               label = billingUnitLabel(m);
@@ -791,7 +802,7 @@ export function CatalogPage() {
               label = `${CATEGORY_TITLE[m.categoryKey]} · ${paramsLabel(m)}`;
             }
           }
-          if (category !== 'kubernetes') title = label;
+          if (category !== 'kubernetes' && category !== 'network') title = label;
           return (
             <Text variant="body-1" color="secondary" ellipsis title={title}>
               {label}

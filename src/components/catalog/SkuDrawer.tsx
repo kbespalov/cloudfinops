@@ -21,8 +21,11 @@ import {
   displayMeterName,
   formatAsOf,
   formatPlatform,
+  isAddressMeter,
+  isGatewayMeter,
   isImageMeter,
   isSnapshotMeter,
+  isUsageMeter,
   meterPriceLabel,
   paramsLabel,
   resolveMeterSources,
@@ -60,7 +63,13 @@ export function SkuDrawer({
   const showPlatform = Boolean(platform && platform !== 'Платформа не указана');
   const params = meter ? paramsLabel(meter) : '';
   const billingUnit =
-    meter && (isImageMeter(meter) || isSnapshotMeter(meter) || meter.unitQuantity === 'GiB')
+    meter &&
+    (isImageMeter(meter) ||
+      isSnapshotMeter(meter) ||
+      isAddressMeter(meter) ||
+      isGatewayMeter(meter) ||
+      isUsageMeter(meter) ||
+      meter.unitQuantity === 'GiB')
       ? billingUnitLabel(meter)
       : null;
   const sources = meter ? resolveMeterSources(meter) : [];

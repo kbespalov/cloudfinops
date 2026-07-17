@@ -9,7 +9,7 @@ metadata:
 spec:
   meters:
   - sku: cloudru.ip.direct
-    name: Direct IP / аренда публичного IP
+    name: Активный публичный IP
     meter: network.ipv4.attached
     status: available
     pricingMode: unit
@@ -66,4 +66,6 @@ spec:
           period: hour
         formula: same rental rate regardless of attachment
         vat: included
-    notes: Аренда продолжается до удаления адреса; attachment не создает отдельную накопительную ставку.
+    notes: >
+      Аренда идёт, пока адрес не удалён. Подключение к ВМ отдельной ставки не добавляет —
+      платите ту же цену за сам IP.

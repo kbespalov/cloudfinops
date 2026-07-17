@@ -45,7 +45,9 @@ spec:
           unit: {quantity: GiB, period: usage}
           vat: included
           byteBasis: binary
-    notes: Бесплатный пул 3 ТБ общий для входящего и исходящего трафика; порог учитывается через SKU selectel.traffic.internet.egress.
+    notes: >
+      Бесплатный пул 3 ТБ общий для входящего и исходящего внешнего трафика всех проектов
+      аккаунта (порог тот же, что у исходящего).
   - sku: selectel.traffic.internet.egress
     name: Исходящий внешний трафик
     meter: network.traffic.egress

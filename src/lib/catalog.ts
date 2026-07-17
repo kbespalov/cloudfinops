@@ -106,6 +106,28 @@ export function isRequestMeter(meter: CatalogMeter): boolean {
   return meter.unitQuantity === 'request' || meter.meter === 'storage.object.requests';
 }
 
+/** Traffic / one-shot usage — priced per quantity, not per wall-clock hour. */
+export function isUsageMeter(meter: CatalogMeter): boolean {
+  return (
+    meter.unitPeriod === 'usage' ||
+    meter.normalizedPeriod === 'usage' ||
+    meter.meter.startsWith('network.traffic.')
+  );
+}
+
+export function isAddressMeter(meter: CatalogMeter): boolean {
+  return (
+    meter.unitQuantity === 'address' ||
+    meter.meter === 'network.ipv4.attached' ||
+    meter.meter === 'network.ipv4.reserved' ||
+    meter.meter.startsWith('network.ipv4.')
+  );
+}
+
+export function isGatewayMeter(meter: CatalogMeter): boolean {
+  return meter.unitQuantity === 'gateway' || meter.meter.includes('nat.gateway');
+}
+
 export function amountNumber(meter: CatalogMeter, period: PeriodMode): number | null {
   // Requests: always price per 10_000 operations (ignore month/year toggle)
   if (isRequestMeter(meter)) {
@@ -154,9 +176,17 @@ export function periodLabel(period: PeriodMode): string {
 
 export function meterPriceLabel(meter: CatalogMeter, period: PeriodMode): string {
   if (isRequestMeter(meter)) return 'за 10 000 запросов';
+  if (isUsageMeter(meter)) {
+    const q = meter.unitQuantity;
+    if (q === 'GiB' || q === 'GB') return 'за GiB';
+    if (q) return `за ${q}`;
+    return 'за единицу';
+  }
   const periodRu = periodLabel(period);
+  if (isAddressMeter(meter)) return `за IP · ${periodRu}`;
+  if (isGatewayMeter(meter)) return `за шлюз · ${periodRu}`;
   const q = meter.unitQuantity;
-  if (q && !['flavor', 'master', 'address', 'vCPU', 'GiB-RAM', 'GB-RAM'].includes(q)) {
+  if (q && !['flavor', 'master', 'address', 'gateway', 'vCPU', 'GiB-RAM', 'GB-RAM'].includes(q)) {
     return `за ${q} · ${periodRu}`;
   }
   if (q === 'vCPU') return `за vCPU · ${periodRu}`;
@@ -239,8 +269,15 @@ export function meterMatchesComputeFacet(meter: CatalogMeter, facet: ComputeFace
   return true;
 }
 
-/** Human-readable billing unit for the specs column (e.g. «GiB · час»). */
+/** Human-readable billing unit for the specs column (e.g. «GiB · час», «IP · час»). */
 export function billingUnitLabel(meter: CatalogMeter): string {
+  if (isUsageMeter(meter)) {
+    const q = meter.unitQuantity;
+    if (q === 'GiB' || q === 'GB') return 'GiB';
+    if (q) return q;
+    return '—';
+  }
+
   // Prefer normalized unit so catalog rows share one period (hour) across providers
   const q = meter.unitQuantity;
   const p = meter.normalizedPeriod || meter.unitPeriod;
@@ -253,9 +290,19 @@ export function billingUnitLabel(meter: CatalogMeter): string {
           ? 'год'
           : p === 'minute'
             ? 'мин'
-            : p || null;
-  if (q && periodRu) return `${q} · ${periodRu}`;
-  if (q) return q;
+            : p && p !== 'usage'
+              ? p
+              : null;
+
+  const quantityRu =
+    q === 'address' || isAddressMeter(meter)
+      ? 'IP'
+      : q === 'gateway' || isGatewayMeter(meter)
+        ? 'шлюз'
+        : q;
+
+  if (quantityRu && periodRu) return `${quantityRu} · ${periodRu}`;
+  if (quantityRu) return quantityRu;
   if (periodRu) return periodRu;
   return '—';
 }
@@ -574,14 +621,20 @@ export function paramsLabel(meter: CatalogMeter): string {
   const k8sAvailability = extractKubernetesAvailability(meter);
   if (k8sAvailability) parts.push(kubernetesAvailabilityLabel(k8sAvailability));
 
-  if (meter.pricingMode === 'bundle' || meter.unitQuantity === 'flavor') {
+  if (meter.categoryKey === 'network' || isAddressMeter(meter) || isGatewayMeter(meter) || isUsageMeter(meter)) {
+    const unit = billingUnitLabel(meter);
+    if (unit && unit !== '—') parts.push(unit);
+  } else if (meter.pricingMode === 'bundle' || meter.unitQuantity === 'flavor') {
     if (typeof dims.vcpu === 'number') parts.push(`${dims.vcpu} vCPU`);
     const ram = typeof dims.ramGiB === 'number' ? dims.ramGiB : dims.ramGb;
     if (typeof ram === 'number') parts.push(`${ram} GiB RAM`);
     if (typeof dims.gpuCount === 'number') parts.push(`${dims.gpuCount} GPU`);
     if (typeof dims.gpuModel === 'string') parts.push(dims.gpuModel);
   } else {
-    if (meter.unitQuantity && !['flavor', 'master', 'address'].includes(meter.unitQuantity)) {
+    if (
+      meter.unitQuantity &&
+      !['flavor', 'master', 'address', 'gateway'].includes(meter.unitQuantity)
+    ) {
       parts.push(meter.unitQuantity);
     }
     if (typeof dims.guaranteedVcpuShare === 'string') parts.push(dims.guaranteedVcpuShare);

@@ -31,8 +31,9 @@ spec:
           period: usage
         vat: included
         byteBasis: binary
-    notes: Это не free tier — документация Cloud Servers и Cloud Networks прямо указывает, что входящий
-      трафик не тарифицируется.
+    notes: >
+      Входящий трафик не тарифицируется — так указано в документации Cloud Servers и Cloud Networks
+      (это не «бесплатный лимит», а нулевая ставка).
   - sku: vk.traffic.internet.egress
     name: Исходящий интернет-трафик Cloud Servers
     meter: network.traffic.egress
@@ -57,8 +58,9 @@ spec:
           period: usage
         vat: included
         byteBasis: binary
-    notes: Это не free tier — документация Cloud Servers и Cloud Networks прямо указывает, что исходящий
-      трафик не тарифицируется.
+    notes: >
+      Исходящий трафик не тарифицируется — так указано в документации Cloud Servers и Cloud Networks
+      (это не «бесплатный лимит», а нулевая ставка).
   - sku: vk.object-storage.traffic.ingress
     name: Входящий интернет-трафик Object Storage
     meter: network.traffic.ingress
@@ -112,8 +114,7 @@ spec:
           period: usage
         vat: included
         byteBasis: binary
-    notes: Публичная ставка 1,31 ₽ за каждый GB исходящего трафика; бесплатный порог в прайс-листе не
-      указан.
+    notes: Ставка из прайса — 1,31 ₽ за каждый GB. Бесплатный порог в прайсе не указан.
   - sku: vk.object-storage.icebox.traffic.egress
     name: Исходящий трафик Object Storage — Icebox
     meter: network.traffic.egress
@@ -143,5 +144,4 @@ spec:
           period: usage
         vat: included
         byteBasis: binary
-    notes: Публичная ставка 1,67 ₽ за каждый GB исходящего трафика; бесплатный порог в прайс-листе не
-      указан.
+    notes: Ставка из прайса — 1,67 ₽ за каждый GB. Бесплатный порог в прайсе не указан.

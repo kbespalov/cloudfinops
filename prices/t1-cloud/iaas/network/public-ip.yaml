@@ -41,7 +41,7 @@ spec:
         formula: 0.00405394 × 60 × 1.22 VAT
         vat: included
   - sku: t1.ip.reserved
-    name: Неактивный или зарезервированный public IPv4
+    name: Неактивный или зарезервированный публичный IPv4
     meter: network.ipv4.reserved
     status: not-publicly-disclosed
     pricingMode: status-only
@@ -52,3 +52,6 @@ spec:
     - t1.rates-pdf-2026-07-13
     dimensions:
       nativeIpType: no separate reserved-state tariff found
+    notes: >
+      Отдельной публичной ставки за неактивный/зарезервированный IP в тарифах
+      не найдено — строка статусная, без цены.
