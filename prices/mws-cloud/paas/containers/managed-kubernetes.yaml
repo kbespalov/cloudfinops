@@ -25,6 +25,8 @@ spec:
       futureHourlyAmount: '8.785586'
       futurePublishedMonth: '6325.62192'
       availability: zonal
+      faultTolerant: false
+      topology: zonal
       comparabilityClass: native-fixed
       comparableTier: basic
       masterCount: 1
@@ -62,6 +64,8 @@ spec:
       futureHourlyAmount: '23.07081'
       futurePublishedMonth: '16610.9832'
       availability: regional
+      faultTolerant: true
+      topology: regional
       comparabilityClass: native-fixed
       comparableTier: ha
       masterCount: 3

@@ -50,6 +50,9 @@ export type StorageKindFacet = 'all' | 'capacity' | 'operations';
 /** Network kind — public IP vs egress (ingress/NAT stay under «Все»). */
 export type NetworkFacet = 'all' | 'public-ip' | 'egress';
 
+/** Kubernetes master topology — zonal (not HA) vs regional (fault-tolerant). */
+export type KubernetesAvailabilityFacet = 'all' | 'zonal' | 'regional';
+
 export type GroupMode = 'none' | 'provider' | 'category';
 export type PeriodMode = 'unit' | 'month' | 'year';
 export type Density = 's' | 'm' | 'l';
@@ -496,6 +499,43 @@ export function meterMatchesNetworkFacet(meter: CatalogMeter, facet: NetworkFace
   return extractNetworkKind(meter) === facet;
 }
 
+/** Zonal = single-zone / not HA; regional = multi-zone / fault-tolerant. */
+export function extractKubernetesAvailability(
+  meter: CatalogMeter,
+): 'zonal' | 'regional' | null {
+  if (meter.categoryKey !== 'kubernetes') return null;
+  const dims = meter.dimensions;
+  if (dims.availability === 'zonal' || dims.availability === 'regional') {
+    return dims.availability;
+  }
+  if (dims.faultTolerant === true) return 'regional';
+  if (dims.faultTolerant === false) return 'zonal';
+  if (dims.topology === 'regional' || dims.topology === 'high-availability') return 'regional';
+  if (dims.topology === 'zonal' || dims.topology === 'basic') return 'zonal';
+  if (dims.masterCount === 3) return 'regional';
+  if (dims.masterCount === 1) return 'zonal';
+  if (meter.comparableTier === 'ha') return 'regional';
+  if (meter.comparableTier === 'basic') return 'zonal';
+  return null;
+}
+
+export function kubernetesAvailabilityLabel(availability: 'zonal' | 'regional'): string {
+  return availability === 'zonal' ? 'Зональный' : 'Региональный';
+}
+
+export function kubernetesFaultToleranceHint(availability: 'zonal' | 'regional'): string {
+  return availability === 'zonal' ? 'Не отказоустойчивый' : 'Отказоустойчивый';
+}
+
+export function meterMatchesKubernetesAvailabilityFacet(
+  meter: CatalogMeter,
+  facet: KubernetesAvailabilityFacet,
+): boolean {
+  if (facet === 'all') return true;
+  if (meter.categoryKey !== 'kubernetes') return false;
+  return extractKubernetesAvailability(meter) === facet;
+}
+
 export function meterMatchesSearch(meter: CatalogMeter, q: string): boolean {
   if (!q.trim()) return true;
   const s = q.trim().toLowerCase();
@@ -530,6 +570,9 @@ export function extractRamGiB(meter: CatalogMeter): number | null {
 export function paramsLabel(meter: CatalogMeter): string {
   const dims = meter.dimensions;
   const parts: string[] = [];
+
+  const k8sAvailability = extractKubernetesAvailability(meter);
+  if (k8sAvailability) parts.push(kubernetesAvailabilityLabel(k8sAvailability));
 
   if (meter.pricingMode === 'bundle' || meter.unitQuantity === 'flavor') {
     if (typeof dims.vcpu === 'number') parts.push(`${dims.vcpu} vCPU`);

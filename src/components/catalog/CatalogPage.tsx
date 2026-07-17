@@ -49,6 +49,7 @@ import {
   extractDiskMedia,
   extractDiskVariant,
   extractGpuModel,
+  extractKubernetesAvailability,
   extractRamGiB,
   extractStorageClass,
   extractVcpu,
@@ -57,10 +58,13 @@ import {
   isSnapshotMeter,
   formatAsOf,
   formatPlatform,
+  kubernetesAvailabilityLabel,
+  kubernetesFaultToleranceHint,
   meterMatchesCategory,
   meterMatchesComputeFacet,
   meterMatchesDiskFacet,
   meterMatchesGpuFacet,
+  meterMatchesKubernetesAvailabilityFacet,
   meterMatchesSearch,
   meterMatchesNetworkFacet,
   meterMatchesStorageFacet,
@@ -77,6 +81,7 @@ import {
   type ComputeFacet,
   type DiskFacet,
   type GpuFacet,
+  type KubernetesAvailabilityFacet,
   type NetworkFacet,
   type PeriodMode,
   type SortKey,
@@ -137,6 +142,15 @@ const NETWORK_FACET_OPTIONS: {value: NetworkFacet; title: string}[] = [
   {value: 'all', title: 'Все'},
   {value: 'public-ip', title: 'Публичный IP'},
   {value: 'egress', title: 'Исходящий трафик'},
+];
+
+const KUBERNETES_AVAILABILITY_OPTIONS: {
+  value: KubernetesAvailabilityFacet;
+  title: string;
+}[] = [
+  {value: 'all', title: 'Все'},
+  {value: 'zonal', title: 'Зональный'},
+  {value: 'regional', title: 'Региональный'},
 ];
 
 const STORAGE_FACET_OPTIONS: {value: StorageFacet; title: string}[] = [
@@ -222,6 +236,11 @@ function parseNetworkFacet(v: string | null): NetworkFacet {
   return 'all';
 }
 
+function parseKubernetesAvailabilityFacet(v: string | null): KubernetesAvailabilityFacet {
+  if (v === 'zonal' || v === 'regional' || v === 'all') return v;
+  return 'all';
+}
+
 function parseDiskFacet(v: string | null): DiskFacet {
   if (v === 'hdd' || v === 'ssd' || v === 'nvme' || v === 'all') return v;
   return 'all';
@@ -284,6 +303,10 @@ export function CatalogPage() {
   const [networkFacet, setNetworkFacet] = useState<NetworkFacet>(() =>
     parseNetworkFacet(searchParams.get('net')),
   );
+  const [kubernetesAvailabilityFacet, setKubernetesAvailabilityFacet] =
+    useState<KubernetesAvailabilityFacet>(() =>
+      parseKubernetesAvailabilityFacet(searchParams.get('k8s')),
+    );
   const [diskFacet, setDiskFacet] = useState<DiskFacet>(() =>
     parseDiskFacet(searchParams.get('disk')),
   );
@@ -320,6 +343,9 @@ export function CatalogPage() {
       if (category === 'storage' && storageFacet !== 'all') params.set('storage', storageFacet);
       if (category === 'storage' && storageKindFacet !== 'all') params.set('kind', storageKindFacet);
       if (category === 'network' && networkFacet !== 'all') params.set('net', networkFacet);
+      if (category === 'kubernetes' && kubernetesAvailabilityFacet !== 'all') {
+        params.set('k8s', kubernetesAvailabilityFacet);
+      }
       if (period !== 'month') params.set('period', period);
       if (search.trim()) params.set('q', search.trim());
       if (providers.length) params.set('providers', providers.join(','));
@@ -338,6 +364,7 @@ export function CatalogPage() {
     storageFacet,
     storageKindFacet,
     networkFacet,
+    kubernetesAvailabilityFacet,
     pathname,
     period,
     providers,
@@ -446,6 +473,24 @@ export function CatalogPage() {
     [networkMeters],
   );
 
+  const kubernetesMeters = useMemo(
+    () => baseMeters.filter((m) => m.categoryKey === 'kubernetes'),
+    [baseMeters],
+  );
+
+  const kubernetesAvailabilityCounts = useMemo(
+    () => ({
+      all: kubernetesMeters.length,
+      zonal: kubernetesMeters.filter((m) =>
+        meterMatchesKubernetesAvailabilityFacet(m, 'zonal'),
+      ).length,
+      regional: kubernetesMeters.filter((m) =>
+        meterMatchesKubernetesAvailabilityFacet(m, 'regional'),
+      ).length,
+    }),
+    [kubernetesMeters],
+  );
+
   const storageFacetCounts = useMemo(() => {
     const items = storageMeters.filter((m) => meterMatchesStorageKindFacet(m, storageKindFacet));
     return {
@@ -514,6 +559,12 @@ export function CatalogPage() {
       }
       if (category === 'storage' && !meterMatchesStorageFacet(m, storageFacet)) return false;
       if (category === 'network' && !meterMatchesNetworkFacet(m, networkFacet)) return false;
+      if (
+        category === 'kubernetes' &&
+        !meterMatchesKubernetesAvailabilityFacet(m, kubernetesAvailabilityFacet)
+      ) {
+        return false;
+      }
       if (!meterMatchesSearch(m, deferredSearch)) return false;
       if (providerSet && !providerSet.has(m.provider)) return false;
       return true;
@@ -530,6 +581,7 @@ export function CatalogPage() {
     storageFacet,
     storageKindFacet,
     networkFacet,
+    kubernetesAvailabilityFacet,
     deferredSearch,
     providers,
     sort,
@@ -632,13 +684,26 @@ export function CatalogPage() {
                 : 'Конфиг'
               : category === 'storage'
                 ? 'Класс'
-                : 'Параметры',
+                : category === 'kubernetes'
+                  ? 'Мастер'
+                  : 'Параметры',
         width: 220,
         className: styles.specsCol,
         template: (m) => {
           let label = paramsLabel(m);
+          let title = label;
           if (category === 'gpu') {
             label = extractGpuModel(m) || label;
+            title = label;
+          } else if (category === 'kubernetes') {
+            const availability = extractKubernetesAvailability(m);
+            if (availability) {
+              label = kubernetesAvailabilityLabel(availability);
+              title = `${label} · ${kubernetesFaultToleranceHint(availability)}`;
+            } else {
+              label = '—';
+              title = 'Компонент мастера без зональности';
+            }
           } else if (category === 'storage') {
             // Only object storage class — never show bare GiB as «Класс»
             const cls = extractStorageClass(m);
@@ -680,8 +745,9 @@ export function CatalogPage() {
               label = `${CATEGORY_TITLE[m.categoryKey]} · ${paramsLabel(m)}`;
             }
           }
+          if (category !== 'kubernetes') title = label;
           return (
-            <Text variant="body-1" color="secondary" ellipsis title={label}>
+            <Text variant="body-1" color="secondary" ellipsis title={title}>
               {label}
             </Text>
           );
@@ -719,6 +785,7 @@ export function CatalogPage() {
       setStorageFacet('all');
       setStorageKindFacet('all');
       setNetworkFacet('all');
+      setKubernetesAvailabilityFacet('all');
       setSearch('');
       setProviders([]);
       setSort('price-asc');
@@ -735,6 +802,7 @@ export function CatalogPage() {
     storageFacet !== 'all' ||
     storageKindFacet !== 'all' ||
     networkFacet !== 'all' ||
+    kubernetesAvailabilityFacet !== 'all' ||
     search.trim() !== '' ||
     providers.length > 0 ||
     sort !== 'price-asc';
@@ -782,6 +850,7 @@ export function CatalogPage() {
                   setStorageKindFacet('all');
                 }
                 if (v !== 'network') setNetworkFacet('all');
+                if (v !== 'kubernetes') setKubernetesAvailabilityFacet('all');
               });
             }}
           >
@@ -1081,6 +1150,39 @@ export function CatalogPage() {
                           )}
                           <span>
                             {o.title} {networkFacetCounts[o.value]}
+                          </span>
+                        </span>
+                      </SegmentedRadioGroup.Option>
+                    ))}
+                  </SegmentedRadioGroup>
+                </div>
+              ) : null}
+
+              {category === 'kubernetes' ? (
+                <div
+                  className={styles.facetControl}
+                  title="Зональный — не отказоустойчивый; региональный — отказоустойчивый"
+                >
+                  <Text variant="caption-2" color="complementary" className={styles.facetLabel}>
+                    Мастер
+                  </Text>
+                  <SegmentedRadioGroup
+                    size="m"
+                    value={kubernetesAvailabilityFacet}
+                    onUpdate={(v) =>
+                      setKubernetesAvailabilityFacet(v as KubernetesAvailabilityFacet)
+                    }
+                  >
+                    {KUBERNETES_AVAILABILITY_OPTIONS.map((o) => (
+                      <SegmentedRadioGroup.Option key={o.value} value={o.value}>
+                        <span className={styles.facetOption}>
+                          {o.value === 'all' ? (
+                            <Icon data={Layers3Diagonal} size={14} />
+                          ) : (
+                            <Icon data={Server} size={14} />
+                          )}
+                          <span>
+                            {o.title} {kubernetesAvailabilityCounts[o.value]}
                           </span>
                         </span>
                       </SegmentedRadioGroup.Option>

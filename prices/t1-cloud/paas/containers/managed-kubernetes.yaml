@@ -23,6 +23,9 @@ spec:
       published30Days: 5417
       vatRatePercent: 22
       nativeVat: excluded
+      availability: zonal
+      faultTolerant: false
+      topology: zonal
       comparabilityClass: native-fixed
       comparableTier: basic
       masterCount: 1

@@ -22,6 +22,8 @@ spec:
       vcpu: 2
       ramGb: 4
       availability: zonal
+      faultTolerant: false
+      topology: zonal
       ramGiB: 4
       comparabilityClass: native-bundle
       comparableTier: basic

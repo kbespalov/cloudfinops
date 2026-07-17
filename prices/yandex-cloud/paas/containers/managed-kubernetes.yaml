@@ -85,6 +85,8 @@ spec:
     - yc.kubernetes
     dimensions:
       topology: zonal
+      availability: zonal
+      faultTolerant: false
       yandexSkuId: dn2tdli7u18tvvc28ov8
       serviceId: dn2af04ph5otc5f23o1h
       comparabilityClass: native-fixed
@@ -112,6 +114,8 @@ spec:
     - yc.kubernetes
     dimensions:
       topology: regional
+      availability: regional
+      faultTolerant: true
       yandexSkuId: dn2j2khrfcdc4p1aki30
       serviceId: dn2af04ph5otc5f23o1h
       comparabilityClass: native-fixed
@@ -142,6 +146,7 @@ spec:
       comparabilityClass: synthetic-bundle
       comparableTier: basic
       availability: zonal
+      faultTolerant: false
       topology: zonal
       masterCount: 1
       vcpu: 2
@@ -187,6 +192,7 @@ spec:
       comparabilityClass: synthetic-bundle
       comparableTier: ha
       availability: regional
+      faultTolerant: true
       topology: regional
       masterCount: 3
       vcpu: 2

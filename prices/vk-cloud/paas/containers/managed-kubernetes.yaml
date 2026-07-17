@@ -56,6 +56,8 @@ spec:
       comparabilityClass: synthetic-bundle
       comparableTier: basic
       availability: zonal
+      faultTolerant: false
+      topology: zonal
       masterCount: 1
       vcpu: 2
       ramGiB: null
@@ -99,6 +101,8 @@ spec:
       comparabilityClass: synthetic-bundle
       comparableTier: ha
       availability: regional
+      faultTolerant: true
+      topology: regional
       masterCount: 3
       vcpu: 2
       ramGiB: null
