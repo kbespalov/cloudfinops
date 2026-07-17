@@ -23,6 +23,16 @@
   line-height: 1.55;
 }
 
+.lead strong {
+  color: var(--g-color-text-primary);
+  font-weight: 600;
+}
+
+.list em {
+  font-style: normal;
+  color: var(--g-color-text-complementary);
+}
+
 .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;

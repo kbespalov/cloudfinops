@@ -30,10 +30,47 @@ export function CalculatorSeo() {
       </h2>
       <p className={styles.lead}>
         Сравните публичные цены на виртуальные машины и GPU у российских облачных провайдеров:{' '}
-        {PROVIDERS.join(', ')}. Калькулятор Cloud FinOps показывает Best offer по готовым пресетам
-        compute (vCPU, RAM, SSD) и GPU (NVIDIA L4, A100, H100, H200) — без конструктора и без
-        скрытых промо-тарифов.
+        {PROVIDERS.join(', ')}. Cloud FinOps считает Best offer по готовым пресетам — без
+        конструктора и без промо-тарифов, которых нет в открытом прайсе.
       </p>
+
+      <h3 className={styles.subtitle}>Как считается цена</h3>
+      <p className={styles.lead}>
+        Калькулятор работает только с публичным каталогом SKU Cloud FinOps. Для каждого пресета и
+        каждого провайдера подбирается <strong>ордерабельная</strong> конфигурация — такая, которую
+        реально можно заказать: компоненты из одного региона, совместимая CPU-платформа, есть
+        загрузочный диск. Затем выбирается минимальная итоговая цена (Best offer).
+      </p>
+      <ul className={styles.list}>
+        <li>
+          <strong>Unit-тариф (vCPU + RAM + SSD)</strong> — если провайдер публикует отдельные цены
+          за ядро и гигабайт памяти (Yandex Cloud, VK Cloud, Selectel, MWS, T1). Складываем:{' '}
+          <em>N × цена vCPU + M × цена RAM + 100 GiB × цена SSD</em>.
+        </li>
+        <li>
+          <strong>Flavor / готовая ВМ</strong> — если unit-цен нет, а есть готовые конфигурации
+          (типичный случай Cloud.ru: SKU «4 vCPU / 8 GiB»). Берём точный flavor под пресет и
+          добавляем SSD отдельно — в тарифе диск обычно не входит в цену ВМ.
+        </li>
+        <li>
+          <strong>General / High CPU / High Memory</strong> — только on-demand и выделенные ядра
+          (100% guarantee). Shared (1:N), burstable 5–50% и preemptible в эти полки не попадают.
+        </li>
+        <li>
+          <strong>Low-cost</strong> — самые дешёвые ордерабельные варианты: preemptible, shared /
+          oversubscribed vCPU и flavor с долей ядра &lt;100% (например 10%/30% у Cloud.ru). Дробные
+          unit-ядра Yandex (5%/20%/50%) не используем: на них нельзя честно собрать «8 vCPU».
+        </li>
+        <li>
+          <strong>GPU</strong> — unit-цена «только карта» и flavor «vCPU + RAM + GPU» считаются в
+          разных списках. Best offer не смешивает «голую» H100 с целой ВМ с H100.
+        </li>
+        <li>
+          <strong>Что отбрасываем</strong> — SKU с пометкой «наличие не подтверждено», снятые с
+          продажи и тарифы без публичной цены. Месяц = 720 часов; сеть, IP, образы и бэкапы в
+          пресет не входят.
+        </li>
+      </ul>
 
       <div className={styles.grid}>
         <div>
@@ -51,7 +88,9 @@ export function CalculatorSeo() {
               );
             })}
           </ul>
-          <p className={styles.meta}>{COMPUTE_PRESETS.length} конфигураций ВМ</p>
+          <p className={styles.meta}>
+            {COMPUTE_PRESETS.length} конфигураций ВМ · Low-cost / General / High CPU / High Memory
+          </p>
         </div>
 
         <div>
@@ -59,13 +98,13 @@ export function CalculatorSeo() {
           <ul className={styles.list}>
             {GPU_PRESETS.map((p) => (
               <li key={p.id}>
-                <strong>{p.title}</strong> — {p.subtitle}. Сравнение unit-цены GPU и flavor (vCPU +
-                RAM + GPU).
+                <strong>{p.title}</strong> — {p.subtitle}
+                {p.preferBundle ? ' · в Best offer приоритет у flavor целиком' : ' · Best offer по unit GPU'}
               </li>
             ))}
           </ul>
           <p className={styles.meta}>
-            Ключевые запросы: аренда GPU H100, H200, A100, L4, цена GPU в облаке, калькулятор GPU
+            NVIDIA L4, A100, H100, H200 · аренда GPU в облаке · сравнение unit и flavor
           </p>
         </div>
       </div>
@@ -75,32 +114,39 @@ export function CalculatorSeo() {
         <div>
           <dt>Как считается стоимость ВМ в калькуляторе?</dt>
           <dd>
-            Берём публичные тарифы на vCPU, RAM и SSD одного региона и совместимой CPU-платформы,
-            складываем в готовую конфигурацию и выбираем минимальную цену среди провайдеров (Best
-            offer).
+            Либо складываем публичные unit-цены vCPU + RAM + SSD одного региона и платформы, либо
+            берём точный flavor (готовая ВМ) и добавляем SSD. Среди провайдеров выбираем минимум —
+            Best offer. Пример: у Cloud.ru нет отдельных цен за ядро, поэтому в расчёт идут их
+            flavor SKU.
           </dd>
         </div>
         <div>
-          <dt>Чем low-cost отличается от General?</dt>
+          <dt>Почему у части пресетов нет Cloud.ru?</dt>
           <dd>
-            Low-cost использует самые дешёвые ордерабельные варианты: preemptible и shared vCPU, где
-            они есть в каталоге. General / High CPU / High Memory — on-demand с выделенными (100%)
-            ядрами.
+            Cloud.ru продаёт фиксированные размеры ВМ. Если в тарифе нет точного совпадения по vCPU
+            и RAM (например High CPU 4/4 или High Memory 16/128), провайдера в карточке нет — мы не
+            подставляем «похожий» размер и не занижаем цену.
+          </dd>
+        </div>
+        <div>
+          <dt>Чем Low-cost отличается от General?</dt>
+          <dd>
+            Low-cost — preemptible, shared и flavor с долей vCPU &lt;100%, где они есть в каталоге.
+            General / High CPU / High Memory — только on-demand с гарантией 100% ядра.
           </dd>
         </div>
         <div>
           <dt>Почему цена GPU H100 у провайдеров отличается так сильно?</dt>
           <dd>
-            Часть облаков продаёт только GPU (unit), часть — готовую ВМ с ядрами и памятью (flavor /
-            bundle). В калькуляторе эти офферы разделены, чтобы не сравнивать «только карту» с
-            «целой машиной».
+            Часть облаков продаёт только GPU (unit), часть — готовую ВМ с ядрами и памятью (flavor).
+            Списки разделены: «только GPU» не сравнивается с «vCPU + RAM + GPU» в одном Best offer.
           </dd>
         </div>
         <div>
           <dt>Какие облака сравниваются?</dt>
           <dd>
-            Yandex Cloud, VK Cloud, Selectel, Cloud.ru, MWS Cloud и T1 Cloud — по единой таксономии
-            SKU Cloud FinOps.
+            {PROVIDERS.join(', ')} — по единой таксономии SKU Cloud FinOps и только по публичным
+            тарифам.
           </dd>
         </div>
       </dl>
@@ -113,12 +159,17 @@ export function calculatorJsonLd() {
     {
       question: 'Как считается стоимость ВМ в калькуляторе Cloud FinOps?',
       answer:
-        'Публичные тарифы vCPU, RAM и SSD одного региона и совместимой CPU-платформы складываются в пресет; Best offer — минимальная цена среди провайдеров.',
+        'Складываем публичные unit-цены vCPU, RAM и SSD одного региона и CPU-платформы либо берём точный flavor (готовая ВМ, как у Cloud.ru) плюс SSD. Best offer — минимальная ордерабельная цена среди провайдеров. Месяц = 720 часов.',
+    },
+    {
+      question: 'Почему у части пресетов нет Cloud.ru?',
+      answer:
+        'Cloud.ru публикует фиксированные flavor SKU. Если нет точного совпадения vCPU/RAM с пресетом, провайдер не показывается — похожие размеры не подставляются.',
     },
     {
       question: 'Какие GPU можно сравнить в калькуляторе?',
       answer:
-        'Пресеты NVIDIA L4, A100, H100, H200 (1× и 8×). Unit-цены GPU и flavor-конфигурации показываются отдельно.',
+        'Пресеты NVIDIA L4, A100, H100, H200 (1× и 8×). Unit-цены GPU и flavor-конфигурации показываются отдельно и не смешиваются в Best offer.',
     },
     {
       question: 'Какие облачные провайдеры России есть в калькуляторе?',
@@ -138,7 +189,7 @@ export function calculatorJsonLd() {
         operatingSystem: 'Web',
         inLanguage: 'ru-RU',
         description:
-          'Калькулятор стоимости облачных ВМ и аренды GPU в России: сравнение цен Yandex Cloud, VK Cloud, Selectel, Cloud.ru, MWS и T1 по пресетам compute и NVIDIA L4/A100/H100/H200.',
+          'Калькулятор стоимости облачных ВМ и аренды GPU в России: сравнение цен Yandex Cloud, VK Cloud, Selectel, Cloud.ru, MWS и T1 по пресетам compute и NVIDIA L4/A100/H100/H200. Учитываются unit-тарифы и flavor SKU, ордерабельность региона и платформы.',
         offers: {
           '@type': 'Offer',
           price: '0',

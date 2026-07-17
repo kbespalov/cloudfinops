@@ -54,6 +54,19 @@ describe('calculator quote arbitration', () => {
     for (const preset of COMPUTE_PRESETS) {
       const result = quotePreset(preset, 'month');
       for (const q of result.quotes) {
+        const isFlavor = q.parts.some((p) => p.id === 'bundle');
+        if (isFlavor) {
+          const [flavor, disk] = q.meters;
+          assert.ok(flavor, `${q.providerName}: missing flavor`);
+          assert.equal(flavor.meter, 'compute.flavor');
+          assert.ok(disk, `${q.providerName}: missing disk beside flavor`);
+          assert.equal(
+            String(disk.region ?? ''),
+            String(flavor.region ?? ''),
+            `${q.providerName}: disk region mismatch vs flavor`,
+          );
+          continue;
+        }
         const [vcpu, ram, disk] = q.meters;
         assert.ok(vcpu && ram, `${q.providerName}: missing vcpu/ram`);
         assert.equal(
@@ -80,7 +93,7 @@ describe('calculator quote arbitration', () => {
     for (const preset of COMPUTE_PRESETS) {
       const result = quotePreset(preset, 'month');
       for (const q of result.quotes) {
-        const disk = q.meters[2];
+        const disk = q.meters.find((m) => m.meter === 'storage.block.capacity');
         if (!disk) continue;
         const hay =
           `${disk.dimensions.performanceTier || ''} ${disk.dimensions.storageMedia || ''} ${disk.name}`.toLowerCase();
@@ -91,15 +104,18 @@ describe('calculator quote arbitration', () => {
     }
   });
 
-  it('excludes fractional-guarantee cores from low-cost best meters', () => {
+  it('excludes fractional-guarantee unit cores from low-cost (flavor shares allowed)', () => {
     const lowCost = COMPUTE_PRESETS.filter((p) => p.family === 'low-cost');
     assert.ok(lowCost.length >= 1);
     for (const preset of lowCost) {
       const result = quotePreset(preset, 'month');
       for (const q of result.quotes) {
-        const pct = sharePercent(q.meters[0]!);
+        const core = q.meters[0]!;
+        // Cloud.ru-style fractional flavors are the cheap tier; unit 5%/20% cores are not.
+        if (core.meter === 'compute.flavor') continue;
+        const pct = sharePercent(core);
         if (pct != null) {
-          assert.ok(pct >= 100, `${preset.id}/${q.providerName}: fractional core ${pct}%`);
+          assert.ok(pct >= 100, `${preset.id}/${q.providerName}: fractional unit core ${pct}%`);
         }
       }
     }
@@ -110,21 +126,42 @@ describe('calculator quote arbitration', () => {
     for (const preset of onDemandFamilies) {
       const result = quotePreset(preset, 'month');
       for (const q of result.quotes) {
-        const vcpu = q.meters[0]!;
+        const core = q.meters[0]!;
         assert.ok(
-          !isPreemptibleMeter(vcpu.name, vcpu.dimensions.purchaseModel ?? vcpu.purchaseModel),
+          !isPreemptibleMeter(core.name, core.dimensions.purchaseModel ?? core.purchaseModel),
           `${preset.id}/${q.providerName}: preemptible vCPU in ${preset.family}`,
         );
         // Shared oversubscription (1:N / burst) must not win general/high tiers.
         assert.ok(
-          !/\b1\s*:\s*[2-9]\d*\b/i.test(vcpu.name),
+          !/\b1\s*:\s*[2-9]\d*\b/i.test(core.name),
           `${preset.id}/${q.providerName}: shared 1:N vCPU in ${preset.family}`,
         );
-        const pct = sharePercent(vcpu);
+        const pct = sharePercent(core);
         if (pct != null) {
           assert.equal(pct, 100, `${preset.id}/${q.providerName}: expected 100% share, got ${pct}%`);
         }
       }
+    }
+  });
+
+  it('includes Cloud.ru via exact compute.flavor when unit vCPU/RAM are not public', () => {
+    // Cloud.ru publishes VM flavors, not unit compute.vcpu/ram rates.
+    const withExactFlavor = ['gen-2-4', 'gen-4-8', 'gen-8-16', 'low-2-4', 'low-4-8', 'low-8-16'];
+    for (const id of withExactFlavor) {
+      const preset = COMPUTE_PRESETS.find((p) => p.id === id);
+      assert.ok(preset, id);
+      const result = quotePreset(preset, 'month');
+      const cloudRu = result.quotes.find((q) => q.provider === 'cloud-ru');
+      assert.ok(cloudRu, `${id}: expected Cloud.ru quote from flavor catalog`);
+      assert.equal(cloudRu.meters[0]!.meter, 'compute.flavor');
+      assert.ok(
+        cloudRu.parts.some((p) => p.id === 'bundle'),
+        `${id}: Cloud.ru should expose flavor as a bundle part`,
+      );
+      assert.ok(
+        cloudRu.parts.some((p) => p.id === 'disk'),
+        `${id}: Cloud.ru flavor quote must still include SSD`,
+      );
     }
   });
 
@@ -206,14 +243,18 @@ describe('calculator quote arbitration', () => {
       const result = quotePreset(preset, 'month');
       for (const q of result.quotes) {
         assert.ok(q.note, `${preset.id}/${q.providerName}: missing note`);
-        const vcpu = q.meters[0]!;
+        const core = q.meters[0]!;
+        if (core.meter === 'compute.flavor') {
+          assert.match(q.note!, /Flavor/i);
+          continue;
+        }
         const preemptible = isPreemptibleMeter(
-          vcpu.name,
-          vcpu.dimensions.purchaseModel ?? vcpu.purchaseModel,
+          core.name,
+          core.dimensions.purchaseModel ?? core.purchaseModel,
         );
         if (preemptible) {
           assert.match(q.note!, /Preemptible/i);
-        } else if (/\b1\s*:\s*[2-9]\d*\b/i.test(vcpu.name)) {
+        } else if (/\b1\s*:\s*[2-9]\d*\b/i.test(core.name)) {
           assert.match(q.note!, /Shared/i);
         } else if (preset.family === 'low-cost') {
           assert.match(q.note!, /On-demand|выделен/i);
@@ -228,6 +269,13 @@ describe('calculator quote arbitration', () => {
     const preset = COMPUTE_PRESETS.find((p) => p.id === 'gen-8-16')!;
     const result = quotePreset(preset, 'month');
     for (const q of result.quotes) {
+      assert.equal(q.scope, 'compute');
+      if (q.parts.some((p) => p.id === 'bundle')) {
+        assert.equal(q.parts[0]!.label, '8 vCPU + 16 GiB RAM');
+        assert.equal(q.parts.at(-1)!.id, 'disk');
+        assert.equal(q.parts.at(-1)!.label, '100 GiB SSD');
+        continue;
+      }
       assert.deepEqual(
         q.parts.map((p) => p.id),
         ['vcpu', 'ram', 'disk'],
@@ -235,7 +283,6 @@ describe('calculator quote arbitration', () => {
       assert.equal(q.parts[0]!.label, '8 vCPU');
       assert.equal(q.parts[1]!.label, '16 GiB RAM');
       assert.equal(q.parts[2]!.label, '100 GiB SSD');
-      assert.equal(q.scope, 'compute');
     }
   });
 

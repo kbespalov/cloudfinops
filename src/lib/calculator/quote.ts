@@ -188,19 +188,54 @@ function pricedList(
     .sort((a, b) => a.unit - b.unit);
 }
 
-type ComputeCombo = {vcpu: PricedMeter; ram: PricedMeter; disk: PricedMeter | null; total: number};
+type UnitComputeCombo = {
+  kind: 'unit';
+  vcpu: PricedMeter;
+  ram: PricedMeter;
+  disk: PricedMeter | null;
+  total: number;
+};
+
+type FlavorComputeCombo = {
+  kind: 'flavor';
+  flavor: PricedMeter;
+  disk: PricedMeter | null;
+  total: number;
+};
+
+type ComputeCombo = UnitComputeCombo | FlavorComputeCombo;
+
+function flavorVcpu(meter: CatalogMeter): number {
+  return Number(meter.dimensions.vcpu ?? NaN);
+}
+
+function flavorRamGiB(meter: CatalogMeter): number {
+  return Number(meter.dimensions.ramGiB ?? meter.dimensions.ramGb ?? NaN);
+}
+
+function pickDiskForRegion(
+  provider: string,
+  period: PeriodMode,
+  lowCost: boolean,
+  region: string,
+): PricedMeter | null {
+  const componentPred = lowCost ? () => true : (m: CatalogMeter) => isOnDemand(m);
+  const disks = pricedList(provider, 'storage.block.capacity', period, componentPred);
+  const sameRegion = disks.filter((disk) => regionKey(disk.m) === region);
+  return sameRegion.find((disk) => isSsd(disk.m)) ?? sameRegion[0] ?? null;
+}
 
 /**
  * Picks the cheapest *orderable* vCPU + RAM (+ SSD disk) combination for a provider:
  * every component shares one region and vCPU/RAM share a CPU platform, so the
  * quoted price is something a client can actually provision.
  */
-function pickComputeCombo(
+function pickUnitComputeCombo(
   provider: string,
   preset: ComputePreset,
   period: PeriodMode,
   lowCost: boolean,
-): ComputeCombo | null {
+): UnitComputeCombo | null {
   const vcpuPred = lowCost
     ? (m: CatalogMeter) => !isFractionalGuarantee(m)
     : (m: CatalogMeter) => isOnDemand(m);
@@ -218,13 +253,11 @@ function pickComputeCombo(
   const disks = pricedList(provider, 'storage.block.capacity', period, componentPred);
   const providerHasDisks = disks.length > 0;
 
-  let best: ComputeCombo | null = null;
+  let best: UnitComputeCombo | null = null;
   for (const vcpu of vcpus) {
     const ram = rams.find((r) => ramCompatible(vcpu.m, r.m));
     if (!ram) continue;
-    const sameRegionDisks = disks.filter((disk) => regionKey(disk.m) === regionKey(vcpu.m));
-    const disk =
-      sameRegionDisks.find((disk) => isSsd(disk.m)) ?? sameRegionDisks[0] ?? null;
+    const disk = pickDiskForRegion(provider, period, lowCost, regionKey(vcpu.m));
     // A real VM needs a boot disk: if the provider sells block storage but none is
     // available in this vCPU's region, the combo is not orderable — skip it.
     if (providerHasDisks && !disk) continue;
@@ -232,20 +265,76 @@ function pickComputeCombo(
       vcpu.unit * preset.vcpu +
       ram.unit * preset.ramGiB +
       (disk ? disk.unit * preset.diskGiB : 0);
-    if (!best || total < best.total) best = {vcpu, ram, disk, total};
+    if (!best || total < best.total) best = {kind: 'unit', vcpu, ram, disk, total};
   }
   return best;
 }
 
-/** Note describing what the chosen vCPU actually is, so the price is not oversold. */
-function computeNote(vcpu: CatalogMeter, lowCost: boolean): string {
+/**
+ * Providers like Cloud.ru publish fixed VM flavors (vCPU+RAM bundle) instead of
+ * unit vCPU/RAM rates. Match an exact flavor for the preset, then add SSD.
+ */
+function pickFlavorComputeCombo(
+  provider: string,
+  preset: ComputePreset,
+  period: PeriodMode,
+  lowCost: boolean,
+): FlavorComputeCombo | null {
+  const flavors = pricedList(provider, 'compute.flavor', period, (m) => {
+    if (m.categoryKey !== 'compute') return false;
+    if (flavorVcpu(m) !== preset.vcpu || flavorRamGiB(m) !== preset.ramGiB) return false;
+    if (!lowCost) {
+      if (!isOnDemand(m)) return false;
+      // General / High CPU / High Memory: only dedicated 100% flavors.
+      if (isFractionalGuarantee(m) || isSharedVcpu(m)) return false;
+      return true;
+    }
+    // Low-cost: fractional flavors (10%/30%) are allowed — that is the cheap tier.
+    return true;
+  });
+  const flavor = flavors[0];
+  if (!flavor) return null;
+
+  const disks = pricedList(
+    provider,
+    'storage.block.capacity',
+    period,
+    lowCost ? () => true : (m) => isOnDemand(m),
+  );
+  const disk = pickDiskForRegion(provider, period, lowCost, regionKey(flavor.m));
+  if (disks.length > 0 && !disk) return null;
+
+  const total = flavor.unit + (disk ? disk.unit * preset.diskGiB : 0);
+  return {kind: 'flavor', flavor, disk, total};
+}
+
+function pickComputeCombo(
+  provider: string,
+  preset: ComputePreset,
+  period: PeriodMode,
+  lowCost: boolean,
+): ComputeCombo | null {
+  const unit = pickUnitComputeCombo(provider, preset, period, lowCost);
+  const flavor = pickFlavorComputeCombo(provider, preset, period, lowCost);
+  if (unit && flavor) return flavor.total < unit.total ? flavor : unit;
+  return unit ?? flavor;
+}
+
+/** Note describing what the chosen vCPU / flavor actually is, so the price is not oversold. */
+function computeNote(meter: CatalogMeter, lowCost: boolean, flavor: boolean): string {
+  if (flavor) {
+    if (isFractionalGuarantee(meter) || isSharedVcpu(meter)) {
+      return 'Flavor с долей vCPU <100% — бюджетный вариант. Диск SSD отдельно.';
+    }
+    return 'Flavor целиком (vCPU+RAM одним SKU). Диск SSD отдельно.';
+  }
   const preemptible =
-    /preempt/i.test(String(vcpu.dimensions.purchaseModel ?? '')) ||
-    /preempt/i.test(vcpu.name);
+    /preempt/i.test(String(meter.dimensions.purchaseModel ?? '')) ||
+    /preempt/i.test(meter.name);
   if (preemptible) {
     return 'Preemptible: цена ниже, но инстанс может быть вытеснен провайдером. Диск — SSD.';
   }
-  if (isSharedVcpu(vcpu)) {
+  if (isSharedVcpu(meter)) {
     return 'Shared vCPU (переподписка ядра) — бюджетный вариант. Диск — SSD.';
   }
   if (lowCost) {
@@ -262,19 +351,43 @@ function quoteCompute(preset: ComputePreset, period: PeriodMode): ProviderQuote[
     const combo = pickComputeCombo(provider.id, preset, period, lowCost);
     if (!combo) continue;
 
-    const parts: CostPart[] = [
-      {id: 'vcpu', label: `${preset.vcpu} vCPU`, amount: combo.vcpu.unit * preset.vcpu},
-      {id: 'ram', label: `${preset.ramGiB} GiB RAM`, amount: combo.ram.unit * preset.ramGiB},
-    ];
-    const meters: CatalogMeter[] = [combo.vcpu.m, combo.ram.m];
+    let parts: CostPart[];
+    let meters: CatalogMeter[];
+    let noteMeter: CatalogMeter;
 
-    if (combo.disk) {
-      parts.push({
-        id: 'disk',
-        label: `${preset.diskGiB} GiB SSD`,
-        amount: combo.disk.unit * preset.diskGiB,
-      });
-      meters.push(combo.disk.m);
+    if (combo.kind === 'flavor') {
+      noteMeter = combo.flavor.m;
+      parts = [
+        {
+          id: 'bundle',
+          label: `${preset.vcpu} vCPU + ${preset.ramGiB} GiB RAM`,
+          amount: combo.flavor.unit,
+        },
+      ];
+      meters = [combo.flavor.m];
+      if (combo.disk) {
+        parts.push({
+          id: 'disk',
+          label: `${preset.diskGiB} GiB SSD`,
+          amount: combo.disk.unit * preset.diskGiB,
+        });
+        meters.push(combo.disk.m);
+      }
+    } else {
+      noteMeter = combo.vcpu.m;
+      parts = [
+        {id: 'vcpu', label: `${preset.vcpu} vCPU`, amount: combo.vcpu.unit * preset.vcpu},
+        {id: 'ram', label: `${preset.ramGiB} GiB RAM`, amount: combo.ram.unit * preset.ramGiB},
+      ];
+      meters = [combo.vcpu.m, combo.ram.m];
+      if (combo.disk) {
+        parts.push({
+          id: 'disk',
+          label: `${preset.diskGiB} GiB SSD`,
+          amount: combo.disk.unit * preset.diskGiB,
+        });
+        meters.push(combo.disk.m);
+      }
     }
 
     const total = parts.reduce((s, p) => s + p.amount, 0);
@@ -284,7 +397,7 @@ function quoteCompute(preset: ComputePreset, period: PeriodMode): ProviderQuote[
       total,
       scope: 'compute',
       parts,
-      note: computeNote(combo.vcpu.m, lowCost),
+      note: computeNote(noteMeter, lowCost, combo.kind === 'flavor'),
       meters,
     });
   }
