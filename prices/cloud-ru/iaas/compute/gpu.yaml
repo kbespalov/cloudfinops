@@ -47,7 +47,7 @@ spec:
           period: hour
         formula: native hourly bundle rate
         vat: included
-    notes: Цена полного GPU flavor Evolution Compute; не ставка одного GPU.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU), а не одной карты.
   - sku: cloudru.gpu.h100-94-pcie-1
     name: 20vCPU/110GB RAM/1 GPU H100 94GB PCI
     meter: compute.flavor
@@ -79,7 +79,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.h100-94-pcie-2
     name: 40vCPU/220GB RAM/2 GPU H100 94GB PCI
     meter: compute.flavor
@@ -111,7 +111,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.h100-94-pcie-3
     name: 60vCPU/330GB RAM/3 GPU H100 94GB PCI
     meter: compute.flavor
@@ -143,7 +143,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.h100-94-pcie-4
     name: 80vCPU/440GB RAM/4 GPU H100 94GB PCI
     meter: compute.flavor
@@ -175,7 +175,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.h100-94-pcie-6
     name: 120vCPU/660GB RAM/6 GPU H100 94GB PCI
     meter: compute.flavor
@@ -207,7 +207,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.h100-94-pcie-7
     name: 140vCPU/770GB RAM/7 GPU H100 94GB PCI
     meter: compute.flavor
@@ -239,7 +239,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.h100-94-pcie-8
     name: 160vCPU/880GB RAM/8 GPU H100 94GB PCI
     meter: compute.flavor
@@ -271,7 +271,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.h100-80-pcie-1
     name: 20vCPU/110GB RAM/1 GPU H100 80GB PCI
     meter: compute.flavor
@@ -303,7 +303,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.h100-80-pcie-2
     name: 40vCPU/220GB RAM/2 GPU H100 80GB PCI
     meter: compute.flavor
@@ -335,7 +335,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.h100-80-pcie-3
     name: 60vCPU/330GB RAM/3 GPU H100 80GB PCI
     meter: compute.flavor
@@ -367,7 +367,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.h100-80-pcie-4
     name: 80vCPU/440GB RAM/4 GPU H100 80GB PCI
     meter: compute.flavor
@@ -399,7 +399,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.h100-80-pcie-5
     name: 100vCPU/550GB RAM/5 GPU H100 80GB PCI
     meter: compute.flavor
@@ -431,7 +431,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.h100-80-pcie-6
     name: 120vCPU/660GB RAM/6 GPU H100 80GB PCI
     meter: compute.flavor
@@ -463,7 +463,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.h100-80-pcie-7
     name: 140vCPU/770GB RAM/7 GPU H100 80GB PCI
     meter: compute.flavor
@@ -495,7 +495,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.h100-80-pcie-8
     name: 160vCPU/880GB RAM/8 GPU H100 80GB PCI
     meter: compute.flavor
@@ -527,7 +527,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.a100-80-pcie-1
     name: 20vCPU/125GB RAM/1 GPU A100 80GB PCI
     meter: compute.flavor
@@ -559,7 +559,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.a100-80-pcie-2
     name: 40vCPU/250GB RAM/2 GPU A100 80GB PCI
     meter: compute.flavor
@@ -591,7 +591,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.a100-80-pcie-3
     name: 60vCPU/375GB RAM/3 GPU A100 80GB PCI
     meter: compute.flavor
@@ -623,7 +623,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.a100-80-pcie-4
     name: 80vCPU/500GB RAM/4 GPU A100 80GB PCI
     meter: compute.flavor
@@ -655,7 +655,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.a100-80-pcie-5
     name: 100vCPU/625GB RAM/5 GPU A100 80GB PCI
     meter: compute.flavor
@@ -687,7 +687,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.a100-80-pcie-6
     name: 120vCPU/750GB RAM/6 GPU A100 80GB PCI
     meter: compute.flavor
@@ -719,7 +719,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.a100-80-pcie-7
     name: 140vCPU/875GB RAM/7 GPU A100 80GB PCI
     meter: compute.flavor
@@ -751,7 +751,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.a100-80-pcie-8
     name: 160vCPU/900GB RAM/8 GPU A100 80GB PCI
     meter: compute.flavor
@@ -783,7 +783,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute; RAM соответствует официальному тарифу.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU); объём RAM — по официальному тарифу.
   - sku: cloudru.gpu.h100-80-nvlink-1
     name: 20vCPU/186GB RAM/1 GPU H100 80GB NVLink
     meter: compute.flavor
@@ -815,7 +815,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute с NVLink.
+    notes: Цена конфигурации целиком с NVLink (vCPU, RAM и GPU).
   - sku: cloudru.gpu.h100-80-nvlink-2
     name: 40vCPU/372GB RAM/2 GPU H100 80GB NVLink
     meter: compute.flavor
@@ -847,7 +847,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute с NVLink.
+    notes: Цена конфигурации целиком с NVLink (vCPU, RAM и GPU).
   - sku: cloudru.gpu.h100-80-nvlink-3
     name: 60vCPU/558GB RAM/3 GPU H100 80GB NVLink
     meter: compute.flavor
@@ -879,7 +879,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute с NVLink.
+    notes: Цена конфигурации целиком с NVLink (vCPU, RAM и GPU).
   - sku: cloudru.gpu.h100-80-nvlink-4
     name: 80vCPU/744GB RAM/4 GPU H100 80GB NVLink
     meter: compute.flavor
@@ -911,7 +911,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute с NVLink.
+    notes: Цена конфигурации целиком с NVLink (vCPU, RAM и GPU).
   - sku: cloudru.gpu.h100-80-nvlink-5
     name: 100vCPU/930GB RAM/5 GPU H100 80GB NVLink
     meter: compute.flavor
@@ -943,7 +943,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute с NVLink.
+    notes: Цена конфигурации целиком с NVLink (vCPU, RAM и GPU).
   - sku: cloudru.gpu.h100-80-nvlink-6
     name: 120vCPU/1116GB RAM/6 GPU H100 80GB NVLink
     meter: compute.flavor
@@ -975,7 +975,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute с NVLink.
+    notes: Цена конфигурации целиком с NVLink (vCPU, RAM и GPU).
   - sku: cloudru.gpu.h100-80-nvlink-7
     name: 140vCPU/1302GB RAM/7 GPU H100 80GB NVLink
     meter: compute.flavor
@@ -1007,7 +1007,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute с NVLink.
+    notes: Цена конфигурации целиком с NVLink (vCPU, RAM и GPU).
   - sku: cloudru.gpu.h100-80-nvlink-8
     name: 160vCPU/1488GB RAM/8 GPU H100 80GB NVLink
     meter: compute.flavor
@@ -1039,7 +1039,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute с NVLink.
+    notes: Цена конфигурации целиком с NVLink (vCPU, RAM и GPU).
   - sku: cloudru.gpu.a100-40-pcie-1
     name: 24vCPU/220GB RAM/1 GPU A100 40GB PCI
     meter: compute.flavor
@@ -1071,7 +1071,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.a100-40-pcie-2
     name: 48vCPU/440GB RAM/2 GPU A100 40GB PCI
     meter: compute.flavor
@@ -1103,7 +1103,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.a100-40-pcie-4
     name: 96vCPU/880GB RAM/4 GPU A100 40GB PCI
     meter: compute.flavor
@@ -1135,7 +1135,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.v100-32-1
     name: 4vCPU/64GB RAM/1 GPU V100 32GB
     meter: compute.flavor
@@ -1165,7 +1165,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.v100-32-2
     name: 8vCPU/128GB RAM/2 GPU V100 32GB
     meter: compute.flavor
@@ -1195,7 +1195,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.v100-32-4
     name: 16vCPU/256GB RAM/4 GPU V100 32GB
     meter: compute.flavor
@@ -1225,7 +1225,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.v100-32-8
     name: 32vCPU/512GB RAM/8 GPU V100 32GB
     meter: compute.flavor
@@ -1255,7 +1255,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).
   - sku: cloudru.gpu.v100-32-16
     name: 64vCPU/1024GB RAM/16 GPU V100 32GB
     meter: compute.flavor
@@ -1285,4 +1285,4 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Цена полного GPU flavor Evolution Compute.
+    notes: Цена конфигурации целиком (vCPU, RAM и GPU).

@@ -100,7 +100,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Нулевая фиксированная ставка подтверждена Billing API; vCPU и RAM мастера оплачиваются отдельно.
+    notes: Фиксированная плата за зональный мастер — 0 ₽; оплачиваются vCPU и RAM мастера.
   - sku: yc.kubernetes.master-regional
     name: Regional master fixed component
     meter: containers.kubernetes.control-plane
@@ -129,7 +129,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Нулевая фиксированная ставка подтверждена Billing API; vCPU и RAM мастера оплачиваются отдельно.
+    notes: Фиксированная плата за региональный мастер — 0 ₽; оплачиваются vCPU и RAM мастера.
   - sku: yc.kubernetes.master-basic-2-4.synthetic
     name: Synthetic basic master 2 vCPU / 4 GiB RAM (zonal)
     meter: containers.kubernetes.control-plane
@@ -174,8 +174,10 @@ spec:
           period: hour
         formula: 2 × 1.76 (vCPU) + 4 × 0.46 (GiB-RAM) + 0 (zonal fixed)
         vat: included
-    notes: Синтетический bundle для кросс-провайдерного сравнения с fixed/bundle master (Cloud.ru 2/4,
-      Selectel/MWS basic). Нативные component SKU сохранены.
+    notes: >
+      Расчётная конфигурация зонального мастера 2 vCPU / 4 ГиБ для сравнения с другими
+      провайдерами. Собрана из отдельных ставок vCPU и RAM; размер мастера в Yandex Cloud
+      выбирается при создании кластера.
   - sku: yc.kubernetes.master-ha-2-4.synthetic
     name: Synthetic HA master 3×(2 vCPU / 4 GiB RAM)
     meter: containers.kubernetes.control-plane
@@ -220,5 +222,7 @@ spec:
           period: hour
         formula: 3 × (2 × 1.76 + 4 × 0.46 + 0 regional fixed)
         vat: included
-    notes: Синтетический HA-эквивалент как 3 независимых master 2/4 для сравнения с Selectel/MWS HA. Реальный
-      размер master в YC выбирается пользователем.
+    notes: >
+      Расчётная конфигурация отказоустойчивого мастера: 3×(2 vCPU / 4 ГиБ) для сравнения
+      с региональными тарифами других провайдеров. Реальный размер мастера в Yandex Cloud
+      выбирается при создании кластера.

@@ -63,7 +63,7 @@ spec:
           period: hour
         vat: included
         byteBasis: binary
-    notes: Ставки зависят от выбранного пула; зафиксирован публичный выбор ru-6a.
+    notes: Ставки зависят от пула; в каталоге указана ставка для ru-6a.
   - sku: selectel.compute.preemptible-vcpu
     name: Intel Xeon Gold 6240R, 100% preemptible vCPU
     meter: compute.vcpu

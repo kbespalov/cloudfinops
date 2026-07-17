@@ -180,7 +180,7 @@ export function SkuDrawer({
             <>
               <Divider />
               <div className={styles.section}>
-                <Alert theme="info" view="outlined" title="Заметка" message={meter.notes} />
+                <Alert theme="info" view="outlined" title="Пояснение" message={meter.notes} />
               </div>
             </>
           ) : null}

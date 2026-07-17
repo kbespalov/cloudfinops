@@ -43,7 +43,7 @@ spec:
         formula: 0.018972 × 60
         vat: included
     notes: >
-      STD2-* flavors. Источник: cloud.vk.com/pricelist → CPU, Intel Cascade Lake.
+      Конфигурации STD2-*. Источник: cloud.vk.com/pricelist, раздел CPU (Intel Cascade Lake).
   - sku: vk.compute.ice-lake.vcpu
     name: Intel Ice Lake, 100% vCPU
     meter: compute.vcpu

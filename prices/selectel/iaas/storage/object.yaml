@@ -85,7 +85,7 @@ spec:
           period: month
         vat: included
         byteBasis: binary
-    notes: Ставки зависят от выбранного пула; зафиксирован публичный выбор ru-3.
+    notes: Ставки зависят от пула; в каталоге указана ставка для ru-3.
 
   # API requests — from selectel.ru/prices (S3 section), ₽ VAT included.
   # GET packs published per 10k; PUT/POST/COPY per 1k. Catalog stores ₽/request.

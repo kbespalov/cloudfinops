@@ -56,4 +56,4 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Ставки зависят от пула; зафиксирован публичный выбор ru-6a.
+    notes: Ставки зависят от пула; в каталоге указана ставка для ru-6a.

@@ -183,4 +183,4 @@ spec:
           period: hour
         formula: native hourly rate
         vat: included
-    notes: Публичная ставка «Снимок» в тарифах Compute Cloud (storage.snapshot.capacity).
+    notes: Публичная ставка «Снимок» в тарифах Compute Cloud.

@@ -175,7 +175,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Ставки зависят от выбранного пула; зафиксирован публичный выбор ru-6a.
+    notes: Ставки зависят от пула; в каталоге указана ставка для ru-6a.
   - sku: selectel.compute.image.capacity
     name: Образ ВМ
     meter: storage.image.capacity
@@ -246,5 +246,6 @@ spec:
         formula: native hourly rate
         vat: included
     notes: >
-      У Selectel цена снапшота равна цене исходного сетевого диска. В каталоге зафиксирован
-      базовый HDD (0,0112 ₽/ГиБ·час); SSD 0,0138, универсальный SSD 0,0285, быстрый SSD 0,0602.
+      У Selectel цена снимка равна цене исходного сетевого диска. Здесь указана ставка
+      базового HDD (0,0112 ₽/ГиБ·час); SSD — 0,0138, универсальный SSD — 0,0285,
+      быстрый SSD — 0,0602.

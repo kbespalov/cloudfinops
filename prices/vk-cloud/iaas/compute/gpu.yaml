@@ -45,7 +45,7 @@ spec:
           period: hour
         formula: 1.65 × 60; published minute rate is rounded
         vat: included
-    notes: Цена относится ко всему flavor, а не к одному GPU отдельно.
+    notes: Цена относится ко всей конфигурации, а не к одной GPU отдельно.
   - sku: vk.gpu.a30-1
     name: GPU2-12-112-A30-1
     meter: compute.flavor
@@ -83,7 +83,7 @@ spec:
           period: hour
         formula: 2.30 × 60
         vat: included
-    notes: Цена полного GPU flavor; vCPU, RAM и GPU включены.
+    notes: "Цена конфигурации целиком: vCPU, RAM и GPU включены."
   - sku: vk.gpu.l40s-1
     name: GPU3-16-112-L40S-1
     meter: compute.flavor
@@ -121,7 +121,7 @@ spec:
           period: hour
         formula: 4.02 × 60
         vat: included
-    notes: Цена полного GPU flavor; vCPU, RAM и GPU включены.
+    notes: "Цена конфигурации целиком: vCPU, RAM и GPU включены."
   - sku: vk.gpu.v100-1
     name: GPU1-16-48-V100-1
     meter: compute.flavor
@@ -161,7 +161,7 @@ spec:
           period: hour
         formula: 2.02 × 60
         vat: included
-    notes: Публичный прайс показывает скидку 50%; ставка относится ко всему flavor и уже включает акцию.
+    notes: В публичном прайсе указана скидка 50%; ставка уже со скидкой и относится ко всей конфигурации.
   - sku: vk.gpu.v100s-1
     name: GPU2-24-72-V100S-1
     meter: compute.flavor
@@ -201,7 +201,7 @@ spec:
           period: hour
         formula: 2.26 × 60
         vat: included
-    notes: Публичный прайс показывает скидку 50%; ставка относится ко всему flavor и уже включает акцию.
+    notes: В публичном прайсе указана скидка 50%; ставка уже со скидкой и относится ко всей конфигурации.
   - sku: vk.gpu.a100-40-1
     name: GPU1A-32-96-A100-1
     meter: compute.flavor
@@ -239,7 +239,7 @@ spec:
           period: hour
         formula: 5.27 × 60
         vat: included
-    notes: Цена полного GPU flavor; vCPU, RAM и GPU включены.
+    notes: "Цена конфигурации целиком: vCPU, RAM и GPU включены."
   - sku: vk.gpu.a100-80-1
     name: GPU3-32-192-A100x80-1
     meter: compute.flavor
@@ -277,7 +277,7 @@ spec:
           period: hour
         formula: 5.59 × 60
         vat: included
-    notes: Цена полного GPU flavor; vCPU, RAM и GPU включены.
+    notes: "Цена конфигурации целиком: vCPU, RAM и GPU включены."
   - sku: vk.gpu.h200-1
     name: GPU-44-256-H200-1
     meter: compute.flavor
@@ -315,7 +315,7 @@ spec:
           period: hour
         formula: 18.36 × 60
         vat: included
-    notes: Цена полного GPU flavor; vCPU, RAM и GPU включены.
+    notes: "Цена конфигурации целиком: vCPU, RAM и GPU включены."
   - sku: vk.gpu.h200-8
     name: GPU-240-2048-H200-8
     meter: compute.flavor
@@ -353,7 +353,7 @@ spec:
           period: hour
         formula: 146.85 × 60
         vat: included
-    notes: Цена полного GPU flavor; vCPU, RAM и восемь GPU включены.
+    notes: "Цена конфигурации целиком: vCPU, RAM и восемь GPU включены."
   - sku: vk.gpu.a100-80-2
     name: GPU2-64-384-A100x80-2
     meter: compute.flavor
@@ -391,7 +391,7 @@ spec:
           period: hour
         formula: 11.19 × 60
         vat: included
-    notes: Цена полного GPU flavor; vCPU, RAM и два GPU включены.
+    notes: "Цена конфигурации целиком: vCPU, RAM и два GPU включены."
   - sku: vk.gpu.a100-80-4
     name: GPU3-112-768-A100x80-4
     meter: compute.flavor
@@ -429,7 +429,7 @@ spec:
           period: hour
         formula: 22.38 × 60
         vat: included
-    notes: Цена полного GPU flavor; vCPU, RAM и четыре GPU включены.
+    notes: "Цена конфигурации целиком: vCPU, RAM и четыре GPU включены."
   - sku: vk.gpu.l40s-2
     name: GPU3-32-224-L40S-2
     meter: compute.flavor
@@ -467,7 +467,7 @@ spec:
           period: hour
         formula: 8.03 × 60
         vat: included
-    notes: Цена полного GPU flavor; vCPU, RAM и два GPU включены.
+    notes: "Цена конфигурации целиком: vCPU, RAM и два GPU включены."
   - sku: vk.gpu.l40s-4
     name: GPU3-64-448-L40S-4
     meter: compute.flavor
@@ -505,7 +505,7 @@ spec:
           period: hour
         formula: 16.06 × 60
         vat: included
-    notes: Цена полного GPU flavor; vCPU, RAM и четыре GPU включены.
+    notes: "Цена конфигурации целиком: vCPU, RAM и четыре GPU включены."
   - sku: vk.gpu.a30-2
     name: GPU2-24-224-A30-2
     meter: compute.flavor
@@ -543,7 +543,7 @@ spec:
           period: hour
         formula: 4.60 × 60
         vat: included
-    notes: Цена полного GPU flavor; vCPU, RAM и два GPU включены.
+    notes: "Цена конфигурации целиком: vCPU, RAM и два GPU включены."
   - sku: vk.gpu.a30-4
     name: GPU2-48-448-A30-4
     meter: compute.flavor
@@ -581,7 +581,7 @@ spec:
           period: hour
         formula: 9.20 × 60
         vat: included
-    notes: Цена полного GPU flavor; vCPU, RAM и четыре GPU включены.
+    notes: "Цена конфигурации целиком: vCPU, RAM и четыре GPU включены."
   - sku: vk.gpu.v100-2
     name: GPU1-32-96-V100-2
     meter: compute.flavor
@@ -621,7 +621,7 @@ spec:
           period: hour
         formula: 4.05 × 60
         vat: included
-    notes: Публичный прайс показывает скидку 50%; ставка относится ко всему flavor и уже включает акцию.
+    notes: В публичном прайсе указана скидка 50%; ставка уже со скидкой и относится ко всей конфигурации.
   - sku: vk.gpu.v100-4
     name: GPU1-64-192-V100-4
     meter: compute.flavor
@@ -661,7 +661,7 @@ spec:
           period: hour
         formula: 8.10 × 60
         vat: included
-    notes: Публичный прайс показывает скидку 50%; ставка относится ко всему flavor и уже включает акцию.
+    notes: В публичном прайсе указана скидка 50%; ставка уже со скидкой и относится ко всей конфигурации.
   - sku: vk.gpu.v100s-2
     name: GPU2-48-144-V100S-2
     meter: compute.flavor
@@ -701,7 +701,7 @@ spec:
           period: hour
         formula: 4.52 × 60
         vat: included
-    notes: Публичный прайс показывает скидку 50%; ставка относится ко всему flavor и уже включает акцию.
+    notes: В публичном прайсе указана скидка 50%; ставка уже со скидкой и относится ко всей конфигурации.
   - sku: vk.gpu.v100s-4
     name: GPU2-96-288-V100S-4
     meter: compute.flavor
@@ -741,7 +741,7 @@ spec:
           period: hour
         formula: 9.04 × 60
         vat: included
-    notes: Публичный прайс показывает скидку 50%; ставка относится ко всему flavor и уже включает акцию.
+    notes: В публичном прайсе указана скидка 50%; ставка уже со скидкой и относится ко всей конфигурации.
   - sku: vk.gpu.l4-2
     name: GPU2-32-144-L4-2
     meter: compute.flavor
@@ -779,7 +779,7 @@ spec:
           period: hour
         formula: 3.31 × 60
         vat: included
-    notes: Цена полного GPU flavor; vCPU, RAM и два GPU включены.
+    notes: "Цена конфигурации целиком: vCPU, RAM и два GPU включены."
   - sku: vk.gpu.l4-4
     name: GPU2-64-288-L4-4
     meter: compute.flavor
@@ -817,7 +817,7 @@ spec:
           period: hour
         formula: 6.62 × 60
         vat: included
-    notes: Цена полного GPU flavor; vCPU, RAM и четыре GPU включены.
+    notes: "Цена конфигурации целиком: vCPU, RAM и четыре GPU включены."
   - sku: vk.gpu.a100-40-2
     name: GPU1A-64-192-A100-2
     meter: compute.flavor
@@ -855,7 +855,7 @@ spec:
           period: hour
         formula: 10.56 × 60
         vat: included
-    notes: Цена полного GPU flavor; vCPU, RAM и два GPU включены.
+    notes: "Цена конфигурации целиком: vCPU, RAM и два GPU включены."
   - sku: vk.gpu.a100-40-4
     name: GPU1A-128-384-A100-4
     meter: compute.flavor
@@ -893,7 +893,7 @@ spec:
           period: hour
         formula: 21.12 × 60
         vat: included
-    notes: Цена полного GPU flavor; vCPU, RAM и четыре GPU включены.
+    notes: "Цена конфигурации целиком: vCPU, RAM и четыре GPU включены."
   - sku: vk.vgpu.l4-1q
     name: vGPU-2-8-L4-1Q
     meter: compute.flavor

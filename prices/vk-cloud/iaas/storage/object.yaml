@@ -108,7 +108,7 @@ spec:
         unit: {quantity: request, period: usage}
         vat: included
         byteBasis: not-applicable
-    notes: Официально API не тарифицируется; SKU зафиксирован как 0 ₽ / запрос для сравнения.
+    notes: API-запросы официально не тарифицируются; в каталоге указано 0 ₽ за запрос.
   - sku: vk.object-storage.hotbox.requests.get
     name: Объектное хранилище · Standard · GET
     meter: storage.object.requests
@@ -131,7 +131,7 @@ spec:
         unit: {quantity: request, period: usage}
         vat: included
         byteBasis: not-applicable
-    notes: Официально API не тарифицируется; SKU зафиксирован как 0 ₽ / запрос для сравнения.
+    notes: API-запросы официально не тарифицируются; в каталоге указано 0 ₽ за запрос.
   - sku: vk.object-storage.icebox.requests.put
     name: Объектное хранилище · Cold · PUT
     meter: storage.object.requests
@@ -154,7 +154,7 @@ spec:
         unit: {quantity: request, period: usage}
         vat: included
         byteBasis: not-applicable
-    notes: Официально API не тарифицируется; SKU зафиксирован как 0 ₽ / запрос для сравнения.
+    notes: API-запросы официально не тарифицируются; в каталоге указано 0 ₽ за запрос.
   - sku: vk.object-storage.icebox.requests.get
     name: Объектное хранилище · Cold · GET
     meter: storage.object.requests
@@ -177,4 +177,4 @@ spec:
         unit: {quantity: request, period: usage}
         vat: included
         byteBasis: not-applicable
-    notes: Официально API не тарифицируется; SKU зафиксирован как 0 ₽ / запрос для сравнения.
+    notes: API-запросы официально не тарифицируются; в каталоге указано 0 ₽ за запрос.

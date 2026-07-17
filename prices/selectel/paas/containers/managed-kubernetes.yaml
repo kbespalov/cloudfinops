@@ -82,4 +82,4 @@ spec:
           period: hour
         formula: native hourly master rate
         vat: included
-    notes: Worker-ноды оплачиваются отдельно; зафиксирован публичный выбор ru-9.
+    notes: Worker-ноды оплачиваются отдельно. В каталоге указана ставка для пула ru-9.

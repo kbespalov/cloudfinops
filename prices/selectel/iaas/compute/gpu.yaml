@@ -138,7 +138,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Зафиксированы representative GPU из публичного пула ru-6a; vCPU, RAM и локальные диски оплачиваются отдельно.
+    notes: Ставка для пула ru-6a; vCPU, RAM и локальные диски оплачиваются отдельно.
   - sku: selectel.gpu.a100-80.preemptible
     name: NVIDIA A100 80 ГБ, прерываемая
     meter: compute.gpu
@@ -499,5 +499,5 @@ spec:
         formula: published dedicated monthly rate
         vat: included
     notes: >
-      Выделенный сервер GL8-B300-HGX-25GE (не Cloud GPU). Публичная цена на
-      selectel.ru/prices — 8 000 000 ₽/мес за конфигурацию 8×B300.
+      Выделенный сервер (не облачная GPU-ВМ): конфигурация GL8-B300-HGX-25GE —
+      8×B300, 8 000 000 ₽/мес по публичному прайсу Selectel.

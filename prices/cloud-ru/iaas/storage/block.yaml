@@ -143,5 +143,5 @@ spec:
         formula: native hourly rate
         vat: included
     notes: >
-      Строка «Хранение резервных копий» в PDF тарифов Evolution Compute; в каталоге
-      отображается как «Снимок диска» (единая таксономия storage.snapshot.capacity).
+      В тарифах Evolution Compute — «Хранение резервных копий»; в каталоге отображается
+      как «Снимок диска».

@@ -39,7 +39,7 @@ spec:
           period: hour
         formula: 0.022766 × 60
         vat: included
-    notes: Публично тарифицируется только master vCPU; отдельной ставки master RAM нет.
+    notes: В публичном прайсе тарифицируется только vCPU мастера; отдельной ставки за RAM мастера нет.
   - sku: vk.kubernetes.master-basic-2vcpu.synthetic
     name: Synthetic basic master 2 vCPU
     meter: containers.kubernetes.control-plane
@@ -84,7 +84,10 @@ spec:
           period: hour
         formula: 2 × 1.36596 (master vCPU-hour)
         vat: included
-    notes: Синтетический basic master для сравнения. В публичном прайсе VK Cloud нет master RAM — в bundle только 2 vCPU; сравнение с 2vCPU/4GiB бандлами неполное.
+    notes: >
+      Расчётная конфигурация зонального мастера на 2 vCPU для сравнения. В публичном прайсе
+      VK Cloud нет ставки за RAM мастера, поэтому в расчёт входят только ядра — сравнение
+      с конфигурациями 2 vCPU / 4 ГиБ у других провайдеров неполное.
   - sku: vk.kubernetes.master-ha-2vcpu.synthetic
     name: Synthetic HA master 3×2 vCPU
     meter: containers.kubernetes.control-plane
@@ -129,4 +132,6 @@ spec:
           period: hour
         formula: 3 × 2 × 1.36596 (master vCPU-hour)
         vat: included
-    notes: Синтетический HA-эквивалент как 3×(2 vCPU). Master RAM в публичном прайсе отсутствует.
+    notes: >
+      Расчётная конфигурация отказоустойчивого мастера: 3×2 vCPU. Отдельной ставки за RAM
+      мастера в публичном прайсе VK Cloud нет.
