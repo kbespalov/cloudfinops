@@ -1,7 +1,31 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
-import {COMPUTE_PRESETS, GPU_PRESETS} from '@/lib/calculator/presets';
-import {quoteAllPresets, quotePreset} from '@/lib/calculator/quote';
+import {
+  COMPUTE_PRESETS,
+  GPU_PRESETS,
+  computePresetsByFamily,
+  type ComputePreset,
+  type GpuPreset,
+} from '@/lib/calculator/presets';
+import {
+  buildQuotesByPeriod,
+  quoteAllPresets,
+  quotePreset,
+  toViewQuote,
+} from '@/lib/calculator/quote';
+
+const MONTH_HOURS = 720;
+const ALL_PRESETS = [...COMPUTE_PRESETS, ...GPU_PRESETS];
+
+function isPreemptibleMeter(name: string, purchaseModel: unknown): boolean {
+  return /preempt/i.test(String(purchaseModel ?? '')) || /preempt/i.test(name);
+}
+
+function sharePercent(meter: {dimensions: Record<string, unknown>}): number | null {
+  const share = String(meter.dimensions.guaranteedVcpuShare ?? '');
+  const pct = share.match(/(\d+)\s*%/);
+  return pct ? Number(pct[1]) : null;
+}
 
 describe('calculator quote arbitration', () => {
   it('quotes every compute preset with at least one provider', () => {
@@ -52,22 +76,166 @@ describe('calculator quote arbitration', () => {
     }
   });
 
+  it('prefers SSD/NVMe disk media when available in the region', () => {
+    for (const preset of COMPUTE_PRESETS) {
+      const result = quotePreset(preset, 'month');
+      for (const q of result.quotes) {
+        const disk = q.meters[2];
+        if (!disk) continue;
+        const hay =
+          `${disk.dimensions.performanceTier || ''} ${disk.dimensions.storageMedia || ''} ${disk.name}`.toLowerCase();
+        if (/hdd/.test(hay) && !/ssd|nvme/.test(hay)) {
+          assert.fail(`${preset.id}/${q.providerName}: picked HDD without SSD fallback check`);
+        }
+      }
+    }
+  });
+
   it('excludes fractional-guarantee cores from low-cost best meters', () => {
     const lowCost = COMPUTE_PRESETS.filter((p) => p.family === 'low-cost');
     assert.ok(lowCost.length >= 1);
     for (const preset of lowCost) {
       const result = quotePreset(preset, 'month');
       for (const q of result.quotes) {
+        const pct = sharePercent(q.meters[0]!);
+        if (pct != null) {
+          assert.ok(pct >= 100, `${preset.id}/${q.providerName}: fractional core ${pct}%`);
+        }
+      }
+    }
+  });
+
+  it('uses dedicated/on-demand cores for non-low-cost compute families', () => {
+    const onDemandFamilies = COMPUTE_PRESETS.filter((p) => p.family !== 'low-cost');
+    for (const preset of onDemandFamilies) {
+      const result = quotePreset(preset, 'month');
+      for (const q of result.quotes) {
         const vcpu = q.meters[0]!;
-        const share = String(vcpu.dimensions.guaranteedVcpuShare ?? '');
-        const pct = share.match(/(\d+)\s*%/);
-        if (pct) {
+        assert.ok(
+          !isPreemptibleMeter(vcpu.name, vcpu.dimensions.purchaseModel ?? vcpu.purchaseModel),
+          `${preset.id}/${q.providerName}: preemptible vCPU in ${preset.family}`,
+        );
+        // Shared oversubscription (1:N / burst) must not win general/high tiers.
+        assert.ok(
+          !/\b1\s*:\s*[2-9]\d*\b/i.test(vcpu.name),
+          `${preset.id}/${q.providerName}: shared 1:N vCPU in ${preset.family}`,
+        );
+        const pct = sharePercent(vcpu);
+        if (pct != null) {
+          assert.equal(pct, 100, `${preset.id}/${q.providerName}: expected 100% share, got ${pct}%`);
+        }
+      }
+    }
+  });
+
+  it('never quotes meters whose notes mark availability as unconfirmed', () => {
+    for (const preset of ALL_PRESETS) {
+      const result = quotePreset(preset, 'month');
+      const allQuotes = [...result.quotes, ...result.alternateQuotes];
+      for (const q of allQuotes) {
+        for (const meter of q.meters) {
+          const note = String(meter.notes ?? '');
           assert.ok(
-            Number(pct[1]) >= 100,
-            `${preset.id}/${q.providerName}: fractional core ${share}`,
+            !/не\s+подтвержд|not\s+confirmed|недоступ|снят[аоы]?\s+с/i.test(note),
+            `${preset.id}/${q.providerName}: unconfirmed meter "${meter.name}"`,
           );
         }
       }
+    }
+  });
+
+  it('low-cost is cheaper than general for the same 4/8 shape', () => {
+    const low = COMPUTE_PRESETS.find((p) => p.id === 'low-4-8');
+    const gen = COMPUTE_PRESETS.find((p) => p.id === 'gen-4-8');
+    assert.ok(low && gen);
+    const lowBest = quotePreset(low, 'month').best!;
+    const genBest = quotePreset(gen, 'month').best!;
+    assert.ok(
+      lowBest.total < genBest.total,
+      `expected low-cost ${lowBest.total} < general ${genBest.total}`,
+    );
+  });
+
+  it('larger compute presets cost at least as much as smaller ones per provider', () => {
+    for (const family of ['general', 'high-cpu', 'high-memory', 'low-cost'] as const) {
+      const presets = computePresetsByFamily(family);
+      assert.ok(presets.length >= 2);
+      const byProvider = new Map<string, number[]>();
+      for (const preset of presets) {
+        for (const q of quotePreset(preset, 'month').quotes) {
+          const arr = byProvider.get(q.provider) ?? [];
+          arr.push(q.total);
+          byProvider.set(q.provider, arr);
+        }
+      }
+      for (const [provider, totals] of byProvider) {
+        // Only compare when the provider quoted every size in the family.
+        if (totals.length !== presets.length) continue;
+        for (let i = 1; i < totals.length; i++) {
+          assert.ok(
+            totals[i]! + 0.01 >= totals[i - 1]!,
+            `${family}/${provider}: size step not monotonic ${totals[i - 1]} -> ${totals[i]}`,
+          );
+        }
+      }
+    }
+  });
+
+  it('scales period amounts with 720h month (hour ↔ month ↔ year)', () => {
+    const sample: ComputePreset = COMPUTE_PRESETS.find((p) => p.id === 'gen-4-8')!;
+    const hour = quotePreset(sample, 'unit');
+    const month = quotePreset(sample, 'month');
+    const year = quotePreset(sample, 'year');
+    assert.ok(hour.best && month.best && year.best);
+
+    for (const provider of month.quotes.map((q) => q.provider)) {
+      const h = hour.quotes.find((q) => q.provider === provider);
+      const m = month.quotes.find((q) => q.provider === provider);
+      const y = year.quotes.find((q) => q.provider === provider);
+      if (!h || !m || !y) continue;
+      assert.ok(
+        Math.abs(h.total * MONTH_HOURS - m.total) / m.total < 0.001,
+        `${provider}: hour*720 != month`,
+      );
+      assert.ok(Math.abs(m.total * 12 - y.total) / y.total < 0.001, `${provider}: month*12 != year`);
+    }
+  });
+
+  it('compute notes describe the actual chosen vCPU class', () => {
+    for (const preset of COMPUTE_PRESETS) {
+      const result = quotePreset(preset, 'month');
+      for (const q of result.quotes) {
+        assert.ok(q.note, `${preset.id}/${q.providerName}: missing note`);
+        const vcpu = q.meters[0]!;
+        const preemptible = isPreemptibleMeter(
+          vcpu.name,
+          vcpu.dimensions.purchaseModel ?? vcpu.purchaseModel,
+        );
+        if (preemptible) {
+          assert.match(q.note!, /Preemptible/i);
+        } else if (/\b1\s*:\s*[2-9]\d*\b/i.test(vcpu.name)) {
+          assert.match(q.note!, /Shared/i);
+        } else if (preset.family === 'low-cost') {
+          assert.match(q.note!, /On-demand|выделен/i);
+        } else {
+          assert.match(q.note!, /On-demand|выделен/i);
+        }
+      }
+    }
+  });
+
+  it('compute parts include vCPU, RAM and disk with expected labels', () => {
+    const preset = COMPUTE_PRESETS.find((p) => p.id === 'gen-8-16')!;
+    const result = quotePreset(preset, 'month');
+    for (const q of result.quotes) {
+      assert.deepEqual(
+        q.parts.map((p) => p.id),
+        ['vcpu', 'ram', 'disk'],
+      );
+      assert.equal(q.parts[0]!.label, '8 vCPU');
+      assert.equal(q.parts[1]!.label, '16 GiB RAM');
+      assert.equal(q.parts[2]!.label, '100 GiB SSD');
+      assert.equal(q.scope, 'compute');
     }
   });
 
@@ -102,11 +270,82 @@ describe('calculator quote arbitration', () => {
     }
   });
 
-  it('breakdown parts sum to the quote total', () => {
-    const all = [...COMPUTE_PRESETS, ...GPU_PRESETS];
-    for (const preset of all) {
+  it('matches GPU model family without L40/H200 cross-contamination', () => {
+    const cases: Array<{presetId: string; must: RegExp; mustNot: RegExp}> = [
+      {presetId: 'gpu-l4-1', must: /\bL4\b/i, mustNot: /L40/i},
+      {presetId: 'gpu-h100-1', must: /H100/i, mustNot: /H200/i},
+      {presetId: 'gpu-h200-1', must: /H200/i, mustNot: /H100(?!\d)/i},
+      {presetId: 'gpu-a100-1', must: /A100/i, mustNot: /H100|H200|L4/i},
+    ];
+    for (const {presetId, must, mustNot} of cases) {
+      const preset = GPU_PRESETS.find((p) => p.id === presetId) as GpuPreset;
       const result = quotePreset(preset, 'month');
-      for (const q of result.quotes) {
+      const all = [...result.quotes, ...result.alternateQuotes];
+      assert.ok(all.length >= 1, `${presetId}: no GPU quotes`);
+      for (const q of all) {
+        const model = String(q.meters[0]!.dimensions.gpuModel || q.meters[0]!.name);
+        assert.match(model, must, `${presetId}/${q.providerName}: ${model}`);
+        assert.doesNotMatch(model, mustNot, `${presetId}/${q.providerName}: ${model}`);
+        assert.ok(!/vGPU/i.test(model), `${presetId}: vGPU leaked`);
+      }
+    }
+  });
+
+  it('respects gpuCount for 1× and 8× H200 presets', () => {
+    const one = GPU_PRESETS.find((p) => p.id === 'gpu-h200-1')!;
+    const eight = GPU_PRESETS.find((p) => p.id === 'gpu-h200-8')!;
+    const oneResult = quotePreset(one, 'month');
+    const eightResult = quotePreset(eight, 'month');
+    assert.ok(oneResult.best);
+    assert.ok(eightResult.best);
+
+    for (const q of [...oneResult.quotes, ...oneResult.alternateQuotes]) {
+      const count = q.meters[0]!.dimensions.gpuCount;
+      assert.equal(count, 1, `${q.providerName}: expected gpuCount=1, got ${count}`);
+    }
+    for (const q of [...eightResult.quotes, ...eightResult.alternateQuotes]) {
+      const count = q.meters[0]!.dimensions.gpuCount;
+      assert.equal(count, 8, `${q.providerName}: expected gpuCount=8, got ${count}`);
+    }
+    assert.ok(
+      eightResult.best!.total > oneResult.best!.total,
+      '8× H200 should cost more than 1× H200 best offer',
+    );
+  });
+
+  it('keeps one primary quote per provider (no duplicate providers)', () => {
+    for (const preset of ALL_PRESETS) {
+      const result = quotePreset(preset, 'month');
+      const providers = result.quotes.map((q) => q.provider);
+      assert.equal(
+        providers.length,
+        new Set(providers).size,
+        `${preset.id}: duplicate providers in primary list`,
+      );
+      const altProviders = result.alternateQuotes.map((q) => `${q.scope}:${q.provider}`);
+      assert.equal(
+        altProviders.length,
+        new Set(altProviders).size,
+        `${preset.id}: duplicate providers in alternate list`,
+      );
+    }
+  });
+
+  it('GPU on-demand primary quotes exclude preemptible purchase models', () => {
+    for (const preset of GPU_PRESETS) {
+      const result = quotePreset(preset, 'month');
+      for (const q of [...result.quotes, ...result.alternateQuotes]) {
+        const m = q.meters[0]!;
+        const pm = String(m.purchaseModel || m.dimensions.purchaseModel || 'on-demand');
+        assert.ok(!/preempt/i.test(pm), `${preset.id}/${q.providerName}: preemptible GPU ${pm}`);
+      }
+    }
+  });
+
+  it('breakdown parts sum to the quote total', () => {
+    for (const preset of ALL_PRESETS) {
+      const result = quotePreset(preset, 'month');
+      for (const q of [...result.quotes, ...result.alternateQuotes]) {
         const sum = q.parts.reduce((s, p) => s + p.amount, 0);
         assert.ok(
           Math.abs(sum - q.total) < 0.02,
@@ -116,11 +355,58 @@ describe('calculator quote arbitration', () => {
     }
   });
 
+  it('breakdown percentages land near 100% after rounding', () => {
+    for (const preset of COMPUTE_PRESETS) {
+      const result = quotePreset(preset, 'month');
+      for (const q of result.quotes) {
+        if (q.total <= 0) continue;
+        const pctSum = q.parts.reduce((s, p) => s + Math.round((p.amount / q.total) * 100), 0);
+        assert.ok(
+          pctSum >= 98 && pctSum <= 102,
+          `${preset.id}/${q.providerName}: pct sum ${pctSum}`,
+        );
+      }
+    }
+  });
+
   it('quoteAllPresets covers every preset id once', () => {
     const map = quoteAllPresets('month');
-    for (const preset of [...COMPUTE_PRESETS, ...GPU_PRESETS]) {
+    for (const preset of ALL_PRESETS) {
       assert.ok(map.has(preset.id), `missing ${preset.id}`);
     }
-    assert.equal(map.size, COMPUTE_PRESETS.length + GPU_PRESETS.length);
+    assert.equal(map.size, ALL_PRESETS.length);
+  });
+
+  it('toViewQuote strips meters but keeps totals/scopes', () => {
+    const preset = COMPUTE_PRESETS[0]!;
+    const result = quotePreset(preset, 'month');
+    const view = toViewQuote(result);
+    assert.equal(view.presetId, preset.id);
+    assert.equal(view.best?.total, result.best?.total);
+    assert.equal(view.quotes.length, result.quotes.length);
+    assert.ok(!('meters' in (view.best as object)));
+    assert.equal(view.best?.provider, result.best?.provider);
+  });
+
+  it('buildQuotesByPeriod returns unit/month/year maps for all presets', () => {
+    const byPeriod = buildQuotesByPeriod();
+    for (const period of ['unit', 'month', 'year'] as const) {
+      assert.ok(byPeriod[period]);
+      assert.equal(Object.keys(byPeriod[period]).length, ALL_PRESETS.length);
+      for (const preset of ALL_PRESETS) {
+        const view = byPeriod[period][preset.id];
+        assert.ok(view, `missing ${period}/${preset.id}`);
+        assert.equal(view.presetId, preset.id);
+        if (view.best) {
+          assert.ok(view.best.total > 0);
+          assert.ok(view.best.parts.length >= 1);
+        }
+      }
+    }
+    // Month totals should dominate unit totals for the same preset/provider.
+    const sampleId = 'gen-4-8';
+    const unitBest = byPeriod.unit[sampleId]!.best!;
+    const monthBest = byPeriod.month[sampleId]!.best!;
+    assert.ok(monthBest.total > unitBest.total * 100);
   });
 });
