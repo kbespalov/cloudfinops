@@ -9,7 +9,7 @@ metadata:
 spec:
   meters:
   - sku: vk.object-storage.hotbox
-    name: Hotbox
+    name: Объектное хранилище · Standard
     meter: storage.object.capacity
     status: available
     pricingMode: unit
@@ -45,10 +45,11 @@ spec:
           period: month
         formula: published 30-day rate
         vat: included
-    notes: Hotbox соответствует API-классу STANDARD; 2,28 ₽ опубликованы за 30 дней, параллельно указана
-      поминутная ставка 0,000053 ₽/GB.
+    notes: >
+      Hotbox = STANDARD. API-запросы официально не тарифицируются
+      (см. SKU операций ниже со ставкой 0 ₽). Тарифицируются хранение и исходящий трафик.
   - sku: vk.object-storage.icebox
-    name: Icebox
+    name: Объектное хранилище · Cold
     meter: storage.object.capacity
     status: available
     pricingMode: unit
@@ -78,3 +79,102 @@ spec:
           period: month
         formula: published 30-day rate
         vat: included
+    notes: >
+      Icebox = COLD. API-запросы официально не тарифицируются
+      (см. SKU операций ниже со ставкой 0 ₽).
+
+  # API requests — explicitly priced at 0 ₽ for catalog parity.
+  # Source: https://cloud.vk.com/docs/ru/storage/s3/tariffication
+  # «Не тарифицируется → Использование API»
+  - sku: vk.object-storage.hotbox.requests.put
+    name: Объектное хранилище · Standard · PUT
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Москва / ru-msk
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs: [vk.s3-rules]
+    dimensions:
+      storageClass: standard
+      storageClassNative: Hotbox
+      operation: PUT
+      nativeBillingStepRequests: 10000
+      nativeAmountPerStep: '0'
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Официально API не тарифицируется; SKU зафиксирован как 0 ₽ / запрос для сравнения.
+  - sku: vk.object-storage.hotbox.requests.get
+    name: Объектное хранилище · Standard · GET
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Москва / ru-msk
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs: [vk.s3-rules]
+    dimensions:
+      storageClass: standard
+      storageClassNative: Hotbox
+      operation: GET
+      nativeBillingStepRequests: 10000
+      nativeAmountPerStep: '0'
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Официально API не тарифицируется; SKU зафиксирован как 0 ₽ / запрос для сравнения.
+  - sku: vk.object-storage.icebox.requests.put
+    name: Объектное хранилище · Cold · PUT
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs: [vk.s3-rules]
+    dimensions:
+      storageClass: cold
+      storageClassNative: Icebox
+      operation: PUT
+      nativeBillingStepRequests: 10000
+      nativeAmountPerStep: '0'
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Официально API не тарифицируется; SKU зафиксирован как 0 ₽ / запрос для сравнения.
+  - sku: vk.object-storage.icebox.requests.get
+    name: Объектное хранилище · Cold · GET
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs: [vk.s3-rules]
+    dimensions:
+      storageClass: cold
+      storageClassNative: Icebox
+      operation: GET
+      nativeBillingStepRequests: 10000
+      nativeAmountPerStep: '0'
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Официально API не тарифицируется; SKU зафиксирован как 0 ₽ / запрос для сравнения.

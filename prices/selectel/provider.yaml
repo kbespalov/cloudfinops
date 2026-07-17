@@ -24,6 +24,7 @@ spec:
     - network.traffic.egress
     - storage.block.capacity
     - storage.object.capacity
+    - storage.object.requests
   - id: selectel.prices
     title: Тарифы и цены на услуги
     url: https://selectel.ru/prices/
@@ -41,6 +42,7 @@ spec:
     - network.traffic.egress
     - storage.block.capacity
     - storage.object.capacity
+    - storage.object.requests
   - id: selectel.compute-rules
     title: Модель оплаты облачного сервера
     url: https://docs.selectel.ru/cloud-servers/about/payment/
@@ -72,5 +74,6 @@ spec:
     priority: 2
     covers:
     - storage.object.capacity
+    - storage.object.requests
     - network.traffic.ingress
     - network.traffic.egress

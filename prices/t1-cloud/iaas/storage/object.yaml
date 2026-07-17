@@ -9,7 +9,7 @@ metadata:
 spec:
   meters:
   - sku: t1.object-storage.single-zone
-    name: Однозонное хранение
+    name: Объектное хранилище · Standard · Single-zone
     meter: storage.object.capacity
     status: available
     pricingMode: unit
@@ -51,7 +51,7 @@ spec:
         vat: included
     notes: Операции и скачивание тарифицируются отдельно.
   - sku: t1.object-storage.multi-zone
-    name: Мультизональное хранение
+    name: Объектное хранилище · Standard · Multi-zone
     meter: storage.object.capacity
     status: available
     pricingMode: unit

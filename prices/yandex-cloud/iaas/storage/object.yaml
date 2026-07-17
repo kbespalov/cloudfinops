@@ -9,7 +9,7 @@ metadata:
 spec:
   meters:
   - sku: yc.object-storage.standard
-    name: STANDARD
+    name: Объектное хранилище · Standard
     meter: storage.object.capacity
     status: available
     pricingMode: unit
@@ -47,7 +47,7 @@ spec:
         vat: included
     notes: Ставка подтверждается примером тарификации; первый 1 ГиБ стандартного класса в месяц не тарифицируется.
   - sku: yc.object-storage.cold
-    name: COLD
+    name: Объектное хранилище · Cold
     meter: storage.object.capacity
     status: available
     pricingMode: unit
@@ -79,7 +79,7 @@ spec:
         vat: included
     notes: Тариф хранения не включает операции и исходящий трафик.
   - sku: yc.object-storage.ice
-    name: ICE
+    name: Объектное хранилище · Ice
     meter: storage.object.capacity
     status: available
     pricingMode: unit
@@ -184,3 +184,145 @@ spec:
         vat: included
         byteBasis: binary
     notes: Помимо хранения тарифицируется мониторинг количества объектов.
+
+  # Operations (official Yandex Cloud pricing page, ₽ VAT included).
+  # Write family priced per 1k ops; read family per 10k. Catalog stores ₽/request;
+  # UI normalizes to ₽ / 10_000 requests.
+  - sku: yc.object-storage.standard.requests.put
+    name: Объектное хранилище · Standard · PUT
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-04-30'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.object-storage
+    dimensions:
+      storageClass: standard
+      operation: PUT
+      nativeBillingStepRequests: 1000
+      nativeAmountPerStep: '0.5692'
+    pricing:
+      rate:
+        amount: '0.0005692'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Официально 0,5692 ₽ за 1 тыс. операций PUT/POST/PATCH/LIST (после free tier).
+  - sku: yc.object-storage.standard.requests.get
+    name: Объектное хранилище · Standard · GET
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-04-30'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.object-storage
+    dimensions:
+      storageClass: standard
+      operation: GET
+      nativeBillingStepRequests: 10000
+      nativeAmountPerStep: '0.46'
+    pricing:
+      rate:
+        amount: '0.000046'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Официально 0,46 ₽ за 10 тыс. операций GET/HEAD/OPTIONS (после free tier).
+  - sku: yc.object-storage.cold.requests.put
+    name: Объектное хранилище · Cold · PUT
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-04-30'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.object-storage
+    dimensions:
+      storageClass: cold
+      operation: PUT
+      nativeBillingStepRequests: 1000
+      nativeAmountPerStep: '1.39'
+    pricing:
+      rate:
+        amount: '0.00139'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Официально 1,39 ₽ за 1 тыс. операций PUT/POST/PATCH/LIST.
+  - sku: yc.object-storage.cold.requests.get
+    name: Объектное хранилище · Cold · GET
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-04-30'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.object-storage
+    dimensions:
+      storageClass: cold
+      operation: GET
+      nativeBillingStepRequests: 10000
+      nativeAmountPerStep: '1.15'
+    pricing:
+      rate:
+        amount: '0.000115'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Официально 1,15 ₽ за 10 тыс. операций GET/HEAD/OPTIONS.
+  - sku: yc.object-storage.ice.requests.put
+    name: Объектное хранилище · Ice · PUT
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-04-30'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.object-storage
+    dimensions:
+      storageClass: ice
+      operation: PUT
+      nativeBillingStepRequests: 1000
+      nativeAmountPerStep: '2.79'
+    pricing:
+      rate:
+        amount: '0.00279'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Официально 2,79 ₽ за 1 тыс. операций PUT/POST/PATCH/LIST.
+  - sku: yc.object-storage.ice.requests.get
+    name: Объектное хранилище · Ice · GET
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-04-30'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.object-storage
+    dimensions:
+      storageClass: ice
+      operation: GET
+      nativeBillingStepRequests: 10000
+      nativeAmountPerStep: '2.3'
+    pricing:
+      rate:
+        amount: '0.00023'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Официально 2,3 ₽ за 10 тыс. операций GET/HEAD/OPTIONS.

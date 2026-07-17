@@ -58,6 +58,7 @@ spec:
     priority: 2
     covers:
     - storage.object.capacity
+    - storage.object.requests
     - network.traffic.ingress
     - network.traffic.egress
   - id: vk.network-rules

@@ -282,3 +282,277 @@ spec:
           period: hour
         formula: native hourly rate
         vat: included
+
+  # Intel Cascade Lake (standard-v2) — from https://yandex.cloud/ru/docs/compute/pricing
+  - sku: yc.compute.cascade-lake-100.vcpu
+    name: Intel Cascade Lake, 100% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-04-30'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.compute
+    dimensions:
+      platform: Intel Cascade Lake
+      cpuPlatformFamily: intel-cascade-lake
+      cpuPlatformNative: Intel Cascade Lake
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      serviceId: dn22pas77ftg9h3f2djj
+    pricing:
+      rate:
+        amount: '1.41'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '1.41'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.cascade-lake.ram
+    name: Intel Cascade Lake, RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-04-30'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.compute
+    dimensions:
+      platform: Intel Cascade Lake
+      cpuPlatformFamily: intel-cascade-lake
+      cpuPlatformNative: Intel Cascade Lake
+      purchaseModel: on-demand
+      serviceId: dn22pas77ftg9h3f2djj
+    pricing:
+      rate:
+        amount: '0.3676'
+        currency: RUB
+        unit: {quantity: GiB-RAM, period: hour}
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.3676'
+        unit: {currency: RUB, quantity: GiB-RAM, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.cascade-lake-20.vcpu
+    name: Intel Cascade Lake, 20% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-04-30'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: intel-cascade-lake
+      cpuPlatformNative: Intel Cascade Lake
+      guaranteedVcpuShare: 20%
+      purchaseModel: on-demand
+    pricing:
+      rate:
+        amount: '0.58'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.58'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.cascade-lake-50.vcpu
+    name: Intel Cascade Lake, 50% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-04-30'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: intel-cascade-lake
+      cpuPlatformNative: Intel Cascade Lake
+      guaranteedVcpuShare: 50%
+      purchaseModel: on-demand
+    pricing:
+      rate:
+        amount: '0.85'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.85'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.cascade-lake-5.vcpu
+    name: Intel Cascade Lake, 5% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-04-30'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: intel-cascade-lake
+      cpuPlatformNative: Intel Cascade Lake
+      guaranteedVcpuShare: 5%
+      purchaseModel: on-demand
+    pricing:
+      rate:
+        amount: '0.1897'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.1897'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.cascade-lake-20.preemptible-vcpu
+    name: Intel Cascade Lake, 20% preemptible vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-04-30'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: intel-cascade-lake
+      cpuPlatformNative: Intel Cascade Lake
+      guaranteedVcpuShare: 20%
+      purchaseModel: preemptible
+    pricing:
+      rate:
+        amount: '0.1897'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.1897'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.cascade-lake-50.preemptible-vcpu
+    name: Intel Cascade Lake, 50% preemptible vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-04-30'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: intel-cascade-lake
+      cpuPlatformNative: Intel Cascade Lake
+      guaranteedVcpuShare: 50%
+      purchaseModel: preemptible
+    pricing:
+      rate:
+        amount: '0.26'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.26'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.cascade-lake-100.preemptible-vcpu
+    name: Intel Cascade Lake, 100% preemptible vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-04-30'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: intel-cascade-lake
+      cpuPlatformNative: Intel Cascade Lake
+      guaranteedVcpuShare: 100%
+      purchaseModel: preemptible
+    pricing:
+      rate:
+        amount: '0.3794'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.3794'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.cascade-lake-5.preemptible-vcpu
+    name: Intel Cascade Lake, 5% preemptible vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-04-30'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: intel-cascade-lake
+      cpuPlatformNative: Intel Cascade Lake
+      guaranteedVcpuShare: 5%
+      purchaseModel: preemptible
+    pricing:
+      rate:
+        amount: '0.1185'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.1185'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.cascade-lake.preemptible-ram
+    name: Intel Cascade Lake, preemptible RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-04-30'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: intel-cascade-lake
+      cpuPlatformNative: Intel Cascade Lake
+      purchaseModel: preemptible
+    pricing:
+      rate:
+        amount: '0.083'
+        currency: RUB
+        unit: {quantity: GiB-RAM, period: hour}
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.083'
+        unit: {currency: RUB, quantity: GiB-RAM, period: hour}
+        formula: native hourly rate
+        vat: included

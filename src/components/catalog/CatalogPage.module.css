@@ -1,0 +1,134 @@
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 24px 80px;
+}
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.controlsPrimary {
+  width: 100%;
+}
+
+.search {
+  flex: 1 1 auto;
+  min-width: 220px;
+}
+
+.searchIcon {
+  display: inline-flex;
+  align-items: center;
+  padding-inline-start: 6px;
+}
+
+.controlSelect {
+  width: 180px;
+  flex: 0 0 auto;
+}
+
+.resetButton {
+  flex: 0 0 auto;
+  min-width: 88px;
+}
+
+/* Fixed slot so table top doesn't jump when facets appear/disappear */
+.facetRow {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: 36px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+}
+
+.facetControl {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.facetLabel {
+  flex: 0 0 auto;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.facetOption {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tableCard {
+  border: 1px solid var(--g-color-line-generic);
+  border-radius: var(--g-border-radius-l);
+  overflow: hidden;
+  background: var(--g-color-base-background);
+}
+
+.tableWrap {
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+
+.tableWrap :global(table) {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.tableWrap tbody tr {
+  cursor: pointer;
+}
+
+.nameCol {
+  width: 340px;
+  max-width: 340px;
+}
+
+.providerCol {
+  width: 130px;
+  max-width: 130px;
+}
+
+.specsCol {
+  width: 220px;
+  max-width: 220px;
+}
+
+.priceCol {
+  width: 140px;
+  max-width: 140px;
+}
+
+.priceCell {
+  display: block;
+  width: 100%;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  white-space: nowrap;
+  font-family: var(--g-font-family-monospace);
+}
+
+.numCell {
+  display: block;
+  width: 100%;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  white-space: nowrap;
+}
+
+.pager {
+  padding: 12px 16px;
+  border-top: 1px solid var(--g-color-line-generic);
+}

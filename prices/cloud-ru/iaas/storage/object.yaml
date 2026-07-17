@@ -9,7 +9,7 @@ metadata:
 spec:
   meters:
   - sku: cloudru.object-storage.standard
-    name: Стандартный класс хранения
+    name: Объектное хранилище · Standard
     meter: storage.object.capacity
     status: available
     pricingMode: unit
@@ -50,7 +50,7 @@ spec:
     notes: Действующая ставка взята из тарифного PDF; 15 ГБ бесплатного объема подтверждены правилами
       тарификации.
   - sku: cloudru.object-storage.single-zone
-    name: Однозонный класс хранения
+    name: Объектное хранилище · Single-zone
     meter: storage.object.capacity
     status: available
     pricingMode: unit
@@ -74,7 +74,7 @@ spec:
         vat: included
         byteBasis: binary
   - sku: cloudru.object-storage.cold
-    name: Холодный класс хранения
+    name: Объектное хранилище · Cold
     meter: storage.object.capacity
     status: available
     pricingMode: unit
@@ -99,7 +99,7 @@ spec:
         vat: included
         byteBasis: binary
   - sku: cloudru.object-storage.ice
-    name: Ледяной класс хранения
+    name: Объектное хранилище · Ice
     meter: storage.object.capacity
     status: available
     pricingMode: unit
@@ -123,3 +123,176 @@ spec:
           period: month
         vat: included
         byteBasis: binary
+
+  # Operations — Evolution Object Storage tariff PDF 260619 (₽ with VAT).
+  # Native pack is 1 000 ops for all verbs; catalog stores ₽/request, UI shows /10k.
+  - sku: cloudru.object-storage.standard.requests.put
+    name: Объектное хранилище · Standard · PUT
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-19'
+    checkedAt: '2026-07-13'
+    sourceRefs: [cloudru.s3-pdf, cloudru.s3-rules]
+    dimensions:
+      storageClass: standard
+      operation: PUT
+      nativeBillingStepRequests: 1000
+      nativeAmountPerStep: '0.1098'
+    pricing:
+      rate:
+        amount: '0.0001098'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: PDF 0,1098 ₽ / 1 000 PUT (с НДС); LIST/POST по той же ставке.
+  - sku: cloudru.object-storage.standard.requests.get
+    name: Объектное хранилище · Standard · GET
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-19'
+    checkedAt: '2026-07-13'
+    sourceRefs: [cloudru.s3-pdf, cloudru.s3-rules]
+    dimensions:
+      storageClass: standard
+      operation: GET
+      nativeBillingStepRequests: 1000
+      nativeAmountPerStep: '0.03294'
+    pricing:
+      rate:
+        amount: '0.00003294'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: PDF 0,03294 ₽ / 1 000 GET (с НДС); HEAD по той же ставке.
+  - sku: cloudru.object-storage.cold.requests.put
+    name: Объектное хранилище · Cold · PUT
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-19'
+    checkedAt: '2026-07-13'
+    sourceRefs: [cloudru.s3-pdf, cloudru.s3-rules]
+    dimensions:
+      storageClass: cold
+      operation: PUT
+      nativeBillingStepRequests: 1000
+      nativeAmountPerStep: '0.549'
+    pricing:
+      rate:
+        amount: '0.000549'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.object-storage.cold.requests.get
+    name: Объектное хранилище · Cold · GET
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-19'
+    checkedAt: '2026-07-13'
+    sourceRefs: [cloudru.s3-pdf, cloudru.s3-rules]
+    dimensions:
+      storageClass: cold
+      operation: GET
+      nativeBillingStepRequests: 1000
+      nativeAmountPerStep: '0.0549'
+    pricing:
+      rate:
+        amount: '0.0000549'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.object-storage.ice.requests.put
+    name: Объектное хранилище · Ice · PUT
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-19'
+    checkedAt: '2026-07-13'
+    sourceRefs: [cloudru.s3-pdf, cloudru.s3-rules]
+    dimensions:
+      storageClass: ice
+      operation: PUT
+      nativeBillingStepRequests: 1000
+      nativeAmountPerStep: '0.549'
+    pricing:
+      rate:
+        amount: '0.000549'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.object-storage.ice.requests.get
+    name: Объектное хранилище · Ice · GET
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-19'
+    checkedAt: '2026-07-13'
+    sourceRefs: [cloudru.s3-pdf, cloudru.s3-rules]
+    dimensions:
+      storageClass: ice
+      operation: GET
+      nativeBillingStepRequests: 1000
+      nativeAmountPerStep: '0.0549'
+    pricing:
+      rate:
+        amount: '0.0000549'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.object-storage.single-zone.requests.put
+    name: Объектное хранилище · Single-zone · PUT
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-19'
+    checkedAt: '2026-07-13'
+    sourceRefs: [cloudru.s3-pdf, cloudru.s3-rules]
+    dimensions:
+      storageClass: single-zone
+      operation: PUT
+      nativeBillingStepRequests: 1000
+      nativeAmountPerStep: '0.1098'
+    pricing:
+      rate:
+        amount: '0.0001098'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.object-storage.single-zone.requests.get
+    name: Объектное хранилище · Single-zone · GET
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-19'
+    checkedAt: '2026-07-13'
+    sourceRefs: [cloudru.s3-pdf, cloudru.s3-rules]
+    dimensions:
+      storageClass: single-zone
+      operation: GET
+      nativeBillingStepRequests: 1000
+      nativeAmountPerStep: '0.03294'
+    pricing:
+      rate:
+        amount: '0.00003294'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable

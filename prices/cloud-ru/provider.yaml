@@ -81,6 +81,7 @@ spec:
     priority: 1
     covers:
     - storage.object.capacity
+    - storage.object.requests
     - network.traffic.ingress
     - network.traffic.egress
   - id: cloudru.s3-pdf
@@ -92,5 +93,6 @@ spec:
     documentVersion: '260619'
     covers:
     - storage.object.capacity
+    - storage.object.requests
     - network.traffic.ingress
     - network.traffic.egress

@@ -1,0 +1,106 @@
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 20px 24px 80px;
+}
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.facetRow {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: 36px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.facetControl {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.facetLabel {
+  flex: 0 0 auto;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.feed {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--g-color-line-generic);
+  border-radius: var(--g-border-radius-l);
+  background: var(--g-color-base-background);
+  overflow: hidden;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 16px 20px;
+  border: none;
+  border-bottom: 1px solid var(--g-color-line-generic);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.item:last-child {
+  border-bottom: none;
+}
+
+.item:hover {
+  background: var(--g-color-base-simple-hover);
+}
+
+.item:focus-visible {
+  outline: 2px solid var(--g-color-line-brand);
+  outline-offset: -2px;
+}
+
+.itemBody {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.itemMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.itemTitle {
+  margin: 0;
+}
+
+.itemSummary {
+  max-width: 72ch;
+}
+
+.itemTags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.itemChevron {
+  flex: 0 0 auto;
+  color: var(--g-color-text-secondary);
+  opacity: 0.7;
+}

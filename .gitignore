@@ -3,6 +3,9 @@
 *.swo
 .idea/
 .vscode/
-*.pyc
-__pycache__/
 .cursor/
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+src/data/catalog.generated.json

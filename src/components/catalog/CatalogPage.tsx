@@ -1,0 +1,1126 @@
+'use client';
+
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  startTransition,
+  type ComponentProps,
+} from 'react';
+import {
+  Button,
+  Flex,
+  Icon,
+  Pagination,
+  PlaceholderContainer,
+  SegmentedRadioGroup,
+  Select,
+  Table,
+  Tab,
+  TabList,
+  TabProvider,
+  Text,
+  TextInput,
+} from '@gravity-ui/uikit';
+import {
+  Cpu,
+  Database,
+  Globe,
+  Gpu,
+  HardDrive,
+  Layers3Diagonal,
+  Magnifier,
+  Server,
+  SquareDashed,
+  SquareListUl,
+} from '@gravity-ui/icons';
+import {usePathname, useRouter, useSearchParams} from 'next/navigation';
+import {
+  CATEGORY_TITLE,
+  catalog,
+  displayAmount,
+  displayMeterName,
+  extractDiskMedia,
+  extractDiskVariant,
+  extractGpuModel,
+  extractRamGiB,
+  extractStorageClass,
+  extractVcpu,
+  isDiskMeter,
+  formatAsOf,
+  formatPlatform,
+  meterMatchesCategory,
+  meterMatchesComputeFacet,
+  meterMatchesDiskFacet,
+  meterMatchesGpuFacet,
+  meterMatchesSearch,
+  meterMatchesNetworkFacet,
+  meterMatchesStorageFacet,
+  meterMatchesStorageKindFacet,
+  meterMatchesVcpuPlatformFacet,
+  meterMatchesVcpuShareFacet,
+  meterPriceLabel,
+  paramsLabel,
+  periodLabel,
+  sortMeters,
+  isRequestMeter,
+  type CatalogMeter,
+  type CategoryFilter,
+  type ComputeFacet,
+  type DiskFacet,
+  type GpuFacet,
+  type NetworkFacet,
+  type PeriodMode,
+  type SortKey,
+  type StorageFacet,
+  type StorageKindFacet,
+  type VcpuPlatformFacet,
+  type VcpuShareFacet,
+} from '@/lib/catalog';
+import {SkuDrawer} from '@/components/catalog/SkuDrawer';
+import {AppHeader} from '@/components/AppHeader';
+import styles from './CatalogPage.module.css';
+
+const PAGE_SIZE = 40;
+
+const CATEGORY_FILTERS: {id: CategoryFilter; title: string}[] = [
+  {id: 'all', title: 'Все'},
+  {id: 'compute', title: 'Compute'},
+  {id: 'gpu', title: 'GPU'},
+  {id: 'storage', title: 'Storage'},
+  {id: 'network', title: 'Network'},
+  {id: 'kubernetes', title: 'Kubernetes'},
+];
+
+const FACET_OPTIONS: {
+  value: ComputeFacet;
+  title: string;
+  icon: typeof Cpu;
+}[] = [
+  {value: 'all', title: 'Все', icon: Layers3Diagonal},
+  {value: 'flavor', title: 'VM', icon: Server},
+  {value: 'vcpu', title: 'Ядра', icon: Cpu},
+  {value: 'ram', title: 'RAM', icon: SquareDashed},
+  {value: 'disk', title: 'Диск', icon: HardDrive},
+];
+
+const GPU_FACET_OPTIONS: {value: GpuFacet; title: string}[] = [
+  {value: 'all', title: 'Все'},
+  {value: 'h100', title: 'H100'},
+  {value: 'h200', title: 'H200'},
+  {value: 'a100', title: 'A100'},
+  {value: 'v100', title: 'V100'},
+  {value: 'l4', title: 'L4'},
+  {value: 'a30', title: 'A30'},
+  {value: 't4', title: 'T4'},
+  {value: 'l40s', title: 'L40S'},
+];
+
+const STORAGE_KIND_OPTIONS: {value: StorageKindFacet; title: string}[] = [
+  {value: 'all', title: 'Все'},
+  {value: 'capacity', title: 'Хранение'},
+  {value: 'operations', title: 'Операции'},
+];
+
+const NETWORK_FACET_OPTIONS: {value: NetworkFacet; title: string}[] = [
+  {value: 'all', title: 'Все'},
+  {value: 'public-ip', title: 'Публичный IP'},
+  {value: 'egress', title: 'Исходящий трафик'},
+];
+
+const STORAGE_FACET_OPTIONS: {value: StorageFacet; title: string}[] = [
+  {value: 'all', title: 'Все'},
+  {value: 'standard', title: 'Standard'},
+  {value: 'warm', title: 'Warm'},
+  {value: 'cold', title: 'Cold'},
+  {value: 'ice', title: 'Ice'},
+];
+
+const DISK_FACET_OPTIONS: {value: DiskFacet; title: string}[] = [
+  {value: 'all', title: 'Все'},
+  {value: 'hdd', title: 'HDD'},
+  {value: 'ssd', title: 'SSD'},
+  {value: 'nvme', title: 'NVMe'},
+];
+
+const VCPU_SHARE_OPTIONS: {value: VcpuShareFacet; title: string}[] = [
+  {value: 'all', title: 'Все'},
+  {value: 'dedicated', title: '100%'},
+  {value: 'shared', title: 'Shared'},
+];
+
+const VCPU_PLATFORM_OPTIONS: {value: VcpuPlatformFacet; title: string}[] = [
+  {value: 'all', title: 'Все'},
+  {value: 'ice-lake', title: 'Ice Lake'},
+  {value: 'cascade-lake', title: 'Cascade'},
+  {value: 'sapphire', title: 'Sapphire'},
+  {value: 'other', title: 'Другое'},
+];
+
+function parseCategory(v: string | null): CategoryFilter {
+  if (v && CATEGORY_FILTERS.some((c) => c.id === v)) return v as CategoryFilter;
+  return 'all';
+}
+
+function parseFacet(v: string | null): ComputeFacet {
+  if (v === 'vcpu' || v === 'ram' || v === 'flavor' || v === 'disk' || v === 'all') return v;
+  return 'all';
+}
+
+function parseGpuFacet(v: string | null): GpuFacet {
+  if (
+    v === 'h100' ||
+    v === 'h200' ||
+    v === 'a100' ||
+    v === 'v100' ||
+    v === 'l4' ||
+    v === 'a30' ||
+    v === 't4' ||
+    v === 'l40s' ||
+    v === 'all'
+  ) {
+    return v;
+  }
+  return 'all';
+}
+
+function parseStorageFacet(v: string | null): StorageFacet {
+  if (v === 'standard' || v === 'warm' || v === 'cold' || v === 'ice' || v === 'all') return v;
+  return 'all';
+}
+
+function parseStorageKindFacet(v: string | null): StorageKindFacet {
+  if (v === 'capacity' || v === 'operations' || v === 'all') return v;
+  return 'all';
+}
+
+function parseNetworkFacet(v: string | null): NetworkFacet {
+  if (v === 'public-ip' || v === 'egress' || v === 'all') return v;
+  if (v === 'ip') return 'public-ip';
+  return 'all';
+}
+
+function parseDiskFacet(v: string | null): DiskFacet {
+  if (v === 'hdd' || v === 'ssd' || v === 'nvme' || v === 'all') return v;
+  return 'all';
+}
+
+function parseVcpuShareFacet(v: string | null): VcpuShareFacet {
+  if (v === 'dedicated' || v === 'shared' || v === 'all') return v;
+  if (v === '100') return 'dedicated';
+  return 'all';
+}
+
+function parseVcpuPlatformFacet(v: string | null): VcpuPlatformFacet {
+  if (
+    v === 'ice-lake' ||
+    v === 'cascade-lake' ||
+    v === 'sapphire' ||
+    v === 'other' ||
+    v === 'all'
+  ) {
+    return v;
+  }
+  return 'all';
+}
+
+function parsePeriod(v: string | null): PeriodMode {
+  if (v === 'unit' || v === 'month' || v === 'year') return v;
+  return 'month';
+}
+
+function parseSort(v: string | null): SortKey {
+  if (v === 'price-asc' || v === 'price-desc' || v === 'name' || v === 'provider') return v;
+  return 'price-asc';
+}
+
+function priceColumnTitle(period: PeriodMode): string {
+  if (period === 'month') return 'Цена / мес';
+  if (period === 'year') return 'Цена / год';
+  return 'Цена';
+}
+
+export function CatalogPage() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const searchRef = useRef<HTMLInputElement>(null);
+  const facetRowRef = useRef<HTMLDivElement>(null);
+
+  const [period, setPeriod] = useState<PeriodMode>(() => parsePeriod(searchParams.get('period')));
+  const [category, setCategory] = useState<CategoryFilter>(() =>
+    parseCategory(searchParams.get('category')),
+  );
+  const [facet, setFacet] = useState<ComputeFacet>(() => parseFacet(searchParams.get('facet')));
+  const [gpuFacet, setGpuFacet] = useState<GpuFacet>(() => parseGpuFacet(searchParams.get('gpu')));
+  const [storageFacet, setStorageFacet] = useState<StorageFacet>(() =>
+    parseStorageFacet(searchParams.get('storage')),
+  );
+  const [storageKindFacet, setStorageKindFacet] = useState<StorageKindFacet>(() =>
+    parseStorageKindFacet(searchParams.get('kind')),
+  );
+  const [networkFacet, setNetworkFacet] = useState<NetworkFacet>(() =>
+    parseNetworkFacet(searchParams.get('net')),
+  );
+  const [diskFacet, setDiskFacet] = useState<DiskFacet>(() =>
+    parseDiskFacet(searchParams.get('disk')),
+  );
+  const [vcpuShareFacet, setVcpuShareFacet] = useState<VcpuShareFacet>(() =>
+    parseVcpuShareFacet(searchParams.get('share')),
+  );
+  const [vcpuPlatformFacet, setVcpuPlatformFacet] = useState<VcpuPlatformFacet>(() =>
+    parseVcpuPlatformFacet(searchParams.get('cpu')),
+  );
+  const [search, setSearch] = useState(() => searchParams.get('q') || '');
+  const deferredSearch = useDeferredValue(search);
+  const [providers, setProviders] = useState<string[]>(() => {
+    const raw = searchParams.get('providers');
+    return raw ? raw.split(',').filter(Boolean) : [];
+  });
+  const [sort, setSort] = useState<SortKey>(() => parseSort(searchParams.get('sort')));
+  const [page, setPage] = useState(1);
+  const [activeMeter, setActiveMeter] = useState<CatalogMeter | null>(null);
+
+  // Debounced URL sync — avoid router thrash on every keystroke
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const params = new URLSearchParams();
+      if (category !== 'all') params.set('category', category);
+      if (category === 'compute' && facet !== 'all') params.set('facet', facet);
+      if (category === 'compute' && facet === 'disk' && diskFacet !== 'all') {
+        params.set('disk', diskFacet);
+      }
+      if (category === 'compute' && facet === 'vcpu') {
+        if (vcpuShareFacet !== 'all') params.set('share', vcpuShareFacet);
+        if (vcpuPlatformFacet !== 'all') params.set('cpu', vcpuPlatformFacet);
+      }
+      if (category === 'gpu' && gpuFacet !== 'all') params.set('gpu', gpuFacet);
+      if (category === 'storage' && storageFacet !== 'all') params.set('storage', storageFacet);
+      if (category === 'storage' && storageKindFacet !== 'all') params.set('kind', storageKindFacet);
+      if (category === 'network' && networkFacet !== 'all') params.set('net', networkFacet);
+      if (period !== 'month') params.set('period', period);
+      if (search.trim()) params.set('q', search.trim());
+      if (providers.length) params.set('providers', providers.join(','));
+      if (sort !== 'price-asc') params.set('sort', sort);
+      const qs = params.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, {scroll: false});
+    }, 350);
+    return () => window.clearTimeout(timer);
+  }, [
+    category,
+    facet,
+    diskFacet,
+    vcpuShareFacet,
+    vcpuPlatformFacet,
+    gpuFacet,
+    storageFacet,
+    storageKindFacet,
+    networkFacet,
+    pathname,
+    period,
+    providers,
+    router,
+    search,
+    sort,
+  ]);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === '/' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const tag = (e.target as HTMLElement | null)?.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  const providerOptions = useMemo(
+    () =>
+      catalog.providers.map((p) => ({
+        value: p.id,
+        content: `${p.name} (${p.count})`,
+      })),
+    [],
+  );
+
+  const baseMeters = useMemo(
+    () => catalog.meters.filter((m) => m.status === 'available'),
+    [],
+  );
+
+  const categoryCounts = useMemo(() => {
+    const counts: Record<CategoryFilter, number> = {
+      all: baseMeters.length,
+      compute: 0,
+      gpu: 0,
+      storage: 0,
+      network: 0,
+      kubernetes: 0,
+    };
+    for (const m of baseMeters) {
+      if (m.categoryKey in counts) counts[m.categoryKey as CategoryFilter] += 1;
+    }
+    return counts;
+  }, [baseMeters]);
+
+  const facetCounts = useMemo(() => {
+    const compute = baseMeters.filter((m) => m.categoryKey === 'compute');
+    return {
+      all: compute.length,
+      vcpu: compute.filter((m) => meterMatchesComputeFacet(m, 'vcpu')).length,
+      ram: compute.filter((m) => meterMatchesComputeFacet(m, 'ram')).length,
+      flavor: compute.filter((m) => meterMatchesComputeFacet(m, 'flavor')).length,
+      disk: compute.filter((m) => meterMatchesComputeFacet(m, 'disk')).length,
+    };
+  }, [baseMeters]);
+
+  const gpuFacetCounts = useMemo(() => {
+    const gpus = baseMeters.filter((m) => m.categoryKey === 'gpu');
+    return {
+      all: gpus.length,
+      h100: gpus.filter((m) => meterMatchesGpuFacet(m, 'h100')).length,
+      h200: gpus.filter((m) => meterMatchesGpuFacet(m, 'h200')).length,
+      a100: gpus.filter((m) => meterMatchesGpuFacet(m, 'a100')).length,
+      v100: gpus.filter((m) => meterMatchesGpuFacet(m, 'v100')).length,
+      l4: gpus.filter((m) => meterMatchesGpuFacet(m, 'l4')).length,
+      a30: gpus.filter((m) => meterMatchesGpuFacet(m, 'a30')).length,
+      t4: gpus.filter((m) => meterMatchesGpuFacet(m, 't4')).length,
+      l40s: gpus.filter((m) => meterMatchesGpuFacet(m, 'l40s')).length,
+    };
+  }, [baseMeters]);
+
+  const storageMeters = useMemo(
+    () => baseMeters.filter((m) => m.categoryKey === 'storage'),
+    [baseMeters],
+  );
+
+  const networkMeters = useMemo(
+    () => baseMeters.filter((m) => m.categoryKey === 'network'),
+    [baseMeters],
+  );
+
+  const storageKindCounts = useMemo(
+    () => ({
+      all: storageMeters.length,
+      capacity: storageMeters.filter((m) => meterMatchesStorageKindFacet(m, 'capacity')).length,
+      operations: storageMeters.filter((m) => meterMatchesStorageKindFacet(m, 'operations'))
+        .length,
+    }),
+    [storageMeters],
+  );
+
+  const networkFacetCounts = useMemo(
+    () => ({
+      all: networkMeters.length,
+      'public-ip': networkMeters.filter((m) => meterMatchesNetworkFacet(m, 'public-ip')).length,
+      egress: networkMeters.filter((m) => meterMatchesNetworkFacet(m, 'egress')).length,
+    }),
+    [networkMeters],
+  );
+
+  const storageFacetCounts = useMemo(() => {
+    const items = storageMeters.filter((m) => meterMatchesStorageKindFacet(m, storageKindFacet));
+    return {
+      all: items.length,
+      standard: items.filter((m) => meterMatchesStorageFacet(m, 'standard')).length,
+      warm: items.filter((m) => meterMatchesStorageFacet(m, 'warm')).length,
+      cold: items.filter((m) => meterMatchesStorageFacet(m, 'cold')).length,
+      ice: items.filter((m) => meterMatchesStorageFacet(m, 'ice')).length,
+    };
+  }, [storageMeters, storageKindFacet]);
+
+  const diskFacetCounts = useMemo(() => {
+    const disks = baseMeters.filter(
+      (m) => m.categoryKey === 'compute' && meterMatchesComputeFacet(m, 'disk'),
+    );
+    return {
+      all: disks.length,
+      hdd: disks.filter((m) => meterMatchesDiskFacet(m, 'hdd')).length,
+      ssd: disks.filter((m) => meterMatchesDiskFacet(m, 'ssd')).length,
+      nvme: disks.filter((m) => meterMatchesDiskFacet(m, 'nvme')).length,
+    };
+  }, [baseMeters]);
+
+  const vcpuMeters = useMemo(
+    () => baseMeters.filter((m) => m.categoryKey === 'compute' && meterMatchesComputeFacet(m, 'vcpu')),
+    [baseMeters],
+  );
+
+  const vcpuShareCounts = useMemo(
+    () => ({
+      all: vcpuMeters.length,
+      dedicated: vcpuMeters.filter((m) => meterMatchesVcpuShareFacet(m, 'dedicated')).length,
+      shared: vcpuMeters.filter((m) => meterMatchesVcpuShareFacet(m, 'shared')).length,
+    }),
+    [vcpuMeters],
+  );
+
+  const vcpuPlatformCounts = useMemo(
+    () => ({
+      all: vcpuMeters.length,
+      'ice-lake': vcpuMeters.filter((m) => meterMatchesVcpuPlatformFacet(m, 'ice-lake')).length,
+      'cascade-lake': vcpuMeters.filter((m) =>
+        meterMatchesVcpuPlatformFacet(m, 'cascade-lake'),
+      ).length,
+      sapphire: vcpuMeters.filter((m) => meterMatchesVcpuPlatformFacet(m, 'sapphire')).length,
+      other: vcpuMeters.filter((m) => meterMatchesVcpuPlatformFacet(m, 'other')).length,
+    }),
+    [vcpuMeters],
+  );
+
+  const filtered = useMemo(() => {
+    const providerSet = providers.length ? new Set(providers) : null;
+    const list = baseMeters.filter((m) => {
+      if (!meterMatchesCategory(m, category)) return false;
+      if (category === 'compute' && !meterMatchesComputeFacet(m, facet)) return false;
+      if (category === 'compute' && facet === 'disk' && !meterMatchesDiskFacet(m, diskFacet)) {
+        return false;
+      }
+      if (category === 'compute' && facet === 'vcpu') {
+        if (!meterMatchesVcpuShareFacet(m, vcpuShareFacet)) return false;
+        if (!meterMatchesVcpuPlatformFacet(m, vcpuPlatformFacet)) return false;
+      }
+      if (category === 'gpu' && !meterMatchesGpuFacet(m, gpuFacet)) return false;
+      if (category === 'storage' && !meterMatchesStorageKindFacet(m, storageKindFacet)) {
+        return false;
+      }
+      if (category === 'storage' && !meterMatchesStorageFacet(m, storageFacet)) return false;
+      if (category === 'network' && !meterMatchesNetworkFacet(m, networkFacet)) return false;
+      if (!meterMatchesSearch(m, deferredSearch)) return false;
+      if (providerSet && !providerSet.has(m.provider)) return false;
+      return true;
+    });
+    return sortMeters(list, sort, period);
+  }, [
+    baseMeters,
+    category,
+    facet,
+    diskFacet,
+    vcpuShareFacet,
+    vcpuPlatformFacet,
+    gpuFacet,
+    storageFacet,
+    storageKindFacet,
+    networkFacet,
+    deferredSearch,
+    providers,
+    sort,
+    period,
+  ]);
+
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, pageCount);
+  const pageItems = useMemo(() => {
+    const start = (safePage - 1) * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, safePage]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [
+    category,
+    facet,
+    diskFacet,
+    vcpuShareFacet,
+    vcpuPlatformFacet,
+    gpuFacet,
+    storageFacet,
+    storageKindFacet,
+    networkFacet,
+    deferredSearch,
+    providers,
+    sort,
+    period,
+  ]);
+
+  /** When nested compute facets open, scroll so the active type (Ядра/Диск) is left-aligned. */
+  useEffect(() => {
+    const row = facetRowRef.current;
+    if (!row) return;
+
+    if (category !== 'compute' || (facet !== 'vcpu' && facet !== 'disk')) {
+      row.scrollTo({left: 0, behavior: 'smooth'});
+      return;
+    }
+
+    let frame2 = 0;
+    const frame1 = window.requestAnimationFrame(() => {
+      // Wait one more frame for Доля/CPU (or Медиа) to mount and widen the row
+      frame2 = window.requestAnimationFrame(() => {
+        const anchor = row.querySelector(
+          `[data-facet-anchor="${facet}"]`,
+        ) as HTMLElement | null;
+        if (!anchor) return;
+        const rowRect = row.getBoundingClientRect();
+        const anchorRect = anchor.getBoundingClientRect();
+        const nextLeft = row.scrollLeft + (anchorRect.left - rowRect.left) - 4;
+        row.scrollTo({left: Math.max(0, nextLeft), behavior: 'smooth'});
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame1);
+      window.cancelAnimationFrame(frame2);
+    };
+  }, [category, facet]);
+
+  const columns = useMemo(() => {
+    // Stable column skeleton across tabs — prevents «Тариф» from shifting
+    const cols: ComponentProps<typeof Table<CatalogMeter>>['columns'] = [
+      {
+        id: 'name',
+        name: 'Тариф',
+        primary: true,
+        width: 340,
+        className: styles.nameCol,
+        template: (m) => {
+          const title = displayMeterName(m);
+          return (
+            <Text variant="body-1" ellipsis title={title}>
+              {title}
+            </Text>
+          );
+        },
+      },
+      {
+        id: 'provider',
+        name: 'Провайдер',
+        width: 130,
+        className: styles.providerCol,
+        template: (m) => (
+          <Text variant="body-1" color="secondary">
+            {m.providerName}
+          </Text>
+        ),
+      },
+      {
+        id: 'specs',
+        name:
+          category === 'gpu'
+            ? 'GPU'
+            : category === 'compute'
+              ? 'Конфиг'
+              : category === 'storage'
+                ? 'Класс'
+                : 'Параметры',
+        width: 220,
+        className: styles.specsCol,
+        template: (m) => {
+          let label = paramsLabel(m);
+          if (category === 'gpu') {
+            label = extractGpuModel(m) || label;
+          } else if (category === 'storage') {
+            const cls = extractStorageClass(m);
+            const clsTitle = cls ? cls.charAt(0).toUpperCase() + cls.slice(1) : null;
+            const op =
+              typeof m.dimensions.operation === 'string' ? m.dimensions.operation : null;
+            if (clsTitle && op) label = `${clsTitle} · ${op}`;
+            else if (clsTitle) label = clsTitle;
+          } else if (category === 'compute') {
+            if (isDiskMeter(m)) {
+              const media = extractDiskMedia(m);
+              const variant = extractDiskVariant(m);
+              const parts: string[] = [];
+              if (media) parts.push(media);
+              if (variant) parts.push(variant);
+              if (m.meter === 'storage.block.iops') parts.push('IOPS');
+              else if (m.unitQuantity) parts.push(m.unitQuantity);
+              if (parts.length) label = parts.join(' · ');
+            } else {
+              const vcpu = extractVcpu(m);
+              const ram = extractRamGiB(m);
+              const parts: string[] = [];
+              if (vcpu != null) parts.push(`${vcpu} vCPU`);
+              if (ram != null) parts.push(`${ram} GiB`);
+              const platform = formatPlatform(m.cpuPlatformFamily);
+              if (platform && platform !== 'Платформа не указана') parts.push(platform);
+              if (parts.length) label = parts.join(' · ');
+            }
+          } else if (category === 'all') {
+            label = `${CATEGORY_TITLE[m.categoryKey]} · ${paramsLabel(m)}`;
+          }
+          return (
+            <Text variant="body-1" color="secondary" ellipsis title={label}>
+              {label}
+            </Text>
+          );
+        },
+      },
+      {
+        id: 'price',
+        name: priceColumnTitle(period),
+        align: 'end',
+        width: 140,
+        className: styles.priceCol,
+        template: (m) => {
+          const amount = displayAmount(m, period);
+          return (
+            <span className={styles.priceCell} title={meterPriceLabel(m, period)}>
+              {amount ?? '—'}
+            </span>
+          );
+        },
+      },
+    ];
+
+    return cols;
+  }, [category, period]);
+
+  const resetFilters = useCallback(() => {
+    startTransition(() => {
+      setCategory('all');
+      setFacet('all');
+      setDiskFacet('all');
+      setVcpuShareFacet('all');
+      setVcpuPlatformFacet('all');
+      setGpuFacet('all');
+      setStorageFacet('all');
+      setStorageKindFacet('all');
+      setNetworkFacet('all');
+      setSearch('');
+      setProviders([]);
+      setSort('price-asc');
+    });
+  }, []);
+
+  const hasFilters =
+    category !== 'all' ||
+    facet !== 'all' ||
+    diskFacet !== 'all' ||
+    vcpuShareFacet !== 'all' ||
+    vcpuPlatformFacet !== 'all' ||
+    gpuFacet !== 'all' ||
+    storageFacet !== 'all' ||
+    storageKindFacet !== 'all' ||
+    networkFacet !== 'all' ||
+    search.trim() !== '' ||
+    providers.length > 0 ||
+    sort !== 'price-asc';
+
+  return (
+    <>
+      <AppHeader />
+      <div className={styles.page}>
+        <Flex direction="column" gap={4}>
+          <Flex justifyContent="space-between" alignItems="flex-end" gap={4} wrap>
+            <Flex direction="column" gap={1}>
+              <Flex alignItems="center" gap={2}>
+                <Icon data={SquareListUl} size={24} />
+                <Text variant="header-1">Каталог SKU</Text>
+              </Flex>
+              <Text color="secondary" variant="body-1">
+                {filtered.length} тарифов · {formatAsOf(catalog.asOf)}
+              </Text>
+            </Flex>
+            <SegmentedRadioGroup
+              size="m"
+              value={period}
+              onUpdate={(v) => setPeriod(v as PeriodMode)}
+            >
+              <SegmentedRadioGroup.Option value="unit">Единица</SegmentedRadioGroup.Option>
+              <SegmentedRadioGroup.Option value="month">Месяц</SegmentedRadioGroup.Option>
+              <SegmentedRadioGroup.Option value="year">Год</SegmentedRadioGroup.Option>
+            </SegmentedRadioGroup>
+          </Flex>
+
+          <TabProvider
+            value={category}
+            onUpdate={(v) => {
+              startTransition(() => {
+                setCategory(v as CategoryFilter);
+                if (v !== 'compute') {
+                  setFacet('all');
+                  setDiskFacet('all');
+                  setVcpuShareFacet('all');
+                  setVcpuPlatformFacet('all');
+                }
+                if (v !== 'gpu') setGpuFacet('all');
+                if (v !== 'storage') {
+                  setStorageFacet('all');
+                  setStorageKindFacet('all');
+                }
+                if (v !== 'network') setNetworkFacet('all');
+              });
+            }}
+          >
+            <TabList size="l">
+              {CATEGORY_FILTERS.map((item) => (
+                <Tab key={item.id} value={item.id} counter={categoryCounts[item.id]}>
+                  {item.title}
+                </Tab>
+              ))}
+            </TabList>
+          </TabProvider>
+
+          <div className={styles.filters}>
+            <Flex gap={3} alignItems="center" className={styles.controlsPrimary}>
+              <div className={styles.search}>
+                <TextInput
+                  controlRef={searchRef}
+                  size="m"
+                  value={search}
+                  onUpdate={setSearch}
+                  placeholder="Поиск тарифа или провайдера"
+                  startContent={
+                    <span className={styles.searchIcon}>
+                      <Icon data={Magnifier} size={16} />
+                    </span>
+                  }
+                  hasClear
+                />
+              </div>
+
+              <Select
+                size="m"
+                multiple
+                filterable
+                hasClear
+                placeholder="Провайдер"
+                value={providers}
+                options={providerOptions}
+                onUpdate={setProviders}
+                className={styles.controlSelect}
+              />
+
+              <Select
+                size="m"
+                value={[sort]}
+                onUpdate={(v) => setSort((v[0] as SortKey) || 'price-asc')}
+                options={[
+                  {value: 'price-asc', content: 'Сначала дешевле'},
+                  {value: 'price-desc', content: 'Сначала дороже'},
+                  {value: 'name', content: 'По названию'},
+                  {value: 'provider', content: 'По провайдеру'},
+                ]}
+                className={styles.controlSelect}
+              />
+
+              <Button
+                view="flat-secondary"
+                size="m"
+                onClick={resetFilters}
+                disabled={!hasFilters}
+                className={styles.resetButton}
+              >
+                Сбросить
+              </Button>
+            </Flex>
+
+            {/* Reserved row — keeps table from jumping across tabs */}
+            <div className={styles.facetRow} ref={facetRowRef}>
+              {category === 'compute' ? (
+                <>
+                  <div className={styles.facetControl} title="Тип compute-ресурса">
+                    <Text variant="caption-2" color="complementary" className={styles.facetLabel}>
+                      Тип
+                    </Text>
+                    <SegmentedRadioGroup
+                      size="m"
+                      value={facet}
+                      onUpdate={(v) => {
+                        const next = v as ComputeFacet;
+                        setFacet(next);
+                        if (next !== 'disk') setDiskFacet('all');
+                        if (next !== 'vcpu') {
+                          setVcpuShareFacet('all');
+                          setVcpuPlatformFacet('all');
+                        }
+                      }}
+                    >
+                      {FACET_OPTIONS.map((o) => (
+                        <SegmentedRadioGroup.Option key={o.value} value={o.value}>
+                          <span
+                            className={styles.facetOption}
+                            data-facet-anchor={
+                              o.value === 'vcpu' || o.value === 'disk' ? o.value : undefined
+                            }
+                          >
+                            <Icon data={o.icon} size={14} />
+                            <span>
+                              {o.title} {facetCounts[o.value]}
+                            </span>
+                          </span>
+                        </SegmentedRadioGroup.Option>
+                      ))}
+                    </SegmentedRadioGroup>
+                  </div>
+                  {facet === 'disk' ? (
+                    <div className={styles.facetControl} title="Тип диска">
+                      <Text variant="caption-2" color="complementary" className={styles.facetLabel}>
+                        Медиа
+                      </Text>
+                      <SegmentedRadioGroup
+                        size="m"
+                        value={diskFacet}
+                        onUpdate={(v) => setDiskFacet(v as DiskFacet)}
+                      >
+                        {DISK_FACET_OPTIONS.map((o) => (
+                          <SegmentedRadioGroup.Option key={o.value} value={o.value}>
+                            <span className={styles.facetOption}>
+                              {o.value === 'all' ? (
+                                <Icon data={Layers3Diagonal} size={14} />
+                              ) : (
+                                <Icon data={HardDrive} size={14} />
+                              )}
+                              <span>
+                                {o.title} {diskFacetCounts[o.value]}
+                              </span>
+                            </span>
+                          </SegmentedRadioGroup.Option>
+                        ))}
+                      </SegmentedRadioGroup>
+                    </div>
+                  ) : null}
+                  {facet === 'vcpu' ? (
+                    <>
+                      <div className={styles.facetControl} title="Гарантия доли vCPU">
+                        <Text
+                          variant="caption-2"
+                          color="complementary"
+                          className={styles.facetLabel}
+                        >
+                          Доля
+                        </Text>
+                        <SegmentedRadioGroup
+                          size="m"
+                          value={vcpuShareFacet}
+                          onUpdate={(v) => setVcpuShareFacet(v as VcpuShareFacet)}
+                        >
+                          {VCPU_SHARE_OPTIONS.map((o) => (
+                            <SegmentedRadioGroup.Option key={o.value} value={o.value}>
+                              <span className={styles.facetOption}>
+                                {o.value === 'all' ? (
+                                  <Icon data={Layers3Diagonal} size={14} />
+                                ) : (
+                                  <Icon data={Cpu} size={14} />
+                                )}
+                                <span>
+                                  {o.title} {vcpuShareCounts[o.value]}
+                                </span>
+                              </span>
+                            </SegmentedRadioGroup.Option>
+                          ))}
+                        </SegmentedRadioGroup>
+                      </div>
+                      <div className={styles.facetControl} title="Платформа CPU">
+                        <Text
+                          variant="caption-2"
+                          color="complementary"
+                          className={styles.facetLabel}
+                        >
+                          CPU
+                        </Text>
+                        <SegmentedRadioGroup
+                          size="m"
+                          value={vcpuPlatformFacet}
+                          onUpdate={(v) => setVcpuPlatformFacet(v as VcpuPlatformFacet)}
+                        >
+                          {VCPU_PLATFORM_OPTIONS.map((o) => (
+                            <SegmentedRadioGroup.Option key={o.value} value={o.value}>
+                              <span className={styles.facetOption}>
+                                {o.value === 'all' ? (
+                                  <Icon data={Layers3Diagonal} size={14} />
+                                ) : (
+                                  <Icon data={Cpu} size={14} />
+                                )}
+                                <span>
+                                  {o.title} {vcpuPlatformCounts[o.value]}
+                                </span>
+                              </span>
+                            </SegmentedRadioGroup.Option>
+                          ))}
+                        </SegmentedRadioGroup>
+                      </div>
+                    </>
+                  ) : null}
+                </>
+              ) : null}
+
+              {category === 'gpu' ? (
+                <div className={styles.facetControl} title="Семейство GPU">
+                  <Text variant="caption-2" color="complementary" className={styles.facetLabel}>
+                    GPU
+                  </Text>
+                  <SegmentedRadioGroup
+                    size="m"
+                    value={gpuFacet}
+                    onUpdate={(v) => setGpuFacet(v as GpuFacet)}
+                  >
+                    {GPU_FACET_OPTIONS.map((o) => (
+                      <SegmentedRadioGroup.Option key={o.value} value={o.value}>
+                        <span className={styles.facetOption}>
+                          {o.value === 'all' ? (
+                            <Icon data={Layers3Diagonal} size={14} />
+                          ) : (
+                            <Icon data={Gpu} size={14} />
+                          )}
+                          <span>
+                            {o.title} {gpuFacetCounts[o.value]}
+                          </span>
+                        </span>
+                      </SegmentedRadioGroup.Option>
+                    ))}
+                  </SegmentedRadioGroup>
+                </div>
+              ) : null}
+
+              {category === 'storage' ? (
+                <>
+                  <div className={styles.facetControl} title="Тип тарифа хранения">
+                    <Text variant="caption-2" color="complementary" className={styles.facetLabel}>
+                      Тип
+                    </Text>
+                    <SegmentedRadioGroup
+                      size="m"
+                      value={storageKindFacet}
+                      onUpdate={(v) => setStorageKindFacet(v as StorageKindFacet)}
+                    >
+                      {STORAGE_KIND_OPTIONS.map((o) => (
+                        <SegmentedRadioGroup.Option key={o.value} value={o.value}>
+                          <span className={styles.facetOption}>
+                            {o.value === 'all' ? (
+                              <Icon data={Layers3Diagonal} size={14} />
+                            ) : (
+                              <Icon data={Database} size={14} />
+                            )}
+                            <span>
+                              {o.title} {storageKindCounts[o.value]}
+                            </span>
+                          </span>
+                        </SegmentedRadioGroup.Option>
+                      ))}
+                    </SegmentedRadioGroup>
+                  </div>
+                  <div className={styles.facetControl} title="Класс объектного хранения">
+                    <Text variant="caption-2" color="complementary" className={styles.facetLabel}>
+                      Класс
+                    </Text>
+                    <SegmentedRadioGroup
+                      size="m"
+                      value={storageFacet}
+                      onUpdate={(v) => setStorageFacet(v as StorageFacet)}
+                    >
+                      {STORAGE_FACET_OPTIONS.map((o) => (
+                        <SegmentedRadioGroup.Option key={o.value} value={o.value}>
+                          <span className={styles.facetOption}>
+                            {o.value === 'all' ? (
+                              <Icon data={Layers3Diagonal} size={14} />
+                            ) : (
+                              <Icon data={Database} size={14} />
+                            )}
+                            <span>
+                              {o.title} {storageFacetCounts[o.value]}
+                            </span>
+                          </span>
+                        </SegmentedRadioGroup.Option>
+                      ))}
+                    </SegmentedRadioGroup>
+                  </div>
+                </>
+              ) : null}
+
+              {category === 'network' ? (
+                <div className={styles.facetControl} title="Тип сетевого тарифа">
+                  <Text variant="caption-2" color="complementary" className={styles.facetLabel}>
+                    Тип
+                  </Text>
+                  <SegmentedRadioGroup
+                    size="m"
+                    value={networkFacet}
+                    onUpdate={(v) => setNetworkFacet(v as NetworkFacet)}
+                  >
+                    {NETWORK_FACET_OPTIONS.map((o) => (
+                      <SegmentedRadioGroup.Option key={o.value} value={o.value}>
+                        <span className={styles.facetOption}>
+                          {o.value === 'all' ? (
+                            <Icon data={Layers3Diagonal} size={14} />
+                          ) : (
+                            <Icon data={Globe} size={14} />
+                          )}
+                          <span>
+                            {o.title} {networkFacetCounts[o.value]}
+                          </span>
+                        </span>
+                      </SegmentedRadioGroup.Option>
+                    ))}
+                  </SegmentedRadioGroup>
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          <div className={styles.tableCard}>
+            {filtered.length === 0 ? (
+              <PlaceholderContainer
+                title="Ничего не найдено"
+                description="Сбросьте фильтры или измените запрос."
+                size="m"
+                align="center"
+                image={<Icon data={Magnifier} size={28} />}
+                actions={[
+                  {
+                    text: 'Сбросить фильтры',
+                    view: 'action',
+                    size: 'm',
+                    onClick: resetFilters,
+                  },
+                ]}
+              />
+            ) : (
+              <>
+                <div className={styles.tableWrap}>
+                  <Table
+                    data={pageItems}
+                    columns={columns}
+                    getRowId={(m) => m.id}
+                    verticalAlign="middle"
+                    width="max"
+                    edgePadding
+                    onRowClick={(item) => setActiveMeter(item)}
+                    getRowDescriptor={() => ({interactive: true})}
+                  />
+                </div>
+                {filtered.length > PAGE_SIZE ? (
+                  <Flex justifyContent="space-between" alignItems="center" className={styles.pager}>
+                    <Text variant="body-1" color="secondary">
+                      {(safePage - 1) * PAGE_SIZE + 1}–
+                      {Math.min(safePage * PAGE_SIZE, filtered.length)} из {filtered.length}
+                    </Text>
+                    <Pagination
+                      page={safePage}
+                      pageSize={PAGE_SIZE}
+                      total={filtered.length}
+                      onUpdate={(nextPage) => setPage(nextPage)}
+                      compact
+                    />
+                  </Flex>
+                ) : null}
+              </>
+            )}
+          </div>
+
+          <Text variant="caption-2" color="secondary">
+            Цены {periodLabel(period)}
+            {category === 'storage' || filtered.some(isRequestMeter)
+              ? '; запросы — за 10 000 операций'
+              : ''}
+            . Клик по строке — детали SKU.
+          </Text>
+        </Flex>
+      </div>
+
+      <SkuDrawer
+        meter={activeMeter}
+        period={period}
+        open={Boolean(activeMeter)}
+        onClose={() => setActiveMeter(null)}
+      />
+    </>
+  );
+}

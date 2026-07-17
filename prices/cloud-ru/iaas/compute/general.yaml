@@ -30,8 +30,8 @@ spec:
       guaranteedVcpuShare: 100%
       purchaseModel: on-demand
       workloadFamily: balanced
-      cpuPlatformFamily: unknown
-      cpuPlatformNative: Intel Xeon Gold 6248R или 6348
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       ramGiB: 2
     pricing:
       rate:
@@ -91,7 +91,10 @@ spec:
         fit:
           scope: stable 100% vCPU flavor lattice
           exactOnSourceRows: true
-    notes: Нельзя использовать как независимую цену одного vCPU. Декомпозиция vCPU/RAM — аналитическая
+    notes: >
+      Хосты Evolution Compute — Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake);
+      в тарифе поколения не разделены. Нельзя использовать как независимую цену одного vCPU.
+      Декомпозиция vCPU/RAM — аналитическая
       оценка по flavor-решетке, не тариф Cloud.ru.
   - sku: cloudru.compute.2vcpu-4gb
     name: Виртуальная машина 2vCPU/4GB RAM
@@ -114,7 +117,8 @@ spec:
       guaranteedVcpuShare: 100%
       purchaseModel: on-demand
       workloadFamily: balanced
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       ramGiB: 4
     pricing:
       rate:
@@ -146,7 +150,8 @@ spec:
       guaranteedVcpuShare: 100%
       purchaseModel: on-demand
       workloadFamily: balanced
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       ramGiB: 8
     pricing:
       rate:
@@ -178,7 +183,8 @@ spec:
       guaranteedVcpuShare: 100%
       purchaseModel: on-demand
       workloadFamily: balanced
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       ramGiB: 16
     pricing:
       rate:
@@ -211,7 +217,8 @@ spec:
       guaranteedVcpuShare: 100%
       purchaseModel: on-demand
       workloadFamily: balanced
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       ramGiB: 16
     pricing:
       rate:
@@ -243,7 +250,8 @@ spec:
       guaranteedVcpuShare: 100%
       purchaseModel: on-demand
       workloadFamily: balanced
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       ramGiB: 32
     pricing:
       rate:
@@ -276,7 +284,8 @@ spec:
       guaranteedVcpuShare: 10%
       purchaseModel: on-demand
       workloadFamily: economy
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 34
       ramGiB: 1
     pricing:
@@ -311,7 +320,8 @@ spec:
       guaranteedVcpuShare: 10%
       purchaseModel: on-demand
       workloadFamily: economy
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 35
       ramGiB: 2
     pricing:
@@ -346,7 +356,8 @@ spec:
       guaranteedVcpuShare: 10%
       purchaseModel: on-demand
       workloadFamily: economy
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 36
       ramGiB: 4
     pricing:
@@ -381,7 +392,8 @@ spec:
       guaranteedVcpuShare: 10%
       purchaseModel: on-demand
       workloadFamily: economy
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 39
       ramGiB: 8
     pricing:
@@ -416,7 +428,8 @@ spec:
       guaranteedVcpuShare: 10%
       purchaseModel: on-demand
       workloadFamily: economy
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 37
       ramGiB: 16
     pricing:
@@ -451,7 +464,8 @@ spec:
       guaranteedVcpuShare: 10%
       purchaseModel: on-demand
       workloadFamily: economy
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 38
       ramGiB: 32
     pricing:
@@ -486,7 +500,8 @@ spec:
       guaranteedVcpuShare: 10%
       purchaseModel: on-demand
       workloadFamily: economy
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 40
       ramGiB: 16
     pricing:
@@ -521,7 +536,8 @@ spec:
       guaranteedVcpuShare: 10%
       purchaseModel: on-demand
       workloadFamily: economy
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 41
       ramGiB: 32
     pricing:
@@ -556,7 +572,8 @@ spec:
       guaranteedVcpuShare: 30%
       purchaseModel: on-demand
       workloadFamily: standard
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 44
       ramGiB: 1
     pricing:
@@ -591,7 +608,8 @@ spec:
       guaranteedVcpuShare: 30%
       purchaseModel: on-demand
       workloadFamily: standard
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 45
       ramGiB: 2
     pricing:
@@ -626,7 +644,8 @@ spec:
       guaranteedVcpuShare: 30%
       purchaseModel: on-demand
       workloadFamily: standard
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 47
       ramGiB: 4
     pricing:
@@ -661,7 +680,8 @@ spec:
       guaranteedVcpuShare: 30%
       purchaseModel: on-demand
       workloadFamily: standard
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 52
       ramGiB: 8
     pricing:
@@ -696,7 +716,8 @@ spec:
       guaranteedVcpuShare: 30%
       purchaseModel: on-demand
       workloadFamily: standard
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 49
       ramGiB: 16
     pricing:
@@ -731,7 +752,8 @@ spec:
       guaranteedVcpuShare: 30%
       purchaseModel: on-demand
       workloadFamily: standard
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 50
       ramGiB: 32
     pricing:
@@ -766,7 +788,8 @@ spec:
       guaranteedVcpuShare: 30%
       purchaseModel: on-demand
       workloadFamily: standard
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 51
       ramGiB: 64
     pricing:
@@ -801,7 +824,8 @@ spec:
       guaranteedVcpuShare: 30%
       purchaseModel: on-demand
       workloadFamily: standard
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 53
       ramGiB: 16
     pricing:
@@ -836,7 +860,8 @@ spec:
       guaranteedVcpuShare: 30%
       purchaseModel: on-demand
       workloadFamily: standard
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 54
       ramGiB: 32
     pricing:
@@ -871,7 +896,8 @@ spec:
       guaranteedVcpuShare: 30%
       purchaseModel: on-demand
       workloadFamily: standard
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 55
       ramGiB: 64
     pricing:
@@ -906,7 +932,8 @@ spec:
       guaranteedVcpuShare: 30%
       purchaseModel: on-demand
       workloadFamily: standard
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 42
       ramGiB: 32
     pricing:
@@ -941,7 +968,8 @@ spec:
       guaranteedVcpuShare: 30%
       purchaseModel: on-demand
       workloadFamily: standard
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 43
       ramGiB: 64
     pricing:
@@ -976,7 +1004,8 @@ spec:
       guaranteedVcpuShare: 30%
       purchaseModel: on-demand
       workloadFamily: standard
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 46
       ramGiB: 48
     pricing:
@@ -1011,7 +1040,8 @@ spec:
       guaranteedVcpuShare: 30%
       purchaseModel: on-demand
       workloadFamily: standard
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 48
       ramGiB: 64
     pricing:
@@ -1025,7 +1055,7 @@ spec:
         byteBasis: not-applicable
     notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
   - sku: cloudru.compute.vcpu-separate
-    name: Intel Xeon Gold 6248R / 6348, 100% vCPU
+    name: Cascade / Ice Lake, 100% vCPU
     meter: compute.vcpu
     status: not-publicly-disclosed
     pricingMode: status-only
@@ -1036,13 +1066,13 @@ spec:
     - cloudru.compute-pdf
     dimensions:
       publishedModel: flavor-bundle
-      cpuPlatformFamily: unknown
-      cpuPlatformNative: Intel Xeon Gold 6248R / 6348
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       guaranteedVcpuShare: 100%
       purchaseModel: on-demand
     notes: Отдельная ставка не опубликована; модельная оценка хранится в derivedEstimates SKU cloudru.compute.1vcpu-2gb.
   - sku: cloudru.compute.ram-separate
-    name: Intel Xeon Gold 6248R / 6348, RAM
+    name: Cascade / Ice Lake, RAM
     meter: compute.ram
     status: not-publicly-disclosed
     pricingMode: status-only
@@ -1053,7 +1083,7 @@ spec:
     - cloudru.compute-pdf
     dimensions:
       publishedModel: fixed vCPU/RAM flavors
-      cpuPlatformFamily: unknown
-      cpuPlatformNative: Intel Xeon Gold 6248R / 6348
+      cpuPlatformFamily: intel-cascade-or-ice
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       purchaseModel: on-demand
     notes: RAM опубликована только внутри готовых конфигураций VM.

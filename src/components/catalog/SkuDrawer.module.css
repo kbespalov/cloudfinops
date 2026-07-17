@@ -1,0 +1,46 @@
+.root {
+  min-height: 100%;
+  background: var(--g-color-base-background);
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  padding: 16px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.titleBlock {
+  padding-inline-end: 8px;
+}
+
+.sku {
+  word-break: break-all;
+}
+
+.priceBlock {
+  padding-top: 4px;
+}
+
+.section {
+  padding: 20px;
+}
+
+.sources {
+  min-width: 0;
+}
+
+.sourceLink {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 100%;
+}
+
+.sourceTitle {
+  flex: 1 1 auto;
+  min-width: 0;
+  line-height: 1.35;
+}

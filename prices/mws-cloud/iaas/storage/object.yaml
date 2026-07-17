@@ -9,7 +9,7 @@ metadata:
 spec:
   meters:
   - sku: mws.object-storage.standard
-    name: Стандартный класс хранения
+    name: Объектное хранилище · Standard
     meter: storage.object.capacity
     status: available
     pricingMode: unit
@@ -48,7 +48,7 @@ spec:
         formula: native monthly rate
         vat: included
   - sku: mws.object-storage.warm
-    name: Теплый класс хранения
+    name: Объектное хранилище · Warm
     meter: storage.object.capacity
     status: available
     pricingMode: unit

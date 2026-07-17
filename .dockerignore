@@ -1,0 +1,15 @@
+.git
+.cursor
+.next
+node_modules
+out
+*.tsbuildinfo
+.DS_Store
+**/.DS_Store
+README.md
+Makefile
+.dockerignore
+Dockerfile
+agent-transcripts
+*.png
+assets

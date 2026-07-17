@@ -8,6 +8,42 @@ metadata:
   title: General compute
 spec:
   meters:
+  - sku: vk.compute.cascade-lake.vcpu
+    name: Intel Cascade Lake, 100% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    - vk.iaas-rules
+    dimensions:
+      published30Days: 820
+      cpuPlatformFamily: intel-cascade-lake
+      cpuPlatformNative: Intel Cascade Lake
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+    pricing:
+      rate:
+        amount: '0.018972'
+        currency: RUB
+        unit:
+          quantity: vCPU
+          period: minute
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '1.13832'
+        unit:
+          currency: RUB
+          quantity: vCPU
+          period: hour
+        formula: 0.018972 × 60
+        vat: included
+    notes: >
+      STD2-* flavors. Источник: cloud.vk.com/pricelist → CPU, Intel Cascade Lake.
   - sku: vk.compute.ice-lake.vcpu
     name: Intel Ice Lake, 100% vCPU
     meter: compute.vcpu
@@ -41,6 +77,39 @@ spec:
           quantity: vCPU
           period: hour
         formula: 0.019660 × 60
+        vat: included
+  - sku: vk.compute.cascade-lake.ram
+    name: Intel Cascade Lake, RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-13'
+    sourceRefs:
+    - vk.pricelist
+    - vk.iaas-rules
+    dimensions:
+      published30Days: 223
+      cpuPlatformFamily: intel-cascade-lake
+      cpuPlatformNative: Intel Cascade Lake
+      purchaseModel: on-demand
+    pricing:
+      rate:
+        amount: '0.005154'
+        currency: RUB
+        unit:
+          quantity: GiB-RAM
+          period: minute
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.30924'
+        unit:
+          currency: RUB
+          quantity: GiB-RAM
+          period: hour
+        formula: 0.005154 × 60
         vat: included
   - sku: vk.compute.ram
     name: Intel Ice Lake, RAM

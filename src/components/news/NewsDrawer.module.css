@@ -1,0 +1,37 @@
+.root {
+  min-height: 100%;
+  background: var(--g-color-base-background);
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  padding: 16px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.titleBlock {
+  padding-inline-end: 8px;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.section {
+  padding: 20px;
+}
+
+.summary {
+  line-height: 1.45;
+}
+
+.url {
+  word-break: break-all;
+  font-size: 12px;
+  line-height: 1.35;
+}

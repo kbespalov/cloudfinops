@@ -9,7 +9,7 @@ metadata:
 spec:
   meters:
   - sku: selectel.object-storage.standard
-    name: Стандартное хранение
+    name: Объектное хранилище · Standard
     meter: storage.object.capacity
     status: available
     pricingMode: unit
@@ -38,7 +38,7 @@ spec:
         vat: included
         byteBasis: binary
   - sku: selectel.object-storage.cold
-    name: Холодное хранение
+    name: Объектное хранилище · Cold
     meter: storage.object.capacity
     status: available
     pricingMode: unit
@@ -62,7 +62,7 @@ spec:
         vat: included
         byteBasis: binary
   - sku: selectel.object-storage.ice
-    name: Ледяное хранение
+    name: Объектное хранилище · Ice
     meter: storage.object.capacity
     status: available
     pricingMode: unit
@@ -86,3 +86,138 @@ spec:
         vat: included
         byteBasis: binary
     notes: Ставки зависят от выбранного пула; зафиксирован публичный выбор ru-3.
+
+  # API requests — from selectel.ru/prices (S3 section), ₽ VAT included.
+  # GET packs published per 10k; PUT/POST/COPY per 1k. Catalog stores ₽/request.
+  - sku: selectel.object-storage.standard.requests.put
+    name: Объектное хранилище · Standard · PUT
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Санкт-Петербург / ru-3
+    effectiveFrom: '2025-09-01'
+    checkedAt: '2026-07-13'
+    sourceRefs: [selectel.prices, selectel.s3-rules]
+    dimensions:
+      storageClass: standard
+      operation: PUT
+      nativeBillingStepRequests: 1000
+      nativeAmountPerStep: '0.0714'
+    pricing:
+      rate:
+        amount: '0.0000714'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Публичная ставка 0,0714 ₽ за 1 000 запросов PUT/POST/COPY (selectel.ru/prices).
+  - sku: selectel.object-storage.standard.requests.get
+    name: Объектное хранилище · Standard · GET
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Санкт-Петербург / ru-3
+    effectiveFrom: '2025-09-01'
+    checkedAt: '2026-07-13'
+    sourceRefs: [selectel.prices, selectel.s3-rules]
+    dimensions:
+      storageClass: standard
+      operation: GET
+      nativeBillingStepRequests: 10000
+      nativeAmountPerStep: '0.0054264'
+    pricing:
+      rate:
+        amount: '0.00000054264'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Публичная ставка 0,0054264 ₽ за 10 000 запросов GET (selectel.ru/prices).
+  - sku: selectel.object-storage.cold.requests.put
+    name: Объектное хранилище · Cold · PUT
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Санкт-Петербург / ru-3
+    effectiveFrom: '2025-09-01'
+    checkedAt: '2026-07-13'
+    sourceRefs: [selectel.prices, selectel.s3-rules]
+    dimensions:
+      storageClass: cold
+      operation: PUT
+      nativeBillingStepRequests: 1000
+      nativeAmountPerStep: '0.204'
+    pricing:
+      rate:
+        amount: '0.000204'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Публичная ставка 0,204 ₽ за 1 000 запросов PUT/POST/COPY.
+  - sku: selectel.object-storage.cold.requests.get
+    name: Объектное хранилище · Cold · GET
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Санкт-Петербург / ru-3
+    effectiveFrom: '2025-09-01'
+    checkedAt: '2026-07-13'
+    sourceRefs: [selectel.prices, selectel.s3-rules]
+    dimensions:
+      storageClass: cold
+      operation: GET
+      nativeBillingStepRequests: 10000
+      nativeAmountPerStep: '0.0265608'
+    pricing:
+      rate:
+        amount: '0.00000265608'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Публичная ставка 0,0265608 ₽ за 10 000 запросов GET.
+  - sku: selectel.object-storage.ice.requests.put
+    name: Объектное хранилище · Ice · PUT
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Санкт-Петербург / ru-3
+    effectiveFrom: '2025-09-01'
+    checkedAt: '2026-07-13'
+    sourceRefs: [selectel.prices, selectel.s3-rules]
+    dimensions:
+      storageClass: ice
+      operation: PUT
+      nativeBillingStepRequests: 1000
+      nativeAmountPerStep: '3.01'
+    pricing:
+      rate:
+        amount: '0.00301'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Публичная ставка 0,0030 ₽/запрос · 3,01 ₽ за 1 000 запросов PUT/POST/COPY.
+  - sku: selectel.object-storage.ice.requests.get
+    name: Объектное хранилище · Ice · GET
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Санкт-Петербург / ru-3
+    effectiveFrom: '2025-09-01'
+    checkedAt: '2026-07-13'
+    sourceRefs: [selectel.prices, selectel.s3-rules]
+    dimensions:
+      storageClass: ice
+      operation: GET
+      nativeBillingStepRequests: 10000
+      nativeAmountPerStep: '3.61'
+    pricing:
+      rate:
+        amount: '0.000361'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+    notes: Публичная ставка 0,00036 ₽/запрос · 3,61 ₽ за 10 000 запросов GET.
