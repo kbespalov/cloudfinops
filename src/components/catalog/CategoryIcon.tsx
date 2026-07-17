@@ -1,7 +1,16 @@
 'use client';
 
 import {Icon} from '@gravity-ui/uikit';
-import {Cpu, Cube, Database, Globe, Gpu, Layers3Diagonal, NodesRight} from '@gravity-ui/icons';
+import {
+  Cpu,
+  Cube,
+  Database,
+  FaceRobot,
+  Globe,
+  Gpu,
+  Layers3Diagonal,
+  NodesRight,
+} from '@gravity-ui/icons';
 import type {CategoryFilter, CategoryKey} from '@/lib/catalog';
 import styles from './CategoryIcon.module.css';
 
@@ -11,6 +20,7 @@ const CATEGORY_ICONS: Record<CategoryKey, typeof Cpu> = {
   storage: Database,
   network: Globe,
   kubernetes: NodesRight,
+  ai: FaceRobot,
   other: Cube,
 };
 
@@ -21,6 +31,7 @@ const FILTER_ICONS: Record<CategoryFilter, typeof Cpu> = {
   storage: Database,
   network: Globe,
   kubernetes: NodesRight,
+  ai: FaceRobot,
 };
 
 export const CATEGORY_TONE: Record<CategoryKey, string> = {
@@ -29,6 +40,7 @@ export const CATEGORY_TONE: Record<CategoryKey, string> = {
   storage: 'success',
   network: 'utility',
   kubernetes: 'misc',
+  ai: 'misc',
   other: 'unknown',
 };
 
@@ -39,6 +51,7 @@ export const FILTER_TONE: Record<CategoryFilter, string> = {
   storage: 'success',
   network: 'utility',
   kubernetes: 'misc',
+  ai: 'misc',
 };
 
 export function CategoryIcon({

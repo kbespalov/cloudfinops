@@ -22,6 +22,8 @@ export function categoryLabelTheme(category: CategoryKey): LabelTheme {
       return 'utility';
     case 'kubernetes':
       return 'utility';
+    case 'ai':
+      return 'info';
     default:
       return 'unknown';
   }

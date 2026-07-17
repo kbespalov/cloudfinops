@@ -26,9 +26,12 @@ import {
   TextInput,
 } from '@gravity-ui/uikit';
 import {
+  ArrowDownToLine,
+  ArrowUpFromLine,
   Copy,
   Cpu,
   Database,
+  FaceRobot,
   Globe,
   Gpu,
   HardDrive,
@@ -46,6 +49,9 @@ import {
   catalog,
   displayAmount,
   displayMeterName,
+  extractAiModelFamily,
+  listAiModelOptions,
+  meterMatchesAiModel,
   extractDiskMedia,
   extractDiskVariant,
   extractGpuModel,
@@ -53,6 +59,7 @@ import {
   extractRamGiB,
   extractStorageClass,
   extractVcpu,
+  isAiTokenMeter,
   isDiskMeter,
   isImageMeter,
   isSnapshotMeter,
@@ -60,6 +67,9 @@ import {
   formatPlatform,
   kubernetesAvailabilityLabel,
   kubernetesFaultToleranceHint,
+  AI_FAMILY_TITLE,
+  meterMatchesAiFacet,
+  meterMatchesAiFamilyFacet,
   meterMatchesCategory,
   meterMatchesComputeFacet,
   meterMatchesDiskFacet,
@@ -76,6 +86,8 @@ import {
   periodLabel,
   sortMeters,
   isRequestMeter,
+  type AiFacet,
+  type AiFamilyFacet,
   type CatalogMeter,
   type CategoryFilter,
   type ComputeFacet,
@@ -122,6 +134,26 @@ const CATEGORY_FILTERS: {id: CategoryFilter; title: string}[] = [
   {id: 'storage', title: 'Storage'},
   {id: 'network', title: 'Network'},
   {id: 'kubernetes', title: 'Kubernetes'},
+  {id: 'ai', title: 'AI'},
+];
+
+const AI_FACET_OPTIONS: {value: AiFacet; title: string; icon: typeof Layers3Diagonal}[] = [
+  {value: 'all', title: 'Все', icon: FaceRobot},
+  {value: 'input', title: 'Input', icon: ArrowDownToLine},
+  {value: 'output', title: 'Output', icon: ArrowUpFromLine},
+];
+
+const AI_FAMILY_OPTIONS: {value: AiFamilyFacet; title: string}[] = [
+  {value: 'all', title: 'Все'},
+  {value: 'qwen', title: AI_FAMILY_TITLE.qwen},
+  {value: 'alice', title: AI_FAMILY_TITLE.alice},
+  {value: 'yandexgpt', title: AI_FAMILY_TITLE.yandexgpt},
+  {value: 'deepseek', title: AI_FAMILY_TITLE.deepseek},
+  {value: 'gemma', title: AI_FAMILY_TITLE.gemma},
+  {value: 'gpt-oss', title: AI_FAMILY_TITLE['gpt-oss']},
+  {value: 'glm', title: AI_FAMILY_TITLE.glm},
+  {value: 'gigachat', title: AI_FAMILY_TITLE.gigachat},
+  {value: 'kimi', title: AI_FAMILY_TITLE.kimi},
 ];
 
 const FACET_OPTIONS: {
@@ -260,6 +292,29 @@ function parseKubernetesAvailabilityFacet(v: string | null): KubernetesAvailabil
   return 'all';
 }
 
+function parseAiFacet(v: string | null): AiFacet {
+  if (v === 'input' || v === 'output' || v === 'all') return v;
+  return 'all';
+}
+
+function parseAiFamilyFacet(v: string | null): AiFamilyFacet {
+  if (
+    v === 'gpt-oss' ||
+    v === 'qwen' ||
+    v === 'gemma' ||
+    v === 'yandexgpt' ||
+    v === 'alice' ||
+    v === 'deepseek' ||
+    v === 'glm' ||
+    v === 'gigachat' ||
+    v === 'kimi' ||
+    v === 'all'
+  ) {
+    return v;
+  }
+  return 'all';
+}
+
 function parseDiskFacet(v: string | null): DiskFacet {
   if (v === 'hdd' || v === 'ssd' || v === 'nvme' || v === 'all') return v;
   return 'all';
@@ -294,7 +349,8 @@ function parseSort(v: string | null): SortKey {
   return 'price-asc';
 }
 
-function priceColumnTitle(period: PeriodMode): string {
+function priceColumnTitle(period: PeriodMode, category: CategoryFilter): string {
+  if (category === 'ai') return 'Цена / 1M ток.';
   if (period === 'month') return 'Цена / мес';
   if (period === 'year') return 'Цена / год';
   return 'Цена / час';
@@ -326,6 +382,11 @@ export function CatalogPage() {
     useState<KubernetesAvailabilityFacet>(() =>
       parseKubernetesAvailabilityFacet(searchParams.get('k8s')),
     );
+  const [aiFacet, setAiFacet] = useState<AiFacet>(() => parseAiFacet(searchParams.get('ai')));
+  const [aiFamilyFacet, setAiFamilyFacet] = useState<AiFamilyFacet>(() =>
+    parseAiFamilyFacet(searchParams.get('family')),
+  );
+  const [aiModel, setAiModel] = useState<string>(() => searchParams.get('model') || '');
   const [diskFacet, setDiskFacet] = useState<DiskFacet>(() =>
     parseDiskFacet(searchParams.get('disk')),
   );
@@ -365,6 +426,9 @@ export function CatalogPage() {
       if (category === 'kubernetes' && kubernetesAvailabilityFacet !== 'all') {
         params.set('k8s', kubernetesAvailabilityFacet);
       }
+      if (category === 'ai' && aiFacet !== 'all') params.set('ai', aiFacet);
+      if (category === 'ai' && aiFamilyFacet !== 'all') params.set('family', aiFamilyFacet);
+      if (category === 'ai' && aiModel) params.set('model', aiModel);
       if (period !== 'month') params.set('period', period);
       if (search.trim()) params.set('q', search.trim());
       if (providers.length) params.set('providers', providers.join(','));
@@ -384,6 +448,9 @@ export function CatalogPage() {
     storageKindFacet,
     networkFacet,
     kubernetesAvailabilityFacet,
+    aiFacet,
+    aiFamilyFacet,
+    aiModel,
     pathname,
     period,
     providers,
@@ -454,6 +521,7 @@ export function CatalogPage() {
       storage: 0,
       network: 0,
       kubernetes: 0,
+      ai: 0,
     };
     for (const m of baseMeters) {
       if (m.categoryKey in counts) counts[m.categoryKey as CategoryFilter] += 1;
@@ -537,6 +605,81 @@ export function CatalogPage() {
     [kubernetesMeters],
   );
 
+  const aiMeters = useMemo(
+    () => baseMeters.filter((m) => m.categoryKey === 'ai'),
+    [baseMeters],
+  );
+
+  /** AI meters after provider + family + model — drives Input/Output counters. */
+  const aiMetersScoped = useMemo(() => {
+    const providerSet = providers.length ? new Set(providers) : null;
+    return aiMeters.filter((m) => {
+      if (providerSet && !providerSet.has(m.provider)) return false;
+      if (!meterMatchesAiFamilyFacet(m, aiFamilyFacet)) return false;
+      if (!meterMatchesAiModel(m, aiModel || null)) return false;
+      return true;
+    });
+  }, [aiMeters, providers, aiFamilyFacet, aiModel]);
+
+  const aiFacetCounts = useMemo(
+    () => ({
+      all: aiMetersScoped.length,
+      input: aiMetersScoped.filter((m) => meterMatchesAiFacet(m, 'input')).length,
+      output: aiMetersScoped.filter((m) => meterMatchesAiFacet(m, 'output')).length,
+    }),
+    [aiMetersScoped],
+  );
+
+  /** Family counters respect provider + token direction (not exact model). */
+  const aiFamilyCounts = useMemo(() => {
+    const providerSet = providers.length ? new Set(providers) : null;
+    const scope = aiMeters.filter((m) => {
+      if (providerSet && !providerSet.has(m.provider)) return false;
+      if (!meterMatchesAiFacet(m, aiFacet)) return false;
+      return true;
+    });
+    return {
+      all: scope.length,
+      'gpt-oss': scope.filter((m) => meterMatchesAiFamilyFacet(m, 'gpt-oss')).length,
+      qwen: scope.filter((m) => meterMatchesAiFamilyFacet(m, 'qwen')).length,
+      gemma: scope.filter((m) => meterMatchesAiFamilyFacet(m, 'gemma')).length,
+      yandexgpt: scope.filter((m) => meterMatchesAiFamilyFacet(m, 'yandexgpt')).length,
+      alice: scope.filter((m) => meterMatchesAiFamilyFacet(m, 'alice')).length,
+      deepseek: scope.filter((m) => meterMatchesAiFamilyFacet(m, 'deepseek')).length,
+      glm: scope.filter((m) => meterMatchesAiFamilyFacet(m, 'glm')).length,
+      gigachat: scope.filter((m) => meterMatchesAiFamilyFacet(m, 'gigachat')).length,
+      kimi: scope.filter((m) => meterMatchesAiFamilyFacet(m, 'kimi')).length,
+    };
+  }, [aiMeters, providers, aiFacet]);
+
+  const aiModelOptions = useMemo(() => {
+    // Model list respects provider + family, but not the selected model itself.
+    const providerSet = providers.length ? new Set(providers) : null;
+    const scope = aiMeters.filter((m) => {
+      if (providerSet && !providerSet.has(m.provider)) return false;
+      if (!meterMatchesAiFamilyFacet(m, aiFamilyFacet)) return false;
+      return true;
+    });
+    const options = listAiModelOptions(scope);
+    return options.map((o) => ({
+      value: o.value,
+      content: `${o.content} · ${o.count}`,
+    }));
+  }, [aiMeters, providers, aiFamilyFacet]);
+
+  /** Drop family/model filters that become empty after provider (or token) scope changes. */
+  useEffect(() => {
+    if (category !== 'ai') return;
+    if (aiFamilyFacet !== 'all' && aiFamilyCounts[aiFamilyFacet] === 0) {
+      setAiFamilyFacet('all');
+      setAiModel('');
+      return;
+    }
+    if (aiModel && !aiModelOptions.some((o) => o.value === aiModel)) {
+      setAiModel('');
+    }
+  }, [category, aiFamilyFacet, aiFamilyCounts, aiModel, aiModelOptions]);
+
   const storageFacetCounts = useMemo(() => {
     const items = storageMeters.filter((m) => meterMatchesStorageKindFacet(m, storageKindFacet));
     return {
@@ -611,6 +754,9 @@ export function CatalogPage() {
       ) {
         return false;
       }
+      if (category === 'ai' && !meterMatchesAiFacet(m, aiFacet)) return false;
+      if (category === 'ai' && !meterMatchesAiFamilyFacet(m, aiFamilyFacet)) return false;
+      if (category === 'ai' && !meterMatchesAiModel(m, aiModel || null)) return false;
       if (!meterMatchesSearch(m, deferredSearch)) return false;
       if (providerSet && !providerSet.has(m.provider)) return false;
       return true;
@@ -628,6 +774,9 @@ export function CatalogPage() {
     storageKindFacet,
     networkFacet,
     kubernetesAvailabilityFacet,
+    aiFacet,
+    aiFamilyFacet,
+    aiModel,
     deferredSearch,
     providers,
     sort,
@@ -653,6 +802,10 @@ export function CatalogPage() {
     storageFacet,
     storageKindFacet,
     networkFacet,
+    kubernetesAvailabilityFacet,
+    aiFacet,
+    aiFamilyFacet,
+    aiModel,
     deferredSearch,
     providers,
     sort,
@@ -734,7 +887,9 @@ export function CatalogPage() {
                   ? 'Мастер'
                   : category === 'network'
                     ? 'Единица'
-                    : 'Параметры',
+                    : category === 'ai'
+                      ? 'Токены'
+                      : 'Параметры',
         width: 220,
         className: styles.specsCol,
         template: (m) => {
@@ -743,6 +898,10 @@ export function CatalogPage() {
           if (category === 'gpu') {
             label = extractGpuModel(m) || label;
             title = label;
+          } else if (category === 'ai') {
+            label = billingUnitLabel(m);
+            const model = extractAiModelFamily(m);
+            title = model ? `${model} · ${label}` : label;
           } else if (category === 'kubernetes') {
             const availability = extractKubernetesAvailability(m);
             if (availability) {
@@ -802,7 +961,9 @@ export function CatalogPage() {
               label = `${CATEGORY_TITLE[m.categoryKey]} · ${paramsLabel(m)}`;
             }
           }
-          if (category !== 'kubernetes' && category !== 'network') title = label;
+          if (category !== 'kubernetes' && category !== 'network' && category !== 'ai') {
+            title = label;
+          }
           return (
             <Text variant="body-1" color="secondary" ellipsis title={title}>
               {label}
@@ -812,7 +973,7 @@ export function CatalogPage() {
       },
       {
         id: 'price',
-        name: priceColumnTitle(period),
+        name: priceColumnTitle(period, category),
         align: 'end',
         width: 140,
         className: styles.priceCol,
@@ -829,7 +990,7 @@ export function CatalogPage() {
     ];
 
     return cols;
-  }, [category, period]);
+  }, [category, period, facet]);
 
   const resetFilters = useCallback(() => {
     startTransition(() => {
@@ -843,6 +1004,9 @@ export function CatalogPage() {
       setStorageKindFacet('all');
       setNetworkFacet('all');
       setKubernetesAvailabilityFacet('all');
+      setAiFacet('all');
+      setAiFamilyFacet('all');
+      setAiModel('');
       setSearch('');
       setProviders([]);
       setSort('price-asc');
@@ -860,6 +1024,9 @@ export function CatalogPage() {
     storageKindFacet !== 'all' ||
     networkFacet !== 'all' ||
     kubernetesAvailabilityFacet !== 'all' ||
+    aiFacet !== 'all' ||
+    aiFamilyFacet !== 'all' ||
+    Boolean(aiModel) ||
     search.trim() !== '' ||
     providers.length > 0 ||
     sort !== 'price-asc';
@@ -913,6 +1080,11 @@ export function CatalogPage() {
                 }
                 if (next !== 'network') setNetworkFacet('all');
                 if (next !== 'kubernetes') setKubernetesAvailabilityFacet('all');
+                if (next !== 'ai') {
+                  setAiFacet('all');
+                  setAiFamilyFacet('all');
+                  setAiModel('');
+                }
               });
             }}
           >
@@ -927,13 +1099,13 @@ export function CatalogPage() {
 
           <div className={styles.filters}>
             <Flex gap={3} alignItems="center" className={styles.controlsPrimary}>
-              <div className={styles.search}>
+              <div className={category === 'ai' ? styles.searchCompact : styles.search}>
                 <TextInput
                   controlRef={searchRef}
                   size="m"
                   value={search}
                   onUpdate={setSearch}
-                  placeholder="Поиск тарифа или провайдера"
+                  placeholder={category === 'ai' ? 'Поиск' : 'Поиск тарифа или провайдера'}
                   startContent={
                     <span className={styles.searchIcon}>
                       <Icon data={Magnifier} size={16} />
@@ -942,6 +1114,19 @@ export function CatalogPage() {
                   hasClear
                 />
               </div>
+
+              {category === 'ai' ? (
+                <Select
+                  size="m"
+                  filterable
+                  hasClear
+                  placeholder="Модель"
+                  value={aiModel ? [aiModel] : []}
+                  options={aiModelOptions}
+                  onUpdate={(v) => setAiModel(v[0] || '')}
+                  className={styles.controlSelectModel}
+                />
+              ) : null}
 
               {category !== 'all' ? (
                 <Select
@@ -1292,6 +1477,57 @@ export function CatalogPage() {
                   </SegmentedRadioGroup>
                 </div>
               ) : null}
+
+              {category === 'ai' ? (
+                <>
+                  <div className={styles.facetControl} title="Семейство моделей">
+                    <Text variant="caption-2" color="complementary" className={styles.facetLabel}>
+                      Семейство
+                    </Text>
+                    <SegmentedRadioGroup
+                      size="m"
+                      value={aiFamilyFacet}
+                      onUpdate={(v) => {
+                        setAiFamilyFacet(v as AiFamilyFacet);
+                        setAiModel('');
+                      }}
+                    >
+                      {AI_FAMILY_OPTIONS.filter(
+                        (o) => o.value === 'all' || aiFamilyCounts[o.value] > 0,
+                      ).map((o) => (
+                        <SegmentedRadioGroup.Option key={o.value} value={o.value}>
+                          <span className={styles.facetOption}>
+                            <span>
+                              {o.title} {aiFamilyCounts[o.value]}
+                            </span>
+                          </span>
+                        </SegmentedRadioGroup.Option>
+                      ))}
+                    </SegmentedRadioGroup>
+                  </div>
+                  <div className={styles.facetControl} title="Направление токенов">
+                    <Text variant="caption-2" color="complementary" className={styles.facetLabel}>
+                      Токены
+                    </Text>
+                    <SegmentedRadioGroup
+                      size="m"
+                      value={aiFacet}
+                      onUpdate={(v) => setAiFacet(v as AiFacet)}
+                    >
+                      {AI_FACET_OPTIONS.map((o) => (
+                        <SegmentedRadioGroup.Option key={o.value} value={o.value}>
+                          <span className={styles.facetOption}>
+                            <Icon data={o.icon} size={14} />
+                            <span>
+                              {o.title} {aiFacetCounts[o.value]}
+                            </span>
+                          </span>
+                        </SegmentedRadioGroup.Option>
+                      ))}
+                    </SegmentedRadioGroup>
+                  </div>
+                </>
+              ) : null}
             </div>
           </div>
 
@@ -1346,7 +1582,9 @@ export function CatalogPage() {
           </div>
 
           <Text variant="caption-2" color="secondary">
-            Цены {periodLabel(period)}; ёмкость — за GiB
+            {category === 'ai' || filtered.some(isAiTokenMeter)
+              ? 'Цены AI — за 1M токенов (локальный inference)'
+              : `Цены ${periodLabel(period)}; ёмкость — за GiB`}
             {category === 'storage' || filtered.some(isRequestMeter)
               ? '; запросы — за 10 000 операций'
               : ''}

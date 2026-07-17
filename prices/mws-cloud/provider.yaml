@@ -28,6 +28,8 @@ spec:
     - storage.image.capacity
     - storage.object.capacity
     - storage.object.requests
+    - ai.inference.tokens.input
+    - ai.inference.tokens.output
   - id: mws.compute
     title: Тарификация Compute
     url: https://mws.ru/docs/cloud-platform/compute/general/pricing.html
@@ -88,3 +90,12 @@ spec:
     priority: 2
     covers:
     - containers.kubernetes.control-plane
+  - id: mws.gpt-model-hub
+    title: Тарификация GPT Model Hub
+    url: https://mws.ru/docs/cloud-platform/gpt/general/pricing.html
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - ai.inference.tokens.input
+    - ai.inference.tokens.output

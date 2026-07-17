@@ -53,6 +53,34 @@ export type NetworkFacet = 'all' | 'public-ip' | 'egress';
 /** Kubernetes master topology — zonal (not HA) vs regional (fault-tolerant). */
 export type KubernetesAvailabilityFacet = 'all' | 'zonal' | 'regional';
 
+/** AI inference token direction — prompt vs completion. */
+export type AiFacet = 'all' | 'input' | 'output';
+
+/** Quick family chips on the AI tab (brand / lineage, not exact SKU). */
+export type AiFamilyFacet =
+  | 'all'
+  | 'gpt-oss'
+  | 'qwen'
+  | 'gemma'
+  | 'yandexgpt'
+  | 'alice'
+  | 'deepseek'
+  | 'glm'
+  | 'gigachat'
+  | 'kimi';
+
+export const AI_FAMILY_TITLE: Record<Exclude<AiFamilyFacet, 'all'>, string> = {
+  'gpt-oss': 'gpt-oss',
+  qwen: 'Qwen',
+  gemma: 'Gemma',
+  yandexgpt: 'YandexGPT',
+  alice: 'Alice',
+  deepseek: 'DeepSeek',
+  glm: 'GLM',
+  gigachat: 'GigaChat',
+  kimi: 'Kimi',
+};
+
 export type GroupMode = 'none' | 'provider' | 'category';
 export type PeriodMode = 'unit' | 'month' | 'year';
 export type Density = 's' | 'm' | 'l';
@@ -66,6 +94,7 @@ export const CATEGORY_ORDER: Exclude<CategoryKey, 'other'>[] = [
   'storage',
   'network',
   'kubernetes',
+  'ai',
 ];
 
 export const CATEGORY_TITLE: Record<CategoryKey, string> = {
@@ -74,6 +103,7 @@ export const CATEGORY_TITLE: Record<CategoryKey, string> = {
   storage: 'Storage',
   network: 'Network',
   kubernetes: 'Kubernetes',
+  ai: 'AI',
   other: 'Other',
 };
 
@@ -111,8 +141,13 @@ export function isUsageMeter(meter: CatalogMeter): boolean {
   return (
     meter.unitPeriod === 'usage' ||
     meter.normalizedPeriod === 'usage' ||
-    meter.meter.startsWith('network.traffic.')
+    meter.meter.startsWith('network.traffic.') ||
+    meter.meter.startsWith('ai.inference.')
   );
+}
+
+export function isAiTokenMeter(meter: CatalogMeter): boolean {
+  return meter.categoryKey === 'ai' || meter.meter.startsWith('ai.inference.');
 }
 
 export function isAddressMeter(meter: CatalogMeter): boolean {
@@ -176,9 +211,11 @@ export function periodLabel(period: PeriodMode): string {
 
 export function meterPriceLabel(meter: CatalogMeter, period: PeriodMode): string {
   if (isRequestMeter(meter)) return 'за 10 000 запросов';
+  if (isAiTokenMeter(meter)) return 'за 1M токенов';
   if (isUsageMeter(meter)) {
     const q = meter.unitQuantity;
     if (q === 'GiB' || q === 'GB') return 'за GiB';
+    if (q === '1M-token') return 'за 1M токенов';
     if (q) return `за ${q}`;
     return 'за единицу';
   }
@@ -271,9 +308,16 @@ export function meterMatchesComputeFacet(meter: CatalogMeter, facet: ComputeFace
 
 /** Human-readable billing unit for the specs column (e.g. «GiB · час», «IP · час»). */
 export function billingUnitLabel(meter: CatalogMeter): string {
+  if (isAiTokenMeter(meter)) {
+    const direction = extractAiTokenDirection(meter);
+    if (direction === 'input') return 'input · 1M ток.';
+    if (direction === 'output') return 'output · 1M ток.';
+    return '1M ток.';
+  }
   if (isUsageMeter(meter)) {
     const q = meter.unitQuantity;
     if (q === 'GiB' || q === 'GB') return 'GiB';
+    if (q === '1M-token') return '1M ток.';
     if (q) return q;
     return '—';
   }
@@ -460,6 +504,13 @@ function displayBlockDiskName(meter: CatalogMeter): string {
 
 /** Taxonomy-aligned label for catalog UI (keeps native name in SKU/drawer meta). */
 export function displayMeterName(meter: CatalogMeter): string {
+  if (isAiTokenMeter(meter)) {
+    const model = extractAiModelFamily(meter);
+    const direction = extractAiTokenDirection(meter);
+    if (model && direction) return `${model} · ${direction}`;
+    if (model) return model;
+  }
+
   if (meter.meter.startsWith('storage.block.')) {
     return displayBlockDiskName(meter);
   }
@@ -538,6 +589,91 @@ export function extractNetworkKind(meter: CatalogMeter): 'public-ip' | 'egress' 
   }
   if (meter.meter === 'network.traffic.egress') return 'egress';
   return null;
+}
+
+export function extractAiModelFamily(meter: CatalogMeter): string | null {
+  const dims = meter.dimensions;
+  if (typeof dims.modelFamily === 'string' && dims.modelFamily.trim()) return dims.modelFamily;
+  if (typeof dims.modelId === 'string' && dims.modelId.trim()) return dims.modelId;
+  return null;
+}
+
+export function extractAiTokenDirection(meter: CatalogMeter): 'input' | 'output' | null {
+  const dims = meter.dimensions;
+  if (dims.tokenDirection === 'input' || meter.meter === 'ai.inference.tokens.input') return 'input';
+  if (dims.tokenDirection === 'output' || meter.meter === 'ai.inference.tokens.output') {
+    return 'output';
+  }
+  return null;
+}
+
+export function meterMatchesAiFacet(meter: CatalogMeter, facet: AiFacet): boolean {
+  if (facet === 'all') return true;
+  if (!isAiTokenMeter(meter)) return false;
+  return extractAiTokenDirection(meter) === facet;
+}
+
+/** Map a concrete model name to a coarse family chip. */
+export function extractAiFamilyFacet(meter: CatalogMeter): Exclude<AiFamilyFacet, 'all'> | null {
+  if (!isAiTokenMeter(meter)) return null;
+  const blob = `${extractAiModelFamily(meter) || ''} ${extractAiModelKey(meter) || ''}`.toLowerCase();
+  if (!blob.trim()) return null;
+  if (blob.includes('gpt-oss')) return 'gpt-oss';
+  if (blob.includes('yandexgpt')) return 'yandexgpt';
+  if (blob.includes('alice')) return 'alice';
+  if (blob.includes('deepseek')) return 'deepseek';
+  if (blob.includes('gemma')) return 'gemma';
+  if (blob.includes('gigachat')) return 'gigachat';
+  if (blob.includes('qwen')) return 'qwen';
+  if (blob.includes('glm')) return 'glm';
+  if (blob.includes('kimi')) return 'kimi';
+  return null;
+}
+
+export function meterMatchesAiFamilyFacet(
+  meter: CatalogMeter,
+  facet: AiFamilyFacet,
+): boolean {
+  if (facet === 'all') return true;
+  if (!isAiTokenMeter(meter)) return false;
+  return extractAiFamilyFacet(meter) === facet;
+}
+
+/** Stable filter key for AI model selector (lowercase modelId / modelFamily). */
+export function extractAiModelKey(meter: CatalogMeter): string | null {
+  const dims = meter.dimensions;
+  const raw =
+    (typeof dims.modelId === 'string' && dims.modelId.trim()) ||
+    (typeof dims.modelFamily === 'string' && dims.modelFamily.trim()) ||
+    null;
+  return raw ? raw.toLowerCase() : null;
+}
+
+export function meterMatchesAiModel(meter: CatalogMeter, modelKey: string | null): boolean {
+  if (!modelKey) return true;
+  if (!isAiTokenMeter(meter)) return false;
+  return extractAiModelKey(meter) === modelKey.toLowerCase();
+}
+
+export function listAiModelOptions(
+  meters: CatalogMeter[],
+): {value: string; content: string; count: number}[] {
+  const byKey = new Map<string, {label: string; count: number}>();
+  for (const m of meters) {
+    if (!isAiTokenMeter(m)) continue;
+    const key = extractAiModelKey(m);
+    if (!key) continue;
+    const label = extractAiModelFamily(m) || key;
+    const prev = byKey.get(key);
+    if (prev) prev.count += 1;
+    else byKey.set(key, {label, count: 1});
+  }
+  return [...byKey.entries()]
+    .map(([value, {label, count}]) => ({value, content: label, count}))
+    .sort((a, b) => {
+      if (b.count !== a.count) return b.count - a.count;
+      return a.content.localeCompare(b.content, 'ru', {sensitivity: 'base'});
+    });
 }
 
 export function meterMatchesNetworkFacet(meter: CatalogMeter, facet: NetworkFacet): boolean {
@@ -621,7 +757,15 @@ export function paramsLabel(meter: CatalogMeter): string {
   const k8sAvailability = extractKubernetesAvailability(meter);
   if (k8sAvailability) parts.push(kubernetesAvailabilityLabel(k8sAvailability));
 
-  if (meter.categoryKey === 'network' || isAddressMeter(meter) || isGatewayMeter(meter) || isUsageMeter(meter)) {
+  if (isAiTokenMeter(meter)) {
+    const unit = billingUnitLabel(meter);
+    if (unit && unit !== '—') parts.push(unit);
+  } else if (
+    meter.categoryKey === 'network' ||
+    isAddressMeter(meter) ||
+    isGatewayMeter(meter) ||
+    isUsageMeter(meter)
+  ) {
     const unit = billingUnitLabel(meter);
     if (unit && unit !== '—') parts.push(unit);
   } else if (meter.pricingMode === 'bundle' || meter.unitQuantity === 'flavor') {

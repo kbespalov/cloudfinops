@@ -42,6 +42,7 @@ export type CategoryKey =
   | 'storage'
   | 'network'
   | 'kubernetes'
+  | 'ai'
   | 'other';
 
 export type CatalogSource = {
@@ -84,6 +85,7 @@ function categoryKey(category: string, meter: string, service: string): Category
   if (category.includes('.gpu') || /\/gpu\.yaml$/.test(category)) return 'gpu';
   if (service === 'compute' && (meter.startsWith('compute.gpu') || category.endsWith('.gpu'))) return 'gpu';
   if (category.includes('kubernetes') || meter.includes('kubernetes')) return 'kubernetes';
+  if (service === 'ai' || category.includes('.ai.') || meter.startsWith('ai.')) return 'ai';
   // Block disks, VM images and disk snapshots live with Compute; object storage stays Storage
   if (
     meter.startsWith('storage.block') ||
@@ -102,6 +104,9 @@ function categoryFromFile(filePath: string, meta: Record<string, string>, meter:
   if (filePath.includes('/compute/gpu.yaml') || meta.category?.includes('.gpu')) return 'gpu';
   if (filePath.includes('managed-kubernetes') || meta.category?.includes('kubernetes')) {
     return 'kubernetes';
+  }
+  if (filePath.includes('/ai/') || meta.service === 'ai' || meta.category?.includes('.ai.')) {
+    return 'ai';
   }
   if (filePath.includes('/storage/') || meta.service === 'storage') {
     if (
@@ -261,6 +266,7 @@ function main() {
     storage: 'Storage',
     network: 'Network',
     kubernetes: 'Kubernetes',
+    ai: 'AI',
     other: 'Other',
   };
 
@@ -272,7 +278,9 @@ function main() {
     providers: [...providerCounts.entries()]
       .map(([id, count]) => ({id, name: PROVIDER_NAMES[id] || id, count}))
       .sort((a, b) => a.name.localeCompare(b.name, 'ru')),
-    categories: (['compute', 'gpu', 'storage', 'network', 'kubernetes', 'other'] as CategoryKey[])
+    categories: (
+      ['compute', 'gpu', 'storage', 'network', 'kubernetes', 'ai', 'other'] as CategoryKey[]
+    )
       .filter((key) => (categoryCounts.get(key) || 0) > 0)
       .map((key) => ({key, title: categoryTitles[key], count: categoryCounts.get(key) || 0})),
     sources,

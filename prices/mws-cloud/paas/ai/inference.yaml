@@ -1,0 +1,516 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: mws-cloud
+  layer: paas
+  service: ai
+  category: paas.ai.inference
+  title: GPT Model Hub — local inference tokens
+spec:
+  meters:
+  - sku: mws.ai.gpt-oss-120b.input
+    name: gpt-oss-120b · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
+    dimensions:
+      modelFamily: gpt-oss-120b
+      modelId: gpt-oss-120b
+      inferenceScope: local
+      serviceProduct: gpt-model-hub
+      tokenDirection: input
+    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    pricing:
+      rate:
+        amount: '68'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: mws.ai.gpt-oss-120b.output
+    name: gpt-oss-120b · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
+    dimensions:
+      modelFamily: gpt-oss-120b
+      modelId: gpt-oss-120b
+      inferenceScope: local
+      serviceProduct: gpt-model-hub
+      tokenDirection: output
+    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    pricing:
+      rate:
+        amount: '67.50'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: mws.ai.gemma-3-27b-it.input
+    name: gemma-3-27b-it · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
+    dimensions:
+      modelFamily: gemma-3-27b-it
+      modelId: gemma-3-27b-it
+      inferenceScope: local
+      serviceProduct: gpt-model-hub
+      tokenDirection: input
+    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    pricing:
+      rate:
+        amount: '1098'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: mws.ai.gemma-3-27b-it.output
+    name: gemma-3-27b-it · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
+    dimensions:
+      modelFamily: gemma-3-27b-it
+      modelId: gemma-3-27b-it
+      inferenceScope: local
+      serviceProduct: gpt-model-hub
+      tokenDirection: output
+    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    pricing:
+      rate:
+        amount: '1098'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: mws.ai.gemma-4-31b-it.input
+    name: gemma-4-31b-it · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
+    dimensions:
+      modelFamily: gemma-4-31b-it
+      modelId: gemma-4-31b-it
+      inferenceScope: local
+      serviceProduct: gpt-model-hub
+      tokenDirection: input
+    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    pricing:
+      rate:
+        amount: '1098'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: mws.ai.gemma-4-31b-it.output
+    name: gemma-4-31b-it · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
+    dimensions:
+      modelFamily: gemma-4-31b-it
+      modelId: gemma-4-31b-it
+      inferenceScope: local
+      serviceProduct: gpt-model-hub
+      tokenDirection: output
+    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    pricing:
+      rate:
+        amount: '1098'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: mws.ai.qwen3-32b.input
+    name: qwen3-32b · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
+    dimensions:
+      modelFamily: qwen3-32b
+      modelId: qwen3-32b
+      inferenceScope: local
+      serviceProduct: gpt-model-hub
+      tokenDirection: input
+    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    pricing:
+      rate:
+        amount: '1098'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: mws.ai.qwen3-32b.output
+    name: qwen3-32b · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
+    dimensions:
+      modelFamily: qwen3-32b
+      modelId: qwen3-32b
+      inferenceScope: local
+      serviceProduct: gpt-model-hub
+      tokenDirection: output
+    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    pricing:
+      rate:
+        amount: '1098'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: mws.ai.qwen3.6-35b-a3b.input
+    name: qwen3.6-35b-a3b · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
+    dimensions:
+      modelFamily: qwen3.6-35b-a3b
+      modelId: qwen3.6-35b-a3b
+      inferenceScope: local
+      serviceProduct: gpt-model-hub
+      tokenDirection: input
+    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    pricing:
+      rate:
+        amount: '1098'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: mws.ai.qwen3.6-35b-a3b.output
+    name: qwen3.6-35b-a3b · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
+    dimensions:
+      modelFamily: qwen3.6-35b-a3b
+      modelId: qwen3.6-35b-a3b
+      inferenceScope: local
+      serviceProduct: gpt-model-hub
+      tokenDirection: output
+    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    pricing:
+      rate:
+        amount: '1098'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: mws.ai.qwen3-235b-instruct.input
+    name: qwen3-235b-instruct · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
+    dimensions:
+      modelFamily: qwen3-235b-instruct
+      modelId: qwen3-235b-instruct
+      inferenceScope: local
+      serviceProduct: gpt-model-hub
+      tokenDirection: input
+    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    pricing:
+      rate:
+        amount: '1220'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: mws.ai.qwen3-235b-instruct.output
+    name: qwen3-235b-instruct · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
+    dimensions:
+      modelFamily: qwen3-235b-instruct
+      modelId: qwen3-235b-instruct
+      inferenceScope: local
+      serviceProduct: gpt-model-hub
+      tokenDirection: output
+    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    pricing:
+      rate:
+        amount: '1220'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: mws.ai.qwen3-coder-480b-a35b.input
+    name: qwen3-coder-480b-a35b · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
+    dimensions:
+      modelFamily: qwen3-coder-480b-a35b
+      modelId: qwen3-coder-480b-a35b
+      inferenceScope: local
+      serviceProduct: gpt-model-hub
+      tokenDirection: input
+    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    pricing:
+      rate:
+        amount: '2074'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: mws.ai.qwen3-coder-480b-a35b.output
+    name: qwen3-coder-480b-a35b · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
+    dimensions:
+      modelFamily: qwen3-coder-480b-a35b
+      modelId: qwen3-coder-480b-a35b
+      inferenceScope: local
+      serviceProduct: gpt-model-hub
+      tokenDirection: output
+    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    pricing:
+      rate:
+        amount: '2074'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: mws.ai.glm-5.2.input
+    name: glm-5.2 · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
+    dimensions:
+      modelFamily: glm-5.2
+      modelId: glm-5.2
+      inferenceScope: local
+      serviceProduct: gpt-model-hub
+      tokenDirection: input
+    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    pricing:
+      rate:
+        amount: '2318'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: mws.ai.glm-5.2.output
+    name: glm-5.2 · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
+    dimensions:
+      modelFamily: glm-5.2
+      modelId: glm-5.2
+      inferenceScope: local
+      serviceProduct: gpt-model-hub
+      tokenDirection: output
+    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    pricing:
+      rate:
+        amount: '2318'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: mws.ai.glm-4.6-357b.input
+    name: glm-4.6-357b · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
+    dimensions:
+      modelFamily: glm-4.6-357b
+      modelId: glm-4.6-357b
+      inferenceScope: local
+      serviceProduct: gpt-model-hub
+      tokenDirection: input
+    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    pricing:
+      rate:
+        amount: '2318'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: mws.ai.glm-4.6-357b.output
+    name: glm-4.6-357b · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
+    dimensions:
+      modelFamily: glm-4.6-357b
+      modelId: glm-4.6-357b
+      inferenceScope: local
+      serviceProduct: gpt-model-hub
+      tokenDirection: output
+    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    pricing:
+      rate:
+        amount: '2318'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: mws.ai.kimi-k2.6.input
+    name: kimi-k2.6 · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
+    dimensions:
+      modelFamily: kimi-k2.6
+      modelId: kimi-k2.6
+      inferenceScope: local
+      serviceProduct: gpt-model-hub
+      tokenDirection: input
+    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    pricing:
+      rate:
+        amount: '3660'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: mws.ai.kimi-k2.6.output
+    name: kimi-k2.6 · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
+    dimensions:
+      modelFamily: kimi-k2.6
+      modelId: kimi-k2.6
+      inferenceScope: local
+      serviceProduct: gpt-model-hub
+      tokenDirection: output
+    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    pricing:
+      rate:
+        amount: '3660'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: mws.ai.kimi-k2-instruct.input
+    name: kimi-k2-instruct · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
+    dimensions:
+      modelFamily: kimi-k2-instruct
+      modelId: kimi-k2-instruct
+      inferenceScope: local
+      serviceProduct: gpt-model-hub
+      tokenDirection: input
+    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    pricing:
+      rate:
+        amount: '3660'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: mws.ai.kimi-k2-instruct.output
+    name: kimi-k2-instruct · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
+    dimensions:
+      modelFamily: kimi-k2-instruct
+      modelId: kimi-k2-instruct
+      inferenceScope: local
+      serviceProduct: gpt-model-hub
+      tokenDirection: output
+    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    pricing:
+      rate:
+        amount: '3660'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable

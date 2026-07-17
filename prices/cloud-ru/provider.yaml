@@ -105,3 +105,12 @@ spec:
     - storage.object.requests
     - network.traffic.ingress
     - network.traffic.egress
+  - id: cloudru.foundation-models
+    title: Тарифы Evolution Foundation Models
+    url: https://cloud.ru/documents/tariffs/evolution/foundation-models
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - ai.inference.tokens.input
+    - ai.inference.tokens.output

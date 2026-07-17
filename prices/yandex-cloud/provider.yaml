@@ -27,6 +27,17 @@ spec:
     - storage.image.capacity
     - storage.snapshot.capacity
     - storage.object.capacity
+    - ai.inference.tokens.input
+    - ai.inference.tokens.output
+  - id: yc.ai-studio
+    title: Правила тарификации Yandex AI Studio
+    url: https://yandex.cloud/ru/docs/ai-studio/pricing
+    type: html
+    access: public
+    priority: 1
+    covers:
+    - ai.inference.tokens.input
+    - ai.inference.tokens.output
   - id: yc.compute
     title: Правила тарификации Compute Cloud
     url: https://yandex.cloud/ru/docs/compute/pricing

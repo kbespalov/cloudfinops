@@ -1,0 +1,660 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: yandex-cloud
+  layer: paas
+  service: ai
+  category: paas.ai.inference
+  title: AI Studio — local inference tokens
+spec:
+  meters:
+  - sku: yc.ai.gpt-oss-120b.input
+    name: gpt-oss-120b · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: gpt-oss-120b
+      modelId: gpt-oss-120b
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: input
+      yandexSkuId: dn2ud3oc4m6ghrowwmco
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '300'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.gpt-oss-120b.output
+    name: gpt-oss-120b · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: gpt-oss-120b
+      modelId: gpt-oss-120b
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: output
+      yandexSkuId: dn2emftmylhwq2bmn6d5
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '300'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.gpt-oss-20b.input
+    name: gpt-oss-20b · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: gpt-oss-20b
+      modelId: gpt-oss-20b
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: input
+      yandexSkuId: dn2k72yxwvvl6lesc2g6
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '100'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.gpt-oss-20b.output
+    name: gpt-oss-20b · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: gpt-oss-20b
+      modelId: gpt-oss-20b
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: output
+      yandexSkuId: dn2ftdm4f643b2yoclnb
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '100'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.gemma3-27b.input
+    name: Gemma3 27B · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: Gemma3 27B
+      modelId: gemma3-27b
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: input
+      yandexSkuId: dn2bimnfbdouf6xmpgrh
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '400'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.gemma3-27b.output
+    name: Gemma3 27B · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: Gemma3 27B
+      modelId: gemma3-27b
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: output
+      yandexSkuId: dn2ecxz6xds62s2invvw
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '400'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.qwen-3.6-35b.input
+    name: Qwen 3.6 35B · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: Qwen 3.6 35B
+      modelId: qwen-3.6-35b
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: input
+      yandexSkuId: dn2nquxmbxtd3ejvdzdc
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '200'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.qwen-3.6-35b.output
+    name: Qwen 3.6 35B · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: Qwen 3.6 35B
+      modelId: qwen-3.6-35b
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: output
+      yandexSkuId: dn2ym3cefutnlwkd52wl
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '300'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.qwen-3.5-35b.input
+    name: Qwen 3.5 35B · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: Qwen 3.5 35B
+      modelId: qwen-3.5-35b
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: input
+      yandexSkuId: dn2bye4uvektqrblglyj
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '200'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.qwen-3.5-35b.output
+    name: Qwen 3.5 35B · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: Qwen 3.5 35B
+      modelId: qwen-3.5-35b
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: output
+      yandexSkuId: dn2666nn3ql7h7nvwbw4
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '300'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.qwen3-235b.input
+    name: Qwen3 235B · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: Qwen3 235B
+      modelId: qwen3-235b
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: input
+      yandexSkuId: dn227y4gookblrlbfeb2
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '500'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.qwen3-235b.output
+    name: Qwen3 235B · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: Qwen3 235B
+      modelId: qwen3-235b
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: output
+      yandexSkuId: dn2xbekpu4ab7tpsuyow
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '500'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.yandexgpt-lite-5.input
+    name: YandexGPT Lite 5 · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: YandexGPT Lite 5
+      modelId: yandexgpt-lite-5
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: input
+      yandexSkuId: dn2tzefuo7lujpbln7sh
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '200'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.yandexgpt-lite-5.output
+    name: YandexGPT Lite 5 · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: YandexGPT Lite 5
+      modelId: yandexgpt-lite-5
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: output
+      yandexSkuId: dn2wpcjt3psoz4ixscfv
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '200'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.yandexgpt-pro-5.input
+    name: YandexGPT Pro 5 · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: YandexGPT Pro 5
+      modelId: yandexgpt-pro-5
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: input
+      yandexSkuId: dn2uvseel3uy3d65ru4p
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '1200'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.yandexgpt-pro-5.output
+    name: YandexGPT Pro 5 · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: YandexGPT Pro 5
+      modelId: yandexgpt-pro-5
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: output
+      yandexSkuId: dn2j656kr4cvprjgsrm6
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '1200'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.yandexgpt-pro-5.1.input
+    name: YandexGPT Pro 5.1 · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: YandexGPT Pro 5.1
+      modelId: yandexgpt-pro-5.1
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: input
+      yandexSkuId: dn2jy5nvkpdkmwfvm6kj
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '800'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.yandexgpt-pro-5.1.output
+    name: YandexGPT Pro 5.1 · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: YandexGPT Pro 5.1
+      modelId: yandexgpt-pro-5.1
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: output
+      yandexSkuId: dn2i63wvctocj7l4opc3
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '800'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.alice-ai-llm.input
+    name: Alice AI LLM · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: Alice AI LLM
+      modelId: alice-ai-llm
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: input
+      yandexSkuId: dn27x7nr3jmdzdl5pvxk
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '500'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.alice-ai-llm.output
+    name: Alice AI LLM · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: Alice AI LLM
+      modelId: alice-ai-llm
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: output
+      yandexSkuId: dn2udg3y4rz4z572wxro
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '1200'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.alice-ai-llm-flash.input
+    name: Alice AI LLM Flash · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: Alice AI LLM Flash
+      modelId: alice-ai-llm-flash
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: input
+      yandexSkuId: dn2t7hqdjtklgz5eagmv
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '100'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.alice-ai-llm-flash.output
+    name: Alice AI LLM Flash · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: Alice AI LLM Flash
+      modelId: alice-ai-llm-flash
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: output
+      yandexSkuId: dn2zgrr3y6jaalyxufbo
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '200'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.deepseek-v3.2.input
+    name: DeepSeek v3.2 · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: DeepSeek v3.2
+      modelId: deepseek-v3.2
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: input
+      yandexSkuId: dn26zqwa3c7glcs4g5ga
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '500'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.deepseek-v3.2.output
+    name: DeepSeek v3.2 · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: DeepSeek v3.2
+      modelId: deepseek-v3.2
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: output
+      yandexSkuId: dn2gpa5w7bzuugyvqxgd
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '800'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.deepseek-v4-flash.input
+    name: DeepSeek v4 flash · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: DeepSeek v4 flash
+      modelId: deepseek-v4-flash
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: input
+      yandexSkuId: dn2niehvzghe2gxazwk7
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '300'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.deepseek-v4-flash.output
+    name: DeepSeek v4 flash · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [yc.billing-api, yc.ai-studio]
+    dimensions:
+      modelFamily: DeepSeek v4 flash
+      modelId: deepseek-v4-flash
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: output
+      yandexSkuId: dn2ljea5yueypaanew5k
+    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    pricing:
+      rate:
+        amount: '500'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable

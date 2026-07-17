@@ -20,6 +20,18 @@
   min-width: 220px;
 }
 
+/* AI tab: shorten search so the model Select fits on one row */
+.searchCompact {
+  flex: 0 1 260px;
+  max-width: 280px;
+  min-width: 160px;
+}
+
+.controlSelectModel {
+  width: 220px;
+  flex: 0 0 auto;
+}
+
 .searchIcon {
   display: inline-flex;
   align-items: center;

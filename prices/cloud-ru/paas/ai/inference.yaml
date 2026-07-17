@@ -1,0 +1,394 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: cloud-ru
+  layer: paas
+  service: ai
+  category: paas.ai.inference
+  title: Foundation Models — local (internal) inference tokens
+spec:
+  meters:
+  - sku: cloudru.ai.gpt-oss-120b.input
+    name: gpt-oss-120b · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [cloudru.foundation-models]
+    dimensions:
+      modelFamily: gpt-oss-120b
+      modelId: gpt-oss-120b
+      inferenceScope: local
+      serviceProduct: foundation-models
+      placement: internal
+      tokenDirection: input
+    notes: Cloud.ru Evolution Foundation Models, внутренняя модель (локальный контур). Цена с НДС из тарифа 7.EVO.11.2.
+    pricing:
+      rate:
+        amount: '15.86'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.ai.gpt-oss-120b.output
+    name: gpt-oss-120b · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [cloudru.foundation-models]
+    dimensions:
+      modelFamily: gpt-oss-120b
+      modelId: gpt-oss-120b
+      inferenceScope: local
+      serviceProduct: foundation-models
+      placement: internal
+      tokenDirection: output
+    notes: Cloud.ru Evolution Foundation Models, внутренняя модель (локальный контур). Цена с НДС из тарифа 7.EVO.11.2.
+    pricing:
+      rate:
+        amount: '61'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.ai.qwen3.6-35b-a3b.input
+    name: Qwen3.6-35B-A3B · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [cloudru.foundation-models]
+    dimensions:
+      modelFamily: Qwen3.6-35B-A3B
+      modelId: qwen3.6-35b-a3b
+      inferenceScope: local
+      serviceProduct: foundation-models
+      placement: internal
+      tokenDirection: input
+    notes: Cloud.ru Evolution Foundation Models, внутренняя модель (локальный контур). Цена с НДС из тарифа 7.EVO.11.2.
+    pricing:
+      rate:
+        amount: '219.60'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.ai.qwen3.6-35b-a3b.output
+    name: Qwen3.6-35B-A3B · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [cloudru.foundation-models]
+    dimensions:
+      modelFamily: Qwen3.6-35B-A3B
+      modelId: qwen3.6-35b-a3b
+      inferenceScope: local
+      serviceProduct: foundation-models
+      placement: internal
+      tokenDirection: output
+    notes: Cloud.ru Evolution Foundation Models, внутренняя модель (локальный контур). Цена с НДС из тарифа 7.EVO.11.2.
+    pricing:
+      rate:
+        amount: '329.40'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.ai.qwen3-coder-next.input
+    name: Qwen3-Coder-Next · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [cloudru.foundation-models]
+    dimensions:
+      modelFamily: Qwen3-Coder-Next
+      modelId: qwen3-coder-next
+      inferenceScope: local
+      serviceProduct: foundation-models
+      placement: internal
+      tokenDirection: input
+    notes: Cloud.ru Evolution Foundation Models, внутренняя модель (локальный контур). Цена с НДС из тарифа 7.EVO.11.2.
+    pricing:
+      rate:
+        amount: '122'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.ai.qwen3-coder-next.output
+    name: Qwen3-Coder-Next · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [cloudru.foundation-models]
+    dimensions:
+      modelFamily: Qwen3-Coder-Next
+      modelId: qwen3-coder-next
+      inferenceScope: local
+      serviceProduct: foundation-models
+      placement: internal
+      tokenDirection: output
+    notes: Cloud.ru Evolution Foundation Models, внутренняя модель (локальный контур). Цена с НДС из тарифа 7.EVO.11.2.
+    pricing:
+      rate:
+        amount: '244'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.ai.qwen3.5-397b-a17b.input
+    name: Qwen3.5-397B-A17B · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [cloudru.foundation-models]
+    dimensions:
+      modelFamily: Qwen3.5-397B-A17B
+      modelId: qwen3.5-397b-a17b
+      inferenceScope: local
+      serviceProduct: foundation-models
+      placement: internal
+      tokenDirection: input
+    notes: Cloud.ru Evolution Foundation Models, внутренняя модель (локальный контур). Цена с НДС из тарифа 7.EVO.11.2.
+    pricing:
+      rate:
+        amount: '915'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.ai.qwen3.5-397b-a17b.output
+    name: Qwen3.5-397B-A17B · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [cloudru.foundation-models]
+    dimensions:
+      modelFamily: Qwen3.5-397B-A17B
+      modelId: qwen3.5-397b-a17b
+      inferenceScope: local
+      serviceProduct: foundation-models
+      placement: internal
+      tokenDirection: output
+    notes: Cloud.ru Evolution Foundation Models, внутренняя модель (локальный контур). Цена с НДС из тарифа 7.EVO.11.2.
+    pricing:
+      rate:
+        amount: '1085.80'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.ai.glm-4.7.input
+    name: GLM-4.7 · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [cloudru.foundation-models]
+    dimensions:
+      modelFamily: GLM-4.7
+      modelId: glm-4.7
+      inferenceScope: local
+      serviceProduct: foundation-models
+      placement: internal
+      tokenDirection: input
+    notes: Cloud.ru Evolution Foundation Models, внутренняя модель (локальный контур). Цена с НДС из тарифа 7.EVO.11.2.
+    pricing:
+      rate:
+        amount: '549'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.ai.glm-4.7.output
+    name: GLM-4.7 · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [cloudru.foundation-models]
+    dimensions:
+      modelFamily: GLM-4.7
+      modelId: glm-4.7
+      inferenceScope: local
+      serviceProduct: foundation-models
+      placement: internal
+      tokenDirection: output
+    notes: Cloud.ru Evolution Foundation Models, внутренняя модель (локальный контур). Цена с НДС из тарифа 7.EVO.11.2.
+    pricing:
+      rate:
+        amount: '793'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.ai.gigachat-2-max.input
+    name: GigaChat-2-Max · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [cloudru.foundation-models]
+    dimensions:
+      modelFamily: GigaChat-2-Max
+      modelId: gigachat-2-max
+      inferenceScope: local
+      serviceProduct: foundation-models
+      placement: internal
+      tokenDirection: input
+    notes: Cloud.ru Evolution Foundation Models, внутренняя модель (локальный контур). Цена с НДС из тарифа 7.EVO.11.2.
+    pricing:
+      rate:
+        amount: '569.3374'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.ai.gigachat-2-max.output
+    name: GigaChat-2-Max · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [cloudru.foundation-models]
+    dimensions:
+      modelFamily: GigaChat-2-Max
+      modelId: gigachat-2-max
+      inferenceScope: local
+      serviceProduct: foundation-models
+      placement: internal
+      tokenDirection: output
+    notes: Cloud.ru Evolution Foundation Models, внутренняя модель (локальный контур). Цена с НДС из тарифа 7.EVO.11.2.
+    pricing:
+      rate:
+        amount: '569.3374'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.ai.gigachat3-10b-a1.8b.input
+    name: GigaChat3-10B-A1.8B · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [cloudru.foundation-models]
+    dimensions:
+      modelFamily: GigaChat3-10B-A1.8B
+      modelId: gigachat3-10b-a1.8b
+      inferenceScope: local
+      serviceProduct: foundation-models
+      placement: internal
+      tokenDirection: input
+    notes: Cloud.ru Evolution Foundation Models, внутренняя модель (локальный контур). Цена с НДС из тарифа 7.EVO.11.2.
+    pricing:
+      rate:
+        amount: '12.20'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.ai.gigachat3-10b-a1.8b.output
+    name: GigaChat3-10B-A1.8B · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [cloudru.foundation-models]
+    dimensions:
+      modelFamily: GigaChat3-10B-A1.8B
+      modelId: gigachat3-10b-a1.8b
+      inferenceScope: local
+      serviceProduct: foundation-models
+      placement: internal
+      tokenDirection: output
+    notes: Cloud.ru Evolution Foundation Models, внутренняя модель (локальный контур). Цена с НДС из тарифа 7.EVO.11.2.
+    pricing:
+      rate:
+        amount: '12.20'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.ai.minimax-m2.5.input
+    name: MiniMax-M2.5 · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [cloudru.foundation-models]
+    dimensions:
+      modelFamily: MiniMax-M2.5
+      modelId: minimax-m2.5
+      inferenceScope: local
+      serviceProduct: foundation-models
+      placement: internal
+      tokenDirection: input
+    notes: Cloud.ru Evolution Foundation Models, внутренняя модель (локальный контур). Цена с НДС из тарифа 7.EVO.11.2.
+    pricing:
+      rate:
+        amount: '353.80'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.ai.minimax-m2.5.output
+    name: MiniMax-M2.5 · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-17'
+    sourceRefs: [cloudru.foundation-models]
+    dimensions:
+      modelFamily: MiniMax-M2.5
+      modelId: minimax-m2.5
+      inferenceScope: local
+      serviceProduct: foundation-models
+      placement: internal
+      tokenDirection: output
+    notes: Cloud.ru Evolution Foundation Models, внутренняя модель (локальный контур). Цена с НДС из тарифа 7.EVO.11.2.
+    pricing:
+      rate:
+        amount: '475.80'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
