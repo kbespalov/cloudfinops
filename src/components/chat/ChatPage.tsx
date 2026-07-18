@@ -2,6 +2,7 @@
 
 import {useCallback, useEffect, useRef, useState} from 'react';
 import dynamic from 'next/dynamic';
+import {useRouter, useSearchParams} from 'next/navigation';
 import {Icon, Text} from '@gravity-ui/uikit';
 import {Sparkles} from '@gravity-ui/icons';
 import type {
@@ -41,6 +42,8 @@ function assistantText(content: TChatMessage['content']): string {
 }
 
 export function ChatPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [chats, setChats] = useState<ChatType[]>([]);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [messagesByChat, setMessagesByChat] = useState<Record<string, TChatMessage[]>>({});
@@ -48,8 +51,9 @@ export function ChatPage() {
   const [error, setError] = useState<Error | null>(null);
   // Start false for SSR/hydration match; matchMedia updates after mount.
   const [narrow, setNarrow] = useState(false);
+  const [storageReady, setStorageReady] = useState(false);
 
-  const hydrated = useRef(false);
+  const deeplinkHandled = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
 
   // Lock document scroll so the composer stays in the viewport on mobile.
@@ -84,19 +88,20 @@ export function ChatPage() {
     } catch {
       // Corrupt storage — start fresh.
     }
-    hydrated.current = true;
+    setStorageReady(true);
   }, []);
 
-  // Persist on change (after hydration to avoid clobbering with empty state).
+  // Persist on change only after storage was loaded — otherwise the first
+  // empty render would clobber localStorage (and wipe a landing deep-link).
   useEffect(() => {
-    if (!hydrated.current) return;
+    if (!storageReady) return;
     try {
       const state: StoredState = {chats, activeChatId, messagesByChat};
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch {
       // Ignore quota / serialization errors.
     }
-  }, [chats, activeChatId, messagesByChat]);
+  }, [storageReady, chats, activeChatId, messagesByChat]);
 
   const activeChat = chats.find((c) => c.id === activeChatId) ?? null;
   const messages = activeChatId ? messagesByChat[activeChatId] ?? [] : [];
@@ -129,12 +134,12 @@ export function ChatPage() {
   }, []);
 
   const onSendMessage = useCallback(
-    async (data: TSubmitData) => {
+    async (data: TSubmitData, options?: {forceNew?: boolean}) => {
       const content = data.content.trim();
       if (!content || status === 'streaming' || status === 'submitted') return;
 
-      // Ensure an active chat exists.
-      let chatId = activeChatId;
+      // Ensure an active chat exists (landing deep-link always starts a fresh one).
+      let chatId = options?.forceNew ? null : activeChatId;
       if (!chatId) {
         chatId = genId();
         const title = content.length > 48 ? `${content.slice(0, 48)}…` : content;
@@ -147,7 +152,7 @@ export function ChatPage() {
       const assistantId = genId();
       const assistantMsg: TChatMessage = {id: assistantId, role: 'assistant', content: ''};
 
-      const priorMessages = messagesByChat[chatId] ?? [];
+      const priorMessages = options?.forceNew ? [] : (messagesByChat[chatId] ?? []);
       const requestMessages = [...priorMessages, userMsg].map((m) => ({
         role: m.role,
         content: assistantText(m.content) || (m.role === 'user' ? m.content : ''),
@@ -155,7 +160,7 @@ export function ChatPage() {
 
       setMessagesByChat((prev) => ({
         ...prev,
-        [chatId as string]: [...(prev[chatId as string] ?? []), userMsg, assistantMsg],
+        [chatId as string]: [...priorMessages, userMsg, assistantMsg],
       }));
       setChats((prev) =>
         prev.map((c) => (c.id === chatId ? {...c, lastMessage: content} : c)),
@@ -208,6 +213,33 @@ export function ChatPage() {
     },
     [activeChatId, messagesByChat, status, appendToAssistant, setAssistantError],
   );
+
+  // Landing / shared links: /chat?q=… → new chat + auto-send, then strip query.
+  useEffect(() => {
+    if (!storageReady || deeplinkHandled.current) return;
+    const q = searchParams.get('q')?.trim();
+    if (!q) return;
+
+    // Guard React Strict Mode remount + rapid re-entry with the same q.
+    try {
+      const raw = sessionStorage.getItem('cf-chat-deeplink');
+      if (raw) {
+        const prev = JSON.parse(raw) as {q?: string; at?: number};
+        if (prev.q === q && typeof prev.at === 'number' && Date.now() - prev.at < 4000) {
+          router.replace('/chat', {scroll: false});
+          deeplinkHandled.current = true;
+          return;
+        }
+      }
+      sessionStorage.setItem('cf-chat-deeplink', JSON.stringify({q, at: Date.now()}));
+    } catch {
+      // sessionStorage unavailable — fall through with ref-only guard.
+    }
+
+    deeplinkHandled.current = true;
+    router.replace('/chat', {scroll: false});
+    void onSendMessage({content: q}, {forceNew: true});
+  }, [storageReady, searchParams, router, onSendMessage]);
 
   const onCancel = useCallback(async () => {
     abortRef.current?.abort();

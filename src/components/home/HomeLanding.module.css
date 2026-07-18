@@ -1,6 +1,10 @@
 .page {
   --cf-ink: #1a120c;
   --cf-ink-muted: rgba(40, 28, 18, 0.72);
+  --cf-panel: rgba(255, 252, 245, 0.94);
+  --cf-panel-border: rgba(26, 18, 12, 0.1);
+  --cf-accent: #e8a54b;
+  --cf-accent-soft: rgba(232, 165, 75, 0.18);
 
   position: relative;
   min-height: 100dvh;
@@ -41,10 +45,10 @@
   z-index: 1;
   background:
     radial-gradient(
-      ellipse 58% 50% at 50% 48%,
-      rgba(255, 252, 245, 0.62) 0%,
-      rgba(255, 248, 232, 0.28) 45%,
-      rgba(255, 244, 220, 0.1) 72%,
+      ellipse 52% 46% at 50% 42%,
+      rgba(255, 252, 245, 0.7) 0%,
+      rgba(255, 248, 232, 0.32) 48%,
+      rgba(255, 244, 220, 0.08) 74%,
       transparent 100%
     );
   pointer-events: none;
@@ -65,8 +69,11 @@
   z-index: 2;
   flex: 1;
   display: grid;
-  place-items: center;
-  padding: 24px 20px 64px;
+  /* Optical center sits a bit above geometric center */
+  align-content: center;
+  justify-items: center;
+  padding: 12px 20px 10vh;
+  transform: translateY(-6vh);
 }
 
 .core {
@@ -76,15 +83,15 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 16px;
-  max-width: 36rem;
-  padding: 12px 20px;
-  animation: rise 0.9s ease-out both;
+  gap: 12px;
+  width: min(100%, 54rem);
+  padding: 8px 12px 16px;
+  animation: rise 0.85s ease-out both;
 }
 
 .brand {
   margin: 0;
-  font-size: clamp(2.75rem, 7vw, 4.75rem);
+  font-size: clamp(2.4rem, 6vw, 3.75rem);
   line-height: 1.05;
   font-weight: 700;
   letter-spacing: -0.03em;
@@ -92,33 +99,148 @@
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
-.lead {
+.headline {
   margin: 0;
-  max-width: 26rem;
-  font-size: 1.05rem;
-  line-height: 1.45;
+  max-width: 28rem;
+  font-size: clamp(1.05rem, 2.2vw, 1.25rem);
+  line-height: 1.35;
+  font-weight: 500;
   color: var(--cf-ink-muted);
 }
 
-.cta {
-  margin-top: 8px;
-  display: flex;
-  flex-wrap: wrap;
+.searchCard {
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 24px;
+  background: var(--cf-panel);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.75) inset,
+    0 18px 48px rgba(40, 28, 18, 0.12),
+    0 2px 8px rgba(40, 28, 18, 0.06);
+  border: 1px solid var(--cf-panel-border);
+  animation: rise 0.95s ease-out 0.08s both;
+  transition:
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.searchCard:focus-within {
+  border-color: rgba(26, 18, 12, 0.18);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 22px 56px rgba(40, 28, 18, 0.14),
+    0 0 0 3px var(--cf-accent-soft);
+}
+
+.searchRow {
+  width: 100%;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+}
+
+.searchIcon {
+  display: inline-flex;
+  color: var(--g-color-text-secondary);
+}
+
+.searchSubmit {
+  flex-shrink: 0;
+}
+
+.chips {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  width: 100%;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(26, 18, 12, 0.08);
+}
+
+.chipWrap {
+  min-width: 0;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  padding: 7px 12px 7px 7px;
+  border: 1px solid rgba(26, 18, 12, 0.1);
+  border-radius: 999px;
+  background: #fffaf3;
+  color: var(--cf-ink);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.2;
+  cursor: pointer;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.7) inset,
+    0 2px 6px rgba(40, 28, 18, 0.06);
+  animation: rise 0.7s ease-out both;
+  transition:
+    transform 0.16s ease,
+    background 0.16s ease,
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.chipIcon {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  gap: 12px;
-  animation: rise 1s ease-out 0.12s both;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(26, 18, 12, 0.1);
+  color: rgba(40, 28, 18, 0.82);
+  transition:
+    background 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease,
+    transform 0.16s ease;
 }
 
-/* Keep secondary CTA readable on the honey hero (Gravity action yellow washes out). */
-.ctaSecondary {
-  color: var(--cf-ink) !important;
-  background: rgba(255, 252, 245, 0.82) !important;
-  box-shadow: inset 0 0 0 1px rgba(26, 18, 12, 0.4) !important;
+.chipLabel {
+  padding-right: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.ctaSecondary:hover {
-  background: rgba(255, 252, 245, 0.95) !important;
-  box-shadow: inset 0 0 0 1px rgba(26, 18, 12, 0.55) !important;
+.chip:hover {
+  transform: translateY(-2px);
+  background: #fff;
+  border-color: rgba(232, 165, 75, 0.55);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.85) inset,
+    0 10px 22px rgba(40, 28, 18, 0.12);
+}
+
+.chip:hover .chipIcon {
+  background: var(--cf-accent-soft);
+  color: var(--cf-ink);
+  box-shadow: inset 0 0 0 1px rgba(232, 165, 75, 0.55);
+  transform: scale(1.04);
+}
+
+.chip:focus-visible {
+  outline: 2px solid var(--cf-accent);
+  outline-offset: 2px;
+}
+
+.chip:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(40, 28, 18, 0.08);
 }
 
 @keyframes rise {
@@ -132,9 +254,51 @@
   }
 }
 
+@media (max-width: 720px) {
+  .stage {
+    transform: none;
+    align-content: start;
+    padding: 20px 16px 32px;
+  }
+
+  .core {
+    gap: 12px;
+    width: 100%;
+  }
+
+  .searchCard {
+    padding: 12px;
+    border-radius: 20px;
+  }
+
+  .searchRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .searchSubmit {
+    width: 100%;
+  }
+
+  .chips {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .core,
-  .cta {
+  .searchCard,
+  .chip {
     animation: none;
+  }
+
+  .chip,
+  .chipIcon,
+  .searchCard {
+    transition: none;
+  }
+
+  .chip:hover {
+    transform: none;
   }
 }

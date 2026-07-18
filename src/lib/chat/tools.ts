@@ -72,7 +72,8 @@ export const CHAT_TOOLS = [
           },
           aiModel: {
             type: 'string',
-            description: 'Фильтр по семейству AI-модели, например GLM, GigaChat, Qwen, DeepSeek, Kimi.',
+            description:
+              'Фильтр по AI-модели с версией, если известна: «Qwen 3.6», «GLM 5.2», «GigaChat». Допускаются варианты написания (Qwen3.6-35B-A3B). Без версии («Qwen») — шире, могут попасть соседние модели.',
           },
           storageClass: {
             type: 'string',
@@ -168,6 +169,9 @@ function serializeRow(r: PriceRow) {
     priceKind: priceKind(r),
     meterKind: r.meterKind ?? null,
     storageClass: r.storageClass ?? null,
+    k8sTier: r.k8sTier ?? null,
+    k8sClass: r.k8sClass ?? null,
+    synthetic: r.synthetic ?? false,
     hour: round(r.hour),
     month: round(r.month),
     year: round(r.year),
@@ -211,7 +215,7 @@ async function runSearch(args: Record<string, unknown>): Promise<unknown> {
     currency: 'RUB',
     vatIncluded: true,
     applied,
-    note: 'Цены с НДС; месяц = 720 ч. Бери провайдеров только из providersMatched с их ценой. cheapest часто preemptible/долевое — для сравнения vCPU бери on-demand 100%. S3: один storageClass за раз; хранение = capacity, не requests/0 ₽. volumeGiB → volumeEstimates. applied.retrieval = lexical|hybrid.',
+    note: 'Цены с НДС; месяц = 720 ч. Бери провайдеров только из providersMatched с их ценой. cheapest часто preemptible/долевое — для сравнения vCPU бери on-demand 100%. S3: один storageClass за раз; хранение = capacity, не requests/0 ₽. volumeGiB → volumeEstimates. Kubernetes: для Managed K8s / мастера search режет выдачу до сопоставимых master (basic=zonal, ha=regional); synthetic-bundle VK/Yandex = расчёт 2 vCPU/4 GiB; native-fixed без размера сравнивай только по сумме; worker-ноды отдельно. applied.retrieval = lexical|hybrid; applied.k8sTier = basic|ha.',
     // Точный список провайдеров, у которых реально есть совпадение, с их СОБСТВЕННОЙ минимальной ценой.
     providersMatched: providers.map((p) => ({
       provider: p.providerName,

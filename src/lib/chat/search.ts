@@ -14,6 +14,7 @@ import {
   amountNumber,
   extractGpuModel,
   extractAiModelFamily,
+  extractAiModelKey,
   extractStorageClass,
   formatPlatform,
   isRequestMeter,
@@ -46,6 +47,12 @@ export type PriceRow = {
   /** Object-storage meter kind when applicable. */
   meterKind?: 'capacity' | 'requests' | 'other';
   storageClass?: string | null;
+  /** Kubernetes control-plane: basic (zonal) | ha (regional) | fixed-component | null. */
+  k8sTier?: string | null;
+  /** Kubernetes: synthetic-bundle | native-bundle | native-fixed | null. */
+  k8sClass?: string | null;
+  /** True for derived VK/Yandex 2 vCPU / 4 GiB master bundles. */
+  synthetic?: boolean;
 };
 
 export type SearchParams = {
@@ -100,6 +107,8 @@ export type PriceSearchResult = {
     meterKind: 'capacity' | 'requests' | null;
     volumeGiB: number | null;
     retrieval?: 'lexical' | 'hybrid';
+    /** When set, kubernetes search preferred zonal (basic) or HA masters. */
+    k8sTier?: 'basic' | 'ha';
   };
 };
 
@@ -234,6 +243,41 @@ function normalize(text: string): string {
     .trim();
 }
 
+/** "Qwen 3.6" / "qwen3.6-35b-a3b" → qwen36… for cross-provider matching. */
+export function compactAiModelId(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, '');
+}
+
+/**
+ * Match AI model across naming variants:
+ * "Qwen 3.6" ↔ "Qwen3.6-35B-A3B" ↔ "qwen3.6-35b-a3b".
+ */
+export function aiModelMatchesNeedle(
+  needle: string,
+  meter: CatalogMeter,
+  hay: string,
+): boolean {
+  const n = compactAiModelId(needle);
+  if (n.length < 3) return false;
+  const family = compactAiModelId(extractAiModelFamily(meter) ?? '');
+  const id = compactAiModelId(extractAiModelKey(meter) ?? '');
+  const blob = compactAiModelId(hay);
+  return family.includes(n) || id.includes(n) || blob.includes(n);
+}
+
+/** Infer "Qwen 3.6" / "GLM 5.2" from free text when tool omits aiModel. */
+export function detectAiModelNeedle(query: string | undefined): string | null {
+  if (!query) return null;
+  const q = normalize(query);
+  const spaced = q.match(
+    /\b(qwen|glm|gigachat|deepseek|gemma|kimi|yandexgpt|alice|gpt-oss)\s+([0-9]+(?:[.\-][0-9]+)*)\b/i,
+  );
+  if (spaced) return `${spaced[1]} ${spaced[2].replace(/-/g, '.')}`;
+  const glued = q.match(/\b(qwen|glm|gigachat|deepseek)(\d+(?:\.\d+)+)/i);
+  if (glued) return `${glued[1]} ${glued[2]}`;
+  return null;
+}
+
 /**
  * Infer intended storage class from the user question (NOT from SKU titles).
  * Prefer the explicit `storageClass` tool arg — that filters by SKU dimension.
@@ -314,6 +358,83 @@ function objectMeterKind(meter: CatalogMeter): 'capacity' | 'requests' | 'other'
   return 'other';
 }
 
+function k8sComparabilityClass(meter: CatalogMeter): string | null {
+  const v = meter.dimensions?.comparabilityClass;
+  return typeof v === 'string' && v ? v : null;
+}
+
+/** Unit rates that must not win «Managed Kubernetes» master comparisons. */
+function isK8sUnitComponent(meter: CatalogMeter): boolean {
+  if (meter.categoryKey !== 'kubernetes') return false;
+  if (/\.(vcpu|ram)$/i.test(meter.meter)) return true;
+  const q = (meter.unitQuantity ?? '').toLowerCase();
+  return q === 'vcpu' || q === 'gib-ram' || q === 'gib';
+}
+
+/**
+ * Control-plane SKU suitable for cross-provider master comparison.
+ * Excludes Yandex 0₽ fixed-component and per-vCPU/RAM rates.
+ */
+export function isK8sComparableMaster(
+  meter: CatalogMeter,
+  tier: 'basic' | 'ha' = 'basic',
+): boolean {
+  if (meter.categoryKey !== 'kubernetes') return false;
+  if (isK8sUnitComponent(meter)) return false;
+  if (meter.comparableTier === 'fixed-component') return false;
+  if (k8sComparabilityClass(meter) === 'fixed-component') return false;
+  const isMaster =
+    meter.unitQuantity === 'master' || meter.meter === 'containers.kubernetes.control-plane';
+  if (!isMaster) return false;
+  if (tier === 'ha') return meter.comparableTier === 'ha';
+  return meter.comparableTier === 'basic';
+}
+
+function detectKubernetesTier(query: string | undefined): 'basic' | 'ha' {
+  if (!query) return 'basic';
+  const q = normalize(query);
+  if (
+    /\bha\b/.test(q) ||
+    q.includes('regional') ||
+    q.includes('региональ') ||
+    q.includes('отказоустойчив') ||
+    q.includes('fault') ||
+    q.includes('high availability') ||
+    q.includes('3 master') ||
+    q.includes('три мастер')
+  ) {
+    return 'ha';
+  }
+  return 'basic';
+}
+
+function wantsK8sUnitComponents(query: string | undefined): boolean {
+  if (!query) return false;
+  const q = normalize(query);
+  return (
+    q.includes('vcpu') ||
+    q.includes('гигабайт ram') ||
+    /\bram\b/.test(q) ||
+    q.includes('за ядро') ||
+    q.includes('за vcpu') ||
+    q.includes('компонент') ||
+    q.includes('ставку')
+  );
+}
+
+function looksLikeKubernetesQuery(
+  category: CategoryKey | null,
+  searchTokens: string[],
+  query: string | undefined,
+): boolean {
+  if (category === 'kubernetes') return true;
+  const q = normalize(query ?? '');
+  if (q.includes('kubernetes') || q.includes('кубер') || q.includes('k8s')) return true;
+  return searchTokens.some((t) =>
+    ['kubernetes', 'k8s', 'кубер', 'кубернетес', 'мастер', 'master', 'кластер'].includes(t),
+  );
+}
+
 function toRow(m: CatalogMeter): PriceRow {
   return {
     sku: m.sku,
@@ -330,6 +451,9 @@ function toRow(m: CatalogMeter): PriceRow {
     note: m.notes,
     meterKind: objectMeterKind(m),
     storageClass: extractStorageClass(m),
+    k8sTier: m.categoryKey === 'kubernetes' ? m.comparableTier : null,
+    k8sClass: m.categoryKey === 'kubernetes' ? k8sComparabilityClass(m) : null,
+    synthetic: m.synthetic || undefined,
   };
 }
 
@@ -363,11 +487,29 @@ function rankPrice(row: PriceRow, preferCapacity: boolean): number {
   return primary;
 }
 
-function isPreferredCheaper(a: PriceRow, b: PriceRow, preferCapacity: boolean): boolean {
+function isK8sComparableRow(row: PriceRow, tier: 'basic' | 'ha'): boolean {
+  if (row.category !== 'kubernetes') return false;
+  if (row.k8sTier === 'fixed-component') return false;
+  if (row.k8sClass === 'fixed-component') return false;
+  if (tier === 'ha') return row.k8sTier === 'ha';
+  return row.k8sTier === 'basic';
+}
+
+function isPreferredCheaper(
+  a: PriceRow,
+  b: PriceRow,
+  preferCapacity: boolean,
+  k8sTier: 'basic' | 'ha' | null,
+): boolean {
   if (preferCapacity) {
     const aCap = a.meterKind === 'capacity';
     const bCap = b.meterKind === 'capacity';
     if (aCap !== bCap) return aCap;
+  }
+  if (k8sTier) {
+    const aOk = isK8sComparableRow(a, k8sTier);
+    const bOk = isK8sComparableRow(b, k8sTier);
+    if (aOk !== bOk) return aOk;
   }
   return rankPrice(a, preferCapacity) < rankPrice(b, preferCapacity);
 }
@@ -378,6 +520,7 @@ type FilterContext = {
   storageClass: string | null;
   meterKind: 'capacity' | 'requests' | null;
   preferCapacity: boolean;
+  k8sTier: 'basic' | 'ha' | null;
 };
 
 /** Hard-filter catalog meters and compute lexical overlap (may be 0). */
@@ -399,7 +542,8 @@ function collectCandidates(params: SearchParams): FilterContext {
 
   const category = params.category ?? null;
   const gpuModel = params.gpuModel?.trim().toLowerCase() || null;
-  const aiModel = params.aiModel?.trim().toLowerCase() || null;
+  const aiModel =
+    params.aiModel?.trim().toLowerCase() || detectAiModelNeedle(params.query) || null;
   const storageClass =
     params.storageClass?.trim().toLowerCase() || detectStorageClass(params.query);
   let meterKind = detectMeterKind(params.query, params.meterKind);
@@ -412,6 +556,9 @@ function collectCandidates(params: SearchParams): FilterContext {
   if (!meterKind && looksLikeObject) meterKind = 'capacity';
 
   const preferCapacity = meterKind === 'capacity';
+  const k8sContext = looksLikeKubernetesQuery(category, searchTokens, params.query);
+  const k8sTier = k8sContext ? detectKubernetesTier(params.query) : null;
+  const k8sComparableOnly = Boolean(k8sContext && k8sTier && !wantsK8sUnitComponents(params.query));
   const candidates: Candidate[] = [];
 
   for (const {meter, hay} of entries) {
@@ -421,10 +568,7 @@ function collectCandidates(params: SearchParams): FilterContext {
       const gm = (extractGpuModel(meter) ?? '').toLowerCase();
       if (!gm.includes(gpuModel) && !hay.includes(gpuModel)) continue;
     }
-    if (aiModel) {
-      const am = (extractAiModelFamily(meter) ?? '').toLowerCase();
-      if (!am.includes(aiModel) && !hay.includes(aiModel)) continue;
-    }
+    if (aiModel && !aiModelMatchesNeedle(aiModel, meter, hay)) continue;
     if (storageClass) {
       const cls = (extractStorageClass(meter) ?? '').toLowerCase();
       if (cls !== storageClass) continue;
@@ -432,12 +576,20 @@ function collectCandidates(params: SearchParams): FilterContext {
     if (meterKind === 'capacity' && objectMeterKind(meter) === 'requests') continue;
     if (meterKind === 'requests' && objectMeterKind(meter) === 'capacity') continue;
 
+    // Default Managed Kubernetes compare: only zonal/HA master SKUs, not unit rates or 0₽ фикс.
+    if (k8sComparableOnly && meter.categoryKey === 'kubernetes') {
+      if (!isK8sComparableMaster(meter, k8sTier ?? 'basic')) continue;
+    }
+
     let lexical = 0;
     for (const tok of searchTokens) {
       if (hay.includes(tok)) lexical += 1;
     }
-    if (meter.synthetic) lexical -= 0.5;
+    // Synthetic GPU/other demotion; for k8s the 2/4 bundles ARE the comparable masters.
+    if (meter.synthetic && !k8sContext) lexical -= 0.5;
     if (storageClass && hay.includes(storageClass)) lexical += 0.5;
+    if (k8sTier && isK8sComparableMaster(meter, k8sTier)) lexical += 1.5;
+    if (aiModel && aiModelMatchesNeedle(aiModel, meter, hay)) lexical += 1.5;
 
     candidates.push({
       meter,
@@ -448,7 +600,7 @@ function collectCandidates(params: SearchParams): FilterContext {
     });
   }
 
-  return {candidates, searchTokens, storageClass, meterKind, preferCapacity};
+  return {candidates, searchTokens, storageClass, meterKind, preferCapacity, k8sTier};
 }
 
 /** Lexical-only ranking (requires a token hit when the query has tokens). */
@@ -539,6 +691,7 @@ function buildResult(
   volumeGiB: number | null,
   limit: number,
   retrieval: 'lexical' | 'hybrid',
+  k8sTier: 'basic' | 'ha' | null = null,
 ): PriceSearchResult {
   const byProvider = new Map<string, ProviderSummary>();
   for (const {row} of scored) {
@@ -552,7 +705,7 @@ function buildResult(
       });
     } else {
       existing.count += 1;
-      if (isPreferredCheaper(row, existing.cheapest, preferCapacity)) {
+      if (isPreferredCheaper(row, existing.cheapest, preferCapacity, k8sTier)) {
         existing.cheapest = row;
       }
     }
@@ -599,7 +752,13 @@ function buildResult(
     providers,
     totalMatches: scored.length,
     ...(volumeEstimates ? {volumeEstimates} : {}),
-    applied: {storageClass, meterKind, volumeGiB, retrieval},
+    applied: {
+      storageClass,
+      meterKind,
+      volumeGiB,
+      retrieval,
+      ...(k8sTier ? {k8sTier} : {}),
+    },
   };
 }
 
@@ -621,6 +780,7 @@ export function searchPricesDetailed(params: SearchParams): PriceSearchResult {
     volumeGiB,
     limit,
     'lexical',
+    ctx.k8sTier,
   );
 }
 
@@ -658,6 +818,7 @@ export async function searchPricesDetailedAsync(
       volumeGiB,
       limit,
       'lexical',
+      ctx.k8sTier,
     );
   }
   const {scored, retrieval} = await rankHybrid(ctx, query);
@@ -669,6 +830,7 @@ export async function searchPricesDetailedAsync(
     volumeGiB,
     limit,
     retrieval,
+    ctx.k8sTier,
   );
 }
 

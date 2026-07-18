@@ -80,9 +80,9 @@ function Stat({
   return (
     <div className={styles.stat}>
       <span className={styles.statIcon} data-tone={tone}>
-        <Icon data={icon} size={16} />
+        <Icon data={icon} size={14} />
       </span>
-      <Text variant="header-2" className={styles.statValue}>
+      <Text variant="subheader-2" className={styles.statValue}>
         {value}
       </Text>
       <Text variant="caption-2" color="secondary" className={styles.statUnit}>
@@ -134,7 +134,7 @@ function GpuIdentity({preset}: {preset: GpuPreset}) {
         {preset.gpuCount}×
       </Label>
       <Flex direction="column" gap={0} className={styles.gpuIdentityText}>
-        <Text variant="body-2" ellipsis title={name}>
+        <Text variant="subheader-2" ellipsis title={name}>
           {name}
         </Text>
         {hint ? (
@@ -152,15 +152,17 @@ function PresetCard({
   period,
   result,
   onOpen,
+  tone,
 }: {
   preset: CalculatorPreset;
   period: PeriodMode;
   result: ViewPresetQuoteSlim | undefined;
   onOpen: () => void;
+  tone: string;
 }) {
   const best = result?.best ?? null;
-
   const highlight = preset.kind === 'gpu' && preset.highlight;
+  const offerLabel = result ? `Сравнить · ${pluralOffers(result.quoteCount)}` : null;
 
   return (
     <Card
@@ -169,62 +171,54 @@ function PresetCard({
       size="l"
       onClick={onOpen}
     >
-      <div className={styles.cardInner}>
+      <div className={styles.cardInner} data-tone={tone}>
+        {preset.kind === 'gpu' ? <GpuIdentity preset={preset} /> : null}
+
         {preset.kind === 'compute' ? (
           <ComputeSpecs preset={preset} />
         ) : (
           <GpuHostSpecs preset={preset} />
         )}
 
-        {preset.kind === 'gpu' ? <GpuIdentity preset={preset} /> : null}
-
-        <div className={styles.spacer} />
-
         {best ? (
-          <div className={styles.priceBlock}>
-            <Text variant="caption-2" color="secondary" className={styles.priceLabel}>
+          <Flex alignItems="baseline" gap={1} wrap className={styles.priceBlock}>
+            <Text variant="body-2" color="secondary" className={styles.priceLabel}>
               от
             </Text>
-            <Flex alignItems="baseline" gap={1}>
-              <Text variant="display-1" className={styles.priceValue}>
-                {formatQuoteAmount(best.total, period)}
-              </Text>
-              <Text variant="body-1" color="secondary">
-                ₽ / {periodShortLabel(period)}
-              </Text>
-            </Flex>
-          </div>
-        ) : (
-          <div className={styles.priceBlock}>
-            <Text variant="subheader-2" color="secondary">
-              Нет публичной цены
+            <Text variant="header-1" className={styles.priceValue}>
+              {formatQuoteAmount(best.total, period)}
             </Text>
-          </div>
+            <Text variant="body-2" color="secondary">
+              / {periodShortLabel(period)}
+            </Text>
+          </Flex>
+        ) : (
+          <Text variant="body-2" color="secondary" className={styles.priceBlock}>
+            Нет публичной цены
+          </Text>
         )}
 
-        {best && result ? (
+        {best && result && offerLabel ? (
           <Flex
             alignItems="center"
             justifyContent="space-between"
-            gap={3}
+            gap={2}
             className={styles.sellerRow}
           >
             <Flex alignItems="center" gap={2} className={styles.seller}>
               <span className={styles.sellerMark}>
-                <ProviderMark providerId={best.provider} size={16} />
+                <ProviderMark providerId={best.provider} size={14} />
               </span>
-              <Flex direction="column" gap={0} className={styles.sellerText}>
-                <Text variant="body-2" ellipsis>
-                  {best.providerName}
-                </Text>
-                <Text variant="caption-2" color="secondary">
-                  {result.quoteCount > 1
-                    ? `лучшая из ${result.quoteCount}`
-                    : 'единственный оффер'}
-                </Text>
-              </Flex>
+              <Text variant="caption-2" color="secondary" ellipsis className={styles.sellerText}>
+                {best.providerName}
+              </Text>
             </Flex>
-            <Icon data={ChevronRight} size={16} className={styles.chevron} />
+            <Flex alignItems="center" gap={1} className={styles.cta}>
+              <Text variant="caption-2" className={styles.ctaLabel}>
+                {offerLabel}
+              </Text>
+              <Icon data={ChevronRight} size={14} className={styles.chevron} />
+            </Flex>
           </Flex>
         ) : null}
       </div>
@@ -232,43 +226,12 @@ function PresetCard({
   );
 }
 
-function FamilyShelf({
-  family,
-  period,
-  quotesById,
-  onOpen,
-}: {
-  family: ComputeFamily;
-  period: PeriodMode;
-  quotesById: Record<string, ViewPresetQuoteSlim>;
-  onOpen: (preset: CalculatorPreset) => void;
-}) {
-  return (
-    <div className={styles.shelf}>
-      <Flex alignItems="center" gap={3} className={styles.shelfHead}>
-        <span className={styles.shelfIcon} data-tone={FAMILY_TONE[family]}>
-          <Icon data={FAMILY_ICON[family]} size={20} />
-        </span>
-        <Flex direction="column" gap={1}>
-          <Text variant="header-1">{COMPUTE_FAMILY_TITLE[family]}</Text>
-          <Text variant="body-2" color="secondary">
-            {COMPUTE_FAMILY_HINT[family]}
-          </Text>
-        </Flex>
-      </Flex>
-      <div className={styles.grid}>
-        {computePresetsByFamily(family).map((preset) => (
-          <PresetCard
-            key={preset.id}
-            preset={preset}
-            period={period}
-            result={quotesById[preset.id]}
-            onOpen={() => onOpen(preset)}
-          />
-        ))}
-      </div>
-    </div>
-  );
+function pluralOffers(count: number): string {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${count} оффер`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return `${count} оффера`;
+  return `${count} офферов`;
 }
 
 export function CalculatorPage({
@@ -282,8 +245,10 @@ export function CalculatorPage({
 }) {
   const [period, setPeriod] = useState<PeriodMode>('month');
   const [viewMode, setViewMode] = useState<ViewMode>('cards');
+  const [family, setFamily] = useState<ComputeFamily>('general');
   const [active, setActive] = useState<CalculatorPreset | null>(null);
   const quotesById = useMemo(() => quotesByPeriod[period], [quotesByPeriod, period]);
+  const familyPresets = useMemo(() => computePresetsByFamily(family), [family]);
 
   return (
     <>
@@ -297,8 +262,7 @@ export function CalculatorPage({
                 <Text variant="header-1">Калькулятор</Text>
               </Flex>
               <Text variant="body-1" color="secondary" className={styles.heroLead}>
-                Сравните цены ВМ и аренды GPU (L4, A100, H100, H200) у Yandex Cloud, VK Cloud,
-                Selectel, Cloud.ru, MWS и T1 — Best offer по публичным тарифам и разбивка стоимости.
+                Выберите конфигурацию — откроется сравнение офферов по провайдерам.
               </Text>
             </Flex>
             <Flex alignItems="center" gap={3} wrap className={styles.heroControls}>
@@ -338,13 +302,15 @@ export function CalculatorPage({
         </header>
 
         <section className={styles.section}>
-          <Flex alignItems="baseline" justifyContent="space-between" gap={3} wrap>
+          <Flex alignItems="center" justifyContent="space-between" gap={3} wrap>
             <Flex alignItems="center" gap={2}>
-              <Icon data={Cpu} size={20} />
+              <span className={styles.sectionIcon} data-tone="info">
+                <Icon data={Cpu} size={18} />
+              </span>
               <Text variant="header-1">Compute</Text>
             </Flex>
             <Text variant="body-2" color="secondary">
-              vCPU + RAM + 100 GiB SSD
+              vCPU + RAM + диск
             </Text>
           </Flex>
 
@@ -357,29 +323,66 @@ export function CalculatorPage({
               onOpen={setActive}
             />
           ) : (
-            FAMILIES.map((family) => (
-              <FamilyShelf
-                key={family}
-                family={family}
-                period={period}
-                quotesById={quotesById}
-                onOpen={setActive}
-              />
-            ))
+            <div className={styles.familyPanel}>
+              <Flex direction="column" gap={3}>
+                <SegmentedRadioGroup
+                  size="l"
+                  aria-label="Семейство Compute"
+                  value={family}
+                  onUpdate={(v) => {
+                    startTransition(() => setFamily(v as ComputeFamily));
+                  }}
+                  className={styles.familyTabs}
+                >
+                  {FAMILIES.map((id) => (
+                    <SegmentedRadioGroup.Option
+                      key={id}
+                      value={id}
+                      title={COMPUTE_FAMILY_TITLE[id]}
+                    >
+                      <Flex alignItems="center" gap={2}>
+                        <span className={styles.tabIcon} data-tone={FAMILY_TONE[id]}>
+                          <Icon data={FAMILY_ICON[id]} size={16} />
+                        </span>
+                        <span className={styles.tabLabel}>{COMPUTE_FAMILY_TITLE[id]}</span>
+                      </Flex>
+                    </SegmentedRadioGroup.Option>
+                  ))}
+                </SegmentedRadioGroup>
+
+                <Text variant="body-2" color="complementary" className={styles.familyHint}>
+                  {COMPUTE_FAMILY_HINT[family]}
+                </Text>
+
+                <div className={styles.grid}>
+                  {familyPresets.map((preset) => (
+                    <PresetCard
+                      key={preset.id}
+                      preset={preset}
+                      period={period}
+                      result={quotesById[preset.id]}
+                      tone={FAMILY_TONE[family]}
+                      onOpen={() => setActive(preset)}
+                    />
+                  ))}
+                </div>
+              </Flex>
+            </div>
           )}
         </section>
 
         <section className={styles.section}>
-          <Flex alignItems="baseline" justifyContent="space-between" gap={3} wrap>
-            <Flex direction="column" gap={1}>
-              <Flex alignItems="center" gap={2}>
-                <Icon data={Gpu} size={20} />
+          <Flex alignItems="center" justifyContent="space-between" gap={3} wrap>
+            <Flex alignItems="center" gap={2}>
+              <span className={styles.sectionIcon} data-tone="warning">
+                <Icon data={Gpu} size={18} />
+              </span>
+              <Flex direction="column" gap={0}>
                 <Text variant="header-1">GPU</Text>
+                <Text variant="body-2" color="secondary">
+                  {gpuPresets.length} конфигураций · сравните офферы по провайдерам
+                </Text>
               </Flex>
-              <Text variant="body-2" color="secondary">
-                Формы Cloud.ru + уникальные VK/Selectel (B300). Сравнение: flavor или сборка GPU +
-                vCPU + RAM. {gpuPresets.length} конфигураций.
-              </Text>
             </Flex>
           </Flex>
           {viewMode === 'table' ? (
@@ -391,16 +394,19 @@ export function CalculatorPage({
               onOpen={setActive}
             />
           ) : (
-            <div className={styles.grid}>
-              {gpuCardPresets.map((preset) => (
-                <PresetCard
-                  key={preset.id}
-                  preset={preset}
-                  period={period}
-                  result={quotesById[preset.id]}
-                  onOpen={() => setActive(preset)}
-                />
-              ))}
+            <div className={styles.familyPanel}>
+              <div className={styles.grid}>
+                {gpuCardPresets.map((preset) => (
+                  <PresetCard
+                    key={preset.id}
+                    preset={preset}
+                    period={period}
+                    result={quotesById[preset.id]}
+                    tone="warning"
+                    onOpen={() => setActive(preset)}
+                  />
+                ))}
+              </div>
             </div>
           )}
         </section>

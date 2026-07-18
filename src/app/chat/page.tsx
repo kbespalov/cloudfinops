@@ -1,4 +1,5 @@
 import type {Metadata} from 'next';
+import {Suspense} from 'react';
 import {ChatPage} from '@/components/chat/ChatPage';
 import {ChatSeo, chatJsonLd} from '@/components/chat/ChatSeo';
 
@@ -67,7 +68,9 @@ export default function ChatRoute() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{__html: JSON.stringify(jsonLd)}}
       />
-      <ChatPage />
+      <Suspense fallback={null}>
+        <ChatPage />
+      </Suspense>
       <ChatSeo />
     </>
   );

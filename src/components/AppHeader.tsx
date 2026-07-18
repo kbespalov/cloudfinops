@@ -31,10 +31,10 @@ type NavItem = {
 };
 
 const NAV: NavItem[] = [
-  {href: '/catalog', label: 'Каталог SKU', icon: SquareListUl},
-  {href: '/news', label: 'Новости', icon: BookOpen},
-  {href: '/calculator', label: 'Калькулятор', icon: Calculator},
   {href: '/chat', label: 'AI-ассистент', icon: Sparkles, accent: true},
+  {href: '/catalog', label: 'Каталог SKU', icon: SquareListUl},
+  {href: '/calculator', label: 'Калькулятор', icon: Calculator},
+  {href: '/news', label: 'Новости', icon: BookOpen},
   {href: '/api', label: 'API', icon: Code, badge: 'planned'},
   {href: '/about', label: 'О нас', icon: CircleInfo},
   {
