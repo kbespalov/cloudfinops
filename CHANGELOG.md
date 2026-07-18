@@ -9,7 +9,11 @@
 - Системный промпт: правила сопоставимости классов Standard / Warm / Cold / Ice и расчёта объёма.
 - Eval: расширен набор вопросов по object storage (классы, объёмы, ловушки смешения классов).
 - Вкладка `/chat`: компактный заголовок, чат на всю высоту вьюпорта — поле ввода сразу в кадре без скролла страницы.
-- Hybrid retrieval в `search_prices`: lexical + Cloud.ru `BAAI/bge-m3` embeddings (RRF), hard filters по dimensions без изменений. Индекс: `npm run data:embeddings` → `src/data/catalog-embeddings.generated.json`. Offline eval: `npm run eval:retrieval`.
+- **Hybrid / semantic search** в инструменте `search_prices` (см. подробности в README):
+  - зачем: lexical token-overlap плохо ловит перефразы («amazon glacier», «старые логи надолго», «восемь процессоров / 32 гига»);
+  - что: precomputed embeddings всех SKU (`BAAI/bge-m3` через Cloud.ru FM) + cosine по запросу + RRF с lexical; hard filters по dimensions без изменений;
+  - артефакт: `npm run data:embeddings` → `src/data/catalog-embeddings.generated.json`;
+  - проверка: `npm run eval:retrieval` (~114 вопросов) — lexical 95.6% → hybrid 100% recall@10, без регрессий.
 
 ### Калькулятор
 
