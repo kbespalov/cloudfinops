@@ -6,6 +6,8 @@
     "predev": "npm run data:build",
     "prebuild": "npm run data:build",
     "data:build": "tsx scripts/build-catalog.ts",
+    "data:embeddings": "tsx scripts/build-embeddings.ts",
+    "eval:retrieval": "tsx scripts/eval/retrieval-run.ts",
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",

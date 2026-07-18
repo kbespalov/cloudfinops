@@ -1,11 +1,16 @@
 /**
  * Function-calling tools exposed to GigaChat: `search_prices` (lexical catalog
  * search) and `get_quote` (calculator engine). JSON-schema definitions plus a
- * dispatcher that runs the tool and returns a compact JSON string for the model.
+ * async dispatcher that runs the tool and returns a compact JSON string for the model.
  */
 
 import type {CategoryKey, PeriodMode} from '@/lib/catalog';
-import {searchPricesDetailed, type PriceRow, type SearchParams} from './search';
+import {
+  searchPricesDetailed,
+  searchPricesDetailedAsync,
+  type PriceRow,
+  type SearchParams,
+} from './search';
 import {quotePreset, listGpuPresets} from '@/lib/calculator/quote';
 import {compareUnitPrice, type UnitComponent} from './analytics';
 import type {ComputePreset, GpuPreset, CalculatorPreset} from '@/lib/calculator/presets';
@@ -42,7 +47,7 @@ export const CHAT_TOOLS = [
     function: {
       name: 'search_prices',
       description:
-        'Найти позиции прайс-листа российских облаков (Yandex Cloud, VK Cloud, Cloud.ru, T1 Cloud, Selectel, MWS) по ключевым словам и фильтрам. Возвращает список SKU с ценами (₽ с НДС) за час/месяц/год. Используй для вопросов о ценах конкретных услуг, GPU, AI-моделей, дисков, трафика и т.п.',
+        'Найти позиции прайс-листа российских облаков (Yandex Cloud, VK Cloud, Cloud.ru, T1 Cloud, Selectel, MWS) по ключевым словам и фильтрам. Hybrid-поиск (lexical + embeddings). Возвращает список SKU с ценами (₽ с НДС) за час/месяц/год. Используй для вопросов о ценах конкретных услуг, GPU, AI-моделей, дисков, трафика, S3 и т.п.',
       parameters: {
         type: 'object',
         properties: {
@@ -173,7 +178,7 @@ function serializeRow(r: PriceRow) {
 
 const STORAGE_CLASSES = ['standard', 'warm', 'cold', 'ice'] as const;
 
-function runSearch(args: Record<string, unknown>): unknown {
+async function runSearch(args: Record<string, unknown>): Promise<unknown> {
   const storageClassRaw =
     typeof args.storageClass === 'string' ? args.storageClass.trim().toLowerCase() : '';
   const meterKindRaw =
@@ -198,14 +203,15 @@ function runSearch(args: Record<string, unknown>): unknown {
     volumeGiB,
     limit: typeof args.limit === 'number' ? args.limit : undefined,
   };
-  const {rows, providers, totalMatches, volumeEstimates, applied} = searchPricesDetailed(params);
+  const {rows, providers, totalMatches, volumeEstimates, applied} =
+    await searchPricesDetailedAsync(params);
   return {
     count: rows.length,
     totalMatches,
     currency: 'RUB',
     vatIncluded: true,
     applied,
-    note: 'Цены с НДС; месяц = 720 ч. hour/month/year — нормализованные значения; для usage-позиций (GiB, 1M токенов) число одинаково для всех периодов, ориентируйся на unit. ВАЖНО: услугу предлагают ТОЛЬКО провайдеры из providersMatched — не добавляй других и не копируй цену одного провайдера другим. priceKind различает «только GPU» и «конфигурацию целиком». ВНИМАНИЕ для vCPU/ВМ: providersMatched.cheapest часто = preemptible или долевое ядро (<100%) — это НЕ сопоставимая база для «цены 1 vCPU». Для сравнения/среднего по ядрам бери у каждого провайдера строку одного типа (on-demand, 100% выделенное ядро; см. config/note), не смешивай и не усредняй разные типы. ОБЪЕКТНОЕ ХРАНИЛИЩЕ (S3): классы Standard / Warm / Cold / Ice НЕ сопоставимы между собой — сравнивай только один класс за раз (параметр storageClass). Для цены хранения смотри meterKind=capacity (₽/GiB·мес); операции PUT/GET — отдельно (meterKind=requests). Бесплатные запросы (0 ₽) — это НЕ цена хранения. Если передан volumeGiB — итоговую стоимость бери из volumeEstimates, не считай вручную.',
+    note: 'Цены с НДС; месяц = 720 ч. hour/month/year — нормализованные значения; для usage-позиций (GiB, 1M токенов) число одинаково для всех периодов, ориентируйся на unit. ВАЖНО: услугу предлагают ТОЛЬКО провайдеры из providersMatched — не добавляй других и не копируй цену одного провайдера другим. priceKind различает «только GPU» и «конфигурацию целиком». ВНИМАНИЕ для vCPU/ВМ: providersMatched.cheapest часто = preemptible или долевое ядро (<100%) — это НЕ сопоставимая база для «цены 1 vCPU». Для сравнения/среднего по ядрам бери у каждого провайдера строку одного типа (on-demand, 100% выделенное ядро; см. config/note), не смешивай и не усредняй разные типы. ОБЪЕКТНОЕ ХРАНИЛИЩЕ (S3): классы Standard / Warm / Cold / Ice НЕ сопоставимы между собой — сравнивай только один класс за раз (параметр storageClass). Для цены хранения смотри meterKind=capacity (₽/GiB·мес); операции PUT/GET — отдельно (meterKind=requests). Бесплатные запросы (0 ₽) — это НЕ цена хранения. Если передан volumeGiB — итоговую стоимость бери из volumeEstimates, не считай вручную. Поиск hybrid (lexical+embeddings), applied.retrieval показывает режим.',
     // Точный список провайдеров, у которых реально есть совпадение, с их СОБСТВЕННОЙ минимальной ценой.
     providersMatched: providers.map((p) => ({
       provider: p.providerName,
@@ -396,23 +402,91 @@ function runCompareUnitPrice(args: Record<string, unknown>): unknown {
   return compareUnitPrice(component);
 }
 
-/** Execute a tool call by name; always returns a JSON string for the tool message. */
-export function runTool(name: string, rawArgs: string): string {
-  let args: Record<string, unknown> = {};
+function parseToolArgs(
+  rawArgs: string,
+): {ok: true; args: Record<string, unknown>} | {ok: false; message: string} {
   try {
-    args = rawArgs ? (JSON.parse(rawArgs) as Record<string, unknown>) : {};
+    return {ok: true, args: rawArgs ? (JSON.parse(rawArgs) as Record<string, unknown>) : {}};
   } catch {
-    return JSON.stringify({error: 'Некорректный JSON в аргументах инструмента.'});
+    return {ok: false, message: 'Некорректный JSON в аргументах инструмента.'};
   }
+}
+
+function toolError(err: unknown): string {
+  return JSON.stringify({
+    error: 'Ошибка выполнения инструмента.',
+    detail: err instanceof Error ? err.message : String(err),
+  });
+}
+
+/**
+ * Sync tool runner for offline ground truth / eval.
+ * `search_prices` uses lexical-only ranking (deterministic, no API).
+ */
+export function runToolSync(name: string, rawArgs: string): string {
+  const parsed = parseToolArgs(rawArgs);
+  if (!parsed.ok) return JSON.stringify({error: parsed.message});
+  const args = parsed.args;
   try {
-    if (name === 'search_prices') return JSON.stringify(runSearch(args));
+    if (name === 'search_prices') {
+      const storageClassRaw =
+        typeof args.storageClass === 'string' ? args.storageClass.trim().toLowerCase() : '';
+      const params: SearchParams = {
+        query: typeof args.query === 'string' ? args.query : undefined,
+        category: CATEGORIES.includes(args.category as CategoryKey)
+          ? (args.category as CategoryKey)
+          : undefined,
+        provider: typeof args.provider === 'string' ? args.provider : undefined,
+        gpuModel: typeof args.gpuModel === 'string' ? args.gpuModel : undefined,
+        aiModel: typeof args.aiModel === 'string' ? args.aiModel : undefined,
+        storageClass: STORAGE_CLASSES.includes(storageClassRaw as (typeof STORAGE_CLASSES)[number])
+          ? storageClassRaw
+          : undefined,
+        meterKind:
+          args.meterKind === 'capacity' || args.meterKind === 'requests'
+            ? args.meterKind
+            : undefined,
+        volumeGiB:
+          typeof args.volumeGiB === 'number' && Number.isFinite(args.volumeGiB) && args.volumeGiB > 0
+            ? args.volumeGiB
+            : undefined,
+        limit: typeof args.limit === 'number' ? args.limit : undefined,
+      };
+      const {rows, providers, totalMatches, volumeEstimates, applied} = searchPricesDetailed(params);
+      return JSON.stringify({
+        count: rows.length,
+        totalMatches,
+        currency: 'RUB',
+        vatIncluded: true,
+        applied,
+        providersMatched: providers.map((p) => ({
+          provider: p.providerName,
+          offerings: p.count,
+          cheapest: serializeRow(p.cheapest),
+        })),
+        rows: rows.map(serializeRow),
+        ...(volumeEstimates && volumeEstimates.length ? {volumeEstimates} : {}),
+      });
+    }
     if (name === 'get_quote') return JSON.stringify(runQuote(args));
     if (name === 'compare_unit_price') return JSON.stringify(runCompareUnitPrice(args));
     return JSON.stringify({error: `Неизвестный инструмент: ${name}`});
   } catch (err) {
-    return JSON.stringify({
-      error: 'Ошибка выполнения инструмента.',
-      detail: err instanceof Error ? err.message : String(err),
-    });
+    return toolError(err);
+  }
+}
+
+/** Execute a tool call by name; always returns a JSON string for the tool message. */
+export async function runTool(name: string, rawArgs: string): Promise<string> {
+  const parsed = parseToolArgs(rawArgs);
+  if (!parsed.ok) return JSON.stringify({error: parsed.message});
+  const args = parsed.args;
+  try {
+    if (name === 'search_prices') return JSON.stringify(await runSearch(args));
+    if (name === 'get_quote') return JSON.stringify(runQuote(args));
+    if (name === 'compare_unit_price') return JSON.stringify(runCompareUnitPrice(args));
+    return JSON.stringify({error: `Неизвестный инструмент: ${name}`});
+  } catch (err) {
+    return toolError(err);
   }
 }

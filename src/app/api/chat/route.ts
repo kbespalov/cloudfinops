@@ -167,7 +167,7 @@ export async function POST(req: Request) {
               tool: call.function.name,
               argsPreview: call.function.arguments.slice(0, 200),
             });
-            const result = runTool(call.function.name, call.function.arguments);
+            const result = await runTool(call.function.name, call.function.arguments);
             messages.push({
               role: 'tool',
               tool_call_id: call.id,

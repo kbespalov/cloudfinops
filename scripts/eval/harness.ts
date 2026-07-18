@@ -46,7 +46,7 @@ export async function runChat(systemPrompt: string, question: string): Promise<C
       }
       messages.push({role: 'assistant', content: reply.content ?? '', tool_calls: calls});
       for (const call of calls) {
-        const result = runTool(call.function.name, call.function.arguments);
+        const result = await runTool(call.function.name, call.function.arguments);
         toolCalls.push({name: call.function.name, arguments: call.function.arguments});
         toolResults.push({name: call.function.name, result});
         messages.push({

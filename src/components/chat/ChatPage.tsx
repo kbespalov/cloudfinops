@@ -231,7 +231,7 @@ export function ChatPage() {
               ИИ-ассистент FinOps
             </Text>
           </div>
-          <Text as="p" variant="body-short-1" color="secondary" className={styles.heroLead}>
+          <Text as="p" variant="body-short" color="secondary" className={styles.heroLead}>
             Спросите про ВМ, GPU, S3, трафик или AI-модели — ответ таблицей, цены с НДС.
           </Text>
         </div>

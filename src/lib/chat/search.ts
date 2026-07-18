@@ -1,10 +1,9 @@
 /**
- * Lexical / structural search over the price catalog for the AI assistant.
+ * Lexical + optional dense hybrid search over the price catalog.
  *
- * The corpus (`catalog.meters`) is small and highly structured, so we index a
- * normalized searchable string per meter and score by token overlap, with
- * hard structural filters (category / provider / gpu / ai / storage class).
- * No embeddings.
+ * Hard structural filters (category / provider / gpu / ai / storage class) always
+ * apply. Ranking is token overlap, optionally fused with Cloud.ru embeddings
+ * (RRF) when `catalog-embeddings.generated.json` and an API key are available.
  */
 
 import {
@@ -22,6 +21,13 @@ import {
   type CatalogMeter,
   type CategoryKey,
 } from '@/lib/catalog';
+import {
+  cosineSimilarity,
+  embedQueryCached,
+  hybridSearchReady,
+  loadEmbeddingIndex,
+  reciprocalRankFusion,
+} from './embeddings';
 
 export type PriceRow = {
   sku: string;
@@ -93,6 +99,7 @@ export type PriceSearchResult = {
     storageClass: string | null;
     meterKind: 'capacity' | 'requests' | null;
     volumeGiB: number | null;
+    retrieval?: 'lexical' | 'hybrid';
   };
 };
 
@@ -326,7 +333,18 @@ function toRow(m: CatalogMeter): PriceRow {
   };
 }
 
-type ScoredRow = {row: PriceRow; score: number; rank: number};
+type Candidate = {
+  meter: CatalogMeter;
+  hay: string;
+  row: PriceRow;
+  lexical: number;
+  id: string;
+};
+
+type ScoredRow = {row: PriceRow; score: number; rank: number; id: string};
+
+const DENSE_TOP_K = 48;
+const RRF_K = 60;
 
 /** Comparable price for ranking (prefer month for capacity; ignore free zeros as "cheapest"). */
 function rankPrice(row: PriceRow, preferCapacity: boolean): number {
@@ -354,17 +372,19 @@ function isPreferredCheaper(a: PriceRow, b: PriceRow, preferCapacity: boolean): 
   return rankPrice(a, preferCapacity) < rankPrice(b, preferCapacity);
 }
 
-/** Score + filter all matching rows, sorted by score desc then price asc. */
-function matchRows(params: SearchParams): {
-  scored: ScoredRow[];
+type FilterContext = {
+  candidates: Candidate[];
+  searchTokens: string[];
   storageClass: string | null;
   meterKind: 'capacity' | 'requests' | null;
-} {
+  preferCapacity: boolean;
+};
+
+/** Hard-filter catalog meters and compute lexical overlap (may be 0). */
+function collectCandidates(params: SearchParams): FilterContext {
   const entries = getIndex();
 
-  // Provider filter: explicit param wins, else inferred from query synonyms.
   let providerFilter = params.provider?.trim().toLowerCase() || null;
-
   const rawTokens = params.query ? normalize(params.query).split(/\s+/).filter(Boolean) : [];
   const tokens = new Set<string>();
   for (const tok of rawTokens) {
@@ -380,11 +400,9 @@ function matchRows(params: SearchParams): {
   const category = params.category ?? null;
   const gpuModel = params.gpuModel?.trim().toLowerCase() || null;
   const aiModel = params.aiModel?.trim().toLowerCase() || null;
-  // Prefer explicit tool arg; query inference is a fallback only.
   const storageClass =
     params.storageClass?.trim().toLowerCase() || detectStorageClass(params.query);
   let meterKind = detectMeterKind(params.query, params.meterKind);
-  // Object-storage questions default to capacity (rate ₽/GiB·мес), not free PUT=0.
   const looksLikeObject =
     category === 'storage' ||
     searchTokens.some((t) =>
@@ -394,7 +412,7 @@ function matchRows(params: SearchParams): {
   if (!meterKind && looksLikeObject) meterKind = 'capacity';
 
   const preferCapacity = meterKind === 'capacity';
-  const scored: ScoredRow[] = [];
+  const candidates: Candidate[] = [];
 
   for (const {meter, hay} of entries) {
     if (category && meter.categoryKey !== category) continue;
@@ -407,7 +425,6 @@ function matchRows(params: SearchParams): {
       const am = (extractAiModelFamily(meter) ?? '').toLowerCase();
       if (!am.includes(aiModel) && !hay.includes(aiModel)) continue;
     }
-    // Hard filter by SKU dimensions.storageClass — not by localized display name.
     if (storageClass) {
       const cls = (extractStorageClass(meter) ?? '').toLowerCase();
       if (cls !== storageClass) continue;
@@ -415,47 +432,114 @@ function matchRows(params: SearchParams): {
     if (meterKind === 'capacity' && objectMeterKind(meter) === 'requests') continue;
     if (meterKind === 'requests' && objectMeterKind(meter) === 'capacity') continue;
 
-    let score = 0;
+    let lexical = 0;
     for (const tok of searchTokens) {
-      if (hay.includes(tok)) score += 1;
+      if (hay.includes(tok)) lexical += 1;
     }
+    if (meter.synthetic) lexical -= 0.5;
+    if (storageClass && hay.includes(storageClass)) lexical += 0.5;
 
-    // Require at least one lexical hit when a free-text query was given.
-    if (searchTokens.length > 0 && score === 0) continue;
-
-    // De-emphasize synthetic composite rows so real SKUs surface first.
-    if (meter.synthetic) score -= 0.5;
-
-    // Prefer exact storage-class lexical hit when class is inferred (scoring only).
-    if (storageClass && hay.includes(storageClass)) score += 0.5;
-
-    const row = toRow(meter);
-    scored.push({row, score, rank: rankPrice(row, preferCapacity)});
+    candidates.push({
+      meter,
+      hay,
+      row: toRow(meter),
+      lexical,
+      id: meter.id,
+    });
   }
 
+  return {candidates, searchTokens, storageClass, meterKind, preferCapacity};
+}
+
+/** Lexical-only ranking (requires a token hit when the query has tokens). */
+function rankLexical(ctx: FilterContext): ScoredRow[] {
+  const scored: ScoredRow[] = [];
+  for (const c of ctx.candidates) {
+    if (ctx.searchTokens.length > 0 && c.lexical <= 0) continue;
+    scored.push({
+      row: c.row,
+      score: c.lexical,
+      rank: rankPrice(c.row, ctx.preferCapacity),
+      id: c.id,
+    });
+  }
   scored.sort((a, b) => {
     if (b.score !== a.score) return b.score - a.score;
     return a.rank - b.rank;
   });
-
-  return {scored, storageClass, meterKind};
+  return scored;
 }
 
 /**
- * Full search result: diversified top-N rows plus a per-provider summary so the
- * consumer always knows exactly which providers offer a match (and never has to
- * guess or invent them). Structural params act as hard filters.
+ * Hybrid: RRF(lexical ranks, dense ranks) over lexical hits ∪ top-K dense.
+ * Falls back to lexical when embeddings/API unavailable.
  */
-export function searchPricesDetailed(params: SearchParams): PriceSearchResult {
-  const limit = Math.min(Math.max(params.limit ?? 12, 1), 40);
-  const {scored, storageClass, meterKind} = matchRows(params);
-  const preferCapacity = meterKind === 'capacity';
-  const volumeGiB =
-    typeof params.volumeGiB === 'number' && Number.isFinite(params.volumeGiB) && params.volumeGiB > 0
-      ? params.volumeGiB
-      : null;
+async function rankHybrid(ctx: FilterContext, query: string): Promise<{
+  scored: ScoredRow[];
+  retrieval: 'lexical' | 'hybrid';
+}> {
+  if (!query.trim() || !hybridSearchReady()) {
+    return {scored: rankLexical(ctx), retrieval: 'lexical'};
+  }
+  const index = loadEmbeddingIndex();
+  if (!index) return {scored: rankLexical(ctx), retrieval: 'lexical'};
 
-  // Per-provider summary across ALL matches (cheapest relevant row wins).
+  let queryVec: Float32Array;
+  try {
+    queryVec = await embedQueryCached(query);
+  } catch {
+    return {scored: rankLexical(ctx), retrieval: 'lexical'};
+  }
+
+  const denseScored = ctx.candidates
+    .map((c) => {
+      const vec = index.byId.get(c.id);
+      const dense = vec ? cosineSimilarity(queryVec, vec) : -1;
+      return {c, dense};
+    })
+    .filter((x) => x.dense >= 0)
+    .sort((a, b) => b.dense - a.dense);
+
+  const lexOrdered = [...ctx.candidates]
+    .filter((c) => c.lexical > 0)
+    .sort((a, b) => b.lexical - a.lexical);
+
+  const denseTop = denseScored.slice(0, DENSE_TOP_K);
+  const keep = new Map<string, Candidate>();
+  for (const c of lexOrdered) keep.set(c.id, c);
+  for (const {c} of denseTop) keep.set(c.id, c);
+  if (!keep.size) return {scored: rankLexical(ctx), retrieval: 'lexical'};
+
+  const lexRanks = lexOrdered.filter((c) => keep.has(c.id)).map((c) => c.id);
+  const denseRanks = denseTop.filter((x) => keep.has(x.c.id)).map((x) => x.c.id);
+  const fused = reciprocalRankFusion([lexRanks, denseRanks], RRF_K);
+  const denseById = new Map(denseScored.map((x) => [x.c.id, x.dense]));
+
+  const scored: ScoredRow[] = [...keep.values()].map((c) => ({
+    row: c.row,
+    score: fused.get(c.id) ?? 0,
+    rank: rankPrice(c.row, ctx.preferCapacity),
+    id: c.id,
+  }));
+  scored.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    const da = denseById.get(a.id) ?? 0;
+    const db = denseById.get(b.id) ?? 0;
+    if (db !== da) return db - da;
+    return a.rank - b.rank;
+  });
+  return {scored, retrieval: 'hybrid'};
+}
+
+function buildResult(
+  scored: ScoredRow[],
+  storageClass: string | null,
+  meterKind: 'capacity' | 'requests' | null,
+  preferCapacity: boolean,
+  volumeGiB: number | null,
+  limit: number,
+  retrieval: 'lexical' | 'hybrid',
+): PriceSearchResult {
   const byProvider = new Map<string, ProviderSummary>();
   for (const {row} of scored) {
     const existing = byProvider.get(row.provider);
@@ -477,8 +561,6 @@ export function searchPricesDetailed(params: SearchParams): PriceSearchResult {
     (a, b) => rankPrice(a.cheapest, preferCapacity) - rankPrice(b.cheapest, preferCapacity),
   );
 
-  // Diversify top-N: guarantee each matching provider appears at least once
-  // (first occurrence in global order), then fill remaining slots by rank.
   const seen = new Set<string>();
   const primary: ScoredRow[] = [];
   const rest: ScoredRow[] = [];
@@ -517,14 +599,63 @@ export function searchPricesDetailed(params: SearchParams): PriceSearchResult {
     providers,
     totalMatches: scored.length,
     ...(volumeEstimates ? {volumeEstimates} : {}),
-    applied: {storageClass, meterKind, volumeGiB},
+    applied: {storageClass, meterKind, volumeGiB, retrieval},
   };
 }
 
 /**
- * Search the catalog. Returns compact rows ranked by lexical overlap, then
- * by price ascending, diversified across providers. Structural params filter.
+ * Synchronous lexical search (tests / ground truth without embedding API).
  */
+export function searchPricesDetailed(params: SearchParams): PriceSearchResult {
+  const limit = Math.min(Math.max(params.limit ?? 12, 1), 40);
+  const ctx = collectCandidates(params);
+  const volumeGiB =
+    typeof params.volumeGiB === 'number' && Number.isFinite(params.volumeGiB) && params.volumeGiB > 0
+      ? params.volumeGiB
+      : null;
+  return buildResult(
+    rankLexical(ctx),
+    ctx.storageClass,
+    ctx.meterKind,
+    ctx.preferCapacity,
+    volumeGiB,
+    limit,
+    'lexical',
+  );
+}
+
+/**
+ * Hybrid search when embeddings + API key are available; otherwise lexical.
+ * Used by the chat tool path.
+ */
+export async function searchPricesDetailedAsync(
+  params: SearchParams,
+): Promise<PriceSearchResult> {
+  const limit = Math.min(Math.max(params.limit ?? 12, 1), 40);
+  const ctx = collectCandidates(params);
+  const volumeGiB =
+    typeof params.volumeGiB === 'number' && Number.isFinite(params.volumeGiB) && params.volumeGiB > 0
+      ? params.volumeGiB
+      : null;
+  const query = typeof params.query === 'string' ? params.query : '';
+  const {scored, retrieval} = await rankHybrid(ctx, query);
+  return buildResult(
+    scored,
+    ctx.storageClass,
+    ctx.meterKind,
+    ctx.preferCapacity,
+    volumeGiB,
+    limit,
+    retrieval,
+  );
+}
+
+/** Sync lexical rows (tests). */
 export function searchPrices(params: SearchParams): PriceRow[] {
   return searchPricesDetailed(params).rows;
+}
+
+/** Async hybrid rows for the assistant tool. */
+export async function searchPricesAsync(params: SearchParams): Promise<PriceRow[]> {
+  return (await searchPricesDetailedAsync(params)).rows;
 }

@@ -20,10 +20,14 @@ npm run dev
 Откроется [http://localhost:3000](http://localhost:3000) → редирект на `/catalog`.
 
 ```bash
-npm run data:build   # пересобрать src/data/catalog.generated.json
-npm run build        # production build
+npm run data:build        # пересобрать src/data/catalog.generated.json
+npm run data:embeddings   # эмбеддинги SKU для hybrid search (нужен CLOUDRU_FM_API_KEY)
+npm run eval:retrieval    # lexical vs hybrid recall@10
+npm run build             # production build
 npm start
 ```
+
+Эмбеддинги пишутся в `src/data/catalog-embeddings.generated.json` (модель `BAAI/bge-m3` через Cloud.ru FM). Без файла или без ключа `search_prices` остаётся lexical-only.
 
 ## Docker (linux/amd64)
 

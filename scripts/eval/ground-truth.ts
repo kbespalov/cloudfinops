@@ -7,7 +7,7 @@
  * cheapest at what price. The assistant is graded on whether its free-text
  * answer is faithful to those facts (no invented providers, right cheapest).
  */
-import {runTool} from '../../src/lib/chat/tools';
+import {runToolSync} from '../../src/lib/chat/tools';
 
 export type ProviderId =
   | 'yandex-cloud'
@@ -171,7 +171,8 @@ export function truthFromSearch(
   params: Record<string, unknown>,
   period: 'hour' | 'month' = 'hour',
 ): Truth {
-  const raw = JSON.parse(runTool('search_prices', JSON.stringify(params))) as ToolResultShape;
+  // Lexical-only sync path — hybrid must not change goldens.
+  const raw = JSON.parse(runToolSync('search_prices', JSON.stringify(params))) as ToolResultShape;
   const allowed = new Set<ProviderId>();
   let cheapestProvider: ProviderId | null = null;
   let cheapestPrice: number | null = null;
@@ -193,7 +194,7 @@ export function truthFromSearch(
 
 /** Compute ground truth for a get_quote-style question. */
 export function truthFromQuote(params: Record<string, unknown>): Truth {
-  const raw = JSON.parse(runTool('get_quote', JSON.stringify(params))) as ToolResultShape;
+  const raw = JSON.parse(runToolSync('get_quote', JSON.stringify(params))) as ToolResultShape;
   const allowed = new Set<ProviderId>();
   for (const q of raw.quotes ?? []) {
     const id = mapProviderName(q.provider);
@@ -218,7 +219,7 @@ export function truthFromObjectStorageVolume(params: {
   query?: string;
 }): Truth {
   const raw = JSON.parse(
-    runTool(
+    runToolSync(
       'search_prices',
       JSON.stringify({
         query: params.query ?? `объектное хранилище ${params.storageClass}`,

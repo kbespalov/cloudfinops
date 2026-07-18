@@ -16,3 +16,4 @@ certificates/
 *.key
 *.crt
 src/data/catalog.generated.json
+scripts/eval/out/
