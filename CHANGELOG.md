@@ -10,6 +10,7 @@
 - Eval: расширен набор вопросов по object storage (классы, объёмы, ловушки смешения классов).
 - Вкладка `/chat`: компактный заголовок, чат на всю высоту вьюпорта — поле ввода сразу в кадре без скролла страницы.
 - Фикс пустого ответа «Не удалось получить ответ» после tool-calling: финальный `content` из non-stream раунда больше не отбрасывается; если SSE пустой — fallback на non-stream completion.
+- Ускорение `/chat` без смены модели: параллельный запуск tool_calls в одном раунде; меньший `max_tokens` на planning-раунде с tools; skip query-embedding при жёстких фильтрах (`storageClass` / `gpuModel` / `aiModel`); короче `note` в ответе `search_prices`.
 - **Hybrid / semantic search** в инструменте `search_prices` (см. подробности в README):
   - зачем: lexical token-overlap плохо ловит перефразы («amazon glacier», «старые логи надолго», «восемь процессоров / 32 гига»);
   - что: precomputed embeddings всех SKU (`BAAI/bge-m3` через Cloud.ru FM) + cosine по запросу + RRF с lexical; hard filters по dimensions без изменений;

@@ -211,7 +211,7 @@ async function runSearch(args: Record<string, unknown>): Promise<unknown> {
     currency: 'RUB',
     vatIncluded: true,
     applied,
-    note: 'Цены с НДС; месяц = 720 ч. hour/month/year — нормализованные значения; для usage-позиций (GiB, 1M токенов) число одинаково для всех периодов, ориентируйся на unit. ВАЖНО: услугу предлагают ТОЛЬКО провайдеры из providersMatched — не добавляй других и не копируй цену одного провайдера другим. priceKind различает «только GPU» и «конфигурацию целиком». ВНИМАНИЕ для vCPU/ВМ: providersMatched.cheapest часто = preemptible или долевое ядро (<100%) — это НЕ сопоставимая база для «цены 1 vCPU». Для сравнения/среднего по ядрам бери у каждого провайдера строку одного типа (on-demand, 100% выделенное ядро; см. config/note), не смешивай и не усредняй разные типы. ОБЪЕКТНОЕ ХРАНИЛИЩЕ (S3): классы Standard / Warm / Cold / Ice НЕ сопоставимы между собой — сравнивай только один класс за раз (параметр storageClass). Для цены хранения смотри meterKind=capacity (₽/GiB·мес); операции PUT/GET — отдельно (meterKind=requests). Бесплатные запросы (0 ₽) — это НЕ цена хранения. Если передан volumeGiB — итоговую стоимость бери из volumeEstimates, не считай вручную. Поиск hybrid (lexical+embeddings), applied.retrieval показывает режим.',
+    note: 'Цены с НДС; месяц = 720 ч. Бери провайдеров только из providersMatched с их ценой. cheapest часто preemptible/долевое — для сравнения vCPU бери on-demand 100%. S3: один storageClass за раз; хранение = capacity, не requests/0 ₽. volumeGiB → volumeEstimates. applied.retrieval = lexical|hybrid.',
     // Точный список провайдеров, у которых реально есть совпадение, с их СОБСТВЕННОЙ минимальной ценой.
     providersMatched: providers.map((p) => ({
       provider: p.providerName,

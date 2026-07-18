@@ -46,11 +46,14 @@ function apiKey(): string {
 
 const COMMON_PARAMS = {
   model: MODEL,
-  max_tokens: 2500,
-  temperature: 0.5,
   presence_penalty: 0,
   top_p: 0.95,
-};
+} as const;
+
+/** Final answer budget (stream / fallback). Keep in sync with CHAT_LIMITS.maxOutputTokens. */
+const FINAL_MAX_TOKENS = 2500;
+/** Tool-loop budget: tool_calls are small; a lower cap cuts latency on the planning round. */
+const TOOL_LOOP_MAX_TOKENS = 1024;
 
 /** Non-streaming completion — used inside the tool-calling loop. */
 export async function chatCompletion(
@@ -58,6 +61,7 @@ export async function chatCompletion(
   tools?: readonly unknown[],
   signal?: AbortSignal,
 ): Promise<CompletionChoiceMessage> {
+  const withTools = Boolean(tools && tools.length);
   const res = await fetch(`${BASE_URL}/chat/completions`, {
     method: 'POST',
     headers: {
@@ -66,8 +70,11 @@ export async function chatCompletion(
     },
     body: JSON.stringify({
       ...COMMON_PARAMS,
+      max_tokens: withTools ? TOOL_LOOP_MAX_TOKENS : FINAL_MAX_TOKENS,
+      // Slightly cooler while planning tools; final prose can stay a bit freer.
+      temperature: withTools ? 0.3 : 0.5,
       messages,
-      ...(tools && tools.length ? {tools, tool_choice: 'auto'} : {}),
+      ...(withTools ? {tools, tool_choice: 'auto'} : {}),
     }),
     signal,
   });
@@ -97,7 +104,13 @@ export async function* chatCompletionStream(
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey()}`,
     },
-    body: JSON.stringify({...COMMON_PARAMS, messages, stream: true}),
+    body: JSON.stringify({
+      ...COMMON_PARAMS,
+      max_tokens: FINAL_MAX_TOKENS,
+      temperature: 0.5,
+      messages,
+      stream: true,
+    }),
     signal,
   });
 

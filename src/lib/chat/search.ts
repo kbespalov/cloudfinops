@@ -625,6 +625,17 @@ export function searchPricesDetailed(params: SearchParams): PriceSearchResult {
 }
 
 /**
+ * Hard dimension filters already narrow the set; skip the query-embedding RTT
+ * and rank lexically inside that set (paraphrase rescue matters most without filters).
+ */
+function skipHybridForHardFilters(params: SearchParams, ctx: FilterContext): boolean {
+  if (ctx.storageClass) return true;
+  if (typeof params.gpuModel === 'string' && params.gpuModel.trim()) return true;
+  if (typeof params.aiModel === 'string' && params.aiModel.trim()) return true;
+  return false;
+}
+
+/**
  * Hybrid search when embeddings + API key are available; otherwise lexical.
  * Used by the chat tool path.
  */
@@ -638,6 +649,17 @@ export async function searchPricesDetailedAsync(
       ? params.volumeGiB
       : null;
   const query = typeof params.query === 'string' ? params.query : '';
+  if (skipHybridForHardFilters(params, ctx)) {
+    return buildResult(
+      rankLexical(ctx),
+      ctx.storageClass,
+      ctx.meterKind,
+      ctx.preferCapacity,
+      volumeGiB,
+      limit,
+      'lexical',
+    );
+  }
   const {scored, retrieval} = await rankHybrid(ctx, query);
   return buildResult(
     scored,

@@ -167,15 +167,22 @@ export async function POST(req: Request) {
             tool_calls: toolCalls,
           });
 
-          for (const call of toolCalls) {
-            chatLog('chat.tool', {
-              requestId,
-              ip,
-              action: 'tool_call',
-              tool: call.function.name,
-              argsPreview: call.function.arguments.slice(0, 200),
-            });
-            const result = await runTool(call.function.name, call.function.arguments);
+          // Run tools in parallel when the model issued several in one round
+          // (e.g. get_quote + search_prices for IP). Preserve call order in messages.
+          const toolResults = await Promise.all(
+            toolCalls.map(async (call) => {
+              chatLog('chat.tool', {
+                requestId,
+                ip,
+                action: 'tool_call',
+                tool: call.function.name,
+                argsPreview: call.function.arguments.slice(0, 200),
+              });
+              const result = await runTool(call.function.name, call.function.arguments);
+              return {call, result};
+            }),
+          );
+          for (const {call, result} of toolResults) {
             messages.push({
               role: 'tool',
               tool_call_id: call.id,
