@@ -55,13 +55,26 @@ const FINAL_MAX_TOKENS = 2500;
 /** Tool-loop budget: tool_calls are small; a lower cap cuts latency on the planning round. */
 const TOOL_LOOP_MAX_TOKENS = 1024;
 
+export type ToolChoice = 'auto' | 'required' | 'none';
+
+export type ChatCompletionOptions = {
+  signal?: AbortSignal;
+  /** OpenAI-compatible tool_choice. Default `auto` when tools are present. */
+  toolChoice?: ToolChoice;
+};
+
 /** Non-streaming completion — used inside the tool-calling loop. */
 export async function chatCompletion(
   messages: ChatMessage[],
   tools?: readonly unknown[],
-  signal?: AbortSignal,
+  signalOrOptions?: AbortSignal | ChatCompletionOptions,
 ): Promise<CompletionChoiceMessage> {
+  const options: ChatCompletionOptions =
+    signalOrOptions instanceof AbortSignal || signalOrOptions === undefined
+      ? {signal: signalOrOptions}
+      : signalOrOptions;
   const withTools = Boolean(tools && tools.length);
+  const toolChoice = options.toolChoice ?? (withTools ? 'auto' : undefined);
   const res = await fetch(`${BASE_URL}/chat/completions`, {
     method: 'POST',
     headers: {
@@ -71,12 +84,12 @@ export async function chatCompletion(
     body: JSON.stringify({
       ...COMMON_PARAMS,
       max_tokens: withTools ? TOOL_LOOP_MAX_TOKENS : FINAL_MAX_TOKENS,
-      // Slightly cooler while planning tools; final prose can stay a bit freer.
-      temperature: withTools ? 0.3 : 0.5,
+      // Cooler while planning tools — gpt-oss otherwise narrates English CoT into content.
+      temperature: withTools ? 0.1 : 0.5,
       messages,
-      ...(withTools ? {tools, tool_choice: 'auto'} : {}),
+      ...(withTools ? {tools, tool_choice: toolChoice ?? 'auto'} : {}),
     }),
-    signal,
+    signal: options.signal,
   });
 
   if (!res.ok) {

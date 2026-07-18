@@ -11,6 +11,9 @@
 
 ### ИИ-ассистент FinOps
 
+- **Баг:** модель `gpt-oss-120b` иногда вместо native `tool_calls` писала в чат английский план вызова (`We will call search_prices…` + JSON аргументов). Пользователь видел внутренний монолог вместо ответа.
+- **Фикс:** детектор утечки + recovery JSON/прозы → реальные `tool_calls`; если не удалось распарсить — retry с `tool_choice=required`; утечка пользователю не отдаётся. Общий `runToolLoop` для `/api/chat` и eval; в системном промпте запрет писать план вызова в текст; planning temperature `0.1`.
+- **Проверка:** `npm run eval:smoke` / `eval:chat` — live smoke (leak / tools / кириллица / цены), в т.ч. кейс «ассистировай про кубернатис».
 - Object storage / S3: жёсткий фильтр `storageClass` и предпочтение capacity над requests в `search_prices` (больше не подменяет Standard на Ice и не берёт PUT=0 ₽ как «самый дешёвый»).
 - Параметр `volumeGiB` → `volumeEstimates` (ставка × объём за месяц) для сценариев DWH / «N ТБ».
 - Системный промпт: правила сопоставимости классов Standard / Warm / Cold / Ice и расчёта объёма.

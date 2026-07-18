@@ -17,7 +17,7 @@ for (const file of ['.env.local', '.env']) {
 }
 
 import {chatCompletion, type ChatMessage} from '../../src/lib/chat/gigachat';
-import {CHAT_TOOLS, runTool} from '../../src/lib/chat/tools';
+import {runToolLoop} from '../../src/lib/chat/tool-loop';
 
 const MAX_TOOL_ROUNDS = 4;
 
@@ -25,50 +25,79 @@ export type ChatRun = {
   answer: string;
   toolCalls: {name: string; arguments: string}[];
   toolResults: {name: string; result: string}[];
+  toolRounds: number;
+  leaksRecovered: number;
+  leaksRetried: number;
+  leaksDropped: number;
+  durationMs: number;
   error?: string;
 };
 
 /** Run the full assistant pipeline for one user question. */
 export async function runChat(systemPrompt: string, question: string): Promise<ChatRun> {
+  const t0 = Date.now();
   const messages: ChatMessage[] = [
     {role: 'system', content: systemPrompt},
     {role: 'user', content: question},
   ];
   const toolCalls: {name: string; arguments: string}[] = [];
   const toolResults: {name: string; result: string}[] = [];
+  const emptyMeta = {
+    toolRounds: 0,
+    leaksRecovered: 0,
+    leaksRetried: 0,
+    leaksDropped: 0,
+  };
 
   try {
-    for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
-      const reply = await chatCompletion(messages, CHAT_TOOLS);
-      const calls = reply.tool_calls ?? [];
-      if (!calls.length) {
-        return {answer: reply.content ?? '', toolCalls, toolResults};
-      }
-      messages.push({role: 'assistant', content: reply.content ?? '', tool_calls: calls});
-      for (const call of calls) {
-        const result = await runTool(call.function.name, call.function.arguments);
-        toolCalls.push({name: call.function.name, arguments: call.function.arguments});
-        toolResults.push({name: call.function.name, result});
-        messages.push({
-          role: 'tool',
-          tool_call_id: call.id,
-          name: call.function.name,
-          content: result,
-        });
+    const loop = await runToolLoop({
+      messages,
+      maxRounds: MAX_TOOL_ROUNDS,
+      onEvent: (event) => {
+        if (event.type !== 'tool_call') return;
+        toolCalls.push({name: event.name, arguments: event.arguments});
+      },
+    });
+
+    // Collect tool result payloads from the loop message history.
+    for (const m of loop.messages) {
+      if (m.role === 'tool' && typeof m.content === 'string' && m.name) {
+        toolResults.push({name: m.name, result: m.content});
       }
     }
-    // Force a final answer after exhausting tool rounds.
+
+    const meta = {
+      toolRounds: loop.toolRounds,
+      leaksRecovered: loop.leaksRecovered,
+      leaksRetried: loop.leaksRetried,
+      leaksDropped: loop.leaksDropped,
+      durationMs: Date.now() - t0,
+    };
+
+    if (loop.finalText) {
+      return {answer: loop.finalText, toolCalls, toolResults, ...meta};
+    }
+
+    // Force a final answer after exhausting tool rounds / post-tools path.
     const finalMessages = messages.filter((m) => m.role !== 'system');
     const final = await chatCompletion(
       [{role: 'system', content: systemPrompt}, ...finalMessages],
       undefined,
     );
-    return {answer: final.content ?? '', toolCalls, toolResults};
+    return {
+      answer: final.content ?? '',
+      toolCalls,
+      toolResults,
+      ...meta,
+      durationMs: Date.now() - t0,
+    };
   } catch (err) {
     return {
       answer: '',
       toolCalls,
       toolResults,
+      ...emptyMeta,
+      durationMs: Date.now() - t0,
       error: err instanceof Error ? err.message : String(err),
     };
   }

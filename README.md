@@ -23,9 +23,15 @@ npm run dev
 npm run data:build        # пересобрать src/data/catalog.generated.json
 npm run data:embeddings   # эмбеддинги SKU для hybrid search (нужен CLOUDRU_FM_API_KEY)
 npm run eval:retrieval    # lexical vs hybrid recall@10
+npm run eval:smoke        # live smoke чата (5 вопросов, нужен CLOUDRU_FM_API_KEY)
+npm run eval:chat -- "вопрос"  # один live-вопрос через тот же pipeline
 npm run build             # production build
 npm start
 ```
+
+### Smoke чата
+
+`npm run eval:smoke` гоняет живой pipeline (`system prompt` + tool loop + ответ) на короткий набор вопросов, включая размытый «ассистировай про кубернатис». Падает, если в ответе утечка English tool-planning, нет tool calls там, где они нужны, или ответ без кириллицы/цен. Один вопрос: `npm run eval:chat -- "Сколько стоит H100?"`. Полный graded eval: `npx tsx scripts/eval/run.ts --limit 20`.
 
 ## Hybrid / semantic search (эмбеддинги каталога)
 

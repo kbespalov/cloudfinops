@@ -8,6 +8,8 @@
     "data:build": "tsx scripts/build-catalog.ts",
     "data:embeddings": "tsx scripts/build-embeddings.ts",
     "eval:retrieval": "tsx scripts/eval/retrieval-run.ts",
+    "eval:smoke": "tsx scripts/eval/smoke.ts --suite",
+    "eval:chat": "tsx scripts/eval/smoke.ts",
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",

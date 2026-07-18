@@ -13,7 +13,7 @@ import {
 } from '@/lib/chat/limits';
 import {chatLog, clientIp} from '@/lib/chat/log';
 import {SYSTEM_PROMPT} from '@/lib/chat/system-prompt';
-import {CHAT_TOOLS, runTool} from '@/lib/chat/tools';
+import {runToolLoop} from '@/lib/chat/tool-loop';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -141,56 +141,48 @@ export async function POST(req: Request) {
 
       let toolRounds = 0;
       let toolCallsTotal = 0;
+      let leaksRecovered = 0;
+      let leaksRetried = 0;
+      let leaksDropped = 0;
       let outputChars = 0;
       let status: 'ok' | 'empty' | 'error' | 'aborted' = 'ok';
 
       try {
-        // Tool loop (non-streaming). When the model returns a final text answer
-        // with no tool_calls, use it immediately — do NOT discard it and call
-        // stream again (Cloud.ru often returns an empty stream after tools).
-        let finalText: string | null = null;
-
-        for (let round = 0; round < CHAT_LIMITS.maxToolRounds; round++) {
-          const reply = await chatCompletion(messages, CHAT_TOOLS, abort.signal);
-          const toolCalls = reply.tool_calls ?? [];
-
-          if (!toolCalls.length) {
-            finalText = (reply.content ?? '').trim() || null;
-            break;
-          }
-
-          toolRounds += 1;
-          toolCallsTotal += toolCalls.length;
-          messages.push({
-            role: 'assistant',
-            content: reply.content ?? '',
-            tool_calls: toolCalls,
-          });
-
-          // Run tools in parallel when the model issued several in one round
-          // (e.g. get_quote + search_prices for IP). Preserve call order in messages.
-          const toolResults = await Promise.all(
-            toolCalls.map(async (call) => {
+        // Tool loop (non-streaming). Recovers gpt-oss English tool-planning leaks.
+        // When the model returns a final text answer with no tool_calls, use it
+        // immediately — do NOT discard it and call stream again (Cloud.ru often
+        // returns an empty stream after tools).
+        const loop = await runToolLoop({
+          messages,
+          maxRounds: CHAT_LIMITS.maxToolRounds,
+          signal: abort.signal,
+          onEvent: (event) => {
+            if (event.type === 'tool_call') {
               chatLog('chat.tool', {
                 requestId,
                 ip,
                 action: 'tool_call',
-                tool: call.function.name,
-                argsPreview: call.function.arguments.slice(0, 200),
+                tool: event.name,
+                argsPreview: event.arguments.slice(0, 200),
+                recoveredFromLeak: event.recoveredFromLeak,
               });
-              const result = await runTool(call.function.name, call.function.arguments);
-              return {call, result};
-            }),
-          );
-          for (const {call, result} of toolResults) {
-            messages.push({
-              role: 'tool',
-              tool_call_id: call.id,
-              name: call.function.name,
-              content: result,
+              return;
+            }
+            chatLog('chat.tool_leak', {
+              requestId,
+              ip,
+              action: event.action,
+              preview: event.preview,
             });
-          }
-        }
+          },
+        });
+
+        toolRounds = loop.toolRounds;
+        toolCallsTotal = loop.toolCallsTotal;
+        leaksRecovered = loop.leaksRecovered;
+        leaksRetried = loop.leaksRetried;
+        leaksDropped = loop.leaksDropped;
+        let finalText = loop.finalText;
 
         if (!finalText) {
           // Prefer streaming for the post-tools answer; fall back to non-stream
@@ -249,6 +241,9 @@ export async function POST(req: Request) {
           durationMs: Date.now() - started,
           toolRounds,
           toolCallsTotal,
+          leaksRecovered,
+          leaksRetried,
+          leaksDropped,
           outputChars,
           outputTokensEst: outputChars ? Math.ceil(outputChars / 2) : 0,
           ...chatRateLimiter.snapshot(),
