@@ -145,11 +145,19 @@ export async function POST(req: Request) {
       let status: 'ok' | 'empty' | 'error' | 'aborted' = 'ok';
 
       try {
+        // Tool loop (non-streaming). When the model returns a final text answer
+        // with no tool_calls, use it immediately — do NOT discard it and call
+        // stream again (Cloud.ru often returns an empty stream after tools).
+        let finalText: string | null = null;
+
         for (let round = 0; round < CHAT_LIMITS.maxToolRounds; round++) {
           const reply = await chatCompletion(messages, CHAT_TOOLS, abort.signal);
           const toolCalls = reply.tool_calls ?? [];
 
-          if (!toolCalls.length) break;
+          if (!toolCalls.length) {
+            finalText = (reply.content ?? '').trim() || null;
+            break;
+          }
 
           toolRounds += 1;
           toolCallsTotal += toolCalls.length;
@@ -177,14 +185,34 @@ export async function POST(req: Request) {
           }
         }
 
-        let streamedAny = false;
-        for await (const delta of chatCompletionStream(messages, abort.signal)) {
-          streamedAny = true;
-          outputChars += delta.length;
-          controller.enqueue(encoder.encode(delta));
+        if (!finalText) {
+          // Prefer streaming for the post-tools answer; fall back to non-stream
+          // if the SSE body has no content deltas (common after tool rounds).
+          let streamedAny = false;
+          try {
+            for await (const delta of chatCompletionStream(messages, abort.signal)) {
+              streamedAny = true;
+              outputChars += delta.length;
+              controller.enqueue(encoder.encode(delta));
+            }
+          } catch (streamErr) {
+            chatLog('chat.stream_fallback', {
+              requestId,
+              ip,
+              error: streamErr instanceof Error ? streamErr.message.slice(0, 200) : String(streamErr),
+            });
+          }
+
+          if (!streamedAny) {
+            const fallback = await chatCompletion(messages, undefined, abort.signal);
+            finalText = (fallback.content ?? '').trim() || null;
+          }
         }
 
-        if (!streamedAny) {
+        if (finalText) {
+          outputChars += finalText.length;
+          controller.enqueue(encoder.encode(finalText));
+        } else if (outputChars === 0) {
           status = 'empty';
           controller.enqueue(
             encoder.encode('Не удалось получить ответ. Попробуйте переформулировать вопрос.'),
