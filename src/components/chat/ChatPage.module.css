@@ -1,24 +1,30 @@
 .page {
+  --cf-header-h: 64px;
   max-width: 1000px;
   margin: 0 auto;
-  padding: 32px 24px;
+  padding: 12px 24px 16px;
   width: 100%;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  gap: 10px;
+  /* Chat is the primary surface: fit below the site header, no page scroll for the shell. */
+  height: calc(100dvh - var(--cf-header-h));
+  min-height: 0;
 }
 
 .hero {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 2px;
+  flex-shrink: 0;
 }
 
 .heroTitle {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
 }
 
 .heroIcon {
@@ -27,26 +33,37 @@
 }
 
 .heroLead {
-  max-width: 620px;
+  max-width: 640px;
 }
 
 .chatShell {
-  height: calc(100vh - var(--cf-header-h, 64px) - 156px);
-  min-height: 520px;
+  flex: 1 1 auto;
+  min-height: 0;
   border: 1px solid var(--g-color-line-generic);
   border-radius: 16px;
   overflow: hidden;
   background: var(--g-color-base-background);
+  /* AIKit chat fills the shell; internal scroll stays inside the messages pane. */
+  display: flex;
+  flex-direction: column;
+}
+
+.chatShell > * {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
 }
 
 @media (max-width: 720px) {
   .page {
-    padding: 20px 12px;
-    gap: 20px;
+    padding: 8px 12px 12px;
+    gap: 8px;
   }
+}
 
-  .chatShell {
-    height: calc(100vh - 200px);
-    min-height: 420px;
+/* Short viewports: drop the lead so the composer stays fully visible. */
+@media (max-height: 720px) {
+  .heroLead {
+    display: none;
   }
 }

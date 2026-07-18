@@ -3,7 +3,8 @@
  *
  * The corpus (`catalog.meters`) is small and highly structured, so we index a
  * normalized searchable string per meter and score by token overlap, with
- * hard structural filters (category / provider / gpu / ai model). No embeddings.
+ * hard structural filters (category / provider / gpu / ai / storage class).
+ * No embeddings.
  */
 
 import {
@@ -16,6 +17,7 @@ import {
   extractAiModelFamily,
   extractStorageClass,
   formatPlatform,
+  isRequestMeter,
   CATEGORY_TITLE,
   type CatalogMeter,
   type CategoryKey,
@@ -35,6 +37,9 @@ export type PriceRow = {
   month: number | null;
   year: number | null;
   note: string | null;
+  /** Object-storage meter kind when applicable. */
+  meterKind?: 'capacity' | 'requests' | 'other';
+  storageClass?: string | null;
 };
 
 export type SearchParams = {
@@ -43,6 +48,15 @@ export type SearchParams = {
   provider?: string;
   gpuModel?: string;
   aiModel?: string;
+  /** Hard filter by object-storage class: standard | warm | cold | ice | … */
+  storageClass?: string;
+  /**
+   * Prefer capacity vs request meters for object storage.
+   * Auto-detected from the query when omitted.
+   */
+  meterKind?: 'capacity' | 'requests';
+  /** Optional volume for capacity estimates (binary GiB). */
+  volumeGiB?: number;
   limit?: number;
 };
 
@@ -55,12 +69,31 @@ export type ProviderSummary = {
   count: number;
 };
 
+export type VolumeEstimate = {
+  provider: string;
+  providerName: string;
+  storageClass: string | null;
+  rateGiBMonth: number;
+  volumeGiB: number;
+  totalMonth: number;
+  sku: string;
+  name: string;
+};
+
 export type PriceSearchResult = {
   /** Top-N rows, diversified so every matching provider is represented. */
   rows: PriceRow[];
   /** One entry per provider that actually offers a matching SKU, cheapest first. */
   providers: ProviderSummary[];
   totalMatches: number;
+  /** Present when volumeGiB was requested and capacity rows matched. */
+  volumeEstimates?: VolumeEstimate[];
+  /** Effective structural filters after query inference. */
+  applied?: {
+    storageClass: string | null;
+    meterKind: 'capacity' | 'requests' | null;
+    volumeGiB: number | null;
+  };
 };
 
 /** Map free-text provider mentions (RU/EN) to catalog provider ids. */
@@ -130,6 +163,26 @@ const TERM_SYNONYMS: Record<string, string[]> = {
   llm: ['ai'],
 };
 
+/**
+ * Query → intended class (fallback when the tool call omits storageClass).
+ * SKU filtering itself always uses dimensions.storageClass, never display name.
+ * ASCII `\b` does not work around Cyrillic — use letter lookarounds.
+ */
+const STORAGE_CLASS_PATTERNS: {cls: string; re: RegExp}[] = [
+  // icebox/hotbox before bare ice
+  {cls: 'cold', re: /icebox|(?<![а-яёa-z])холодн\p{L}*|(?<![а-яёa-z])cold(?![а-яёa-z])/gu},
+  {cls: 'standard', re: /hotbox|(?<![а-яёa-z])стандарт\p{L}*|(?<![а-яёa-z])standard(?![а-яёa-z])/gu},
+  {cls: 'warm', re: /(?<![а-яёa-z])warm(?![а-яёa-z])|(?<![а-яёa-z])тепл\p{L}*/gu},
+  {cls: 'ice', re: /(?<![а-яёa-z])ice(?![а-яёa-z])|(?<![а-яёa-z])ледян\p{L}*/gu},
+];
+
+/**
+ * Class tokens in disclaimers («не смешивай с Cold/Ice») must not drive the filter.
+ * Match a negation cue anywhere in a short window before the class token.
+ */
+const CLASS_NEGATION_WINDOW =
+  /(?:не\s+(?:смешивай|смешивайте|путай|путайте|сравнивай|сравнивайте|включай|подставляй|бери|берите)|кроме|помимо|а\s+не|вместо)(?:(?![.!;?]).){0,48}$/iu;
+
 type IndexEntry = {meter: CatalogMeter; hay: string};
 
 let index: IndexEntry[] | null = null;
@@ -174,6 +227,86 @@ function normalize(text: string): string {
     .trim();
 }
 
+/**
+ * Infer intended storage class from the user question (NOT from SKU titles).
+ * Prefer the explicit `storageClass` tool arg — that filters by SKU dimension.
+ * Returns null when several classes appear positively (ambiguous) so we don't
+ * hard-filter to the wrong one.
+ */
+export function detectStorageClass(query: string | undefined): string | null {
+  if (!query) return null;
+  const q = normalize(query);
+  const positive = new Set<string>();
+  for (const {cls, re} of STORAGE_CLASS_PATTERNS) {
+    re.lastIndex = 0;
+    let match: RegExpExecArray | null;
+    while ((match = re.exec(q)) !== null) {
+      const before = q.slice(Math.max(0, match.index - 64), match.index);
+      if (CLASS_NEGATION_WINDOW.test(before)) continue;
+      positive.add(cls);
+    }
+  }
+  if (positive.size !== 1) return null;
+  return [...positive][0] ?? null;
+}
+
+/** Cyrillic-safe “word” check (JS `\b` is ASCII-only). */
+function hasWord(q: string, stem: string): boolean {
+  return new RegExp(`(?<![а-яёa-z])${stem}(?![а-яёa-z])`, 'u').test(q);
+}
+
+function detectMeterKind(
+  query: string | undefined,
+  explicit?: 'capacity' | 'requests',
+): 'capacity' | 'requests' | null {
+  if (explicit) return explicit;
+  if (!query) return null;
+  const q = normalize(query);
+  if (
+    hasWord(q, 'request') ||
+    hasWord(q, 'requests') ||
+    /(?<![а-яёa-z])операц\p{L}*/u.test(q) ||
+    /(?<![а-яёa-z])запрос\p{L}*/u.test(q) ||
+    hasWord(q, 'put') ||
+    hasWord(q, 'get') ||
+    hasWord(q, 'list') ||
+    hasWord(q, 'head') ||
+    hasWord(q, 'post')
+  ) {
+    return 'requests';
+  }
+  if (
+    hasWord(q, 'gib') ||
+    hasWord(q, 'tib') ||
+    hasWord(q, 'tb') ||
+    hasWord(q, 'gb') ||
+    hasWord(q, 'гб') ||
+    hasWord(q, 'тб') ||
+    /(?<![а-яёa-z])терабайт\p{L}*/u.test(q) ||
+    /(?<![а-яёa-z])гигабайт\p{L}*/u.test(q) ||
+    /(?<![а-яёa-z])хранен\p{L}*/u.test(q) ||
+    /(?<![а-яёa-z])емкост\p{L}*/u.test(q) ||
+    /(?<![а-яёa-z])класс\p{L}*/u.test(q) ||
+    hasWord(q, 'dwh') ||
+    /(?<![а-яёa-z])данные/u.test(q) ||
+    /(?<![а-яёa-z])объем\p{L}*/u.test(q) ||
+    hasWord(q, 'бакет') ||
+    hasWord(q, 'bucket') ||
+    hasWord(q, 's3') ||
+    hasWord(q, 'object') ||
+    /(?<![а-яёa-z])объектн\p{L}*/u.test(q)
+  ) {
+    return 'capacity';
+  }
+  return null;
+}
+
+function objectMeterKind(meter: CatalogMeter): 'capacity' | 'requests' | 'other' {
+  if (meter.meter === 'storage.object.capacity') return 'capacity';
+  if (meter.meter === 'storage.object.requests' || isRequestMeter(meter)) return 'requests';
+  return 'other';
+}
+
 function toRow(m: CatalogMeter): PriceRow {
   return {
     sku: m.sku,
@@ -188,20 +321,45 @@ function toRow(m: CatalogMeter): PriceRow {
     month: amountNumber(m, 'month'),
     year: amountNumber(m, 'year'),
     note: m.notes,
+    meterKind: objectMeterKind(m),
+    storageClass: extractStorageClass(m),
   };
 }
 
-type ScoredRow = {row: PriceRow; score: number; hour: number};
+type ScoredRow = {row: PriceRow; score: number; rank: number};
 
-/** Cheapest-comparable price for ranking (hour, else month, else +inf). */
-function rankPrice(row: PriceRow): number {
-  if (row.hour != null && Number.isFinite(row.hour)) return row.hour;
-  if (row.month != null && Number.isFinite(row.month)) return row.month;
-  return Number.POSITIVE_INFINITY;
+/** Comparable price for ranking (prefer month for capacity; ignore free zeros as "cheapest"). */
+function rankPrice(row: PriceRow, preferCapacity: boolean): number {
+  const primary =
+    preferCapacity && row.month != null && Number.isFinite(row.month)
+      ? row.month
+      : row.hour != null && Number.isFinite(row.hour)
+        ? row.hour
+        : row.month != null && Number.isFinite(row.month)
+          ? row.month
+          : Number.POSITIVE_INFINITY;
+  // Free request SKUs must not win "cheapest storage" comparisons.
+  if (preferCapacity && primary === 0 && row.meterKind === 'requests') {
+    return Number.POSITIVE_INFINITY;
+  }
+  return primary;
+}
+
+function isPreferredCheaper(a: PriceRow, b: PriceRow, preferCapacity: boolean): boolean {
+  if (preferCapacity) {
+    const aCap = a.meterKind === 'capacity';
+    const bCap = b.meterKind === 'capacity';
+    if (aCap !== bCap) return aCap;
+  }
+  return rankPrice(a, preferCapacity) < rankPrice(b, preferCapacity);
 }
 
 /** Score + filter all matching rows, sorted by score desc then price asc. */
-function matchRows(params: SearchParams): ScoredRow[] {
+function matchRows(params: SearchParams): {
+  scored: ScoredRow[];
+  storageClass: string | null;
+  meterKind: 'capacity' | 'requests' | null;
+} {
   const entries = getIndex();
 
   // Provider filter: explicit param wins, else inferred from query synonyms.
@@ -222,8 +380,21 @@ function matchRows(params: SearchParams): ScoredRow[] {
   const category = params.category ?? null;
   const gpuModel = params.gpuModel?.trim().toLowerCase() || null;
   const aiModel = params.aiModel?.trim().toLowerCase() || null;
+  // Prefer explicit tool arg; query inference is a fallback only.
+  const storageClass =
+    params.storageClass?.trim().toLowerCase() || detectStorageClass(params.query);
+  let meterKind = detectMeterKind(params.query, params.meterKind);
+  // Object-storage questions default to capacity (rate ₽/GiB·мес), not free PUT=0.
+  const looksLikeObject =
+    category === 'storage' ||
+    searchTokens.some((t) =>
+      ['storage.object', 's3', 'object', 'объектное', 'объектного', 'бакет', 'bucket'].includes(t),
+    ) ||
+    Boolean(storageClass);
+  if (!meterKind && looksLikeObject) meterKind = 'capacity';
 
-  const scored: {row: PriceRow; score: number; hour: number}[] = [];
+  const preferCapacity = meterKind === 'capacity';
+  const scored: ScoredRow[] = [];
 
   for (const {meter, hay} of entries) {
     if (category && meter.categoryKey !== category) continue;
@@ -236,6 +407,13 @@ function matchRows(params: SearchParams): ScoredRow[] {
       const am = (extractAiModelFamily(meter) ?? '').toLowerCase();
       if (!am.includes(aiModel) && !hay.includes(aiModel)) continue;
     }
+    // Hard filter by SKU dimensions.storageClass — not by localized display name.
+    if (storageClass) {
+      const cls = (extractStorageClass(meter) ?? '').toLowerCase();
+      if (cls !== storageClass) continue;
+    }
+    if (meterKind === 'capacity' && objectMeterKind(meter) === 'requests') continue;
+    if (meterKind === 'requests' && objectMeterKind(meter) === 'capacity') continue;
 
     let score = 0;
     for (const tok of searchTokens) {
@@ -248,16 +426,19 @@ function matchRows(params: SearchParams): ScoredRow[] {
     // De-emphasize synthetic composite rows so real SKUs surface first.
     if (meter.synthetic) score -= 0.5;
 
+    // Prefer exact storage-class lexical hit when class is inferred (scoring only).
+    if (storageClass && hay.includes(storageClass)) score += 0.5;
+
     const row = toRow(meter);
-    scored.push({row, score, hour: rankPrice(row)});
+    scored.push({row, score, rank: rankPrice(row, preferCapacity)});
   }
 
   scored.sort((a, b) => {
     if (b.score !== a.score) return b.score - a.score;
-    return a.hour - b.hour;
+    return a.rank - b.rank;
   });
 
-  return scored;
+  return {scored, storageClass, meterKind};
 }
 
 /**
@@ -267,9 +448,14 @@ function matchRows(params: SearchParams): ScoredRow[] {
  */
 export function searchPricesDetailed(params: SearchParams): PriceSearchResult {
   const limit = Math.min(Math.max(params.limit ?? 12, 1), 40);
-  const scored = matchRows(params);
+  const {scored, storageClass, meterKind} = matchRows(params);
+  const preferCapacity = meterKind === 'capacity';
+  const volumeGiB =
+    typeof params.volumeGiB === 'number' && Number.isFinite(params.volumeGiB) && params.volumeGiB > 0
+      ? params.volumeGiB
+      : null;
 
-  // Per-provider summary across ALL matches (cheapest row wins), price asc.
+  // Per-provider summary across ALL matches (cheapest relevant row wins).
   const byProvider = new Map<string, ProviderSummary>();
   for (const {row} of scored) {
     const existing = byProvider.get(row.provider);
@@ -282,11 +468,13 @@ export function searchPricesDetailed(params: SearchParams): PriceSearchResult {
       });
     } else {
       existing.count += 1;
-      if (rankPrice(row) < rankPrice(existing.cheapest)) existing.cheapest = row;
+      if (isPreferredCheaper(row, existing.cheapest, preferCapacity)) {
+        existing.cheapest = row;
+      }
     }
   }
   const providers = [...byProvider.values()].sort(
-    (a, b) => rankPrice(a.cheapest) - rankPrice(b.cheapest),
+    (a, b) => rankPrice(a.cheapest, preferCapacity) - rankPrice(b.cheapest, preferCapacity),
   );
 
   // Diversify top-N: guarantee each matching provider appears at least once
@@ -304,7 +492,33 @@ export function searchPricesDetailed(params: SearchParams): PriceSearchResult {
   }
   const rows = [...primary, ...rest].slice(0, limit).map((s) => s.row);
 
-  return {rows, providers, totalMatches: scored.length};
+  let volumeEstimates: VolumeEstimate[] | undefined;
+  if (volumeGiB != null) {
+    volumeEstimates = providers
+      .filter((p) => p.cheapest.meterKind === 'capacity' && p.cheapest.month != null)
+      .map((p) => {
+        const rate = p.cheapest.month as number;
+        return {
+          provider: p.provider,
+          providerName: p.providerName,
+          storageClass: p.cheapest.storageClass ?? null,
+          rateGiBMonth: Math.round(rate * 1e6) / 1e6,
+          volumeGiB,
+          totalMonth: Math.round(rate * volumeGiB * 100) / 100,
+          sku: p.cheapest.sku,
+          name: p.cheapest.name,
+        };
+      })
+      .sort((a, b) => a.totalMonth - b.totalMonth);
+  }
+
+  return {
+    rows,
+    providers,
+    totalMatches: scored.length,
+    ...(volumeEstimates ? {volumeEstimates} : {}),
+    applied: {storageClass, meterKind, volumeGiB},
+  };
 }
 
 /**

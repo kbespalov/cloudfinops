@@ -144,6 +144,7 @@ export type ToolResultShape = {
   providersMatched?: {provider: string; cheapest?: {provider?: string; hour?: number | null; month?: number | null; year?: number | null}}[];
   quotes?: {provider: string; total: number | null}[];
   best?: {provider: string; total: number | null} | null;
+  volumeEstimates?: {provider: string; providerName?: string; totalMonth: number; rateGiBMonth?: number}[];
 };
 
 export type Truth = {
@@ -203,6 +204,58 @@ export function truthFromQuote(params: Record<string, unknown>): Truth {
   if (raw.best) {
     cheapestProvider = mapProviderName(raw.best.provider);
     cheapestPrice = raw.best.total ?? null;
+  }
+  return {allowed, cheapestProvider, cheapestPrice, raw};
+}
+
+/**
+ * Ground truth for object-storage volume estimates (capacity × GiB).
+ * Uses search_prices with storageClass + volumeGiB; cheapest = min totalMonth.
+ */
+export function truthFromObjectStorageVolume(params: {
+  storageClass: string;
+  volumeGiB: number;
+  query?: string;
+}): Truth {
+  const raw = JSON.parse(
+    runTool(
+      'search_prices',
+      JSON.stringify({
+        query: params.query ?? `объектное хранилище ${params.storageClass}`,
+        category: 'storage',
+        storageClass: params.storageClass,
+        meterKind: 'capacity',
+        volumeGiB: params.volumeGiB,
+        limit: 30,
+      }),
+    ),
+  ) as ToolResultShape;
+  const allowed = new Set<ProviderId>();
+  let cheapestProvider: ProviderId | null = null;
+  let cheapestPrice: number | null = null;
+  let bestVal = Number.POSITIVE_INFINITY;
+  for (const e of raw.volumeEstimates ?? []) {
+    const id = mapProviderName(e.providerName ?? e.provider);
+    if (!id) continue;
+    allowed.add(id);
+    if (Number.isFinite(e.totalMonth) && e.totalMonth > 0 && e.totalMonth < bestVal) {
+      bestVal = e.totalMonth;
+      cheapestProvider = id;
+      cheapestPrice = e.totalMonth;
+    }
+  }
+  // Fallback to unit rates if estimates missing.
+  if (!allowed.size) {
+    return truthFromSearch(
+      {
+        query: params.query ?? `объектное хранилище ${params.storageClass}`,
+        category: 'storage',
+        storageClass: params.storageClass,
+        meterKind: 'capacity',
+        limit: 30,
+      },
+      'month',
+    );
   }
   return {allowed, cheapestProvider, cheapestPrice, raw};
 }

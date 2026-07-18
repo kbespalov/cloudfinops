@@ -226,15 +226,13 @@ export function ChatPage() {
       <main className={styles.page}>
         <div className={styles.hero}>
           <div className={styles.heroTitle}>
-            <Icon data={Sparkles} size={20} className={styles.heroIcon} />
-            <Text as="h1" variant="header-2">
-              ИИ-ассистент FinOps — цены облаков просто спросите
+            <Icon data={Sparkles} size={18} className={styles.heroIcon} />
+            <Text as="h1" variant="subheader-2">
+              ИИ-ассистент FinOps
             </Text>
           </div>
-          <Text as="p" variant="body-1" color="secondary" className={styles.heroLead}>
-            Рекомендательная система подберёт оптимального провайдера, а аналитика цен сравнит
-            тарифы облаков России — по ВМ, GPU, хранилищу, трафику и AI-моделям. Ответы таблицами,
-            цены с НДС.
+          <Text as="p" variant="body-short-1" color="secondary" className={styles.heroLead}>
+            Спросите про ВМ, GPU, S3, трафик или AI-модели — ответ таблицей, цены с НДС.
           </Text>
         </div>
 
@@ -263,9 +261,8 @@ export function ChatPage() {
             texts={{
               headerTitle: 'Новый чат',
               emptyStateTitle: 'С чего начнём?',
-              emptyStateDescription:
-                'Выберите пример ниже или спросите своими словами — по ценам ВМ, GPU, хранилища, трафика или AI-моделей.',
-              emptyStateSuggestionsTitle: 'Примеры вопросов',
+              emptyStateDescription: 'Выберите пример или спросите своими словами.',
+              emptyStateSuggestionsTitle: 'Примеры',
               promptPlaceholder: 'Спросите про цены облаков…',
               errorText: 'Не удалось получить ответ. Попробуйте ещё раз.',
               disclaimerText: 'Ассистент может ошибаться — проверяйте важные цифры.',

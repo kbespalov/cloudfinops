@@ -69,6 +69,23 @@ export const CHAT_TOOLS = [
             type: 'string',
             description: 'Фильтр по семейству AI-модели, например GLM, GigaChat, Qwen, DeepSeek, Kimi.',
           },
+          storageClass: {
+            type: 'string',
+            enum: ['standard', 'warm', 'cold', 'ice'],
+            description:
+              'Жёсткий фильтр по SKU-dimension storageClass (не по названию строки). Для сравнения Standard/Cold/Ice/Warm передавай явно — так отсекаются несопоставимые классы.',
+          },
+          meterKind: {
+            type: 'string',
+            enum: ['capacity', 'requests'],
+            description:
+              'Для S3: capacity — хранение ₽/GiB·мес; requests — операции PUT/GET. По умолчанию для объектного хранилища берётся capacity.',
+          },
+          volumeGiB: {
+            type: 'number',
+            description:
+              'Объём данных в GiB (двоичные: 1 ТиБ = 1024 GiB). Если задан — вернётся volumeEstimates: ставка × объём за месяц по каждому провайдеру. Для «50 ТБ» передай 51200.',
+          },
           limit: {
             type: 'integer',
             description: 'Максимум строк в ответе (1–40, по умолчанию 12).',
@@ -144,6 +161,8 @@ function serializeRow(r: PriceRow) {
     config: r.config,
     unit: r.unit,
     priceKind: priceKind(r),
+    meterKind: r.meterKind ?? null,
+    storageClass: r.storageClass ?? null,
     hour: round(r.hour),
     month: round(r.month),
     year: round(r.year),
@@ -152,7 +171,17 @@ function serializeRow(r: PriceRow) {
   };
 }
 
+const STORAGE_CLASSES = ['standard', 'warm', 'cold', 'ice'] as const;
+
 function runSearch(args: Record<string, unknown>): unknown {
+  const storageClassRaw =
+    typeof args.storageClass === 'string' ? args.storageClass.trim().toLowerCase() : '';
+  const meterKindRaw =
+    typeof args.meterKind === 'string' ? args.meterKind.trim().toLowerCase() : '';
+  const volumeGiB =
+    typeof args.volumeGiB === 'number' && Number.isFinite(args.volumeGiB) && args.volumeGiB > 0
+      ? args.volumeGiB
+      : undefined;
   const params: SearchParams = {
     query: typeof args.query === 'string' ? args.query : undefined,
     category: CATEGORIES.includes(args.category as CategoryKey)
@@ -161,15 +190,22 @@ function runSearch(args: Record<string, unknown>): unknown {
     provider: typeof args.provider === 'string' ? args.provider : undefined,
     gpuModel: typeof args.gpuModel === 'string' ? args.gpuModel : undefined,
     aiModel: typeof args.aiModel === 'string' ? args.aiModel : undefined,
+    storageClass: STORAGE_CLASSES.includes(storageClassRaw as (typeof STORAGE_CLASSES)[number])
+      ? storageClassRaw
+      : undefined,
+    meterKind:
+      meterKindRaw === 'capacity' || meterKindRaw === 'requests' ? meterKindRaw : undefined,
+    volumeGiB,
     limit: typeof args.limit === 'number' ? args.limit : undefined,
   };
-  const {rows, providers, totalMatches} = searchPricesDetailed(params);
+  const {rows, providers, totalMatches, volumeEstimates, applied} = searchPricesDetailed(params);
   return {
     count: rows.length,
     totalMatches,
     currency: 'RUB',
     vatIncluded: true,
-    note: 'Цены с НДС; месяц = 720 ч. hour/month/year — нормализованные значения; для usage-позиций (GiB, 1M токенов) число одинаково для всех периодов, ориентируйся на unit. ВАЖНО: услугу предлагают ТОЛЬКО провайдеры из providersMatched — не добавляй других и не копируй цену одного провайдера другим. priceKind различает «только GPU» и «конфигурацию целиком». ВНИМАНИЕ для vCPU/ВМ: providersMatched.cheapest часто = preemptible или долевое ядро (<100%) — это НЕ сопоставимая база для «цены 1 vCPU». Для сравнения/среднего по ядрам бери у каждого провайдера строку одного типа (on-demand, 100% выделенное ядро; см. config/note), не смешивай и не усредняй разные типы.',
+    applied,
+    note: 'Цены с НДС; месяц = 720 ч. hour/month/year — нормализованные значения; для usage-позиций (GiB, 1M токенов) число одинаково для всех периодов, ориентируйся на unit. ВАЖНО: услугу предлагают ТОЛЬКО провайдеры из providersMatched — не добавляй других и не копируй цену одного провайдера другим. priceKind различает «только GPU» и «конфигурацию целиком». ВНИМАНИЕ для vCPU/ВМ: providersMatched.cheapest часто = preemptible или долевое ядро (<100%) — это НЕ сопоставимая база для «цены 1 vCPU». Для сравнения/среднего по ядрам бери у каждого провайдера строку одного типа (on-demand, 100% выделенное ядро; см. config/note), не смешивай и не усредняй разные типы. ОБЪЕКТНОЕ ХРАНИЛИЩЕ (S3): классы Standard / Warm / Cold / Ice НЕ сопоставимы между собой — сравнивай только один класс за раз (параметр storageClass). Для цены хранения смотри meterKind=capacity (₽/GiB·мес); операции PUT/GET — отдельно (meterKind=requests). Бесплатные запросы (0 ₽) — это НЕ цена хранения. Если передан volumeGiB — итоговую стоимость бери из volumeEstimates, не считай вручную.',
     // Точный список провайдеров, у которых реально есть совпадение, с их СОБСТВЕННОЙ минимальной ценой.
     providersMatched: providers.map((p) => ({
       provider: p.providerName,
@@ -177,6 +213,13 @@ function runSearch(args: Record<string, unknown>): unknown {
       cheapest: serializeRow(p.cheapest),
     })),
     rows: rows.map(serializeRow),
+    ...(volumeEstimates && volumeEstimates.length
+      ? {
+          volumeEstimates,
+          volumeNote:
+            'Итог за месяц = ставка ₽/GiB·мес × volumeGiB (двоичные GiB). Сортировка по возрастанию totalMonth. Операции и egress сюда не входят.',
+        }
+      : {}),
   };
 }
 

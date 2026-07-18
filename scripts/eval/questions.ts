@@ -3,7 +3,7 @@
  * compute deterministic ground truth (see ground-truth.ts). Questions are phrased
  * naturally; the assistant must pick tools itself — params here are ONLY for truth.
  */
-import {truthFromSearch, truthFromQuote, type Truth} from './ground-truth';
+import {truthFromSearch, truthFromQuote, truthFromObjectStorageVolume, type Truth} from './ground-truth';
 
 export type Question = {
   id: string;
@@ -140,14 +140,24 @@ export function buildQuestions(): Question[] {
     });
   }
 
-  // --- Object storage classes (search) ---
+  // --- Object storage classes (search, hard class + capacity) ---
   for (const c of STORAGE_CLASSES) {
     qs.push({
       id: `storage-${c.token}`,
       tag: 'storage',
       kind: 'search',
-      q: `Кто предлагает объектное хранилище класса ${c.label} и по какой цене за GiB?`,
-      truth: () => truthFromSearch({query: `объектное хранилище ${c.token}`, category: 'storage', limit: 30}, 'month'),
+      q: `Кто предлагает объектное хранилище класса ${c.label} и по какой цене за GiB в месяц?`,
+      truth: () =>
+        truthFromSearch(
+          {
+            query: `объектное хранилище ${c.token}`,
+            category: 'storage',
+            storageClass: c.token,
+            meterKind: 'capacity',
+            limit: 30,
+          },
+          'month',
+        ),
     });
   }
 
@@ -268,7 +278,164 @@ export function buildQuestions(): Question[] {
     tag: 'storage',
     kind: 'search',
     q: `Сколько стоят операции (requests) в объектном хранилище за 10 000 запросов?`,
-    truth: () => truthFromSearch({query: 'объектное хранилище requests операции', category: 'storage', limit: 30}, 'month'),
+    truth: () =>
+      truthFromSearch(
+        {
+          query: 'объектное хранилище requests операции',
+          category: 'storage',
+          meterKind: 'requests',
+          limit: 30,
+        },
+        'month',
+      ),
+  });
+
+  // --- Object storage: natural scenarios (class parity, volume / DWH) ---
+  qs.push({
+    id: `storage-standard-compare`,
+    tag: 'storage',
+    kind: 'search',
+    q: `Сравни объектное хранилище стандартного класса (S3 Standard) по провайдерам: цена за GiB в месяц. Кто дешевле? Не смешивай с Cold/Ice.`,
+    truth: () =>
+      truthFromSearch(
+        {
+          query: 'объектное хранилище standard',
+          category: 'storage',
+          storageClass: 'standard',
+          meterKind: 'capacity',
+          limit: 30,
+        },
+        'month',
+      ),
+  });
+
+  qs.push({
+    id: `storage-ice-compare`,
+    tag: 'storage',
+    kind: 'search',
+    q: `Сравни класс Ice объектного хранилища по провайдерам: кто предлагает и сколько ₽/GiB·мес?`,
+    truth: () =>
+      truthFromSearch(
+        {
+          query: 'объектное хранилище ice',
+          category: 'storage',
+          storageClass: 'ice',
+          meterKind: 'capacity',
+          limit: 30,
+        },
+        'month',
+      ),
+  });
+
+  qs.push({
+    id: `storage-cold-compare`,
+    tag: 'storage',
+    kind: 'search',
+    q: `Кто дешевле по холодному (Cold) объектному хранилищу за GiB в месяц?`,
+    truth: () =>
+      truthFromSearch(
+        {
+          query: 'объектное хранилище cold',
+          category: 'storage',
+          storageClass: 'cold',
+          meterKind: 'capacity',
+          limit: 30,
+        },
+        'month',
+      ),
+  });
+
+  qs.push({
+    id: `storage-dwh-50tb`,
+    tag: 'storage',
+    kind: 'search',
+    q: `Сколько будет стоить в месяц хранение 50 ТБ данных платформы/DWH в объектном хранилище стандартного класса у разных провайдеров? Кто дешевле?`,
+    truth: () => truthFromObjectStorageVolume({storageClass: 'standard', volumeGiB: 50 * 1024}),
+  });
+
+  qs.push({
+    id: `storage-10tib-cold`,
+    tag: 'storage',
+    kind: 'search',
+    q: `Оцени стоимость 10 ТиБ холодного (Cold) S3-хранилища в месяц по провайдерам.`,
+    truth: () => truthFromObjectStorageVolume({storageClass: 'cold', volumeGiB: 10 * 1024}),
+  });
+
+  qs.push({
+    id: `storage-100gib-standard`,
+    tag: 'storage',
+    kind: 'search',
+    q: `Сколько стоит 100 GiB объектного хранилища Standard в месяц у провайдеров?`,
+    truth: () => truthFromObjectStorageVolume({storageClass: 'standard', volumeGiB: 100}),
+  });
+
+  qs.push({
+    id: `storage-selectel-tb`,
+    tag: 'storage',
+    kind: 'search',
+    q: `Цена объектного хранилища Standard за 1 ТиБ в месяц у Selectel.`,
+    truth: () =>
+      truthFromObjectStorageVolume({
+        storageClass: 'standard',
+        volumeGiB: 1024,
+        query: 'объектное хранилище standard Selectel',
+      }),
+  });
+
+  qs.push({
+    id: `storage-vk-hotbox`,
+    tag: 'storage',
+    kind: 'search',
+    q: `Сколько стоит Hotbox / Standard объектное хранилище у VK Cloud за GiB в месяц?`,
+    truth: () =>
+      truthFromSearch(
+        {
+          query: 'объектное хранилище standard VK',
+          category: 'storage',
+          storageClass: 'standard',
+          meterKind: 'capacity',
+          provider: 'vk-cloud',
+          limit: 10,
+        },
+        'month',
+      ),
+  });
+
+  qs.push({
+    id: `storage-cloudru-standard`,
+    tag: 'storage',
+    kind: 'search',
+    q: `Есть ли у Cloud.ru стандартный класс объектного хранилища и какая цена за GiB·мес? Не путай с Ice.`,
+    truth: () =>
+      truthFromSearch(
+        {
+          query: 'объектное хранилище standard Cloud.ru',
+          category: 'storage',
+          storageClass: 'standard',
+          meterKind: 'capacity',
+          provider: 'cloud-ru',
+          limit: 10,
+        },
+        'month',
+      ),
+  });
+
+  qs.push({
+    id: `storage-cheapest-standard`,
+    tag: 'storage',
+    kind: 'search',
+    q: `Какой провайдер сейчас самый дешёвый для S3 Standard (хранение ₽/GiB·мес)?`,
+    truth: () =>
+      truthFromSearch(
+        {
+          query: 'объектное хранилище standard',
+          category: 'storage',
+          storageClass: 'standard',
+          meterKind: 'capacity',
+          limit: 30,
+        },
+        'month',
+      ),
   });
 
   return qs;
