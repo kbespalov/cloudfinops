@@ -2,6 +2,13 @@
 
 ## 2026-07-18
 
+### Mobile UX
+
+- Шапка: на узких экранах (`≤900px`) навигация снова доступна через меню (Gravity UI `Drawer`), а не только бренд и тема.
+- `/chat`: один viewport без page-scroll (SEO скрыт визуально, hero убран на mobile), без autofocus клавиатуры, `safe-area`, узкий history popup, suggestions списком.
+- Каталог: wrap фильтров и горизонтальный скролл вкладок на `≤760px` (без раздувания страницы).
+- Калькулятор: на `≤520px` уже sticky-колонки таблицы и скрыта подпись «Внешний вид».
+
 ### ИИ-ассистент FinOps
 
 - Object storage / S3: жёсткий фильтр `storageClass` и предпочтение capacity над requests в `search_prices` (больше не подменяет Standard на Ice и не берёт PUT=0 ₽ как «самый дешёвый»).

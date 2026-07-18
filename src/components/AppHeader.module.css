@@ -4,6 +4,7 @@
   position: sticky;
   top: 0;
   z-index: 20;
+  flex-shrink: 0;
 }
 
 .inner {
@@ -11,12 +12,19 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 12px 24px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.brandRow {
+  min-width: 0;
 }
 
 .brand {
   display: inline-flex;
   align-items: center;
   gap: 12px;
+  flex-shrink: 0;
 }
 
 .mark {
@@ -53,8 +61,43 @@
   color: var(--g-color-text-utility);
 }
 
+.actions {
+  flex-shrink: 0;
+}
+
+.menuButton {
+  display: none;
+}
+
+.mobileMenu {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+.mobileMenuHead {
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--g-color-line-generic);
+}
+
+.mobileNav {
+  display: flex;
+  flex-direction: column;
+}
+
 @media (max-width: 900px) {
+  .inner {
+    padding: 10px 16px;
+  }
+
   .nav {
     display: none;
+  }
+
+  .menuButton {
+    display: inline-flex;
   }
 }

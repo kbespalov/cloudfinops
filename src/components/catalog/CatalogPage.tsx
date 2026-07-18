@@ -1088,13 +1088,15 @@ export function CatalogPage() {
               });
             }}
           >
-            <TabList size="l">
-              {CATEGORY_FILTERS.map((item) => (
-                <Tab key={item.id} value={item.id} counter={categoryCounts[item.id]}>
-                  {item.title}
-                </Tab>
-              ))}
-            </TabList>
+            <div className={styles.tabsScroll}>
+              <TabList size="l">
+                {CATEGORY_FILTERS.map((item) => (
+                  <Tab key={item.id} value={item.id} counter={categoryCounts[item.id]}>
+                    {item.title}
+                  </Tab>
+                ))}
+              </TabList>
+            </div>
           </TabProvider>
 
           <div className={styles.filters}>

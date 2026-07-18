@@ -20,6 +20,10 @@
   white-space: nowrap;
 }
 
+.viewControlLabel {
+  flex-shrink: 0;
+}
+
 .hero {
   display: flex;
   flex-direction: column;
@@ -95,8 +99,17 @@
 }
 
 @media (max-width: 520px) {
+  .page {
+    padding: 24px 16px 72px;
+    gap: 36px;
+  }
+
   .grid {
     grid-template-columns: 1fr;
+  }
+
+  .viewControlLabel {
+    display: none;
   }
 }
 

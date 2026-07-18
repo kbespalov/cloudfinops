@@ -46,9 +46,28 @@ export function ChatPage() {
   const [messagesByChat, setMessagesByChat] = useState<Record<string, TChatMessage[]>>({});
   const [status, setStatus] = useState<ChatStatus>('ready');
   const [error, setError] = useState<Error | null>(null);
+  // Start false for SSR/hydration match; matchMedia updates after mount.
+  const [narrow, setNarrow] = useState(false);
 
   const hydrated = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
+
+  // Lock document scroll so the composer stays in the viewport on mobile.
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 720px)');
+    const update = () => setNarrow(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
 
   // Load persisted history (client only).
   useEffect(() => {
@@ -221,7 +240,7 @@ export function ChatPage() {
   );
 
   return (
-    <>
+    <div className={styles.viewport}>
       <AppHeader />
       <main className={styles.page}>
         <div className={styles.hero}>
@@ -253,9 +272,17 @@ export function ChatPage() {
             hideTitleOnEmptyChat
             shouldParseIncompleteMarkdown
             openMarkdownLinksInNewTab
+            promptInputProps={{
+              bodyProps: {
+                autoFocus: false,
+                autoFocusOnNewChat: false,
+                autoFocusOnChatSelect: false,
+                maxRows: narrow ? 5 : 15,
+              },
+            }}
             welcomeConfig={{
-              suggestions: CHAT_SUGGESTIONS,
-              layout: 'grid',
+              suggestions: narrow ? CHAT_SUGGESTIONS.slice(0, 4) : CHAT_SUGGESTIONS,
+              layout: narrow ? 'list' : 'grid',
               wrapText: true,
             }}
             texts={{
@@ -270,6 +297,6 @@ export function ChatPage() {
           />
         </div>
       </main>
-    </>
+    </div>
   );
 }

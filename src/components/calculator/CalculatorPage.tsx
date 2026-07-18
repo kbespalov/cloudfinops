@@ -303,7 +303,7 @@ export function CalculatorPage({
             </Flex>
             <Flex alignItems="center" gap={3} wrap className={styles.heroControls}>
               <Flex alignItems="center" gap={2} className={styles.viewControl}>
-                <Text variant="body-1" color="secondary">
+                <Text variant="body-1" color="secondary" className={styles.viewControlLabel}>
                   Внешний вид
                 </Text>
                 <SegmentedRadioGroup

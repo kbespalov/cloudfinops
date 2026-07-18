@@ -58,6 +58,29 @@
   background: var(--g-color-base-generic);
 }
 
+/* Phones: shrink sticky cols so price columns stay reachable. */
+@media (max-width: 520px) {
+  .typeCol {
+    width: 100px;
+    max-width: 100px;
+  }
+
+  .configCol,
+  .configColWide {
+    left: 100px;
+  }
+
+  .configCol {
+    width: 140px;
+    max-width: 140px;
+  }
+
+  .configColWide {
+    width: 160px;
+    max-width: 160px;
+  }
+}
+
 .typeCell {
   min-width: 0;
 }

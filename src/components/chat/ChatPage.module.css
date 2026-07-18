@@ -1,5 +1,14 @@
+.viewport {
+  height: 100dvh;
+  max-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-sizing: border-box;
+}
+
 .page {
-  --cf-header-h: 64px;
   max-width: 1000px;
   margin: 0 auto;
   padding: 12px 24px 16px;
@@ -8,8 +17,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  /* Chat is the primary surface: fit below the site header, no page scroll for the shell. */
-  height: calc(100dvh - var(--cf-header-h));
+  flex: 1 1 auto;
   min-height: 0;
 }
 
@@ -43,9 +51,10 @@
   border-radius: 16px;
   overflow: hidden;
   background: var(--g-color-base-background);
-  /* AIKit chat fills the shell; internal scroll stays inside the messages pane. */
   display: flex;
   flex-direction: column;
+  /* Keep history popup usable on phones */
+  --g-aikit-history-width: min(360px, calc(100vw - 24px));
 }
 
 .chatShell > * {
@@ -59,9 +68,17 @@
     padding: 8px 12px 12px;
     gap: 8px;
   }
+
+  .hero {
+    display: none;
+  }
+
+  .chatShell {
+    border-radius: 12px;
+  }
 }
 
-/* Short viewports: drop the lead so the composer stays fully visible. */
+/* Short viewports (desktop laptop / landscape phone): drop the lead. */
 @media (max-height: 720px) {
   .heroLead {
     display: none;
