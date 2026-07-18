@@ -161,10 +161,21 @@
 
 .card {
   height: 100%;
+  overflow: hidden;
+  /* type=action → base-float + shadow; не перекрываем base-background */
+  --g-card-border-width: 1px;
+  --g-card-border-color: var(--g-color-line-generic);
 }
 
 .cardHighlight {
-  box-shadow: inset 0 0 0 2px var(--g-color-line-warning);
+  --g-card-border-color: var(--g-color-line-warning);
+  --g-card-border-width: 2px;
+}
+
+/* В dark float почти слит с background — чуть поднимаем поверхность */
+:global(.g-root_theme_dark) .card,
+:global(.g-root_theme_dark-hc) .card {
+  --g-card-background-color: var(--g-color-base-float-heavy);
 }
 
 .cardInner {
@@ -173,9 +184,9 @@
   gap: 12px;
   height: 100%;
   padding: 14px;
-  background: var(--g-color-base-background);
   border-radius: inherit;
   border-top: 3px solid transparent;
+  background: transparent;
 }
 
 .cardInner[data-tone='success'] {
