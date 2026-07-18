@@ -32,7 +32,7 @@ const NAV: NavItem[] = [
   {href: '/news', label: 'Новости', icon: BookOpen},
   {href: '/calculator', label: 'Калькулятор', icon: Calculator},
   {href: '/chat', label: 'AI-ассистент', icon: Sparkles, accent: true},
-  {href: '/api', label: 'API', icon: Code, disabled: true, badge: 'planned'},
+  {href: '/api', label: 'API', icon: Code, badge: 'planned'},
   {href: '/about', label: 'О нас', icon: CircleInfo},
   {
     href: 'https://t.me/cloudfinopsru',

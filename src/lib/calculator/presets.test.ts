@@ -73,5 +73,12 @@ describe('calculator presets', () => {
     const cards = buildGpuCardPresets(all);
     assert.ok(cards.length >= 4);
     assert.ok(cards.some((p) => p.gpuModelMatch === 'B300'));
+    // Shelf must show comparable H100 80GB (Selectel/T1/Cloud.ru), not Cloud.ru-only 94GB NVL.
+    const h100Cards = cards.filter((p) => p.gpuModelMatch === 'H100');
+    assert.ok(h100Cards.length >= 1);
+    for (const p of h100Cards) {
+      assert.equal(p.gpuMemoryGb, 80, `${p.title}: shelf H100 should be 80GB`);
+      assert.equal(p.gpuInterconnect, 'PCIe', `${p.title}: shelf H100 should be PCIe`);
+    }
   });
 });

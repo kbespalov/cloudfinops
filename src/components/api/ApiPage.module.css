@@ -1,0 +1,363 @@
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 36px 24px 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--g-color-line-generic);
+}
+
+.heroHeading {
+  max-width: 840px;
+  margin: 0;
+  text-wrap: balance;
+}
+
+.heroLead {
+  max-width: 720px;
+  margin: 0;
+  line-height: 1.55;
+}
+
+.pipeline {
+  padding: 24px;
+  border: 1px solid var(--g-color-line-generic);
+  border-radius: var(--g-border-radius-xl);
+  background: var(--g-color-base-background);
+}
+
+.pipelineFlow {
+  display: grid;
+  grid-template-columns:
+    minmax(170px, 0.9fr) 28px minmax(210px, 1fr) 28px minmax(330px, 1.7fr) 28px
+    minmax(170px, 0.9fr);
+  grid-template-areas: 'request c1 api c2 providers c3 result';
+  align-items: stretch;
+}
+
+.pipelineStep {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--g-color-line-generic);
+  border-radius: var(--g-border-radius-l);
+  background: var(--g-color-base-background);
+}
+
+.requestStep {
+  grid-area: request;
+  display: flex;
+  align-items: center;
+}
+
+.apiStep {
+  grid-area: api;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--g-color-base-generic-ultralight);
+  box-shadow: inset 3px 0 0 var(--g-color-line-brand);
+}
+
+.apiMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--g-border-radius-m);
+  color: var(--g-color-text-brand-contrast);
+  background: var(--g-color-base-brand);
+  flex-shrink: 0;
+}
+
+.providersStep {
+  grid-area: providers;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.resultStep {
+  grid-area: result;
+  display: flex;
+  align-items: center;
+}
+
+.requestCode {
+  color: var(--g-color-text-secondary);
+  font-family: var(--g-font-family-monospace);
+  font-variant-numeric: tabular-nums;
+}
+
+.providerGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.providerNode {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 8px;
+  overflow: hidden;
+  border: 1px solid var(--g-color-line-generic);
+  border-radius: var(--g-border-radius-m);
+  background: var(--g-color-base-generic-ultralight);
+  animation: provider-scan 8s linear infinite;
+  animation-delay: calc(2.4s + var(--scan-index) * 0.65s);
+}
+
+.providerMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--g-border-radius-s);
+  color: var(--g-color-text-primary);
+  background: var(--g-color-base-background);
+  flex-shrink: 0;
+}
+
+.connector {
+  position: relative;
+  align-self: center;
+  height: 2px;
+  overflow: hidden;
+  background: var(--g-color-line-generic);
+}
+
+.connector span {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  width: 12px;
+  height: 2px;
+  border-radius: 2px;
+  opacity: 0;
+  background: var(--g-color-base-brand);
+  animation: flow-signal 8s ease-in-out infinite;
+  animation-delay: var(--flow-delay);
+}
+
+.connectorOne {
+  grid-area: c1;
+}
+
+.connectorTwo {
+  grid-area: c2;
+}
+
+.connectorThree {
+  grid-area: c3;
+}
+
+.howItWorks {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.sectionLead {
+  max-width: 640px;
+  line-height: 1.55;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--g-color-line-generic);
+  border-bottom: 1px solid var(--g-color-line-generic);
+}
+
+.step {
+  min-width: 0;
+  padding: 20px 24px 20px 0;
+}
+
+.step + .step {
+  padding-left: 24px;
+  border-left: 1px solid var(--g-color-line-generic);
+}
+
+.cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 32px;
+  text-align: center;
+  border: 1px solid var(--g-color-line-generic);
+  border-radius: var(--g-border-radius-xl);
+  background: var(--g-color-base-generic-ultralight);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes flow-signal {
+  0% {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+
+  3% {
+    opacity: 1;
+  }
+
+  12% {
+    opacity: 1;
+    transform: translateX(28px);
+  }
+
+  15%,
+  100% {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+}
+
+@keyframes flow-signal-vertical {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  3% {
+    opacity: 1;
+  }
+
+  12% {
+    opacity: 1;
+    transform: translateY(24px);
+  }
+
+  15%,
+  100% {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+@keyframes provider-scan {
+  0%,
+  10% {
+    border-color: var(--g-color-line-brand);
+    box-shadow: inset 0 0 0 1px var(--g-color-line-brand);
+  }
+
+  13%,
+  100% {
+    border-color: var(--g-color-line-generic);
+    box-shadow: inset 0 0 0 0 transparent;
+  }
+}
+
+@media (max-width: 1050px) {
+  .pipelineFlow {
+    grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr);
+    grid-template-areas:
+      'request c1 api'
+      'c2 c2 c2'
+      'providers c3 result';
+    row-gap: 20px;
+  }
+
+  .connectorTwo {
+    width: 2px;
+    height: 20px;
+    justify-self: center;
+  }
+
+  .connectorTwo span {
+    width: 2px;
+    height: 10px;
+    animation-name: flow-signal-vertical;
+  }
+}
+
+@media (max-width: 760px) {
+  .page {
+    padding-top: 32px;
+  }
+
+  .steps {
+    grid-template-columns: 1fr;
+  }
+
+  .step {
+    padding: 20px 0;
+  }
+
+  .step + .step {
+    padding-left: 0;
+    border-top: 1px solid var(--g-color-line-generic);
+    border-left: 0;
+  }
+}
+
+@media (max-width: 680px) {
+  .page {
+    padding-inline: 16px;
+  }
+
+  .pipeline {
+    padding: 16px;
+  }
+
+  .pipelineFlow {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'request'
+      'c1'
+      'api'
+      'c2'
+      'providers'
+      'c3'
+      'result';
+    row-gap: 0;
+  }
+
+  .connector {
+    width: 2px;
+    height: 24px;
+    justify-self: center;
+  }
+
+  .connector span {
+    width: 2px;
+    height: 10px;
+    animation-name: flow-signal-vertical;
+  }
+
+  .cta {
+    padding-inline: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .providerNode,
+  .connector span {
+    animation: none;
+  }
+}

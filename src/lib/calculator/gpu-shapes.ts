@@ -242,6 +242,31 @@ export function buildGpuFlavorPresets(): GpuPreset[] {
   return all;
 }
 
+/**
+ * Pick a representative 1× (or N×) shape for the card shelf.
+ * H100: prefer 80GB PCIe — Selectel/T1/Cloud.ru all quote it. Cloud.ru's 94GB NVL
+ * flavors are sole-offer and make the shelf look like «H100 only at Cloud.ru».
+ */
+function pickFeaturedGpuShape(candidates: GpuPreset[], family: string): GpuPreset | undefined {
+  if (candidates.length === 0) return undefined;
+
+  if (family === 'H100') {
+    return (
+      candidates.find((p) => p.gpuMemoryGb === 80 && p.gpuInterconnect === 'PCIe') ??
+      candidates.find((p) => p.gpuMemoryGb === 80) ??
+      candidates.find((p) => p.shapeSource === 'cloud-ru') ??
+      candidates.find((p) => p.vcpu != null) ??
+      candidates[0]
+    );
+  }
+
+  return (
+    candidates.find((p) => p.shapeSource === 'cloud-ru') ??
+    candidates.find((p) => p.vcpu != null) ??
+    candidates[0]
+  );
+}
+
 /** Compact card shelf: B300 + one representative per popular family. */
 export function buildGpuCardPresets(all: GpuPreset[] = buildGpuFlavorPresets()): GpuPreset[] {
   const featured: GpuPreset[] = [];
@@ -251,18 +276,16 @@ export function buildGpuCardPresets(all: GpuPreset[] = buildGpuFlavorPresets()):
   const want = ['L4', 'A100', 'H100', 'H200', 'V100'] as const;
   for (const family of want) {
     const candidates = all.filter((p) => p.gpuModelMatch === family && p.gpuCount === 1);
-    const pick =
-      candidates.find((p) => p.shapeSource === 'cloud-ru') ??
-      candidates.find((p) => p.vcpu != null) ??
-      candidates[0];
+    const pick = pickFeaturedGpuShape(candidates, family);
     if (pick) featured.push(pick);
   }
 
   // Full node example
   const h200x8 = all.find((p) => p.gpuModelMatch === 'H200' && p.gpuCount === 8);
   if (h200x8) featured.push(h200x8);
-  const h100x8 = all.find(
-    (p) => p.gpuModelMatch === 'H100' && p.gpuCount === 8 && p.shapeSource === 'cloud-ru',
+  const h100x8 = pickFeaturedGpuShape(
+    all.filter((p) => p.gpuModelMatch === 'H100' && p.gpuCount === 8),
+    'H100',
   );
   if (h100x8 && !featured.includes(h100x8)) featured.push(h100x8);
 

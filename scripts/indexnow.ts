@@ -31,7 +31,7 @@ const HOST = new URL(SITE_URL).host;
 const ENDPOINTS = ['https://yandex.com/indexnow', 'https://api.indexnow.org/indexnow'];
 
 function allUrls(): string[] {
-  const staticRoutes = ['/', '/catalog', '/calculator', '/chat', '/news', '/about'];
+  const staticRoutes = ['/', '/catalog', '/calculator', '/chat', '/api', '/news', '/about'];
   const newsRoutes = newsItems.map((n) => `/news/${n.id}`);
   return [...staticRoutes, ...newsRoutes].map((p) => `${SITE_URL}${p}`);
 }

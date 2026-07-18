@@ -304,20 +304,26 @@ export function CalculatorPage({
               </Text>
             </Flex>
             <Flex alignItems="center" gap={3} wrap className={styles.heroControls}>
-              <SegmentedRadioGroup
-                size="l"
-                value={viewMode}
-                onUpdate={(v) => {
-                  startTransition(() => setViewMode(v as ViewMode));
-                }}
-              >
-                <SegmentedRadioGroup.Option value="cards" title="Плашки">
-                  <Icon data={LayoutCells} size={16} />
-                </SegmentedRadioGroup.Option>
-                <SegmentedRadioGroup.Option value="table" title="Таблица">
-                  <Icon data={LayoutList} size={16} />
-                </SegmentedRadioGroup.Option>
-              </SegmentedRadioGroup>
+              <Flex alignItems="center" gap={2} className={styles.viewControl}>
+                <Text variant="body-1" color="secondary">
+                  Внешний вид
+                </Text>
+                <SegmentedRadioGroup
+                  size="l"
+                  aria-label="Внешний вид"
+                  value={viewMode}
+                  onUpdate={(v) => {
+                    startTransition(() => setViewMode(v as ViewMode));
+                  }}
+                >
+                  <SegmentedRadioGroup.Option value="cards" title="Плашки">
+                    <Icon data={LayoutCells} size={16} />
+                  </SegmentedRadioGroup.Option>
+                  <SegmentedRadioGroup.Option value="table" title="Таблица">
+                    <Icon data={LayoutList} size={16} />
+                  </SegmentedRadioGroup.Option>
+                </SegmentedRadioGroup>
+              </Flex>
               <SegmentedRadioGroup
                 size="l"
                 value={period}
