@@ -291,12 +291,10 @@ export function CalculatorPage({
       <main className={styles.page} data-view={viewMode}>
         <header className={styles.hero}>
           <Flex justifyContent="space-between" alignItems="flex-end" gap={4} wrap>
-            <Flex direction="column" gap={3}>
-              <Flex alignItems="center" gap={3}>
-                <span className={styles.heroIcon}>
-                  <Icon data={Calculator} size={28} />
-                </span>
-                <Text variant="display-1">Калькулятор</Text>
+            <Flex direction="column" gap={1}>
+              <Flex alignItems="center" gap={2}>
+                <Icon data={Calculator} size={24} />
+                <Text variant="header-1">Калькулятор</Text>
               </Flex>
               <Text variant="body-1" color="secondary" className={styles.heroLead}>
                 Сравните цены ВМ и аренды GPU (L4, A100, H100, H200) у Yandex Cloud, VK Cloud,
@@ -309,7 +307,7 @@ export function CalculatorPage({
                   Внешний вид
                 </Text>
                 <SegmentedRadioGroup
-                  size="l"
+                  size="m"
                   aria-label="Внешний вид"
                   value={viewMode}
                   onUpdate={(v) => {
@@ -325,7 +323,7 @@ export function CalculatorPage({
                 </SegmentedRadioGroup>
               </Flex>
               <SegmentedRadioGroup
-                size="l"
+                size="m"
                 value={period}
                 onUpdate={(v) => {
                   startTransition(() => setPeriod(v as PeriodMode));
