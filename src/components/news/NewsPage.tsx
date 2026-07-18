@@ -177,9 +177,19 @@ export function NewsPage() {
                       <NextLink href={`/news/${item.id}`} className={styles.itemButton}>
                         <div className={styles.itemBody}>
                           <div className={styles.itemMeta}>
-                            <Label size="s" theme="unknown">
-                              {item.providerName}
-                            </Label>
+                            <button
+                              type="button"
+                              className={styles.tagChip}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setProvider(provider === item.provider ? 'all' : item.provider);
+                              }}
+                            >
+                              <Label size="xs" theme="unknown">
+                                {item.providerName}
+                              </Label>
+                            </button>
                             <Text variant="caption-2" color="secondary">
                               {formatNewsDate(item.date)}
                             </Text>
@@ -192,16 +202,24 @@ export function NewsPage() {
                             {item.summary}
                           </Text>
 
-                          <div className={styles.itemTags}>
-                            {item.tags.map((t) => (
-                              <Label key={t} size="xs" theme={tagTheme(t)}>
-                                {NEWS_TAG_TITLE[t]}
-                              </Label>
-                            ))}
-                          </div>
                         </div>
                         <Icon data={ChevronRight} size={16} className={styles.itemChevron} />
                       </NextLink>
+
+                      <div className={styles.itemTags}>
+                        {item.tags.map((t) => (
+                          <button
+                            key={t}
+                            type="button"
+                            className={styles.tagChip}
+                            onClick={() => setTag(tag === t ? 'all' : t)}
+                          >
+                            <Label size="xs" theme={tagTheme(t)}>
+                              {NEWS_TAG_TITLE[t]}
+                            </Label>
+                          </button>
+                        ))}
+                      </div>
 
                       <div className={styles.itemSource}>
                         <Text variant="caption-2" color="secondary">
