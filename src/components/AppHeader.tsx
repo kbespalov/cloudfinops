@@ -1,6 +1,6 @@
 'use client';
 
-import {useState} from 'react';
+import {useState, type ReactNode} from 'react';
 import {Flex, Text, Button, Icon, Drawer} from '@gravity-ui/uikit';
 import {
   Bars,
@@ -45,6 +45,24 @@ const NAV: NavItem[] = [
   },
 ];
 
+function navChildren(item: NavItem): ReactNode[] {
+  // Gravity Button.prepareChildren expects icon + text as siblings, not a Fragment.
+  return [
+    <Icon
+      key="icon"
+      data={item.icon}
+      size={16}
+      className={item.accent ? styles.accentIcon : undefined}
+    />,
+    item.label,
+    item.badge ? (
+      <Text key="badge" variant="caption-2" color="secondary" className={styles.navBadge}>
+        {item.badge}
+      </Text>
+    ) : null,
+  ];
+}
+
 function NavButton({
   item,
   active,
@@ -60,47 +78,56 @@ function NavButton({
   useHref?: boolean;
 }) {
   const external = Boolean(item.external);
-  const common = {
-    view: (active ? 'flat-action' : 'flat') as 'flat-action' | 'flat',
-    size: 'l' as const,
-    width,
-    disabled: Boolean(item.disabled),
-    selected: active,
-    children: (
-      <>
-        <Icon data={item.icon} size={16} className={item.accent ? styles.accentIcon : undefined} />
-        {item.label}
-        {item.badge ? (
-          <Text variant="caption-2" color="secondary" className={styles.navBadge}>
-            {item.badge}
-          </Text>
-        ) : null}
-      </>
-    ),
-  };
+  const view = active ? 'flat-action' : 'flat';
+  const children = navChildren(item);
 
   if (item.disabled) {
-    return <Button {...common} />;
+    return (
+      <Button view={view} size="l" width={width} disabled selected={active}>
+        {children}
+      </Button>
+    );
   }
 
   if (external) {
     return (
       <Button
-        {...common}
+        view={view}
+        size="l"
+        width={width}
+        selected={active}
         href={item.href}
         target="_blank"
         rel="noopener noreferrer"
         onClick={onNavigate}
-      />
+      >
+        {children}
+      </Button>
     );
   }
 
   // Soft client navigation — avoids full reload (theme/font flash).
   if (useHref) {
-    return <Button {...common} component={Link} href={item.href} prefetch />;
+    return (
+      <Button
+        component={Link}
+        href={item.href}
+        prefetch
+        view={view}
+        size="l"
+        width={width}
+        selected={active}
+      >
+        {children}
+      </Button>
+    );
   }
 
-  return <Button {...common} onClick={onNavigate} />;
+  return (
+    <Button view={view} size="l" width={width} selected={active} onClick={onNavigate}>
+      {children}
+    </Button>
+  );
 }
 
 export function AppHeader() {
