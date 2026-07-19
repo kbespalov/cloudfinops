@@ -263,7 +263,15 @@ function pickUnitComputeCombo(
     : (m: CatalogMeter) => isOnDemand(m);
   const componentPred = lowCost ? () => true : (m: CatalogMeter) => isOnDemand(m);
 
-  let vcpus = pricedList(provider, 'compute.vcpu', period, vcpuPred);
+  // Synthetic / derived unit rates (e.g. Cloud.ru lattice decomposition) are for
+  // catalog comparison only — they are not orderable SKUs. Prefer real flavors.
+  const notSynthetic = (m: CatalogMeter) => !m.synthetic;
+  let vcpus = pricedList(
+    provider,
+    'compute.vcpu',
+    period,
+    (m) => notSynthetic(m) && vcpuPred(m),
+  );
   // For on-demand tiers prefer guaranteed (dedicated) cores; fall back to any.
   if (!lowCost) {
     const dedicated = vcpus.filter((x) => isDedicatedVcpu(x.m));
@@ -271,7 +279,12 @@ function pickUnitComputeCombo(
   }
   if (!vcpus.length) return null;
 
-  const rams = pricedList(provider, 'compute.ram', period, componentPred);
+  const rams = pricedList(
+    provider,
+    'compute.ram',
+    period,
+    (m) => notSynthetic(m) && componentPred(m),
+  );
   const disks = pricedList(provider, 'storage.block.capacity', period, componentPred);
   const providerHasDisks = disks.length > 0;
 

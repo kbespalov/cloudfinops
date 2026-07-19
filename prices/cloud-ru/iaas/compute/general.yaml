@@ -94,8 +94,8 @@ spec:
     notes: >
       Хосты Evolution Compute — Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake);
       в тарифе поколения не разделены. Нельзя использовать как независимую цену одного vCPU.
-      Декомпозиция vCPU/RAM — аналитическая
-      оценка по flavor-решетке, не тариф Cloud.ru.
+      Декомпозиция vCPU/RAM — аналитическая оценка по flavor-решетке; вынесена в
+      синтетические SKU cloudru.compute.*.synthetic (помечены *).
   - sku: cloudru.compute.2vcpu-4gb
     name: Виртуальная машина 2vCPU/4GB RAM
     meter: compute.flavor
@@ -1918,36 +1918,214 @@ spec:
         vat: included
         byteBasis: not-applicable
     notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
-  - sku: cloudru.compute.vcpu-separate
-    name: Cascade / Ice Lake, 100% vCPU
+  - sku: cloudru.compute.cascade-lake.vcpu.synthetic
+    name: Intel Cascade Lake, 100% vCPU *
     meter: compute.vcpu
-    status: not-publicly-disclosed
-    pricingMode: status-only
+    status: available
+    pricingMode: unit
     region: Россия
-    effectiveFrom: null
-    checkedAt: '2026-07-17'
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: derived
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-19'
     sourceRefs:
     - cloudru.compute-pdf
+    - cloudru.compute-rules
     dimensions:
       publishedModel: flavor-bundle
-      cpuPlatformFamily: intel-cascade-or-ice
-      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      cpuPlatformFamily: intel-cascade-lake
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake Refresh)
       guaranteedVcpuShare: 100%
       purchaseModel: on-demand
-    notes: Отдельная ставка не опубликована; модельная оценка хранится в derivedEstimates SKU cloudru.compute.1vcpu-2gb.
-  - sku: cloudru.compute.ram-separate
-    name: Cascade / Ice Lake, RAM
-    meter: compute.ram
-    status: not-publicly-disclosed
-    pricingMode: status-only
+      synthetic: true
+      syntheticFrom:
+      - cloudru.compute.1vcpu-2gb
+      - cloudru.compute.2vcpu-4gb
+      - cloudru.compute.4vcpu-8gb
+      - cloudru.compute.4vcpu-16gb
+      - cloudru.compute.8vcpu-16gb
+      - cloudru.compute.8vcpu-32gb
+      latticeScope: stable-100pct-ratio-le-4
+    pricing:
+      rate:
+        amount: '0.976'
+        currency: RUB
+        unit:
+          quantity: vCPU
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.976'
+        unit:
+          currency: RUB
+          quantity: vCPU
+          period: hour
+        formula: 1.22 × 0.8 RUB/vCPU-hour excluding VAT (multi-flavor lattice)
+        vat: included
+    notes: >
+      Синтезированная ставка (*): Cloud.ru публикует только flavor-бандлы;
+      отдельного unit-тарифа нет. Хосты Evolution — Xeon Gold 6248R (Cascade Lake)
+      или 6348 (Ice Lake); в PDF поколения не разделены, цена одна.
+      Оценка по решётке 100% vCPU: 0.80 ₽/vCPU-ч без НДС. Exact на основной решётке
+      (ratio ≤ 4 GiB/vCPU). Не применять к выбросам: 2vCPU с RAM ≥ 8 GiB и всем
+      12vCPU (+33–44% к модели). High-mem (ratio ≥ 8) почти та же модель (RAM −0.15%).
+  - sku: cloudru.compute.ice-lake.vcpu.synthetic
+    name: Intel Ice Lake, 100% vCPU *
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
     region: Россия
-    effectiveFrom: null
-    checkedAt: '2026-07-17'
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: derived
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-19'
     sourceRefs:
     - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      publishedModel: flavor-bundle
+      cpuPlatformFamily: intel-ice-lake
+      cpuPlatformNative: Intel Xeon Gold 6348 (Ice Lake)
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      synthetic: true
+      syntheticFrom:
+      - cloudru.compute.1vcpu-2gb
+      - cloudru.compute.2vcpu-4gb
+      - cloudru.compute.4vcpu-8gb
+      - cloudru.compute.4vcpu-16gb
+      - cloudru.compute.8vcpu-16gb
+      - cloudru.compute.8vcpu-32gb
+      latticeScope: stable-100pct-ratio-le-4
+    pricing:
+      rate:
+        amount: '0.976'
+        currency: RUB
+        unit:
+          quantity: vCPU
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.976'
+        unit:
+          currency: RUB
+          quantity: vCPU
+          period: hour
+        formula: 1.22 × 0.8 RUB/vCPU-hour excluding VAT (same as Cascade Lake)
+        vat: included
+    notes: >
+      Синтезированная ставка (*): та же цена, что у Cascade Lake — в тарифе
+      Evolution поколения хостов не разделены (док: 6248R или 6348). Отдельного
+      unit-тарифа нет. Exact на основной решётке (ratio ≤ 4 GiB/vCPU). Не применять
+      к выбросам: 2vCPU с RAM ≥ 8 GiB и всем 12vCPU. High-mem (ratio ≥ 8) — RAM −0.15%.
+  - sku: cloudru.compute.cascade-lake.ram.synthetic
+    name: Intel Cascade Lake, RAM *
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: derived
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-19'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
     dimensions:
       publishedModel: fixed vCPU/RAM flavors
-      cpuPlatformFamily: intel-cascade-or-ice
-      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
+      cpuPlatformFamily: intel-cascade-lake
+      cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake Refresh)
       purchaseModel: on-demand
-    notes: RAM опубликована только внутри готовых конфигураций VM.
+      synthetic: true
+      syntheticFrom:
+      - cloudru.compute.1vcpu-2gb
+      - cloudru.compute.2vcpu-4gb
+      - cloudru.compute.4vcpu-8gb
+      - cloudru.compute.4vcpu-16gb
+      - cloudru.compute.8vcpu-16gb
+      - cloudru.compute.8vcpu-32gb
+      latticeScope: stable-100pct-ratio-le-4
+    pricing:
+      rate:
+        amount: '0.254675'
+        currency: RUB
+        unit:
+          quantity: GiB-RAM
+          period: hour
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.254675'
+        unit:
+          currency: RUB
+          quantity: GiB-RAM
+          period: hour
+        formula: 1.22 × 0.20875 RUB/GiB-RAM-hour excluding VAT (multi-flavor lattice)
+        vat: included
+    notes: >
+      Синтезированная ставка (*): RAM только внутри flavor-бандлов. Та же ставка
+      для Ice Lake (поколения в тарифе не разделены). 0.20875 ₽/GiB-ч без НДС.
+      Exact при ratio ≤ 4 GiB/vCPU. Кроме high-mem (ratio ≥ 8: ~0.2084375 без НДС)
+      и выбросов 2vCPU≥8 GiB / 12vCPU, где линейная модель не держится.
+  - sku: cloudru.compute.ice-lake.ram.synthetic
+    name: Intel Ice Lake, RAM *
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: derived
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-19'
+    sourceRefs:
+    - cloudru.compute-pdf
+    - cloudru.compute-rules
+    dimensions:
+      publishedModel: fixed vCPU/RAM flavors
+      cpuPlatformFamily: intel-ice-lake
+      cpuPlatformNative: Intel Xeon Gold 6348 (Ice Lake)
+      purchaseModel: on-demand
+      synthetic: true
+      syntheticFrom:
+      - cloudru.compute.1vcpu-2gb
+      - cloudru.compute.2vcpu-4gb
+      - cloudru.compute.4vcpu-8gb
+      - cloudru.compute.4vcpu-16gb
+      - cloudru.compute.8vcpu-16gb
+      - cloudru.compute.8vcpu-32gb
+      latticeScope: stable-100pct-ratio-le-4
+    pricing:
+      rate:
+        amount: '0.254675'
+        currency: RUB
+        unit:
+          quantity: GiB-RAM
+          period: hour
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.254675'
+        unit:
+          currency: RUB
+          quantity: GiB-RAM
+          period: hour
+        formula: 1.22 × 0.20875 RUB/GiB-RAM-hour excluding VAT (same as Cascade Lake)
+        vat: included
+    notes: >
+      Синтезированная ставка (*): та же цена, что у Cascade Lake RAM. Отдельного
+      unit-тарифа нет. Exact при ratio ≤ 4 GiB/vCPU. Кроме high-mem (ratio ≥ 8)
+      и выбросов 2vCPU≥8 GiB / 12vCPU.

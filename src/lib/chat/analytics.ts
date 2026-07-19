@@ -56,12 +56,26 @@ function pct(n: number): number {
 
 function meterForComponent(component: UnitComponent, m: CatalogMeter): boolean {
   if (m.status !== 'available' || !isConfirmedAvailable(m)) return false;
+  // Derived / synthetic unit rates (Cloud.ru lattice *) stay out of the
+  // like-for-like average — they surface via derivedFromFlavors instead.
+  if (m.synthetic) return false;
   if (component === 'vcpu') return m.meter === 'compute.vcpu' || isVcpuMeter(m);
   if (component === 'ram') return m.meter === 'compute.ram' || isRamMeter(m);
   // ssd: block storage capacity, SSD/NVMe media (exclude HDD)
   if (m.meter !== 'storage.block.capacity') return false;
   const media = extractDiskMedia(m);
   return media === 'SSD' || media === 'NVMe';
+}
+
+/** Synthetic unit SKUs published as catalog estimates (not orderable tariff rows). */
+function syntheticUnitForComponent(component: UnitComponent, m: CatalogMeter): boolean {
+  if (!m.synthetic || m.status !== 'available' || !isConfirmedAvailable(m)) return false;
+  if (!isOnDemand(m)) return false;
+  if (component === 'vcpu') {
+    return (m.meter === 'compute.vcpu' || isVcpuMeter(m)) && isDedicatedVcpu(m) && !isFractionalGuarantee(m);
+  }
+  if (component === 'ram') return m.meter === 'compute.ram' || isRamMeter(m);
+  return false;
 }
 
 /** Is this meter the comparable, like-for-like basis for the component? */
@@ -199,29 +213,45 @@ export function compareUnitPrice(component: UnitComponent) {
       (m) => m.provider === provider.id && meterForComponent(component, m),
     );
     if (rows.length === 0) {
-      // Provider does not sell this component as a standalone unit (e.g. Cloud.ru
-      // prices whole flavors). Try to recover an IMPLIED per-vCPU / per-GiB rate
-      // by decomposing its flavor line, so it is not dropped from the analysis.
-      const decomp = component !== 'ssd' ? decomposeFlavors(provider.id) : null;
-      if (decomp) {
-        const hour = component === 'vcpu' ? decomp.vcpuHour : decomp.ramGiBHour;
+      // Prefer curated synthetic unit SKUs (Cloud.ru lattice *) when present;
+      // else OLS-decompose whole-VM flavors so the provider is not dropped.
+      const synth = catalog.meters
+        .filter((m) => m.provider === provider.id && syntheticUnitForComponent(component, m))
+        .map((m) => ({m, hour: amountNumber(m, 'unit')}))
+        .filter((x): x is {m: CatalogMeter; hour: number} => x.hour != null && x.hour > 0)
+        .sort((a, b) => a.hour - b.hour)[0];
+      if (synth) {
         derived.push({
           provider: provider.id,
           providerName: provider.name,
-          hour: round(hour),
-          month: round(hour * 720, 2),
-          method: `оценка по декомпозиции ${decomp.n} флейворов (цена ≈ a·vCPU + b·GiB RAM)`,
-          fitR2: round(decomp.r2, 3) ?? 0,
+          hour: round(synth.hour),
+          month: round(synth.hour * 720, 2),
+          method:
+            'синтетическая unit-ставка (*) по решётке flavor’ов; не тариф Cloud.ru, кроме выбросов (2vCPU≥8 GiB, 12vCPU)',
+          fitR2: 1,
         });
       } else {
-        noComparable.push({
-          provider: provider.id,
-          providerName: provider.name,
-          note:
-            component === 'vcpu' || component === 'ram'
-              ? 'Нет отдельной unit-цены (тарифицирует ВМ целиком, флейвором), декомпозиция не удалась — сопоставимой цены за единицу нет.'
-              : 'Нет отдельной цены за GiB диска.',
-        });
+        const decomp = component !== 'ssd' ? decomposeFlavors(provider.id) : null;
+        if (decomp) {
+          const hour = component === 'vcpu' ? decomp.vcpuHour : decomp.ramGiBHour;
+          derived.push({
+            provider: provider.id,
+            providerName: provider.name,
+            hour: round(hour),
+            month: round(hour * 720, 2),
+            method: `оценка по декомпозиции ${decomp.n} флейворов (цена ≈ a·vCPU + b·GiB RAM)`,
+            fitR2: round(decomp.r2, 3) ?? 0,
+          });
+        } else {
+          noComparable.push({
+            provider: provider.id,
+            providerName: provider.name,
+            note:
+              component === 'vcpu' || component === 'ram'
+                ? 'Нет отдельной unit-цены (тарифицирует ВМ целиком, флейвором), декомпозиция не удалась — сопоставимой цены за единицу нет.'
+                : 'Нет отдельной цены за GiB диска.',
+          });
+        }
       }
       continue;
     }
