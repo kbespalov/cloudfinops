@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import {Button, Flex, Icon, Label, Text} from '@gravity-ui/uikit';
 import {Calculator, SquareListUl} from '@gravity-ui/icons';
 import {AppHeader} from '@/components/AppHeader';
@@ -80,11 +81,11 @@ export function ApiPage() {
             </Text>
           </Flex>
           <Flex gap={2} wrap justifyContent="center">
-            <Button view="action" size="l" href="/calculator">
+            <Button component={Link} href="/calculator" view="action" size="l" prefetch>
               <Icon data={Calculator} size={16} />
               Открыть калькулятор
             </Button>
-            <Button view="outlined" size="l" href="/catalog">
+            <Button component={Link} href="/catalog" view="outlined" size="l" prefetch>
               <Icon data={SquareListUl} size={16} />
               Каталог SKU
             </Button>

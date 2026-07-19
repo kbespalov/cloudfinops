@@ -4,9 +4,12 @@
 
 ### Производительность / навигация
 
-- Шапка: внутренние пункты меню через Next.js `Link` (soft-nav) — без полного reload при переключении разделов.
+- Шапка: внутренние разделы через Next.js `Link` (soft-nav) — без полного reload при переключении вкладок.
+- CTA на About / API / News / Calculator тоже soft-nav (`Button` + `Link`), без hard-reload.
 - Тема: blocking boot-script + `useSyncExternalStore` по `cf-theme` — меньше вспышки light→dark до hydrate.
 - Шрифт: Inter через `next/font` (self-host), убран Google Fonts `@import` из Gravity `fonts.css`.
+- Фикс иконок в шапке: после soft-nav рефакторинга дети `Button` нельзя было оборачивать в Fragment (Gravity клал иконку над текстом).
+- Известный следующий шаг (не в этом релизе): `catalog.generated.json` (~450KB) сейчас уезжает в клиентский бандл каталога — можно ужать / отдавать порциями.
 
 ### Главная
 

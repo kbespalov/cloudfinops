@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import Link from 'next/link';
 import {startTransition, useMemo, useState} from 'react';
 import {Button, Card, Flex, Icon, Label, SegmentedRadioGroup, Text} from '@gravity-ui/uikit';
 import {
@@ -412,7 +413,13 @@ export function CalculatorPage({
         </section>
 
         <Flex justifyContent="center">
-          <Button view="flat-secondary" size="l" href="/catalog?category=compute">
+          <Button
+            component={Link}
+            href="/catalog?category=compute"
+            view="flat-secondary"
+            size="l"
+            prefetch
+          >
             Открыть полный каталог SKU
             <Icon data={ChevronRight} size={16} />
           </Button>

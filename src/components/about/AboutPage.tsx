@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import {Button, Flex, Icon, Text} from '@gravity-ui/uikit';
 import {LogoTelegram, SquareListUl} from '@gravity-ui/icons';
 import {AppHeader} from '@/components/AppHeader';
@@ -44,7 +45,7 @@ export function AboutPage() {
                 <Icon data={LogoTelegram} size={16} />
                 Сообщество в Telegram
               </Button>
-              <Button view="outlined" size="l" href="/catalog">
+              <Button component={Link} href="/catalog" view="outlined" size="l" prefetch>
                 <Icon data={SquareListUl} size={16} />
                 Каталог SKU
               </Button>

@@ -87,15 +87,15 @@ export function NewsArticle({item}: {item: NewsItem}) {
               или спросите ИИ-ассистента FinOps своими словами.
             </Text>
             <div className={styles.ctaButtons}>
-              <Button view="outlined" size="l" href="/chat">
+              <Button component={Link} href="/chat" view="outlined" size="l" prefetch>
                 <Icon data={Sparkles} size={16} />
                 ИИ-ассистент FinOps
               </Button>
-              <Button view="outlined" size="l" href="/calculator">
+              <Button component={Link} href="/calculator" view="outlined" size="l" prefetch>
                 <Icon data={Calculator} size={16} />
                 Калькулятор
               </Button>
-              <Button view="outlined" size="l" href="/catalog">
+              <Button component={Link} href="/catalog" view="outlined" size="l" prefetch>
                 <Icon data={SquareListUl} size={16} />
                 Каталог SKU
               </Button>
