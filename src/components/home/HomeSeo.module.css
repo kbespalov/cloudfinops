@@ -1,0 +1,87 @@
+/* Visually hidden but kept in the DOM for crawlers / SEO.
+   Hero landing owns the viewport; this block must not create page scroll. */
+.seo {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  pointer-events: none;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+.lead {
+  margin: 0;
+  max-width: 52rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.card {
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+.subtitle {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.subtitle a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.cardText {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.list {
+  margin: 0;
+  padding-inline-start: 1.15rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 24px;
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+
+.faq {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.faq dt {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.faq dd {
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
