@@ -44,8 +44,10 @@ function statusLabel(status: string): string {
 }
 
 function pricingModeLabel(mode: string): string {
-  if (mode === 'bundle') return 'Комплект';
+  if (mode === 'bundle') return 'Комплект (ВМ целиком)';
+  if (mode === 'unit') return 'За единицу';
   if (mode === 'component') return 'Покомпонентно';
+  if (mode === 'status-only') return 'Без цены в каталоге';
   return mode;
 }
 

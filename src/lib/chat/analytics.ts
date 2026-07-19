@@ -227,7 +227,7 @@ export function compareUnitPrice(component: UnitComponent) {
           hour: round(synth.hour),
           month: round(synth.hour * 720, 2),
           method:
-            'синтетическая unit-ставка (*) по решётке flavor’ов; не тариф Cloud.ru, кроме выбросов (2vCPU≥8 GiB, 12vCPU)',
+            'оценка (*) по типичным готовым ВМ Cloud.ru; не отдельная строка прайса. На большинстве конфигураций совпадает; дороже — у 2 vCPU с RAM от 8 ГБ и у всех 12 vCPU',
           fitR2: 1,
         });
       } else {

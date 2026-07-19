@@ -853,7 +853,7 @@ export function paramsLabel(meter: CatalogMeter): string {
   if (platform && platform !== 'Платформа не указана') parts.push(platform);
 
   if (meter.purchaseModel === 'preemptible') parts.push('preemptible');
-  if (meter.synthetic) parts.push('синтетика *');
+  if (meter.synthetic) parts.push('оценка *');
 
   return parts.slice(0, 4).join(' · ') || '—';
 }
