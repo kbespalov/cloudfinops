@@ -487,6 +487,18 @@ export const newsItems: NewsItem[] = [
 
   // ——— Июль 2026 ———
   {
+    id: 'market-2026-07-qwen-38',
+    date: '2026-07-19',
+    provider: 'market',
+    providerName: 'Рынок РФ',
+    title: 'Alibaba анонсировала Qwen3.8 — 2,4T параметров, open-weight скоро',
+    summary:
+      '19 июля команда Qwen (Alibaba) сообщила о выходе Qwen3.8: ~2,4 трлн параметров, формальный релиз и open-weight — «в ближайшее время». Preview Qwen3.8-Max уже в Token Plan, Qoder и QoderWork (есть промо на credits; планы Individual/Team, совместимость с OpenAI/Anthropic-тулами). Вендор позиционирует модель как frontier, «вторую после Fable 5» — без опубликованных независимых бенчмарков. Сравнивать логично с Claude Fable 5, GPT-5.6 Sol, Kimi K3 (2,8T, веса к 27.07) и GLM 5.2; в РФ уже есть инференс предыдущего поколения Qwen (MWS и др.).',
+    tags: ['ai'],
+    sourceUrl: 'https://www.yicai.com/news/103281471.html',
+    sourceLabel: '第一财经 / Yicai',
+  },
+  {
     id: 'mws-2026-07-glm-52',
     date: '2026-07-17',
     provider: 'mws-cloud',
