@@ -172,10 +172,17 @@
   --g-card-border-width: 2px;
 }
 
-/* В dark float почти слит с background — чуть поднимаем поверхность */
+/* Dark: avoid float-heavy + translucent generic (milky low-contrast wash). */
 :global(.g-root_theme_dark) .card,
 :global(.g-root_theme_dark-hc) .card {
-  --g-card-background-color: var(--g-color-base-float-heavy);
+  --g-card-background-color: var(--g-color-base-float);
+}
+
+:global(.g-root_theme_dark) .stat,
+:global(.g-root_theme_dark-hc) .stat,
+:global(.g-root_theme_dark) .sellerMark,
+:global(.g-root_theme_dark-hc) .sellerMark {
+  background: var(--g-color-base-generic-ultralight);
 }
 
 .cardInner {
