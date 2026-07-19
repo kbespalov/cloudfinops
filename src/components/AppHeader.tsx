@@ -56,31 +56,51 @@ function NavButton({
   active: boolean;
   onNavigate?: () => void;
   width?: 'auto' | 'max';
-  /** Desktop keeps href; mobile drawer uses onClick + router to close cleanly. */
+  /** Desktop: Next.js Link soft-nav. Mobile drawer: onClick + router. */
   useHref?: boolean;
 }) {
   const external = Boolean(item.external);
-  return (
-    <Button
-      view={active ? 'flat-action' : 'flat'}
-      size="l"
-      width={width}
-      disabled={Boolean(item.disabled)}
-      href={useHref && !item.disabled ? item.href : undefined}
-      target={external ? '_blank' : undefined}
-      rel={external ? 'noopener noreferrer' : undefined}
-      selected={active}
-      onClick={onNavigate}
-    >
-      <Icon data={item.icon} size={16} className={item.accent ? styles.accentIcon : undefined} />
-      {item.label}
-      {item.badge ? (
-        <Text variant="caption-2" color="secondary" className={styles.navBadge}>
-          {item.badge}
-        </Text>
-      ) : null}
-    </Button>
-  );
+  const common = {
+    view: (active ? 'flat-action' : 'flat') as 'flat-action' | 'flat',
+    size: 'l' as const,
+    width,
+    disabled: Boolean(item.disabled),
+    selected: active,
+    children: (
+      <>
+        <Icon data={item.icon} size={16} className={item.accent ? styles.accentIcon : undefined} />
+        {item.label}
+        {item.badge ? (
+          <Text variant="caption-2" color="secondary" className={styles.navBadge}>
+            {item.badge}
+          </Text>
+        ) : null}
+      </>
+    ),
+  };
+
+  if (item.disabled) {
+    return <Button {...common} />;
+  }
+
+  if (external) {
+    return (
+      <Button
+        {...common}
+        href={item.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={onNavigate}
+      />
+    );
+  }
+
+  // Soft client navigation — avoids full reload (theme/font flash).
+  if (useHref) {
+    return <Button {...common} component={Link} href={item.href} prefetch />;
+  }
+
+  return <Button {...common} onClick={onNavigate} />;
 }
 
 export function AppHeader() {

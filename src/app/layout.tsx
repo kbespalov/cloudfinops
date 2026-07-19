@@ -1,13 +1,22 @@
 import type {Metadata} from 'next';
 import {Suspense} from 'react';
-import '@gravity-ui/uikit/styles/fonts.css';
+import {Inter} from 'next/font/google';
 import '@gravity-ui/uikit/styles/styles.css';
 import '@gravity-ui/aikit/styles';
 import './globals.css';
 import {AppProviders} from '@/components/AppProviders';
 import {YandexMetrika} from '@/components/YandexMetrika';
+import {THEME_BOOT_SCRIPT} from '@/lib/theme-boot';
 
 const SITE_URL = 'https://cloudfinops.ru';
+
+/** Self-hosted Inter (no Google Fonts @import) — same family Gravity expects. */
+const inter = Inter({
+  subsets: ['latin', 'cyrillic'],
+  weight: ['400', '600'],
+  display: 'swap',
+  variable: '--font-inter',
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -86,8 +95,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
-    <html lang="ru" suppressHydrationWarning>
-      <body>
+    <html lang="ru" className={inter.variable} suppressHydrationWarning>
+      <body suppressHydrationWarning>
+        <script dangerouslySetInnerHTML={{__html: THEME_BOOT_SCRIPT}} />
         <AppProviders>
           {children}
           <Suspense fallback={null}>

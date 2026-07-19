@@ -2,6 +2,12 @@
 
 ## 2026-07-19
 
+### Производительность / навигация
+
+- Шапка: внутренние пункты меню через Next.js `Link` (soft-nav) — без полного reload при переключении разделов.
+- Тема: blocking boot-script + `useSyncExternalStore` по `cf-theme` — меньше вспышки light→dark до hydrate.
+- Шрифт: Inter через `next/font` (self-host), убран Google Fonts `@import` из Gravity `fonts.css`.
+
 ### Главная
 
 - Поиск: убран белый квадратный фон от scoped `ThemeProvider` (`.g-root`); вместо цельной белой карточки — стеклянная полоса поиска и чипы без «боксового» фона.

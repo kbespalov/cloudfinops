@@ -1,3 +1,9 @@
+/* next/font Inter → Gravity sans token (overrides uikit default family name). */
+:root,
+.g-root {
+  --g-font-family-sans: var(--font-inter), 'Helvetica Neue', Arial, Helvetica, sans-serif;
+}
+
 html,
 body {
   margin: 0;
