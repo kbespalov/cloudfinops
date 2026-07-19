@@ -142,9 +142,19 @@
   min-width: 0;
 }
 
+/* Belt-and-suspenders: keep typed/placeholder text readable on the cream panel
+   even if a parent dark theme leaks into the control. */
+.searchInput :global(.g-text-input__content) {
+  color: var(--cf-ink);
+}
+
+.searchInput :global(.g-text-input__control::placeholder) {
+  color: var(--cf-ink-muted);
+}
+
 .searchIcon {
   display: inline-flex;
-  color: var(--g-color-text-secondary);
+  color: var(--cf-ink-muted);
 }
 
 .searchSubmit {

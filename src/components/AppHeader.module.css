@@ -65,7 +65,8 @@
   flex-shrink: 0;
 }
 
-.menuButton {
+/* Beat Gravity Button's display:inline-flex so the burger stays desktop-hidden. */
+.menuButton:global(.g-button) {
   display: none;
 }
 
@@ -88,6 +89,7 @@
   flex-direction: column;
 }
 
+/* Compact / phone: inline nav → drawer. Tablet+ keeps the full bar. */
 @media (max-width: 900px) {
   .inner {
     padding: 10px 16px;
@@ -97,7 +99,7 @@
     display: none;
   }
 
-  .menuButton {
+  .menuButton:global(.g-button) {
     display: inline-flex;
   }
 }
