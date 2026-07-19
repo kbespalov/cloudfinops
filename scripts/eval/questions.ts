@@ -3,12 +3,18 @@
  * compute deterministic ground truth (see ground-truth.ts). Questions are phrased
  * naturally; the assistant must pick tools itself — params here are ONLY for truth.
  */
-import {truthFromSearch, truthFromQuote, truthFromObjectStorageVolume, type Truth} from './ground-truth';
+import {
+  truthFromSearch,
+  truthFromQuote,
+  truthFromObjectStorageVolume,
+  truthFromUnitPrice,
+  type Truth,
+} from './ground-truth';
 
 export type Question = {
   id: string;
   q: string;
-  kind: 'search' | 'quote';
+  kind: 'search' | 'quote' | 'unit';
   truth: () => Truth;
   /** short tag for reporting */
   tag: string;
@@ -436,6 +442,139 @@ export function buildQuestions(): Question[] {
         },
         'month',
       ),
+  });
+
+  // --- Unit prices (compare_unit_price) ---
+  for (const component of ['vcpu', 'ram', 'ssd'] as const) {
+    const label =
+      component === 'vcpu' ? '1 vCPU (on-demand 100%)' : component === 'ram' ? '1 GiB RAM' : '1 GiB SSD';
+    qs.push({
+      id: `unit-${component}`,
+      tag: 'unit-price',
+      kind: 'unit',
+      q: `Какая средняя и минимальная цена ${label} по провайдерам? Кто дешевле всех?`,
+      truth: () => truthFromUnitPrice(component),
+    });
+  }
+
+  // --- Block SSD volume (unit × GiB; model must not use S3 storage class) ---
+  for (const tb of [1, 10, 50, 100]) {
+    qs.push({
+      id: `ssd-volume-${tb}tb`,
+      tag: 'disk-volume',
+      kind: 'unit',
+      q: `Сколько стоит ${tb} ТБ блочного SSD в месяц по провайдерам? Не путай с объектным хранилищем.`,
+      truth: () => {
+        const t = truthFromUnitPrice('ssd');
+        if (t.cheapestPrice != null) {
+          const gib = tb * 1024;
+          return {
+            ...t,
+            cheapestPrice: Math.round(t.cheapestPrice * gib * 100) / 100,
+          };
+        }
+        return t;
+      },
+    });
+  }
+
+  // --- Versioned AI (must not substitute neighboring versions) ---
+  for (const model of [
+    {id: 'qwen-36', q: 'Qwen 3.6', aiModel: 'Qwen 3.6'},
+    {id: 'qwen-35', q: 'Qwen 3.5', aiModel: 'Qwen 3.5'},
+    {id: 'glm-52', q: 'GLM 5.2', aiModel: 'GLM 5.2'},
+    {id: 'glm-47', q: 'GLM 4.7', aiModel: 'GLM 4.7'},
+    {id: 'deepseek-v32', q: 'DeepSeek v3.2', aiModel: 'DeepSeek v3.2'},
+    {id: 'kimi-k26', q: 'Kimi K2.6', aiModel: 'Kimi K2.6'},
+  ]) {
+    qs.push({
+      id: `ai-ver-${model.id}`,
+      tag: 'ai-version',
+      kind: 'search',
+      q: `Сравни цены ${model.q} за 1M токенов по провайдерам. Не подменяй соседней версией.`,
+      truth: () =>
+        truthFromSearch({query: model.q, category: 'ai', aiModel: model.aiModel, limit: 30}, 'hour'),
+    });
+  }
+
+  // --- More Kubernetes / network paraphrases ---
+  qs.push({
+    id: 'k8s-zonal-basic',
+    tag: 'kubernetes',
+    kind: 'search',
+    q: 'Сравни зональный (basic) мастер Managed Kubernetes по провайдерам за месяц.',
+    truth: () =>
+      truthFromSearch({query: 'Managed Kubernetes зональный', category: 'kubernetes', limit: 30}, 'month'),
+  });
+  qs.push({
+    id: 'k8s-who',
+    tag: 'kubernetes',
+    kind: 'search',
+    q: 'У каких провайдеров есть Managed Kubernetes в каталоге?',
+    truth: () => truthFromSearch({query: 'Kubernetes', category: 'kubernetes', limit: 30}, 'month'),
+  });
+  qs.push({
+    id: 'net-egress-1tb',
+    tag: 'network',
+    kind: 'search',
+    q: 'Сколько примерно будет стоить 1 ТБ исходящего трафика (egress) у разных провайдеров?',
+    truth: () => truthFromSearch({query: 'egress трафик', category: 'network', limit: 30}, 'month'),
+  });
+  qs.push({
+    id: 'net-ip-compare',
+    tag: 'network',
+    kind: 'search',
+    q: 'Сравни цену внешнего/публичного IP в месяц. Кто дешевле?',
+    truth: () => truthFromSearch({query: 'публичный IP', category: 'network', limit: 30}, 'month'),
+  });
+
+  // --- Homepage-style / natural paraphrases (still tool-grounded) ---
+  qs.push({
+    id: 'home-vm-8-32',
+    tag: 'vm-quote',
+    kind: 'quote',
+    q: 'Сравни ВМ 8 vCPU / 32 GiB / 100 ГБ SSD на месяц по провайдерам',
+    truth: () => truthFromQuote({vcpu: 8, ramGiB: 32, diskGiB: 100, period: 'month'}),
+  });
+  qs.push({
+    id: 'home-h100-month',
+    tag: 'gpu-price',
+    kind: 'search',
+    q: 'Самый дешёвый H100 в месяц',
+    truth: () => truthFromSearch({query: 'H100', category: 'gpu', gpuModel: 'H100', limit: 30}, 'month'),
+  });
+  qs.push({
+    id: 'home-s3-50tb',
+    tag: 'storage',
+    kind: 'search',
+    q: 'Сколько стоит 50 ТБ в объектном хранилище Standard?',
+    truth: () => truthFromObjectStorageVolume({storageClass: 'standard', volumeGiB: 50 * 1024}),
+  });
+
+  // --- Adversarial / abstain traps ---
+  qs.push({
+    id: 'adv-s3-as-ssd',
+    tag: 'adversarial',
+    kind: 'unit',
+    q: 'Сравни блочный SSD и S3 Standard как будто это одно и то же — кто дешевле за GiB?',
+    // Gold: treat as SSD unit price; model should NOT invent S3 as block disk.
+    truth: () => truthFromUnitPrice('ssd'),
+  });
+  qs.push({
+    id: 'adv-missing-gpu',
+    tag: 'adversarial',
+    kind: 'search',
+    q: 'Кто предлагает GPU H800 NVL в российских облаках из каталога?',
+    truth: () =>
+      truthFromSearch({query: 'H800', category: 'gpu', gpuModel: 'H800', limit: 30}, 'hour'),
+  });
+  qs.push({
+    id: 'adv-wrong-ai-version',
+    tag: 'adversarial',
+    kind: 'search',
+    q: 'Сколько стоит Qwen 9.9 за 1M токенов у провайдеров?',
+    truth: () =>
+      truthFromSearch({query: 'Qwen 9.9', category: 'ai', aiModel: 'Qwen 9.9', limit: 30}, 'hour'),
   });
 
   return qs;

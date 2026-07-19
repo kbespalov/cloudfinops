@@ -16,7 +16,12 @@ for (const file of ['.env.local', '.env']) {
   }
 }
 
-import {chatCompletion, type ChatMessage} from '../../src/lib/chat/gigachat';
+import {
+  chatCompletion,
+  getChatModel,
+  withChatModel,
+  type ChatMessage,
+} from '../../src/lib/chat/gigachat';
 import {tryRunFastPath} from '../../src/lib/chat/fast-path';
 import {CHAT_LIMITS} from '../../src/lib/chat/limits';
 import {sanitizeUserFacingAnswer} from '../../src/lib/chat/tool-call-recovery';
@@ -33,12 +38,30 @@ export type ChatRun = {
   leaksRetried: number;
   leaksDropped: number;
   durationMs: number;
+  model: string;
+  fastPath: boolean;
   error?: string;
 };
 
+export type RunChatOptions = {
+  /** Override Cloud.ru model id for this run. */
+  model?: string;
+  /** Disable homepage deterministic fast-path (required for fair model A/B). */
+  disableFastPath?: boolean;
+};
+
 /** Run the full assistant pipeline for one user question. */
-export async function runChat(systemPrompt: string, question: string): Promise<ChatRun> {
+export async function runChat(
+  systemPrompt: string,
+  question: string,
+  opts: RunChatOptions = {},
+): Promise<ChatRun> {
+  if (opts.model) {
+    return withChatModel(opts.model, () => runChat(systemPrompt, question, {...opts, model: undefined}));
+  }
+
   const t0 = Date.now();
+  const model = getChatModel();
   const messages: ChatMessage[] = [
     {role: 'system', content: systemPrompt},
     {role: 'user', content: question},
@@ -50,6 +73,8 @@ export async function runChat(systemPrompt: string, question: string): Promise<C
     leaksRecovered: 0,
     leaksRetried: 0,
     leaksDropped: 0,
+    model,
+    fastPath: false,
   };
 
   try {
@@ -57,12 +82,16 @@ export async function runChat(systemPrompt: string, question: string): Promise<C
       toolCalls.push({name, arguments: args});
     };
 
-    const fast = await tryRunFastPath({
-      messages,
-      onEvent: (event) => {
-        if (event.type === 'tool_call') onToolCall(event.name, event.arguments);
-      },
-    });
+    let usedFastPath = false;
+    const fast = opts.disableFastPath
+      ? null
+      : await tryRunFastPath({
+          messages,
+          onEvent: (event) => {
+            if (event.type === 'tool_call') onToolCall(event.name, event.arguments);
+          },
+        });
+    if (fast) usedFastPath = true;
     const loop =
       fast ??
       (await runToolLoop({
@@ -86,6 +115,8 @@ export async function runChat(systemPrompt: string, question: string): Promise<C
       leaksRetried: loop.leaksRetried,
       leaksDropped: loop.leaksDropped,
       durationMs: Date.now() - t0,
+      model,
+      fastPath: usedFastPath,
     };
 
     if (loop.finalText) {

@@ -156,13 +156,13 @@ export type Truth = {
 };
 
 function mapProviderName(name: string): ProviderId | null {
-  const n = name.toLowerCase();
-  if (n.includes('yandex')) return 'yandex-cloud';
-  if (n.includes('vk')) return 'vk-cloud';
-  if (n.includes('cloud.ru') || n === 'cloud.ru') return 'cloud-ru';
-  if (n.includes('t1')) return 't1-cloud';
-  if (n.includes('selectel')) return 'selectel';
-  if (n.includes('mws')) return 'mws-cloud';
+  const n = name.toLowerCase().trim();
+  if (n === 'yandex-cloud' || n.includes('yandex')) return 'yandex-cloud';
+  if (n === 'vk-cloud' || n.includes('vk')) return 'vk-cloud';
+  if (n === 'cloud-ru' || n.includes('cloud.ru') || n === 'cloud.ru') return 'cloud-ru';
+  if (n === 't1-cloud' || n.includes('t1')) return 't1-cloud';
+  if (n === 'selectel' || n.includes('selectel')) return 'selectel';
+  if (n === 'mws-cloud' || n.includes('mws')) return 'mws-cloud';
   return null;
 }
 
@@ -209,10 +209,39 @@ export function truthFromQuote(params: Record<string, unknown>): Truth {
   return {allowed, cheapestProvider, cheapestPrice, raw};
 }
 
-/**
- * Ground truth for object-storage volume estimates (capacity × GiB).
- * Uses search_prices with storageClass + volumeGiB; cheapest = min totalMonth.
- */
+/** Ground truth for compare_unit_price (vcpu / ram / ssd). */
+export function truthFromUnitPrice(component: 'vcpu' | 'ram' | 'ssd'): Truth {
+  const raw = JSON.parse(
+    runToolSync('compare_unit_price', JSON.stringify({component})),
+  ) as {
+    providers?: {provider: string; providerName: string; priceMonth: number | null; priceHour: number | null}[];
+    stats?: {cheapest?: {provider: string; price: number}};
+  };
+  const allowed = new Set<ProviderId>();
+  let cheapestProvider: ProviderId | null = null;
+  let cheapestPrice: number | null = null;
+  let bestVal = Number.POSITIVE_INFINITY;
+  for (const p of raw.providers ?? []) {
+    const id = mapProviderName(p.providerName || p.provider);
+    if (!id) continue;
+    allowed.add(id);
+    const price = component === 'ssd' ? p.priceMonth : p.priceHour ?? p.priceMonth;
+    if (price != null && Number.isFinite(price) && price > 0 && price < bestVal) {
+      bestVal = price;
+      cheapestProvider = id;
+      cheapestPrice = price;
+    }
+  }
+  if (raw.stats?.cheapest) {
+    const id = mapProviderName(raw.stats.cheapest.provider);
+    if (id) {
+      cheapestProvider = id;
+      cheapestPrice = raw.stats.cheapest.price;
+    }
+  }
+  return {allowed, cheapestProvider, cheapestPrice, raw: raw as ToolResultShape};
+}
+
 export function truthFromObjectStorageVolume(params: {
   storageClass: string;
   volumeGiB: number;

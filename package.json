@@ -10,6 +10,8 @@
     "eval:retrieval": "tsx scripts/eval/retrieval-run.ts",
     "eval:smoke": "tsx scripts/eval/smoke.ts --suite",
     "eval:chat": "tsx scripts/eval/smoke.ts",
+    "eval:bench": "tsx scripts/eval/benchmark.ts",
+    "eval:run": "tsx scripts/eval/run.ts",
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",

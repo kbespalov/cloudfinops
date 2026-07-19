@@ -4,7 +4,23 @@
  */
 
 const BASE_URL = process.env.CLOUDRU_FM_BASE_URL || 'https://foundation-models.api.cloud.ru/v1';
-const MODEL = process.env.CLOUDRU_FM_MODEL || 'openai/gpt-oss-120b';
+const DEFAULT_MODEL = 'openai/gpt-oss-120b';
+
+/** Resolved at call time so eval can switch models via CLOUDRU_FM_MODEL / withChatModel. */
+export function getChatModel(): string {
+  return process.env.CLOUDRU_FM_MODEL || DEFAULT_MODEL;
+}
+
+export async function withChatModel<T>(model: string, fn: () => Promise<T>): Promise<T> {
+  const prev = process.env.CLOUDRU_FM_MODEL;
+  process.env.CLOUDRU_FM_MODEL = model;
+  try {
+    return await fn();
+  } finally {
+    if (prev === undefined) delete process.env.CLOUDRU_FM_MODEL;
+    else process.env.CLOUDRU_FM_MODEL = prev;
+  }
+}
 
 export type ChatRole = 'system' | 'user' | 'assistant' | 'tool';
 
@@ -44,11 +60,13 @@ function apiKey(): string {
   return key;
 }
 
-const COMMON_PARAMS = {
-  model: MODEL,
-  presence_penalty: 0,
-  top_p: 0.95,
-} as const;
+function commonParams() {
+  return {
+    model: getChatModel(),
+    presence_penalty: 0,
+    top_p: 0.95,
+  } as const;
+}
 
 /** Final answer budget (stream / fallback). Keep in sync with CHAT_LIMITS.maxOutputTokens. */
 const FINAL_MAX_TOKENS = 2500;
@@ -82,7 +100,7 @@ export async function chatCompletion(
       Authorization: `Bearer ${apiKey()}`,
     },
     body: JSON.stringify({
-      ...COMMON_PARAMS,
+      ...commonParams(),
       max_tokens: withTools ? TOOL_LOOP_MAX_TOKENS : FINAL_MAX_TOKENS,
       // Cooler while planning tools — gpt-oss otherwise narrates English CoT into content.
       temperature: withTools ? 0.1 : 0.5,
@@ -118,7 +136,7 @@ export async function* chatCompletionStream(
       Authorization: `Bearer ${apiKey()}`,
     },
     body: JSON.stringify({
-      ...COMMON_PARAMS,
+      ...commonParams(),
       max_tokens: FINAL_MAX_TOKENS,
       temperature: 0.5,
       messages,

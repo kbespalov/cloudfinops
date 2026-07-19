@@ -2,6 +2,12 @@
 
 ## 2026-07-19
 
+### Eval / бенчмарк чата
+
+- Предметный бенчмарк качества+латентности: `scripts/eval/questions.ts` (~135 кейсов: GPU, AI, S3, SSD volume, K8s, unit-price, adversarial).
+- `npm run eval:bench` — матрица моделей (`--models a,b`), `--no-fast-path` для честного A/B, leaderboard pass% + p50/p95.
+- Модель переключается на лету (`withChatModel` / `CLOUDRU_FM_MODEL`); harness пишет `durationMs`, `fastPath`.
+
 ### ИИ-ассистент / Kubernetes
 
 - Сравнение Managed Kubernetes: поиск отдаёт сопоставимые **мастера** (basic/HA), а не 0₽ фикс Yandex и не unit-ставки vCPU/RAM; synthetic 2/4 VK/Yandex больше не штрафуются в ranking.
