@@ -23,7 +23,7 @@ spec:
       sharedBidirectionalPool: true
     pricing:
       rate:
-        amount: '0'
+        amount: '0.89616384'
         currency: RUB
         unit: {quantity: GiB, period: usage}
         vat: included
@@ -46,8 +46,8 @@ spec:
           vat: included
           byteBasis: binary
     notes: >
-      Бесплатный пул 3 ТБ общий для входящего и исходящего внешнего трафика всех проектов
-      аккаунта (порог тот же, что у исходящего).
+      В каталоге — ставка сверх бесплатного пула. Первые 3 ТБ общие для входящего
+      и исходящего внешнего трафика всех проектов аккаунта; дальше — ~0,90 ₽/GiB.
   - sku: selectel.traffic.internet.egress
     name: Исходящий внешний трафик
     meter: network.traffic.egress
@@ -55,7 +55,7 @@ spec:
     pricingMode: tiered
     region: Российские пулы
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [selectel.calculator, selectel.compute-rules]
     dimensions:
       sourceService: compute
@@ -64,7 +64,7 @@ spec:
       freeTierGiBMonth: 3072
     pricing:
       rate:
-        amount: '0'
+        amount: '0.89616384'
         currency: RUB
         unit: {quantity: GiB, period: usage}
         vat: included
@@ -86,7 +86,9 @@ spec:
           unit: {quantity: GiB, period: usage}
           vat: included
           byteBasis: binary
-    notes: Бесплатный пул 3 ТБ общий для входящего и исходящего внешнего трафика всех проектов аккаунта.
+    notes: >
+      В каталоге — ставка сверх бесплатного пула. Первые 3 ТБ общие для входящего
+      и исходящего внешнего трафика всех проектов аккаунта; дальше — ~0,90 ₽/GiB.
   - sku: selectel.object-storage.traffic.ingress
     name: Входящий интернет-трафик S3
     meter: network.traffic.ingress

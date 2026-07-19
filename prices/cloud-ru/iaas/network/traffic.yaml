@@ -100,7 +100,7 @@ spec:
       freeTierGiBMonth: 10000
     pricing:
       rate:
-        amount: '0'
+        amount: '1.1712'
         currency: RUB
         unit:
           quantity: GiB
@@ -128,3 +128,6 @@ spec:
             period: usage
           vat: included
           byteBasis: binary
+    notes: >
+      В каталоге — ставка сверх бесплатного объёма. Первые 10 ТБ исходящего
+      трафика Object Storage в месяц не тарифицируются; дальше — 1,1712 ₽/GiB.

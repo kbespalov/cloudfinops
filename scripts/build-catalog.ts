@@ -186,7 +186,29 @@ function main() {
     const meta = data.metadata;
     for (const raw of data.spec.meters || []) {
       const pricing = (raw.pricing as Record<string, unknown>) || {};
-      const rate = (pricing.rate as Record<string, unknown>) || {};
+      const rate = {...((pricing.rate as Record<string, unknown>) || {})};
+      // Tiered SKUs often put 0 in rate (free allowance). Catalog list/sort should
+      // show the first paid step — free tier stays in YAML tiers + notes/dimensions.
+      const tiers = Array.isArray(pricing.tiers) ? pricing.tiers : [];
+      if (tiers.length > 0) {
+        const top = Number(rate.amount);
+        if (!Number.isFinite(top) || top === 0) {
+          for (const tier of tiers) {
+            const tRate = ((tier as Record<string, unknown>).rate || {}) as Record<
+              string,
+              unknown
+            >;
+            const amt = Number(tRate.amount);
+            if (Number.isFinite(amt) && amt > 0) {
+              rate.amount = String(tRate.amount);
+              if (tRate.vat != null) rate.vat = tRate.vat;
+              if (tRate.currency != null) rate.currency = tRate.currency;
+              if (tRate.unit != null) rate.unit = tRate.unit;
+              break;
+            }
+          }
+        }
+      }
       const unit = (rate.unit as Record<string, unknown>) || {};
       const normalized = {...((pricing.normalized as Record<string, unknown>) || {})};
       const nUnit = {...((normalized.unit as Record<string, unknown>) || {})};
