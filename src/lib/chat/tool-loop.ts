@@ -26,6 +26,29 @@ export type ToolLoopResult = {
 const REQUIRED_RETRY_NUDGE =
   'Вызови нужный инструмент через нативный function calling (tool_calls). Не пиши план вызова и JSON аргументов в тексте.';
 
+const EMPTY_AFTER_TOOLS_NUDGE =
+  'Данные инструментов уже в истории. Дай пользователю полный ответ на русском: markdown-таблица и вывод. Без вызова инструментов и без пустого ответа.';
+
+/** Shrink oversized tool JSON before a tools-free final (Cloud.ru often returns empty otherwise). */
+function messagesForForcedFinal(messages: ChatMessage[]): ChatMessage[] {
+  return messages.map((m) => {
+    if (m.role !== 'tool' || typeof m.content !== 'string' || m.content.length < 4000) {
+      return m;
+    }
+    try {
+      const parsed = JSON.parse(m.content) as Record<string, unknown>;
+      if (Array.isArray(parsed.rows)) parsed.rows = parsed.rows.slice(0, 8);
+      if (Array.isArray(parsed.quotes)) parsed.quotes = parsed.quotes.slice(0, 8);
+      if (typeof parsed.note === 'string' && parsed.note.length > 240) {
+        parsed.note = `${parsed.note.slice(0, 240)}…`;
+      }
+      return {...m, content: JSON.stringify(parsed)};
+    } catch {
+      return {...m, content: `${m.content.slice(0, 3500)}…`};
+    }
+  });
+}
+
 export async function runToolLoop(options: {
   messages: ChatMessage[];
   maxRounds: number;
@@ -40,6 +63,7 @@ export async function runToolLoop(options: {
   let leaksDropped = 0;
   let finalText: string | null = null;
   let requiredRetryUsed = false;
+  let emptyAfterToolsNudgeUsed = false;
 
   for (let round = 0; round < options.maxRounds; round++) {
     const reply = await chatCompletion(messages, CHAT_TOOLS, {
@@ -78,7 +102,27 @@ export async function runToolLoop(options: {
     }
 
     if (resolved.kind === 'final') {
-      finalText = resolved.text ? sanitizeUserFacingAnswer(resolved.text) : null;
+      const text = (resolved.text ?? '').trim();
+      if (text) {
+        finalText = sanitizeUserFacingAnswer(text);
+        break;
+      }
+      // Empty content after tools is common on Cloud.ru. Force a tools-free
+      // completion (tools still attached → model often returns empty again).
+      if (toolCallsTotal > 0 && !emptyAfterToolsNudgeUsed) {
+        emptyAfterToolsNudgeUsed = true;
+        messages.push({role: 'assistant', content: ''});
+        messages.push({role: 'user', content: EMPTY_AFTER_TOOLS_NUDGE});
+        const forced = await chatCompletion(messagesForForcedFinal(messages), undefined, {
+          signal: options.signal,
+        });
+        const forcedText = (forced.content ?? '').trim();
+        if (forcedText) {
+          finalText = sanitizeUserFacingAnswer(forcedText);
+        }
+        break;
+      }
+      finalText = null;
       break;
     }
 
@@ -124,6 +168,18 @@ export async function runToolLoop(options: {
         name: call.function.name,
         content: result,
       });
+    }
+  }
+
+  // Exhausted rounds with tool data but no prose — last-chance tools-free answer.
+  if (!finalText && toolCallsTotal > 0 && !emptyAfterToolsNudgeUsed) {
+    messages.push({role: 'user', content: EMPTY_AFTER_TOOLS_NUDGE});
+    const forced = await chatCompletion(messagesForForcedFinal(messages), undefined, {
+      signal: options.signal,
+    });
+    const forcedText = (forced.content ?? '').trim();
+    if (forcedText) {
+      finalText = sanitizeUserFacingAnswer(forcedText);
     }
   }
 

@@ -189,6 +189,19 @@ export async function POST(req: Request) {
           // Prefer streaming for the post-tools answer; buffer then sanitize so
           // tool names cannot leak mid-chunk (search_prices / get_quote).
           // Fall back to non-stream if the SSE body has no content deltas.
+          const alreadyNudged = messages.some(
+            (m) =>
+              m.role === 'user' &&
+              typeof m.content === 'string' &&
+              m.content.includes('Данные инструментов уже в истории'),
+          );
+          if (!alreadyNudged && loop.toolCallsTotal > 0) {
+            messages.push({
+              role: 'user',
+              content:
+                'Данные инструментов уже в истории. Дай пользователю полный ответ на русском: markdown-таблица и вывод. Без вызова инструментов и без пустого ответа.',
+            });
+          }
           let streamed = '';
           try {
             for await (const delta of chatCompletionStream(messages, abort.signal)) {

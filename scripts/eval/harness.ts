@@ -82,6 +82,16 @@ export async function runChat(systemPrompt: string, question: string): Promise<C
 
     // Force a final answer after exhausting tool rounds / post-tools path.
     const finalMessages = messages.filter((m) => m.role !== 'system');
+    const alreadyNudged = finalMessages.some(
+      (m) => m.role === 'user' && typeof m.content === 'string' && m.content.includes('Данные инструментов уже в истории'),
+    );
+    if (!alreadyNudged && toolCalls.length > 0) {
+      finalMessages.push({
+        role: 'user',
+        content:
+          'Данные инструментов уже в истории. Дай пользователю полный ответ на русском: markdown-таблица и вывод. Без вызова инструментов и без пустого ответа.',
+      });
+    }
     const final = await chatCompletion(
       [{role: 'system', content: systemPrompt}, ...finalMessages],
       undefined,

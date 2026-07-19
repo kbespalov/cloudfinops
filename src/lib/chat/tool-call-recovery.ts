@@ -7,7 +7,12 @@
 
 import type {CompletionChoiceMessage} from './gigachat';
 
-export const CHAT_TOOL_NAMES = ['search_prices', 'get_quote', 'compare_unit_price'] as const;
+export const CHAT_TOOL_NAMES = [
+  'search_prices',
+  'get_quote',
+  'compare_unit_price',
+  'fit_budget',
+] as const;
 export type ChatToolName = (typeof CHAT_TOOL_NAMES)[number];
 
 const TOOL_NAME_SET = new Set<string>(CHAT_TOOL_NAMES);
@@ -16,6 +21,7 @@ const TOOL_NAME_USER_LABEL: Record<ChatToolName, string> = {
   get_quote: 'калькулятора конфигурации',
   search_prices: 'прайс-листа',
   compare_unit_price: 'кросс-провайдерной аналитики',
+  fit_budget: 'подбора под бюджет',
 };
 
 /**
@@ -141,6 +147,7 @@ const QUOTE_KEYS = new Set([
   'presetId',
 ]);
 const COMPARE_KEYS = new Set(['component', 'period']);
+const FIT_BUDGET_KEYS = new Set(['budgetMonthRub', 'profile']);
 
 function pickKeys(record: Record<string, unknown>, allowed: Set<string>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
@@ -168,13 +175,14 @@ function inferToolName(
     return fn.name as ChatToolName;
   }
 
+  if ('budgetMonthRub' in record) return 'fit_budget';
   if ('query' in record) return 'search_prices';
   if ('component' in record) return 'compare_unit_price';
   if ('vcpu' in record || 'ramGiB' in record || 'presetId' in record) return 'get_quote';
   if ('gpuModel' in record && !('query' in record)) return 'get_quote';
 
   const callMention = content.match(
-    /\b(?:call|calling|invoke|use)\s+`?(search_prices|get_quote|compare_unit_price)`?/i,
+    /\b(?:call|calling|invoke|use)\s+`?(search_prices|get_quote|compare_unit_price|fit_budget)`?/i,
   );
   if (callMention) return callMention[1] as ChatToolName;
 
@@ -231,6 +239,16 @@ function sanitizeArgs(
   if (name === 'compare_unit_price') {
     const args = pickKeys(cleaned, COMPARE_KEYS);
     if (typeof args.component !== 'string') return null;
+    return args;
+  }
+  if (name === 'fit_budget') {
+    const args = pickKeys(cleaned, FIT_BUDGET_KEYS);
+    if (typeof args.budgetMonthRub !== 'number' && typeof args.budgetMonthRub !== 'string') {
+      return null;
+    }
+    const n = Number(args.budgetMonthRub);
+    if (!Number.isFinite(n) || n < 1000) return null;
+    args.budgetMonthRub = n;
     return args;
   }
   return null;

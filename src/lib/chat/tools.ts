@@ -13,6 +13,7 @@ import {
 } from './search';
 import {quotePreset, listGpuPresets} from '@/lib/calculator/quote';
 import {compareUnitPrice, type UnitComponent} from './analytics';
+import {fitBudget, type FitBudgetProfile} from './fit-budget';
 import type {ComputePreset, GpuPreset, CalculatorPreset} from '@/lib/calculator/presets';
 
 export type ChatToolCall = {
@@ -148,7 +149,45 @@ export const CHAT_TOOLS = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'fit_budget',
+      description:
+        'Подобрать инфраструктуру под месячный бюджет (₽ с НДС): сколько целых ВМ (или GPU) каждого типового размера укладывается у каждого провайдера и какая утилизация бюджета. Используй для «бюджет 100 тысяч», «что можно позволить за N ₽/мес», «максимально утилизировать бюджет» — НЕ устраивай длинный опросник. По умолчанию profile=general (типовые ВМ).',
+      parameters: {
+        type: 'object',
+        properties: {
+          budgetMonthRub: {
+            type: 'number',
+            description: 'Бюджет в ₽ за месяц (с НДС), например 100000.',
+          },
+          profile: {
+            type: 'string',
+            enum: ['general', 'high-cpu', 'gpu-l4', 'gpu-h100'],
+            description:
+              'general — balanced ВМ (по умолчанию); high-cpu — плотнее по ядрам; gpu-l4 / gpu-h100 — сколько целых GPU-конфигов влезает.',
+          },
+        },
+        required: ['budgetMonthRub'],
+      },
+    },
+  },
 ] as const;
+
+const FIT_PROFILES: FitBudgetProfile[] = ['general', 'high-cpu', 'gpu-l4', 'gpu-h100'];
+
+function runFitBudget(args: Record<string, unknown>): unknown {
+  const budget = num(args.budgetMonthRub);
+  if (!budget || budget < 1000) {
+    return {error: 'Укажи budgetMonthRub — месячный бюджет в ₽ (например 100000).'};
+  }
+  const profileRaw = typeof args.profile === 'string' ? args.profile : 'general';
+  const profile = FIT_PROFILES.includes(profileRaw as FitBudgetProfile)
+    ? (profileRaw as FitBudgetProfile)
+    : 'general';
+  return fitBudget({budgetMonthRub: budget, profile});
+}
 
 /** Distinguish a whole-VM/GPU flavor price from a GPU-only accelerator rate. */
 function priceKind(r: PriceRow): string {
@@ -160,6 +199,7 @@ function priceKind(r: PriceRow): string {
 }
 
 function serializeRow(r: PriceRow) {
+  // Keep chat tool payloads compact — large JSON after 3–4 tools often yields empty finals.
   return {
     provider: r.providerName,
     category: r.categoryTitle,
@@ -174,9 +214,6 @@ function serializeRow(r: PriceRow) {
     synthetic: r.synthetic ?? false,
     hour: round(r.hour),
     month: round(r.month),
-    year: round(r.year),
-    sku: r.sku,
-    note: r.note,
   };
 }
 
@@ -215,14 +252,16 @@ async function runSearch(args: Record<string, unknown>): Promise<unknown> {
     currency: 'RUB',
     vatIncluded: true,
     applied,
-    note: 'Цены с НДС; месяц = 720 ч. Бери провайдеров только из providersMatched с их ценой. cheapest часто preemptible/долевое — для сравнения vCPU бери on-demand 100%. S3: один storageClass за раз; хранение = capacity, не requests/0 ₽. volumeGiB → volumeEstimates. Kubernetes: для Managed K8s / мастера search режет выдачу до сопоставимых master (basic=zonal, ha=regional); synthetic-bundle VK/Yandex = расчёт 2 vCPU/4 GiB; native-fixed без размера сравнивай только по сумме; worker-ноды отдельно. applied.retrieval = lexical|hybrid; applied.k8sTier = basic|ha.',
+    note:
+      'НДС вкл., месяц=720ч. Цены только из providersMatched. S3: capacity одного storageClass. K8s master: basic/HA; synthetic VK/Yandex=2vCPU/4GiB.',
     // Точный список провайдеров, у которых реально есть совпадение, с их СОБСТВЕННОЙ минимальной ценой.
     providersMatched: providers.map((p) => ({
       provider: p.providerName,
       offerings: p.count,
       cheapest: serializeRow(p.cheapest),
     })),
-    rows: rows.map(serializeRow),
+    // Cap rows for the model; providersMatched already has per-provider cheapest.
+    rows: rows.slice(0, 10).map(serializeRow),
     ...(volumeEstimates && volumeEstimates.length
       ? {
           volumeEstimates,
@@ -463,17 +502,20 @@ export function runToolSync(name: string, rawArgs: string): string {
         currency: 'RUB',
         vatIncluded: true,
         applied,
+        note:
+          'НДС вкл., месяц=720ч. Цены только из providersMatched. S3: capacity одного storageClass. K8s master: basic/HA; synthetic VK/Yandex=2vCPU/4GiB.',
         providersMatched: providers.map((p) => ({
           provider: p.providerName,
           offerings: p.count,
           cheapest: serializeRow(p.cheapest),
         })),
-        rows: rows.map(serializeRow),
+        rows: rows.slice(0, 10).map(serializeRow),
         ...(volumeEstimates && volumeEstimates.length ? {volumeEstimates} : {}),
       });
     }
     if (name === 'get_quote') return JSON.stringify(runQuote(args));
     if (name === 'compare_unit_price') return JSON.stringify(runCompareUnitPrice(args));
+    if (name === 'fit_budget') return JSON.stringify(runFitBudget(args));
     return JSON.stringify({error: `Неизвестный инструмент: ${name}`});
   } catch (err) {
     return toolError(err);
@@ -489,6 +531,7 @@ export async function runTool(name: string, rawArgs: string): Promise<string> {
     if (name === 'search_prices') return JSON.stringify(await runSearch(args));
     if (name === 'get_quote') return JSON.stringify(runQuote(args));
     if (name === 'compare_unit_price') return JSON.stringify(runCompareUnitPrice(args));
+    if (name === 'fit_budget') return JSON.stringify(runFitBudget(args));
     return JSON.stringify({error: `Неизвестный инструмент: ${name}`});
   } catch (err) {
     return toolError(err);

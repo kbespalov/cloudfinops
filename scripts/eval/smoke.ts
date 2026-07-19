@@ -84,6 +84,14 @@ const SUITE: SmokeCase[] = [
     expectBestOfferPct: true,
     expectAnswerMatch: /kubernetes|k8s|мастер|IP|object|хранилищ/i,
   },
+  {
+    id: 'fit-budget-100k',
+    q: 'Бюджет примерно 100 тысяч рублей в месяц — какую инфраструктуру я могу себе позволить? Подбери, не устраивай длинный опрос.',
+    expectTools: true,
+    expectToolMatch: /fit_budget|100000|budget/i,
+    expectPriceSignal: true,
+    expectAnswerMatch: /vCPU|ВМ|бюджет|утил/i,
+  },
 ];
 
 const CYRILLIC = /[А-Яа-яЁё]/;
@@ -117,7 +125,8 @@ function gradeCase(c: SmokeCase, run: Awaited<ReturnType<typeof runChat>>): Chec
     /\bwe will call\b/i.test(answer) ||
     /\bsearch_prices\b/.test(answer) ||
     /\bget_quote\b/.test(answer) ||
-    /\bcompare_unit_price\b/.test(answer);
+    /\bcompare_unit_price\b/.test(answer) ||
+    /\bfit_budget\b/.test(answer);
   checks.push({
     ok: !toolNameLeak,
     detail: toolNameLeak
