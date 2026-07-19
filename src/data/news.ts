@@ -487,6 +487,18 @@ export const newsItems: NewsItem[] = [
 
   // ——— Июль 2026 ———
   {
+    id: 'market-2026-07-kimi-k3-pause-subs',
+    date: '2026-07-19',
+    provider: 'market',
+    providerName: 'Рынок РФ',
+    title: 'Moonshot временно остановила новые подписки Kimi из‑за спроса на K3',
+    summary:
+      'После релиза Kimi K3 спрос за ~48 часов приблизил GPU Moonshot к пределу мощности: новые подписки временно приостановлены, приоритет вычислений — у действующих участников (их доступ не режут). Мощности наращивают и обещают открывать места партиями. Параллельно членство разделят на Kimi Membership (Web/App/Work) и Kimi Code Membership — чтобы точнее распределять compute. Для рынка это сигнал: даже сильный frontier упирается в ёмкость инференса; в РФ уже хостят предыдущее поколение (Kimi K2.6) у MWS и Cloud.ru.',
+    tags: ['ai', 'compute', 'finops'],
+    sourceUrl: 'https://twitter.com/kimi_moonshot/status/2078855608565207130',
+    sourceLabel: 'Kimi Moonshot · X',
+  },
+  {
     id: 'market-2026-07-qwen-38',
     date: '2026-07-19',
     provider: 'market',
