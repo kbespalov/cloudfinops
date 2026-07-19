@@ -6,6 +6,10 @@ metadata:
   service: ai
   category: paas.ai.inference
   title: Foundation Models — local (internal) inference tokens
+# AI inference PriceBook — dimensions for model size
+#   parameterCountB        — total parameters, billions (e.g. 120 = 120B, 1000 = 1T)
+#   activeParameterCountB  — MoE active parameters per token, billions (omit for dense)
+# Proprietary models without a public size leave these keys unset.
 spec:
   meters:
   - sku: cloudru.ai.gpt-oss-120b.input
@@ -20,7 +24,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-120b
       modelId: gpt-oss-120b
-      parameterCountB: 120
+      parameterCountB: 120  # total params, billions
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -45,7 +49,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-120b
       modelId: gpt-oss-120b
-      parameterCountB: 120
+      parameterCountB: 120  # total params, billions
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -70,8 +74,8 @@ spec:
     dimensions:
       modelFamily: Qwen3.6-35B-A3B
       modelId: qwen3.6-35b-a3b
-      parameterCountB: 35
-      activeParameterCountB: 3
+      parameterCountB: 35  # total params, billions
+      activeParameterCountB: 3  # MoE active params, billions
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -96,8 +100,8 @@ spec:
     dimensions:
       modelFamily: Qwen3.6-35B-A3B
       modelId: qwen3.6-35b-a3b
-      parameterCountB: 35
-      activeParameterCountB: 3
+      parameterCountB: 35  # total params, billions
+      activeParameterCountB: 3  # MoE active params, billions
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -122,8 +126,8 @@ spec:
     dimensions:
       modelFamily: Qwen3-Coder-Next
       modelId: qwen3-coder-next
-      parameterCountB: 80
-      activeParameterCountB: 3
+      parameterCountB: 80  # total params, billions
+      activeParameterCountB: 3  # MoE active params, billions
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -148,8 +152,8 @@ spec:
     dimensions:
       modelFamily: Qwen3-Coder-Next
       modelId: qwen3-coder-next
-      parameterCountB: 80
-      activeParameterCountB: 3
+      parameterCountB: 80  # total params, billions
+      activeParameterCountB: 3  # MoE active params, billions
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -174,8 +178,8 @@ spec:
     dimensions:
       modelFamily: Qwen3.5-397B-A17B
       modelId: qwen3.5-397b-a17b
-      parameterCountB: 397
-      activeParameterCountB: 17
+      parameterCountB: 397  # total params, billions
+      activeParameterCountB: 17  # MoE active params, billions
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -200,8 +204,8 @@ spec:
     dimensions:
       modelFamily: Qwen3.5-397B-A17B
       modelId: qwen3.5-397b-a17b
-      parameterCountB: 397
-      activeParameterCountB: 17
+      parameterCountB: 397  # total params, billions
+      activeParameterCountB: 17  # MoE active params, billions
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -226,8 +230,8 @@ spec:
     dimensions:
       modelFamily: GLM-4.7
       modelId: glm-4.7
-      parameterCountB: 358
-      activeParameterCountB: 32
+      parameterCountB: 358  # total params, billions
+      activeParameterCountB: 32  # MoE active params, billions
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -252,8 +256,8 @@ spec:
     dimensions:
       modelFamily: GLM-4.7
       modelId: glm-4.7
-      parameterCountB: 358
-      activeParameterCountB: 32
+      parameterCountB: 358  # total params, billions
+      activeParameterCountB: 32  # MoE active params, billions
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -278,6 +282,7 @@ spec:
     dimensions:
       modelFamily: GigaChat-2-Max
       modelId: gigachat-2-max
+      # parameterCountB: unset — size undisclosed (Sber proprietary)
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -302,6 +307,7 @@ spec:
     dimensions:
       modelFamily: GigaChat-2-Max
       modelId: gigachat-2-max
+      # parameterCountB: unset — size undisclosed (Sber proprietary)
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -326,8 +332,8 @@ spec:
     dimensions:
       modelFamily: GigaChat3-10B-A1.8B
       modelId: gigachat3-10b-a1.8b
-      parameterCountB: 10
-      activeParameterCountB: 1.8
+      parameterCountB: 10  # total params, billions
+      activeParameterCountB: 1.8  # MoE active params, billions
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -352,8 +358,8 @@ spec:
     dimensions:
       modelFamily: GigaChat3-10B-A1.8B
       modelId: gigachat3-10b-a1.8b
-      parameterCountB: 10
-      activeParameterCountB: 1.8
+      parameterCountB: 10  # total params, billions
+      activeParameterCountB: 1.8  # MoE active params, billions
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -378,8 +384,8 @@ spec:
     dimensions:
       modelFamily: MiniMax-M2.5
       modelId: minimax-m2.5
-      parameterCountB: 230
-      activeParameterCountB: 10
+      parameterCountB: 230  # total params, billions
+      activeParameterCountB: 10  # MoE active params, billions
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -404,8 +410,8 @@ spec:
     dimensions:
       modelFamily: MiniMax-M2.5
       modelId: minimax-m2.5
-      parameterCountB: 230
-      activeParameterCountB: 10
+      parameterCountB: 230  # total params, billions
+      activeParameterCountB: 10  # MoE active params, billions
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal

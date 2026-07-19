@@ -6,6 +6,10 @@ metadata:
   service: ai
   category: paas.ai.inference
   title: AI Studio — local inference tokens
+# AI inference PriceBook — dimensions for model size
+#   parameterCountB        — total parameters, billions (e.g. 120 = 120B, 1000 = 1T)
+#   activeParameterCountB  — MoE active parameters per token, billions (omit for dense)
+# Proprietary models without a public size leave these keys unset.
 spec:
   meters:
   - sku: yc.ai.gpt-oss-120b.input
@@ -20,7 +24,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-120b
       modelId: gpt-oss-120b
-      parameterCountB: 120
+      parameterCountB: 120  # total params, billions
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -46,7 +50,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-120b
       modelId: gpt-oss-120b
-      parameterCountB: 120
+      parameterCountB: 120  # total params, billions
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -72,7 +76,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-20b
       modelId: gpt-oss-20b
-      parameterCountB: 20
+      parameterCountB: 20  # total params, billions
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -98,7 +102,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-20b
       modelId: gpt-oss-20b
-      parameterCountB: 20
+      parameterCountB: 20  # total params, billions
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -124,7 +128,7 @@ spec:
     dimensions:
       modelFamily: Gemma3 27B
       modelId: gemma3-27b
-      parameterCountB: 27
+      parameterCountB: 27  # total params, billions
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -150,7 +154,7 @@ spec:
     dimensions:
       modelFamily: Gemma3 27B
       modelId: gemma3-27b
-      parameterCountB: 27
+      parameterCountB: 27  # total params, billions
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -176,8 +180,8 @@ spec:
     dimensions:
       modelFamily: Qwen 3.6 35B
       modelId: qwen-3.6-35b
-      parameterCountB: 35
-      activeParameterCountB: 3
+      parameterCountB: 35  # total params, billions
+      activeParameterCountB: 3  # MoE active params, billions
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -203,8 +207,8 @@ spec:
     dimensions:
       modelFamily: Qwen 3.6 35B
       modelId: qwen-3.6-35b
-      parameterCountB: 35
-      activeParameterCountB: 3
+      parameterCountB: 35  # total params, billions
+      activeParameterCountB: 3  # MoE active params, billions
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -230,7 +234,7 @@ spec:
     dimensions:
       modelFamily: Qwen 3.5 35B
       modelId: qwen-3.5-35b
-      parameterCountB: 35
+      parameterCountB: 35  # total params, billions
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -256,7 +260,7 @@ spec:
     dimensions:
       modelFamily: Qwen 3.5 35B
       modelId: qwen-3.5-35b
-      parameterCountB: 35
+      parameterCountB: 35  # total params, billions
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -282,8 +286,8 @@ spec:
     dimensions:
       modelFamily: Qwen3 235B
       modelId: qwen3-235b
-      parameterCountB: 235
-      activeParameterCountB: 22
+      parameterCountB: 235  # total params, billions
+      activeParameterCountB: 22  # MoE active params, billions
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -309,8 +313,8 @@ spec:
     dimensions:
       modelFamily: Qwen3 235B
       modelId: qwen3-235b
-      parameterCountB: 235
-      activeParameterCountB: 22
+      parameterCountB: 235  # total params, billions
+      activeParameterCountB: 22  # MoE active params, billions
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -336,6 +340,7 @@ spec:
     dimensions:
       modelFamily: YandexGPT Lite 5
       modelId: yandexgpt-lite-5
+      # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -361,6 +366,7 @@ spec:
     dimensions:
       modelFamily: YandexGPT Lite 5
       modelId: yandexgpt-lite-5
+      # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -386,6 +392,7 @@ spec:
     dimensions:
       modelFamily: YandexGPT Pro 5
       modelId: yandexgpt-pro-5
+      # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -411,6 +418,7 @@ spec:
     dimensions:
       modelFamily: YandexGPT Pro 5
       modelId: yandexgpt-pro-5
+      # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -436,6 +444,7 @@ spec:
     dimensions:
       modelFamily: YandexGPT Pro 5.1
       modelId: yandexgpt-pro-5.1
+      # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -461,6 +470,7 @@ spec:
     dimensions:
       modelFamily: YandexGPT Pro 5.1
       modelId: yandexgpt-pro-5.1
+      # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -486,6 +496,7 @@ spec:
     dimensions:
       modelFamily: Alice AI LLM
       modelId: alice-ai-llm
+      # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -511,6 +522,7 @@ spec:
     dimensions:
       modelFamily: Alice AI LLM
       modelId: alice-ai-llm
+      # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -536,6 +548,7 @@ spec:
     dimensions:
       modelFamily: Alice AI LLM Flash
       modelId: alice-ai-llm-flash
+      # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -561,6 +574,7 @@ spec:
     dimensions:
       modelFamily: Alice AI LLM Flash
       modelId: alice-ai-llm-flash
+      # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -586,8 +600,8 @@ spec:
     dimensions:
       modelFamily: DeepSeek v3.2
       modelId: deepseek-v3.2
-      parameterCountB: 671
-      activeParameterCountB: 37
+      parameterCountB: 671  # total params, billions
+      activeParameterCountB: 37  # MoE active params, billions
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -613,8 +627,8 @@ spec:
     dimensions:
       modelFamily: DeepSeek v3.2
       modelId: deepseek-v3.2
-      parameterCountB: 671
-      activeParameterCountB: 37
+      parameterCountB: 671  # total params, billions
+      activeParameterCountB: 37  # MoE active params, billions
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -640,8 +654,8 @@ spec:
     dimensions:
       modelFamily: DeepSeek v4 flash
       modelId: deepseek-v4-flash
-      parameterCountB: 284
-      activeParameterCountB: 13
+      parameterCountB: 284  # total params, billions
+      activeParameterCountB: 13  # MoE active params, billions
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -667,8 +681,8 @@ spec:
     dimensions:
       modelFamily: DeepSeek v4 flash
       modelId: deepseek-v4-flash
-      parameterCountB: 284
-      activeParameterCountB: 13
+      parameterCountB: 284  # total params, billions
+      activeParameterCountB: 13  # MoE active params, billions
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
