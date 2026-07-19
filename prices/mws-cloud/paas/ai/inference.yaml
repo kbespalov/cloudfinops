@@ -20,6 +20,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-120b
       modelId: gpt-oss-120b
+      parameterCountB: 120
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
@@ -43,6 +44,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-120b
       modelId: gpt-oss-120b
+      parameterCountB: 120
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
@@ -66,6 +68,7 @@ spec:
     dimensions:
       modelFamily: gemma-3-27b-it
       modelId: gemma-3-27b-it
+      parameterCountB: 27
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
@@ -89,6 +92,7 @@ spec:
     dimensions:
       modelFamily: gemma-3-27b-it
       modelId: gemma-3-27b-it
+      parameterCountB: 27
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
@@ -112,6 +116,7 @@ spec:
     dimensions:
       modelFamily: gemma-4-31b-it
       modelId: gemma-4-31b-it
+      parameterCountB: 31
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
@@ -135,6 +140,7 @@ spec:
     dimensions:
       modelFamily: gemma-4-31b-it
       modelId: gemma-4-31b-it
+      parameterCountB: 31
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
@@ -158,6 +164,7 @@ spec:
     dimensions:
       modelFamily: qwen3-32b
       modelId: qwen3-32b
+      parameterCountB: 32
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
@@ -181,6 +188,7 @@ spec:
     dimensions:
       modelFamily: qwen3-32b
       modelId: qwen3-32b
+      parameterCountB: 32
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
@@ -204,6 +212,8 @@ spec:
     dimensions:
       modelFamily: qwen3.6-35b-a3b
       modelId: qwen3.6-35b-a3b
+      parameterCountB: 35
+      activeParameterCountB: 3
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
@@ -227,6 +237,8 @@ spec:
     dimensions:
       modelFamily: qwen3.6-35b-a3b
       modelId: qwen3.6-35b-a3b
+      parameterCountB: 35
+      activeParameterCountB: 3
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
@@ -250,6 +262,8 @@ spec:
     dimensions:
       modelFamily: qwen3-235b-instruct
       modelId: qwen3-235b-instruct
+      parameterCountB: 235
+      activeParameterCountB: 22
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
@@ -273,6 +287,8 @@ spec:
     dimensions:
       modelFamily: qwen3-235b-instruct
       modelId: qwen3-235b-instruct
+      parameterCountB: 235
+      activeParameterCountB: 22
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
@@ -296,6 +312,8 @@ spec:
     dimensions:
       modelFamily: qwen3-coder-480b-a35b
       modelId: qwen3-coder-480b-a35b
+      parameterCountB: 480
+      activeParameterCountB: 35
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
@@ -319,6 +337,8 @@ spec:
     dimensions:
       modelFamily: qwen3-coder-480b-a35b
       modelId: qwen3-coder-480b-a35b
+      parameterCountB: 480
+      activeParameterCountB: 35
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
@@ -342,6 +362,8 @@ spec:
     dimensions:
       modelFamily: glm-5.2
       modelId: glm-5.2
+      parameterCountB: 744
+      activeParameterCountB: 40
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
@@ -365,6 +387,8 @@ spec:
     dimensions:
       modelFamily: glm-5.2
       modelId: glm-5.2
+      parameterCountB: 744
+      activeParameterCountB: 40
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
@@ -388,6 +412,7 @@ spec:
     dimensions:
       modelFamily: glm-4.6-357b
       modelId: glm-4.6-357b
+      parameterCountB: 357
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
@@ -411,6 +436,7 @@ spec:
     dimensions:
       modelFamily: glm-4.6-357b
       modelId: glm-4.6-357b
+      parameterCountB: 357
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
@@ -434,6 +460,8 @@ spec:
     dimensions:
       modelFamily: kimi-k2.6
       modelId: kimi-k2.6
+      parameterCountB: 1000
+      activeParameterCountB: 32
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
@@ -457,6 +485,8 @@ spec:
     dimensions:
       modelFamily: kimi-k2.6
       modelId: kimi-k2.6
+      parameterCountB: 1000
+      activeParameterCountB: 32
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
@@ -480,6 +510,8 @@ spec:
     dimensions:
       modelFamily: kimi-k2-instruct
       modelId: kimi-k2-instruct
+      parameterCountB: 1000
+      activeParameterCountB: 32
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
@@ -503,6 +535,8 @@ spec:
     dimensions:
       modelFamily: kimi-k2-instruct
       modelId: kimi-k2-instruct
+      parameterCountB: 1000
+      activeParameterCountB: 32
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output

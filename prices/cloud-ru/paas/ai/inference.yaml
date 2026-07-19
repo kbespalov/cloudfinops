@@ -20,6 +20,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-120b
       modelId: gpt-oss-120b
+      parameterCountB: 120
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -44,6 +45,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-120b
       modelId: gpt-oss-120b
+      parameterCountB: 120
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -68,6 +70,8 @@ spec:
     dimensions:
       modelFamily: Qwen3.6-35B-A3B
       modelId: qwen3.6-35b-a3b
+      parameterCountB: 35
+      activeParameterCountB: 3
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -92,6 +96,8 @@ spec:
     dimensions:
       modelFamily: Qwen3.6-35B-A3B
       modelId: qwen3.6-35b-a3b
+      parameterCountB: 35
+      activeParameterCountB: 3
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -116,6 +122,8 @@ spec:
     dimensions:
       modelFamily: Qwen3-Coder-Next
       modelId: qwen3-coder-next
+      parameterCountB: 80
+      activeParameterCountB: 3
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -140,6 +148,8 @@ spec:
     dimensions:
       modelFamily: Qwen3-Coder-Next
       modelId: qwen3-coder-next
+      parameterCountB: 80
+      activeParameterCountB: 3
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -164,6 +174,8 @@ spec:
     dimensions:
       modelFamily: Qwen3.5-397B-A17B
       modelId: qwen3.5-397b-a17b
+      parameterCountB: 397
+      activeParameterCountB: 17
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -188,6 +200,8 @@ spec:
     dimensions:
       modelFamily: Qwen3.5-397B-A17B
       modelId: qwen3.5-397b-a17b
+      parameterCountB: 397
+      activeParameterCountB: 17
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -212,6 +226,8 @@ spec:
     dimensions:
       modelFamily: GLM-4.7
       modelId: glm-4.7
+      parameterCountB: 358
+      activeParameterCountB: 32
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -236,6 +252,8 @@ spec:
     dimensions:
       modelFamily: GLM-4.7
       modelId: glm-4.7
+      parameterCountB: 358
+      activeParameterCountB: 32
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -308,6 +326,8 @@ spec:
     dimensions:
       modelFamily: GigaChat3-10B-A1.8B
       modelId: gigachat3-10b-a1.8b
+      parameterCountB: 10
+      activeParameterCountB: 1.8
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -332,6 +352,8 @@ spec:
     dimensions:
       modelFamily: GigaChat3-10B-A1.8B
       modelId: gigachat3-10b-a1.8b
+      parameterCountB: 10
+      activeParameterCountB: 1.8
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -356,6 +378,8 @@ spec:
     dimensions:
       modelFamily: MiniMax-M2.5
       modelId: minimax-m2.5
+      parameterCountB: 230
+      activeParameterCountB: 10
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal
@@ -380,6 +404,8 @@ spec:
     dimensions:
       modelFamily: MiniMax-M2.5
       modelId: minimax-m2.5
+      parameterCountB: 230
+      activeParameterCountB: 10
       inferenceScope: local
       serviceProduct: foundation-models
       placement: internal

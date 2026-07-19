@@ -783,6 +783,27 @@ export function extractRamGiB(meter: CatalogMeter): number | null {
   return null;
 }
 
+/** Format AI model size from dimensions, e.g. `35B`, `35B · 3B active`, `1T`. */
+export function formatParameterCount(meter: CatalogMeter): string | null {
+  const dims = meter.dimensions;
+  const total = Number(dims.parameterCountB);
+  if (!Number.isFinite(total) || total <= 0) return null;
+
+  const totalLabel =
+    total >= 1000 && total % 1000 === 0
+      ? `${total / 1000}T`
+      : total >= 1000
+        ? `${parseFloat((total / 1000).toFixed(2))}T`
+        : `${total}B`;
+
+  const active = Number(dims.activeParameterCountB);
+  if (Number.isFinite(active) && active > 0 && active !== total) {
+    const activeLabel = active >= 1000 ? `${parseFloat((active / 1000).toFixed(2))}T` : `${active}B`;
+    return `${totalLabel} · ${activeLabel} active`;
+  }
+  return totalLabel;
+}
+
 export function paramsLabel(meter: CatalogMeter): string {
   const dims = meter.dimensions;
   const parts: string[] = [];
@@ -791,6 +812,8 @@ export function paramsLabel(meter: CatalogMeter): string {
   if (k8sAvailability) parts.push(kubernetesAvailabilityLabel(k8sAvailability));
 
   if (isAiTokenMeter(meter)) {
+    const paramCount = formatParameterCount(meter);
+    if (paramCount) parts.push(paramCount);
     const unit = billingUnitLabel(meter);
     if (unit && unit !== '—') parts.push(unit);
   } else if (

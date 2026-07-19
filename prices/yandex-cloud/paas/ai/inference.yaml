@@ -20,6 +20,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-120b
       modelId: gpt-oss-120b
+      parameterCountB: 120
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -45,6 +46,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-120b
       modelId: gpt-oss-120b
+      parameterCountB: 120
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -70,6 +72,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-20b
       modelId: gpt-oss-20b
+      parameterCountB: 20
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -95,6 +98,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-20b
       modelId: gpt-oss-20b
+      parameterCountB: 20
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -120,6 +124,7 @@ spec:
     dimensions:
       modelFamily: Gemma3 27B
       modelId: gemma3-27b
+      parameterCountB: 27
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -145,6 +150,7 @@ spec:
     dimensions:
       modelFamily: Gemma3 27B
       modelId: gemma3-27b
+      parameterCountB: 27
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -170,6 +176,8 @@ spec:
     dimensions:
       modelFamily: Qwen 3.6 35B
       modelId: qwen-3.6-35b
+      parameterCountB: 35
+      activeParameterCountB: 3
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -195,6 +203,8 @@ spec:
     dimensions:
       modelFamily: Qwen 3.6 35B
       modelId: qwen-3.6-35b
+      parameterCountB: 35
+      activeParameterCountB: 3
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -220,6 +230,7 @@ spec:
     dimensions:
       modelFamily: Qwen 3.5 35B
       modelId: qwen-3.5-35b
+      parameterCountB: 35
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -245,6 +256,7 @@ spec:
     dimensions:
       modelFamily: Qwen 3.5 35B
       modelId: qwen-3.5-35b
+      parameterCountB: 35
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -270,6 +282,8 @@ spec:
     dimensions:
       modelFamily: Qwen3 235B
       modelId: qwen3-235b
+      parameterCountB: 235
+      activeParameterCountB: 22
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -295,6 +309,8 @@ spec:
     dimensions:
       modelFamily: Qwen3 235B
       modelId: qwen3-235b
+      parameterCountB: 235
+      activeParameterCountB: 22
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -570,6 +586,8 @@ spec:
     dimensions:
       modelFamily: DeepSeek v3.2
       modelId: deepseek-v3.2
+      parameterCountB: 671
+      activeParameterCountB: 37
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -595,6 +613,8 @@ spec:
     dimensions:
       modelFamily: DeepSeek v3.2
       modelId: deepseek-v3.2
+      parameterCountB: 671
+      activeParameterCountB: 37
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -620,6 +640,8 @@ spec:
     dimensions:
       modelFamily: DeepSeek v4 flash
       modelId: deepseek-v4-flash
+      parameterCountB: 284
+      activeParameterCountB: 13
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
@@ -645,6 +667,8 @@ spec:
     dimensions:
       modelFamily: DeepSeek v4 flash
       modelId: deepseek-v4-flash
+      parameterCountB: 284
+      activeParameterCountB: 13
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous

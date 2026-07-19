@@ -20,6 +20,7 @@ import {
   displayAmount,
   displayMeterName,
   formatAsOf,
+  formatParameterCount,
   formatPlatform,
   isAddressMeter,
   isGatewayMeter,
@@ -62,6 +63,7 @@ export function SkuDrawer({
   const platform = meter ? formatPlatform(meter.cpuPlatformFamily) : null;
   const showPlatform = Boolean(platform && platform !== 'Платформа не указана');
   const params = meter ? paramsLabel(meter) : '';
+  const parameterCount = meter ? formatParameterCount(meter) : null;
   const billingUnit =
     meter &&
     (isImageMeter(meter) ||
@@ -135,6 +137,9 @@ export function SkuDrawer({
               ) : null}
               {params && params !== '—' ? (
                 <DefinitionList.Item name="Конфигурация">{params}</DefinitionList.Item>
+              ) : null}
+              {parameterCount ? (
+                <DefinitionList.Item name="Параметры модели">{parameterCount}</DefinitionList.Item>
               ) : null}
               {billingUnit ? (
                 <DefinitionList.Item name="Единица биллинга">{billingUnit}</DefinitionList.Item>
