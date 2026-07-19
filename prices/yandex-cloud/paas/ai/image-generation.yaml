@@ -1,0 +1,59 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: yandex-cloud
+  layer: paas
+  service: ai
+  category: paas.ai.image-generation
+  title: AI Studio — image generation
+# Image generation PriceBook — dimensions
+#   modelCapability: image-generation
+# Flat per-request rate in AI Studio pricing (2,23 ₽ / image request).
+spec:
+  meters:
+  - sku: yc.ai.image.alice-ai-art.request
+    name: Alice AI ART · image request
+    meter: ai.image.generation.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-19'
+    sourceRefs: [yc.ai-studio]
+    dimensions:
+      modelFamily: Alice AI ART
+      modelId: aliceai-image-art-3.0
+      modelCapability: image-generation
+      inferenceScope: local
+      serviceProduct: ai-studio
+    notes: art://…/aliceai-image-art-3.0. Images API. 1 запрос = 2,23 ₽.
+    pricing:
+      rate:
+        amount: '2.23'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.image.yandex-art.request
+    name: YandexART · image request
+    meter: ai.image.generation.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-19'
+    sourceRefs: [yc.ai-studio]
+    dimensions:
+      modelFamily: YandexART
+      modelId: yandex-art-2.0
+      modelCapability: image-generation
+      inferenceScope: local
+      serviceProduct: ai-studio
+    notes: art://…/yandex-art-2.0. Доступна до 18 августа 2026. 1 запрос = 2,23 ₽.
+    pricing:
+      rate:
+        amount: '2.23'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable

@@ -6,7 +6,9 @@ metadata:
   service: ai
   category: paas.ai.inference
   title: Foundation Models — local (internal) inference tokens
-# AI inference PriceBook — dimensions for model size
+# AI inference PriceBook — dimensions
+#   modelCapability        — text-generation | speech | text-classification | text-embedding | image-generation
+#   (text-embedding ≈ Feature Structuring / векторизация)
 #   parameterCountB        — total parameters, billions (e.g. 120 = 120B, 1000 = 1T)
 #   activeParameterCountB  — MoE active parameters per token, billions (omit for dense)
 # Proprietary models without a public size leave these keys unset.
@@ -19,11 +21,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: gpt-oss-120b
       modelId: gpt-oss-120b
+      modelCapability: text-generation
       parameterCountB: 120  # total params, billions
       inferenceScope: local
       serviceProduct: foundation-models
@@ -44,11 +47,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: gpt-oss-120b
       modelId: gpt-oss-120b
+      modelCapability: text-generation
       parameterCountB: 120  # total params, billions
       inferenceScope: local
       serviceProduct: foundation-models
@@ -69,11 +73,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: Qwen3.6-35B-A3B
       modelId: qwen3.6-35b-a3b
+      modelCapability: text-generation
       parameterCountB: 35  # total params, billions
       activeParameterCountB: 3  # MoE active params, billions
       inferenceScope: local
@@ -95,11 +100,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: Qwen3.6-35B-A3B
       modelId: qwen3.6-35b-a3b
+      modelCapability: text-generation
       parameterCountB: 35  # total params, billions
       activeParameterCountB: 3  # MoE active params, billions
       inferenceScope: local
@@ -121,11 +127,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: Qwen3-Coder-Next
       modelId: qwen3-coder-next
+      modelCapability: text-generation
       parameterCountB: 80  # total params, billions
       activeParameterCountB: 3  # MoE active params, billions
       inferenceScope: local
@@ -147,11 +154,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: Qwen3-Coder-Next
       modelId: qwen3-coder-next
+      modelCapability: text-generation
       parameterCountB: 80  # total params, billions
       activeParameterCountB: 3  # MoE active params, billions
       inferenceScope: local
@@ -173,11 +181,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: Qwen3.5-397B-A17B
       modelId: qwen3.5-397b-a17b
+      modelCapability: text-generation
       parameterCountB: 397  # total params, billions
       activeParameterCountB: 17  # MoE active params, billions
       inferenceScope: local
@@ -199,11 +208,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: Qwen3.5-397B-A17B
       modelId: qwen3.5-397b-a17b
+      modelCapability: text-generation
       parameterCountB: 397  # total params, billions
       activeParameterCountB: 17  # MoE active params, billions
       inferenceScope: local
@@ -225,11 +235,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: GLM-4.7
       modelId: glm-4.7
+      modelCapability: text-generation
       parameterCountB: 358  # total params, billions
       activeParameterCountB: 32  # MoE active params, billions
       inferenceScope: local
@@ -251,11 +262,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: GLM-4.7
       modelId: glm-4.7
+      modelCapability: text-generation
       parameterCountB: 358  # total params, billions
       activeParameterCountB: 32  # MoE active params, billions
       inferenceScope: local
@@ -277,11 +289,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: GigaChat-2-Max
       modelId: gigachat-2-max
+      modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Sber proprietary)
       inferenceScope: local
       serviceProduct: foundation-models
@@ -302,11 +315,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: GigaChat-2-Max
       modelId: gigachat-2-max
+      modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Sber proprietary)
       inferenceScope: local
       serviceProduct: foundation-models
@@ -327,11 +341,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: GigaChat3-10B-A1.8B
       modelId: gigachat3-10b-a1.8b
+      modelCapability: text-generation
       parameterCountB: 10  # total params, billions
       activeParameterCountB: 1.8  # MoE active params, billions
       inferenceScope: local
@@ -353,11 +368,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: GigaChat3-10B-A1.8B
       modelId: gigachat3-10b-a1.8b
+      modelCapability: text-generation
       parameterCountB: 10  # total params, billions
       activeParameterCountB: 1.8  # MoE active params, billions
       inferenceScope: local
@@ -379,11 +395,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: MiniMax-M2.5
       modelId: minimax-m2.5
+      modelCapability: text-generation
       parameterCountB: 230  # total params, billions
       activeParameterCountB: 10  # MoE active params, billions
       inferenceScope: local
@@ -405,11 +422,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: MiniMax-M2.5
       modelId: minimax-m2.5
+      modelCapability: text-generation
       parameterCountB: 230  # total params, billions
       activeParameterCountB: 10  # MoE active params, billions
       inferenceScope: local
@@ -420,6 +438,58 @@ spec:
     pricing:
       rate:
         amount: '475.80'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.ai.minimax-m3.input
+    name: MiniMax M3 · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-19'
+    sourceRefs: [cloudru.foundation-models]
+    dimensions:
+      modelFamily: MiniMax M3
+      modelId: minimax-m3
+      modelCapability: text-generation
+      # parameterCountB: unset — size not confirmed in tariff name
+      inferenceScope: local
+      serviceProduct: foundation-models
+      placement: internal
+      tokenDirection: input
+    notes: Cloud.ru Evolution Foundation Models, внутренняя модель. Цена с НДС из тарифа 7.EVO.11.2 (ред. 260619, с 15.07.2026).
+    pricing:
+      rate:
+        amount: '240.218'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.ai.minimax-m3.output
+    name: MiniMax M3 · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-19'
+    sourceRefs: [cloudru.foundation-models]
+    dimensions:
+      modelFamily: MiniMax M3
+      modelId: minimax-m3
+      modelCapability: text-generation
+      # parameterCountB: unset — size not confirmed in tariff name
+      inferenceScope: local
+      serviceProduct: foundation-models
+      placement: internal
+      tokenDirection: output
+    notes: Cloud.ru Evolution Foundation Models, внутренняя модель. Цена с НДС из тарифа 7.EVO.11.2 (ред. 260619, с 15.07.2026).
+    pricing:
+      rate:
+        amount: '1008.8546'
         currency: RUB
         unit: {quantity: 1M-token, period: usage}
         vat: included

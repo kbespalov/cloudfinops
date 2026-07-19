@@ -31,13 +31,16 @@ spec:
     - ai.inference.tokens.output
   - id: yc.ai-studio
     title: Правила тарификации Yandex AI Studio
-    url: https://yandex.cloud/ru/docs/ai-studio/pricing
+    url: https://aistudio.yandex.ru/docs/ru/ai-studio/pricing
     type: html
     access: public
     priority: 1
     covers:
     - ai.inference.tokens.input
     - ai.inference.tokens.output
+    - ai.embeddings.tokens
+    - ai.classification.requests
+    - ai.image.generation.requests
   - id: yc.compute
     title: Правила тарификации Compute Cloud
     url: https://yandex.cloud/ru/docs/compute/pricing

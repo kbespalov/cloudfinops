@@ -1,0 +1,88 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: yandex-cloud
+  layer: paas
+  service: ai
+  category: paas.ai.classification
+  title: AI Studio — text classification
+# Classification PriceBook — dimensions
+#   modelCapability: text-classification
+# Billing unit is a request chunk (Lite ≤1000 tokens, Pro/tuned ≤250 tokens), not 1M-token.
+spec:
+  meters:
+  - sku: yc.ai.classification.yandexgpt-lite.request
+    name: Classifier · YandexGPT Lite · request
+    meter: ai.classification.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-19'
+    sourceRefs: [yc.ai-studio]
+    dimensions:
+      modelFamily: YandexGPT Lite Classifier
+      modelId: yandexgpt-lite-classifier
+      modelCapability: text-classification
+      classificationUnitTokens: 1000
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+    notes: cls://…/yandexgpt-lite/latest. 1 запрос до 1000 токенов = 0,1525 ₽.
+    pricing:
+      rate:
+        amount: '0.1525'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.classification.yandexgpt-pro.request
+    name: Classifier · YandexGPT Pro · request
+    meter: ai.classification.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-19'
+    sourceRefs: [yc.ai-studio]
+    dimensions:
+      modelFamily: YandexGPT Pro Classifier
+      modelId: yandexgpt-pro-classifier
+      modelCapability: text-classification
+      classificationUnitTokens: 250
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+    notes: cls://…/yandexgpt/latest. 1 запрос до 250 токенов = 0,1525 ₽.
+    pricing:
+      rate:
+        amount: '0.1525'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.classification.tuned.request
+    name: Classifier · fine-tuned · request
+    meter: ai.classification.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-19'
+    sourceRefs: [yc.ai-studio]
+    dimensions:
+      modelFamily: Fine-tuned Classifier
+      modelId: tuned-classifier
+      modelCapability: text-classification
+      classificationUnitTokens: 250
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+    notes: Дообученный классификатор. 1 запрос до 250 токенов = 0,1525 ₽.
+    pricing:
+      rate:
+        amount: '0.1525'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: included
+        byteBasis: not-applicable

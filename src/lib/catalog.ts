@@ -142,12 +142,19 @@ export function isUsageMeter(meter: CatalogMeter): boolean {
     meter.unitPeriod === 'usage' ||
     meter.normalizedPeriod === 'usage' ||
     meter.meter.startsWith('network.traffic.') ||
-    meter.meter.startsWith('ai.inference.')
+    meter.meter.startsWith('ai.inference.') ||
+    meter.meter.startsWith('ai.embeddings.')
   );
 }
 
+/** Token-priced AI meters (generation / speech / embeddings). Excludes per-request AI SKUs. */
 export function isAiTokenMeter(meter: CatalogMeter): boolean {
-  return meter.categoryKey === 'ai' || meter.meter.startsWith('ai.inference.');
+  if (isRequestMeter(meter)) return false;
+  return (
+    meter.meter.startsWith('ai.inference.') ||
+    meter.meter.startsWith('ai.embeddings.') ||
+    (meter.categoryKey === 'ai' && meter.unitQuantity === '1M-token')
+  );
 }
 
 export function isAddressMeter(meter: CatalogMeter): boolean {
@@ -308,6 +315,7 @@ export function meterMatchesComputeFacet(meter: CatalogMeter, facet: ComputeFace
 
 /** Human-readable billing unit for the specs column (e.g. «GiB · час», «IP · час»). */
 export function billingUnitLabel(meter: CatalogMeter): string {
+  if (isRequestMeter(meter)) return 'request';
   if (isAiTokenMeter(meter)) {
     const direction = extractAiTokenDirection(meter);
     if (direction === 'input') return 'input · 1M ток.';

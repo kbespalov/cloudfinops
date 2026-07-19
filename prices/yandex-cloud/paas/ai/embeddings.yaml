@@ -1,0 +1,113 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: yandex-cloud
+  layer: paas
+  service: ai
+  category: paas.ai.embeddings
+  title: AI Studio — text embeddings
+# Embeddings PriceBook — dimensions
+#   modelCapability: text-embedding  (Feature Structuring / векторизация)
+# Flat rate for all embedding models in AI Studio pricing (0,0101 ₽ / 1k tokens).
+spec:
+  meters:
+  - sku: yc.ai.embeddings.text-search-doc.tokens
+    name: Yandex Text Embeddings (doc) · tokens
+    meter: ai.embeddings.tokens
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-19'
+    sourceRefs: [yc.ai-studio]
+    dimensions:
+      modelFamily: Yandex Text Embeddings (doc)
+      modelId: text-search-doc
+      modelCapability: text-embedding
+      embeddingVersion: 1
+      embeddingRole: doc
+      inferenceScope: local
+      serviceProduct: ai-studio
+    notes: emb://…/text-search-doc/latest. Ставка pricing 0,0101 ₽/1k → 10,1 ₽/1M.
+    pricing:
+      rate:
+        amount: '10.1'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.embeddings.text-search-query.tokens
+    name: Yandex Text Embeddings (query) · tokens
+    meter: ai.embeddings.tokens
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-19'
+    sourceRefs: [yc.ai-studio]
+    dimensions:
+      modelFamily: Yandex Text Embeddings (query)
+      modelId: text-search-query
+      modelCapability: text-embedding
+      embeddingVersion: 1
+      embeddingRole: query
+      inferenceScope: local
+      serviceProduct: ai-studio
+    notes: emb://…/text-search-query/latest. Ставка pricing 0,0101 ₽/1k → 10,1 ₽/1M.
+    pricing:
+      rate:
+        amount: '10.1'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.embeddings.text-embeddings-v2-doc.tokens
+    name: Yandex Text Embeddings v2 (doc) · tokens
+    meter: ai.embeddings.tokens
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-19'
+    sourceRefs: [yc.ai-studio]
+    dimensions:
+      modelFamily: Yandex Text Embeddings v2 (doc)
+      modelId: text-embeddings-v2-doc
+      modelCapability: text-embedding
+      embeddingVersion: 2
+      embeddingRole: doc
+      inferenceScope: local
+      serviceProduct: ai-studio
+    notes: emb://…/text-embeddings-v2-doc/. Ставка pricing 0,0101 ₽/1k → 10,1 ₽/1M.
+    pricing:
+      rate:
+        amount: '10.1'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.embeddings.text-embeddings-v2-query.tokens
+    name: Yandex Text Embeddings v2 (query) · tokens
+    meter: ai.embeddings.tokens
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-19'
+    sourceRefs: [yc.ai-studio]
+    dimensions:
+      modelFamily: Yandex Text Embeddings v2 (query)
+      modelId: text-embeddings-v2-query
+      modelCapability: text-embedding
+      embeddingVersion: 2
+      embeddingRole: query
+      inferenceScope: local
+      serviceProduct: ai-studio
+    notes: emb://…/text-embeddings-v2-query/. Ставка pricing 0,0101 ₽/1k → 10,1 ₽/1M.
+    pricing:
+      rate:
+        amount: '10.1'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable

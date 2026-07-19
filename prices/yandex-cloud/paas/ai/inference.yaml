@@ -6,10 +6,14 @@ metadata:
   service: ai
   category: paas.ai.inference
   title: AI Studio — local inference tokens
-# AI inference PriceBook — dimensions for model size
+# AI inference PriceBook — dimensions
+#   modelCapability        — task family:
+#     text-generation | speech | text-classification | text-embedding | image-generation
+#     (text-embedding ≈ Feature Structuring / векторизация)
 #   parameterCountB        — total parameters, billions (e.g. 120 = 120B, 1000 = 1T)
 #   activeParameterCountB  — MoE active parameters per token, billions (omit for dense)
 # Proprietary models without a public size leave these keys unset.
+# Source: aistudio.yandex.ru docs + pricing (checked 2026-07-19).
 spec:
   meters:
   - sku: yc.ai.gpt-oss-120b.input
@@ -19,11 +23,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: gpt-oss-120b
       modelId: gpt-oss-120b
+      modelCapability: text-generation
       parameterCountB: 120  # total params, billions
       inferenceScope: local
       serviceProduct: ai-studio
@@ -45,11 +50,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: gpt-oss-120b
       modelId: gpt-oss-120b
+      modelCapability: text-generation
       parameterCountB: 120  # total params, billions
       inferenceScope: local
       serviceProduct: ai-studio
@@ -71,11 +77,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: gpt-oss-20b
       modelId: gpt-oss-20b
+      modelCapability: text-generation
       parameterCountB: 20  # total params, billions
       inferenceScope: local
       serviceProduct: ai-studio
@@ -97,11 +104,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: gpt-oss-20b
       modelId: gpt-oss-20b
+      modelCapability: text-generation
       parameterCountB: 20  # total params, billions
       inferenceScope: local
       serviceProduct: ai-studio
@@ -123,21 +131,22 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: Gemma3 27B
       modelId: gemma3-27b
+      modelCapability: text-generation
       parameterCountB: 27  # total params, billions
       inferenceScope: local
       serviceProduct: ai-studio
-      inferenceMode: synchronous
+      inferenceMode: batch
       tokenDirection: input
       yandexSkuId: dn2bimnfbdouf6xmpgrh
-    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    notes: Yandex AI Studio, batch mode (в sync-таблице больше нет). Ставка из pricing batch 0,41 ₽/1k → 410 ₽/1M.
     pricing:
       rate:
-        amount: '400'
+        amount: '410'
         currency: RUB
         unit: {quantity: 1M-token, period: usage}
         vat: included
@@ -149,21 +158,22 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: Gemma3 27B
       modelId: gemma3-27b
+      modelCapability: text-generation
       parameterCountB: 27  # total params, billions
       inferenceScope: local
       serviceProduct: ai-studio
-      inferenceMode: synchronous
+      inferenceMode: batch
       tokenDirection: output
       yandexSkuId: dn2ecxz6xds62s2invvw
-    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    notes: Yandex AI Studio, batch mode (в sync-таблице больше нет). Ставка из pricing batch 0,41 ₽/1k → 410 ₽/1M.
     pricing:
       rate:
-        amount: '400'
+        amount: '410'
         currency: RUB
         unit: {quantity: 1M-token, period: usage}
         vat: included
@@ -175,11 +185,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: Qwen 3.6 35B
       modelId: qwen-3.6-35b
+      modelCapability: text-generation
       parameterCountB: 35  # total params, billions
       activeParameterCountB: 3  # MoE active params, billions
       inferenceScope: local
@@ -202,11 +213,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: Qwen 3.6 35B
       modelId: qwen-3.6-35b
+      modelCapability: text-generation
       parameterCountB: 35  # total params, billions
       activeParameterCountB: 3  # MoE active params, billions
       inferenceScope: local
@@ -229,18 +241,19 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: Qwen 3.5 35B
       modelId: qwen-3.5-35b
+      modelCapability: text-generation
       parameterCountB: 35  # total params, billions
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
       tokenDirection: input
       yandexSkuId: dn2bye4uvektqrblglyj
-    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    notes: Нет в актуальной таблице тарифов AI Studio (2026-07-19); SKU Billing API сохранён. Возможна депрекация.
     pricing:
       rate:
         amount: '200'
@@ -255,18 +268,19 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: Qwen 3.5 35B
       modelId: qwen-3.5-35b
+      modelCapability: text-generation
       parameterCountB: 35  # total params, billions
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
       tokenDirection: output
       yandexSkuId: dn2666nn3ql7h7nvwbw4
-    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    notes: Нет в актуальной таблице тарифов AI Studio (2026-07-19); SKU Billing API сохранён. Возможна депрекация.
     pricing:
       rate:
         amount: '300'
@@ -281,11 +295,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: Qwen3 235B
       modelId: qwen3-235b
+      modelCapability: text-generation
       parameterCountB: 235  # total params, billions
       activeParameterCountB: 22  # MoE active params, billions
       inferenceScope: local
@@ -308,11 +323,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: Qwen3 235B
       modelId: qwen3-235b
+      modelCapability: text-generation
       parameterCountB: 235  # total params, billions
       activeParameterCountB: 22  # MoE active params, billions
       inferenceScope: local
@@ -335,11 +351,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: YandexGPT Lite 5
       modelId: yandexgpt-lite-5
+      modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
       serviceProduct: ai-studio
@@ -361,11 +378,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: YandexGPT Lite 5
       modelId: yandexgpt-lite-5
+      modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
       serviceProduct: ai-studio
@@ -387,11 +405,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: YandexGPT Pro 5
       modelId: yandexgpt-pro-5
+      modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
       serviceProduct: ai-studio
@@ -413,11 +432,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: YandexGPT Pro 5
       modelId: yandexgpt-pro-5
+      modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
       serviceProduct: ai-studio
@@ -439,11 +459,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: YandexGPT Pro 5.1
       modelId: yandexgpt-pro-5.1
+      modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
       serviceProduct: ai-studio
@@ -465,11 +486,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: YandexGPT Pro 5.1
       modelId: yandexgpt-pro-5.1
+      modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
       serviceProduct: ai-studio
@@ -491,11 +513,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: Alice AI LLM
       modelId: alice-ai-llm
+      modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
       serviceProduct: ai-studio
@@ -517,11 +540,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: Alice AI LLM
       modelId: alice-ai-llm
+      modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
       serviceProduct: ai-studio
@@ -543,11 +567,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: Alice AI LLM Flash
       modelId: alice-ai-llm-flash
+      modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
       serviceProduct: ai-studio
@@ -569,11 +594,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: Alice AI LLM Flash
       modelId: alice-ai-llm-flash
+      modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
       serviceProduct: ai-studio
@@ -595,11 +621,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: DeepSeek v3.2
       modelId: deepseek-v3.2
+      modelCapability: text-generation
       parameterCountB: 671  # total params, billions
       activeParameterCountB: 37  # MoE active params, billions
       inferenceScope: local
@@ -607,7 +634,7 @@ spec:
       inferenceMode: synchronous
       tokenDirection: input
       yandexSkuId: dn26zqwa3c7glcs4g5ga
-    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    notes: С 28 мая 2026 URI deepseek-v3.2 переводится на DeepSeek V4 Flash. SKU Billing сохранён.
     pricing:
       rate:
         amount: '500'
@@ -622,11 +649,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: DeepSeek v3.2
       modelId: deepseek-v3.2
+      modelCapability: text-generation
       parameterCountB: 671  # total params, billions
       activeParameterCountB: 37  # MoE active params, billions
       inferenceScope: local
@@ -634,7 +662,7 @@ spec:
       inferenceMode: synchronous
       tokenDirection: output
       yandexSkuId: dn2gpa5w7bzuugyvqxgd
-    notes: Yandex AI Studio, synchronous local inference. Ставка Billing API (1k×token → 1M).
+    notes: С 28 мая 2026 URI deepseek-v3.2 переводится на DeepSeek V4 Flash. SKU Billing сохранён.
     pricing:
       rate:
         amount: '800'
@@ -649,11 +677,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: DeepSeek v4 flash
       modelId: deepseek-v4-flash
+      modelCapability: text-generation
       parameterCountB: 284  # total params, billions
       activeParameterCountB: 13  # MoE active params, billions
       inferenceScope: local
@@ -676,11 +705,12 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs: [yc.billing-api, yc.ai-studio]
     dimensions:
       modelFamily: DeepSeek v4 flash
       modelId: deepseek-v4-flash
+      modelCapability: text-generation
       parameterCountB: 284  # total params, billions
       activeParameterCountB: 13  # MoE active params, billions
       inferenceScope: local
@@ -692,6 +722,110 @@ spec:
     pricing:
       rate:
         amount: '500'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.speech-realtime-260528.input
+    name: Speech Realtime 260528 · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-19'
+    sourceRefs: [yc.ai-studio]
+    dimensions:
+      modelFamily: Speech Realtime 260528
+      modelId: speech-realtime-260528
+      modelCapability: speech
+      # parameterCountB: unset — size undisclosed
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: input
+    notes: Yandex AI Studio Realtime API. Ставка pricing 0,1 ₽/1k → 100 ₽/1M.
+    pricing:
+      rate:
+        amount: '100'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.speech-realtime-260528.output
+    name: Speech Realtime 260528 · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-19'
+    sourceRefs: [yc.ai-studio]
+    dimensions:
+      modelFamily: Speech Realtime 260528
+      modelId: speech-realtime-260528
+      modelCapability: speech
+      # parameterCountB: unset — size undisclosed
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: output
+    notes: Yandex AI Studio Realtime API. Ставка pricing 0,2 ₽/1k → 200 ₽/1M.
+    pricing:
+      rate:
+        amount: '200'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.speech-realtime-250923.input
+    name: Speech Realtime 250923 · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-19'
+    sourceRefs: [yc.ai-studio]
+    dimensions:
+      modelFamily: Speech Realtime 250923
+      modelId: speech-realtime-250923
+      modelCapability: speech
+      # parameterCountB: unset — size undisclosed
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: input
+    notes: Yandex AI Studio Realtime API (legacy). Ставка pricing 0,8 ₽/1k → 800 ₽/1M.
+    pricing:
+      rate:
+        amount: '800'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: yc.ai.speech-realtime-250923.output
+    name: Speech Realtime 250923 · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-19'
+    sourceRefs: [yc.ai-studio]
+    dimensions:
+      modelFamily: Speech Realtime 250923
+      modelId: speech-realtime-250923
+      modelCapability: speech
+      # parameterCountB: unset — size undisclosed
+      inferenceScope: local
+      serviceProduct: ai-studio
+      inferenceMode: synchronous
+      tokenDirection: output
+    notes: Yandex AI Studio Realtime API (legacy). Ставка pricing 0,8 ₽/1k → 800 ₽/1M.
+    pricing:
+      rate:
+        amount: '800'
         currency: RUB
         unit: {quantity: 1M-token, period: usage}
         vat: included
