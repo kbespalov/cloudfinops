@@ -51,8 +51,10 @@ spec:
         formula: native hourly rate
         vat: included
     notes: >
-      Сетевой диск NBS-PL2 с настраиваемой производительностью; объём и дополнительные
-      IOPS тарифицируются отдельно.
+      Mid-tier сетевой диск: в цену объёма входят 1 000 IOPS (и ~32 МиБ/с);
+      лимит 1 000–10 000. Доп. IOPS — отдельный SKU (нативно пачками по 100,
+      в каталоге нормализовано в ₽/IOPS·час). Ближе к Selectel Универсальный v2,
+      чем к Быстрому v2 (база 25 000).
   - sku: mws.disk.nbs-pl2-iops
     name: Дополнительная производительность диска NBS-PL2
     meter: storage.block.iops
@@ -73,6 +75,7 @@ spec:
       storageTopology: network
       nativeBillingStepIops: 100
       nativeHourlyAmountPerStep: '0.0339'
+      iopsChargedSeparately: true
       includedIops: 1000
       maximumIops: 10000
       futureRateFrom: '2026-08-01'
@@ -94,8 +97,10 @@ spec:
           period: hour
         formula: 0.0339 RUB per 100 IOPS-hour / 100
         vat: included
-    notes: Базовые 1000 IOPS включены в цену емкости; ставка применяется только к заказанным дополнительным
-      IOPS.
+    notes: >
+      Нативно 0,0339 ₽/ч за пачку 100 IOPS; в каталоге 0,000339 ₽/IOPS·час.
+      Ставка только сверх включённых 1 000 IOPS (макс. 10 000). Не сравнивать
+      напрямую с Selectel Быстрый v2 без учёта базы/класса диска.
   - sku: mws.compute.image.capacity
     name: Образ ВМ
     meter: storage.image.capacity

@@ -67,6 +67,57 @@ describe('buildSkuComparePrompt', () => {
     assert.match(prompt, /цена в каталоге не указана/);
   });
 
+  it('includes disk IOPS base/max when dimensions are present', () => {
+    const prompt = buildSkuComparePrompt(
+      fixtureMeter({
+        sku: 'selectel.disk.fast-ssd-v2-iops',
+        name: 'Дополнительные IOPS быстрого SSD v2',
+        meter: 'storage.block.iops',
+        category: 'iaas.storage.block',
+        categoryKey: 'compute',
+        provider: 'selectel',
+        providerName: 'Selectel',
+        unitQuantity: 'IOPS',
+        dimensions: {
+          diskType: 'fast-ssd-v2',
+          includedIops: 25000,
+          maximumIops: 75000,
+          iopsChargedSeparately: true,
+        },
+      }),
+      'unit',
+    );
+
+    assert.match(prompt, /IOPS диска: база 25\s?000/);
+    assert.match(prompt, /макс\. 75\s?000/);
+    assert.match(prompt, /сверх базы/);
+  });
+
+  it('describes fixed IOPS without implying a separate IOPS rate', () => {
+    const prompt = buildSkuComparePrompt(
+      fixtureMeter({
+        sku: 't1.disk.basic',
+        name: 'Дисковое пространство Basic',
+        meter: 'storage.block.capacity',
+        category: 'iaas.storage.block',
+        categoryKey: 'compute',
+        provider: 't1-cloud',
+        providerName: 'T1 Cloud',
+        unitQuantity: 'GiB',
+        dimensions: {
+          diskType: 'basic',
+          includedIops: 3000,
+          maximumIops: 3000,
+          iopsChargedSeparately: false,
+        },
+      }),
+      'unit',
+    );
+
+    assert.match(prompt, /фиксировано до 3\s?000/);
+    assert.doesNotMatch(prompt, /сверх базы/);
+  });
+
   it('builds a chat deeplink that encodes the full prompt', () => {
     const meter = catalog.meters.find((m) => m.provider === 'yandex-cloud') ?? catalog.meters[0]!;
     const prompt = buildSkuComparePrompt(meter, 'month');

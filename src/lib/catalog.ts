@@ -525,6 +525,28 @@ export function extractDiskVariant(meter: CatalogMeter): string | null {
   return null;
 }
 
+/** Included / max IOPS from price-book dimensions (block disks). */
+export function extractDiskIopsLimits(meter: CatalogMeter): {
+  included: number | null;
+  maximum: number | null;
+  /** null = unknown; false = fixed IOPS in GiB rate (e.g. T1). */
+  chargedSeparately: boolean | null;
+} {
+  if (!meter.meter.startsWith('storage.block.')) {
+    return {included: null, maximum: null, chargedSeparately: null};
+  }
+  const dims = meter.dimensions;
+  const included = typeof dims.includedIops === 'number' ? dims.includedIops : null;
+  const maximum = typeof dims.maximumIops === 'number' ? dims.maximumIops : null;
+  const chargedSeparately =
+    typeof dims.iopsChargedSeparately === 'boolean' ? dims.iopsChargedSeparately : null;
+  return {included, maximum, chargedSeparately};
+}
+
+function formatIopsCount(n: number): string {
+  return n.toLocaleString('ru-RU');
+}
+
 function displayBlockDiskName(meter: CatalogMeter): string {
   const media = extractDiskMedia(meter) || 'SSD';
   const variant = extractDiskVariant(meter);
@@ -847,6 +869,21 @@ export function paramsLabel(meter: CatalogMeter): string {
     }
     if (typeof dims.guaranteedVcpuShare === 'string') parts.push(dims.guaranteedVcpuShare);
     if (typeof dims.gpuCount === 'number') parts.push(`${dims.gpuCount} GPU`);
+  }
+
+  const iopsLimits = extractDiskIopsLimits(meter);
+  if (iopsLimits.chargedSeparately === false && iopsLimits.maximum != null) {
+    parts.push(`до ${formatIopsCount(iopsLimits.maximum)} IOPS`);
+  } else {
+    if (iopsLimits.included != null) {
+      parts.push(`база ${formatIopsCount(iopsLimits.included)} IOPS`);
+    }
+    if (
+      iopsLimits.maximum != null &&
+      iopsLimits.maximum !== iopsLimits.included
+    ) {
+      parts.push(`до ${formatIopsCount(iopsLimits.maximum)}`);
+    }
   }
 
   const platform = formatPlatform(meter.cpuPlatformFamily);

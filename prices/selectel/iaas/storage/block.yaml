@@ -84,6 +84,9 @@ spec:
       storageInterface: nvme
       storageTopology: network
       nativeMediaLabel: SSD NVMe
+      iopsChargedSeparately: true
+      includedIops: 25000
+      maximumIops: 75000
     pricing:
       rate:
         amount: '0.0332'
@@ -93,6 +96,9 @@ spec:
           period: hour
         vat: included
         byteBasis: binary
+    notes: >
+      В цену объёма входят первые 25 000 IOPS; лимит настраивается 25 000–75 000
+      без разделения на чтение/запись (ru-6). Доп. IOPS — отдельный SKU.
   - sku: selectel.disk.universal-ssd-v2
     name: Сетевой универсальный SSD v2
     meter: storage.block.capacity
@@ -112,6 +118,9 @@ spec:
       storageMedia: ssd
       storageInterface: unknown
       storageTopology: network
+      iopsChargedSeparately: true
+      includedIops: 2000
+      maximumIops: 16000
     pricing:
       rate:
         amount: '0.0144'
@@ -121,6 +130,10 @@ spec:
           period: hour
         vat: included
         byteBasis: binary
+    notes: >
+      В цену объёма входят первые 2 000 IOPS; лимит настраивается 2 000–16 000
+      без разделения на чтение/запись. Доп. IOPS — отдельный SKU. Ближе к mid-tier
+      (как MWS NBS-PL2), чем Быстрый v2.
   - sku: selectel.disk.fast-ssd-v2-iops
     name: Дополнительные IOPS быстрого SSD v2
     meter: storage.block.iops
@@ -139,6 +152,9 @@ spec:
       storageMedia: ssd
       storageInterface: nvme
       storageTopology: network
+      iopsChargedSeparately: true
+      includedIops: 25000
+      maximumIops: 75000
     pricing:
       rate:
         amount: '0.0001'
@@ -148,6 +164,9 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
+    notes: >
+      Ставка за 1 IOPS сверх включённых 25 000 (база в цене объёма). Лимит диска
+      25 000–75 000 IOPS. Не путать с mid-tier вроде MWS NBS-PL2 (база 1 000, макс. 10 000).
   - sku: selectel.disk.universal-ssd-v2-iops
     name: Дополнительные IOPS универсального SSD v2
     meter: storage.block.iops
@@ -166,6 +185,9 @@ spec:
       storageMedia: ssd
       storageInterface: unknown
       storageTopology: network
+      iopsChargedSeparately: true
+      includedIops: 2000
+      maximumIops: 16000
     pricing:
       rate:
         amount: '0.0004'
@@ -175,7 +197,10 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Ставки зависят от пула; в каталоге указана ставка для ru-6a.
+    notes: >
+      Ставка за 1 IOPS сверх включённых 2 000 (база в цене объёма). Лимит 2 000–16 000.
+      Ставки зависят от пула; в каталоге — ru-6a. Для сравнения с MWS NBS-PL2 это
+      более близкий аналог, чем Быстрый v2.
   - sku: selectel.compute.image.capacity
     name: Образ ВМ
     meter: storage.image.capacity

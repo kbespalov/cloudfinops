@@ -21,6 +21,7 @@ import {
   billingUnitLabel,
   displayAmount,
   displayMeterName,
+  extractDiskIopsLimits,
   formatAsOf,
   formatParameterCount,
   formatPlatform,
@@ -81,6 +82,9 @@ export function SkuDrawer({
       ? billingUnitLabel(meter)
       : null;
   const sources = meter ? resolveMeterSources(meter) : [];
+  const iopsLimits = meter
+    ? extractDiskIopsLimits(meter)
+    : {included: null, maximum: null, chargedSeparately: null};
   const compareHref = meter
     ? chatUrlForQuery(buildSkuComparePrompt(meter, period))
     : '/chat';
@@ -154,6 +158,24 @@ export function SkuDrawer({
                 {billingUnit ? (
                   <DefinitionList.Item name="Единица биллинга">{billingUnit}</DefinitionList.Item>
                 ) : null}
+                {iopsLimits.chargedSeparately === false && iopsLimits.maximum != null ? (
+                  <DefinitionList.Item name="IOPS">
+                    до {iopsLimits.maximum.toLocaleString('ru-RU')} (в цене объёма)
+                  </DefinitionList.Item>
+                ) : (
+                  <>
+                    {iopsLimits.included != null ? (
+                      <DefinitionList.Item name="База IOPS">
+                        {iopsLimits.included.toLocaleString('ru-RU')} (в цене объёма)
+                      </DefinitionList.Item>
+                    ) : null}
+                    {iopsLimits.maximum != null ? (
+                      <DefinitionList.Item name="Макс. IOPS">
+                        {iopsLimits.maximum.toLocaleString('ru-RU')}
+                      </DefinitionList.Item>
+                    ) : null}
+                  </>
+                )}
                 {showPlatform ? (
                   <DefinitionList.Item name="Платформа">{platform}</DefinitionList.Item>
                 ) : null}
