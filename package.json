@@ -17,7 +17,7 @@
     "start": "next start",
     "seo:indexnow": "tsx scripts/indexnow.ts",
     "lint": "next lint",
-    "test": "tsx --test src/lib/calculator/**/*.test.ts src/lib/chat/**/*.test.ts"
+    "test": "tsx --test src/lib/calculator/**/*.test.ts src/lib/chat/**/*.test.ts src/lib/catalog/**/*.test.ts"
   },
   "dependencies": {
     "@gravity-ui/aikit": "^2.11.0",
