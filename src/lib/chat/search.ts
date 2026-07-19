@@ -792,6 +792,14 @@ function skipHybridForHardFilters(params: SearchParams, ctx: FilterContext): boo
   if (ctx.storageClass) return true;
   if (typeof params.gpuModel === 'string' && params.gpuModel.trim()) return true;
   if (typeof params.aiModel === 'string' && params.aiModel.trim()) return true;
+  // Narrow category already scopes the candidate set — skip embed RTT.
+  if (
+    params.category === 'kubernetes' ||
+    params.category === 'ai' ||
+    params.category === 'gpu'
+  ) {
+    return true;
+  }
   return false;
 }
 

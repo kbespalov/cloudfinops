@@ -17,6 +17,7 @@ for (const file of ['.env.local', '.env']) {
 }
 
 import {chatCompletion, type ChatMessage} from '../../src/lib/chat/gigachat';
+import {tryRunFastPath} from '../../src/lib/chat/fast-path';
 import {CHAT_LIMITS} from '../../src/lib/chat/limits';
 import {sanitizeUserFacingAnswer} from '../../src/lib/chat/tool-call-recovery';
 import {runToolLoop} from '../../src/lib/chat/tool-loop';
@@ -52,14 +53,25 @@ export async function runChat(systemPrompt: string, question: string): Promise<C
   };
 
   try {
-    const loop = await runToolLoop({
+    const onToolCall = (name: string, args: string) => {
+      toolCalls.push({name, arguments: args});
+    };
+
+    const fast = await tryRunFastPath({
       messages,
-      maxRounds: MAX_TOOL_ROUNDS,
       onEvent: (event) => {
-        if (event.type !== 'tool_call') return;
-        toolCalls.push({name: event.name, arguments: event.arguments});
+        if (event.type === 'tool_call') onToolCall(event.name, event.arguments);
       },
     });
+    const loop =
+      fast ??
+      (await runToolLoop({
+        messages,
+        maxRounds: Math.min(MAX_TOOL_ROUNDS, 3),
+        onEvent: (event) => {
+          if (event.type === 'tool_call') onToolCall(event.name, event.arguments);
+        },
+      }));
 
     // Collect tool result payloads from the loop message history.
     for (const m of loop.messages) {

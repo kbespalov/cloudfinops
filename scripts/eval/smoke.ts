@@ -26,7 +26,77 @@ type SmokeCase = {
   expectBestOfferPct?: boolean;
   /** Answer body must match (e.g. multi-component stack columns). */
   expectAnswerMatch?: RegExp;
+  /** Soft/hard latency budget for homepage chips (ms). */
+  maxDurationMs?: number;
 };
+
+/** Homepage chip prompts — target &lt;5s via fast-path. */
+const HOME_SUITE: SmokeCase[] = [
+  {
+    id: 'home-vm',
+    q: 'Сравни ВМ 8 vCPU / 32 GiB / 100 ГБ SSD на месяц по провайдерам',
+    expectTools: true,
+    expectToolMatch: /get_quote/,
+    expectPriceSignal: true,
+    maxDurationMs: 5000,
+  },
+  {
+    id: 'home-h100',
+    q: 'Самый дешёвый H100 в месяц',
+    expectTools: true,
+    expectToolMatch: /search_prices|H100/,
+    expectPriceSignal: true,
+    maxDurationMs: 5000,
+  },
+  {
+    id: 'home-s3',
+    q: 'Сколько стоит 50 ТБ в объектном хранилище Standard?',
+    expectTools: true,
+    expectToolMatch: /search_prices|standard|51200/,
+    expectPriceSignal: true,
+    maxDurationMs: 5000,
+  },
+  {
+    id: 'home-ssd',
+    q: 'Сколько стоит 100 ТБ SSD (блочный диск) в месяц по провайдерам?',
+    expectTools: true,
+    expectToolMatch: /compare_unit_price|ssd/,
+    expectPriceSignal: true,
+    maxDurationMs: 5000,
+  },
+  {
+    id: 'home-k8s',
+    q: 'Сравни Managed Kubernetes по провайдерам',
+    expectTools: true,
+    expectToolMatch: /search_prices|kubernetes/,
+    expectPriceSignal: true,
+    maxDurationMs: 5000,
+  },
+  {
+    id: 'home-glm',
+    q: 'Сколько стоит GLM 5.2 у MWS за 1M токенов?',
+    expectTools: true,
+    expectToolMatch: /search_prices|GLM|mws/,
+    expectPriceSignal: true,
+    maxDurationMs: 5000,
+  },
+  {
+    id: 'home-qwen',
+    q: 'Сравни цены Qwen 3.6 по провайдерам за 1M токенов',
+    expectTools: true,
+    expectToolMatch: /search_prices|Qwen/,
+    expectPriceSignal: true,
+    maxDurationMs: 5000,
+  },
+  {
+    id: 'home-ai',
+    q: 'Сравни цены AI API / токенов по провайдерам',
+    expectTools: true,
+    expectToolMatch: /search_prices|ai/,
+    expectPriceSignal: true,
+    maxDurationMs: 5000,
+  },
+];
 
 const SUITE: SmokeCase[] = [
   {
@@ -186,6 +256,16 @@ function gradeCase(c: SmokeCase, run: Awaited<ReturnType<typeof runChat>>): Chec
     });
   }
 
+  if (c.maxDurationMs != null) {
+    const ok = run.durationMs <= c.maxDurationMs;
+    checks.push({
+      ok,
+      detail: ok
+        ? `latency ${(run.durationMs / 1000).toFixed(1)}s ≤ ${(c.maxDurationMs / 1000).toFixed(0)}s`
+        : `FAIL: latency ${(run.durationMs / 1000).toFixed(1)}s > ${(c.maxDurationMs / 1000).toFixed(0)}s budget`,
+    });
+  }
+
   return checks;
 }
 
@@ -218,18 +298,20 @@ async function runOne(q: string) {
   process.exit(checks.some((x) => !x.ok) ? 1 : 0);
 }
 
-async function runSuite() {
+async function runSuite(cases: SmokeCase[], label: string) {
   if (!process.env.CLOUDRU_FM_API_KEY) {
     console.error('CLOUDRU_FM_API_KEY missing (.env.local). Cannot smoke the live chat.');
     process.exit(2);
   }
 
-  console.log(`Smoke suite: ${SUITE.length} questions · model=${process.env.CLOUDRU_FM_MODEL || 'default'}`);
+  console.log(
+    `Smoke ${label}: ${cases.length} questions · model=${process.env.CLOUDRU_FM_MODEL || 'default'}`,
+  );
   let failedCases = 0;
   const t0 = Date.now();
 
   // Sequential: avoid bursting the FM rate limit during local smoke.
-  for (const c of SUITE) {
+  for (const c of cases) {
     const run = await runChat(SYSTEM_PROMPT, c.q);
     const checks = gradeCase(c, run);
     printRun(c, run, checks);
@@ -237,23 +319,28 @@ async function runSuite() {
   }
 
   console.log(
-    `\nDone in ${((Date.now() - t0) / 1000).toFixed(1)}s · ${SUITE.length - failedCases}/${SUITE.length} passed`,
+    `\nDone in ${((Date.now() - t0) / 1000).toFixed(1)}s · ${cases.length - failedCases}/${cases.length} passed`,
   );
   process.exit(failedCases ? 1 : 0);
 }
 
 async function main() {
-  const args = process.argv.slice(2).filter((a) => a !== '--suite');
-  const forceSuite = process.argv.includes('--suite') || args.length === 0;
+  const argv = process.argv.slice(2);
+  if (argv.includes('--home')) {
+    await runSuite(HOME_SUITE, 'home chips');
+    return;
+  }
+  const args = argv.filter((a) => a !== '--suite');
+  const forceSuite = argv.includes('--suite') || args.length === 0;
   if (forceSuite && args.length === 0) {
-    await runSuite();
+    await runSuite(SUITE, 'suite');
     return;
   }
   if (args.length) {
     await runOne(args.join(' '));
     return;
   }
-  await runSuite();
+  await runSuite(SUITE, 'suite');
 }
 
 main().catch((err) => {

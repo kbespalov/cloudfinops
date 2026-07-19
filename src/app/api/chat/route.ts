@@ -13,6 +13,7 @@ import {
 } from '@/lib/chat/limits';
 import {chatLog, clientIp} from '@/lib/chat/log';
 import {SYSTEM_PROMPT} from '@/lib/chat/system-prompt';
+import {tryRunFastPath} from '@/lib/chat/fast-path';
 import {sanitizeUserFacingAnswer} from '@/lib/chat/tool-call-recovery';
 import {runToolLoop} from '@/lib/chat/tool-loop';
 
@@ -146,38 +147,60 @@ export async function POST(req: Request) {
       let leaksRetried = 0;
       let leaksDropped = 0;
       let outputChars = 0;
+      let fastPathId: string | null = null;
       let status: 'ok' | 'empty' | 'error' | 'aborted' = 'ok';
 
       try {
-        // Tool loop (non-streaming). Recovers gpt-oss English tool-planning leaks.
-        // When the model returns a final text answer with no tool_calls, use it
-        // immediately — do NOT discard it and call stream again (Cloud.ru often
-        // returns an empty stream after tools).
-        const loop = await runToolLoop({
-          messages,
-          maxRounds: CHAT_LIMITS.maxToolRounds,
-          signal: abort.signal,
-          onEvent: (event) => {
-            if (event.type === 'tool_call') {
-              chatLog('chat.tool', {
-                requestId,
-                ip,
-                action: 'tool_call',
-                tool: event.name,
-                argsPreview: event.arguments.slice(0, 200),
-                recoveredFromLeak: event.recoveredFromLeak,
-              });
-              return;
-            }
-            chatLog('chat.tool_leak', {
+        const onToolEvent = (
+          event:
+            | {
+                type: 'tool_call';
+                name: string;
+                arguments: string;
+                recoveredFromLeak: boolean;
+              }
+            | {type: 'tool_leak'; action: 'recovered' | 'retry_required' | 'dropped'; preview: string},
+        ) => {
+          if (event.type === 'tool_call') {
+            chatLog('chat.tool', {
               requestId,
               ip,
-              action: event.action,
-              preview: event.preview,
+              action: 'tool_call',
+              tool: event.name,
+              argsPreview: event.arguments.slice(0, 200),
+              recoveredFromLeak: event.recoveredFromLeak,
             });
-          },
+            return;
+          }
+          chatLog('chat.tool_leak', {
+            requestId,
+            ip,
+            action: event.action,
+            preview: event.preview,
+          });
+        };
+
+        // Homepage chips / first-turn twins: skip planning LLM, run tools, one short final.
+        const fast = await tryRunFastPath({
+          messages,
+          signal: abort.signal,
+          onEvent: onToolEvent,
         });
 
+        const loop =
+          fast ??
+          (await runToolLoop({
+            messages,
+            // First user turn: prefer 1–2 tool rounds, not long retry chains.
+            maxRounds:
+              history.length <= 1
+                ? Math.min(CHAT_LIMITS.maxToolRounds, 3)
+                : CHAT_LIMITS.maxToolRounds,
+            signal: abort.signal,
+            onEvent: onToolEvent,
+          }));
+
+        if (fast) fastPathId = fast.fastPathId;
         toolRounds = loop.toolRounds;
         toolCallsTotal = loop.toolCallsTotal;
         leaksRecovered = loop.leaksRecovered;
@@ -260,6 +283,7 @@ export async function POST(req: Request) {
           leaksRecovered,
           leaksRetried,
           leaksDropped,
+          fastPathId,
           outputChars,
           outputTokensEst: outputChars ? Math.ceil(outputChars / 2) : 0,
           ...chatRateLimiter.snapshot(),
