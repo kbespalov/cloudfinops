@@ -13,6 +13,7 @@ import {
 } from '@/lib/chat/limits';
 import {chatLog, clientIp} from '@/lib/chat/log';
 import {SYSTEM_PROMPT} from '@/lib/chat/system-prompt';
+import {sanitizeUserFacingAnswer} from '@/lib/chat/tool-call-recovery';
 import {runToolLoop} from '@/lib/chat/tool-loop';
 
 export const runtime = 'nodejs';
@@ -185,14 +186,13 @@ export async function POST(req: Request) {
         let finalText = loop.finalText;
 
         if (!finalText) {
-          // Prefer streaming for the post-tools answer; fall back to non-stream
-          // if the SSE body has no content deltas (common after tool rounds).
-          let streamedAny = false;
+          // Prefer streaming for the post-tools answer; buffer then sanitize so
+          // tool names cannot leak mid-chunk (search_prices / get_quote).
+          // Fall back to non-stream if the SSE body has no content deltas.
+          let streamed = '';
           try {
             for await (const delta of chatCompletionStream(messages, abort.signal)) {
-              streamedAny = true;
-              outputChars += delta.length;
-              controller.enqueue(encoder.encode(delta));
+              streamed += delta;
             }
           } catch (streamErr) {
             chatLog('chat.stream_fallback', {
@@ -202,13 +202,16 @@ export async function POST(req: Request) {
             });
           }
 
-          if (!streamedAny) {
+          if (streamed) {
+            finalText = streamed;
+          } else {
             const fallback = await chatCompletion(messages, undefined, abort.signal);
             finalText = (fallback.content ?? '').trim() || null;
           }
         }
 
         if (finalText) {
+          finalText = sanitizeUserFacingAnswer(finalText);
           outputChars += finalText.length;
           controller.enqueue(encoder.encode(finalText));
         } else if (outputChars === 0) {

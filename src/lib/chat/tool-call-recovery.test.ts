@@ -5,6 +5,7 @@ import {
   looksLikeToolCallLeak,
   recoverToolCallsFromContent,
   resolveToolCalls,
+  sanitizeUserFacingAnswer,
 } from './tool-call-recovery';
 
 const LEAK_FROM_SCREENSHOT = `We will call search_prices. We need to actually call the tool. We need to use the tool. Let's call search_prices. We need to actually produce a tool call. Now call. Now actual call: Let's call search_prices with query "Kubernetes". We need to produce JSON tool call. Okay. Now actual. Let's do it. Now. Okay, I'm going to call:
@@ -20,6 +21,16 @@ Now call. We need to output tool call JSON. Okay. Now: Let's do it. Now final. O
 }`;
 
 describe('tool-call-recovery', () => {
+  it('sanitizes tool names in methodology footnotes', () => {
+    const raw =
+      '* **ВМ** – цены из `get_quote`. * **IP** – из search_prices. Среднее — compare_unit_price.';
+    const clean = sanitizeUserFacingAnswer(raw);
+    assert.equal(/\bget_quote\b|\bsearch_prices\b|\bcompare_unit_price\b/.test(clean), false);
+    assert.match(clean, /калькулятора конфигурации/);
+    assert.match(clean, /прайс-листа/);
+    assert.match(clean, /кросс-провайдерной аналитики/);
+  });
+
   it('detects gpt-oss English tool-planning leak', () => {
     assert.equal(looksLikeToolCallLeak(LEAK_FROM_SCREENSHOT), true);
   });

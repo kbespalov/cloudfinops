@@ -12,7 +12,8 @@ export const CHAT_LIMITS = {
   maxContentLen: 3000,
   /** Max total characters across the sanitized history (excl. system). */
   maxTotalChars: 80_000,
-  maxToolRounds: 4,
+  /** Multi-component stacks (VM+IP+S3+K8s) need headroom if the model serializes tool calls. */
+  maxToolRounds: 6,
   /** Soft cap on completion output (must stay in sync with gigachat COMMON_PARAMS). */
   maxOutputTokens: 2500,
   /** Per-IP request budget (sliding 60s). */

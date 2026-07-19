@@ -22,14 +22,20 @@ type SmokeCase = {
   expectToolMatch?: RegExp;
   /** Answer should mention a ruble / price-ish signal. */
   expectPriceSignal?: boolean;
+  /** Comparison table should show % vs cheapest (best offer column). */
+  expectBestOfferPct?: boolean;
+  /** Answer body must match (e.g. multi-component stack columns). */
+  expectAnswerMatch?: RegExp;
 };
 
 const SUITE: SmokeCase[] = [
   {
     id: 'k8s-vague',
-    q: 'ассистировай про кубернатис',
+    q: 'Сравни цены на зональный мастер Managed Kubernetes по провайдерам',
     expectTools: true,
-    expectToolMatch: /kubernetes|k8s|кубер/i,
+    expectToolMatch: /kubernetes|k8s|кубер|search_prices/i,
+    expectPriceSignal: true,
+    expectBestOfferPct: true,
   },
   {
     id: 'h100-price',
@@ -44,6 +50,7 @@ const SUITE: SmokeCase[] = [
     expectTools: true,
     expectToolMatch: /get_quote|vcpu|4/i,
     expectPriceSignal: true,
+    expectBestOfferPct: true,
   },
   {
     id: 's3-standard',
@@ -51,6 +58,7 @@ const SUITE: SmokeCase[] = [
     expectTools: true,
     expectToolMatch: /search_prices|standard|хран|object|s3/i,
     expectPriceSignal: true,
+    expectBestOfferPct: true,
   },
   {
     id: 'unit-vcpu',
@@ -59,10 +67,30 @@ const SUITE: SmokeCase[] = [
     expectToolMatch: /compare_unit_price|vcpu|search_prices/i,
     expectPriceSignal: true,
   },
+  {
+    id: 'vm-best-offer-pct',
+    q: 'Сравни ВМ 4 vCPU / 16 GiB по провайдерам на месяц. В таблице покажи процент к самому дешёвому.',
+    expectTools: true,
+    expectToolMatch: /get_quote|vcpu|4/i,
+    expectPriceSignal: true,
+    expectBestOfferPct: true,
+  },
+  {
+    id: 'stack-vm-ip-s3-k8s',
+    q: 'Собери стоимость: 2 ВМ по 4 vCPU / 8 GiB, 2 внешних IP, Object Storage Standard 1 TiB и 1 зональный мастер Managed Kubernetes. Сравни по провайдерам за месяц, с колонкой к best offer.',
+    expectTools: true,
+    expectToolMatch: /get_quote|search_prices/i,
+    expectPriceSignal: true,
+    expectBestOfferPct: true,
+    expectAnswerMatch: /kubernetes|k8s|мастер|IP|object|хранилищ/i,
+  },
 ];
 
 const CYRILLIC = /[А-Яа-яЁё]/;
 const PRICE_SIGNAL = /₽|руб|\bмес\b|\bчас\b|\d[\d\s.,]*\s*(₽|руб)/i;
+/** best / 0% / +12% / к best offer — signals from the new comparison column. */
+const BEST_OFFER_PCT =
+  /\bbest\b|к\s*best\s*offer|best\s*offer|\+?\d+\s*%|0\s*%|дешев/i;
 
 type Check = {ok: boolean; detail: string};
 
@@ -85,12 +113,16 @@ function gradeCase(c: SmokeCase, run: Awaited<ReturnType<typeof runChat>>): Chec
       ? 'FAIL: tool-planning leak in answer'
       : 'no tool-planning leak',
   });
+  const toolNameLeak =
+    /\bwe will call\b/i.test(answer) ||
+    /\bsearch_prices\b/.test(answer) ||
+    /\bget_quote\b/.test(answer) ||
+    /\bcompare_unit_price\b/.test(answer);
   checks.push({
-    ok: !/\bwe will call\b/i.test(answer) && !/\bsearch_prices\b/.test(answer),
-    detail:
-      /\bsearch_prices\b/.test(answer) || /\bwe will call\b/i.test(answer)
-        ? 'FAIL: raw tool name / English planning in answer'
-        : 'no raw tool names in answer',
+    ok: !toolNameLeak,
+    detail: toolNameLeak
+      ? 'FAIL: raw tool name / English planning in answer'
+      : 'no raw tool names in answer',
   });
   checks.push({
     ok: CYRILLIC.test(answer),
@@ -123,6 +155,25 @@ function gradeCase(c: SmokeCase, run: Awaited<ReturnType<typeof runChat>>): Chec
       detail: PRICE_SIGNAL.test(answer)
         ? 'price signal present'
         : 'FAIL: no ₽/руб/час/мес in answer',
+    });
+  }
+
+  if (c.expectBestOfferPct) {
+    const hasPct = BEST_OFFER_PCT.test(answer) && /\d+\s*%/.test(answer);
+    checks.push({
+      ok: hasPct,
+      detail: hasPct
+        ? 'best-offer % signal present'
+        : 'FAIL: no % vs best offer in answer (need e.g. +12% / best / к best offer)',
+    });
+  }
+
+  if (c.expectAnswerMatch) {
+    checks.push({
+      ok: c.expectAnswerMatch.test(answer),
+      detail: c.expectAnswerMatch.test(answer)
+        ? `answer match ${c.expectAnswerMatch}`
+        : `FAIL: answer did not match ${c.expectAnswerMatch}`,
     });
   }
 

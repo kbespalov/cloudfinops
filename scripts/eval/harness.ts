@@ -17,9 +17,11 @@ for (const file of ['.env.local', '.env']) {
 }
 
 import {chatCompletion, type ChatMessage} from '../../src/lib/chat/gigachat';
+import {CHAT_LIMITS} from '../../src/lib/chat/limits';
+import {sanitizeUserFacingAnswer} from '../../src/lib/chat/tool-call-recovery';
 import {runToolLoop} from '../../src/lib/chat/tool-loop';
 
-const MAX_TOOL_ROUNDS = 4;
+const MAX_TOOL_ROUNDS = CHAT_LIMITS.maxToolRounds;
 
 export type ChatRun = {
   answer: string;
@@ -85,7 +87,7 @@ export async function runChat(systemPrompt: string, question: string): Promise<C
       undefined,
     );
     return {
-      answer: final.content ?? '',
+      answer: sanitizeUserFacingAnswer(final.content ?? ''),
       toolCalls,
       toolResults,
       ...meta,

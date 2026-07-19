@@ -5,7 +5,7 @@
  */
 
 import {chatCompletion, type ChatMessage} from './gigachat';
-import {resolveToolCalls} from './tool-call-recovery';
+import {resolveToolCalls, sanitizeUserFacingAnswer} from './tool-call-recovery';
 import {CHAT_TOOLS, runTool} from './tools';
 
 export type ToolLoopEvent =
@@ -78,7 +78,7 @@ export async function runToolLoop(options: {
     }
 
     if (resolved.kind === 'final') {
-      finalText = resolved.text || null;
+      finalText = resolved.text ? sanitizeUserFacingAnswer(resolved.text) : null;
       break;
     }
 

@@ -12,6 +12,28 @@ export type ChatToolName = (typeof CHAT_TOOL_NAMES)[number];
 
 const TOOL_NAME_SET = new Set<string>(CHAT_TOOL_NAMES);
 
+const TOOL_NAME_USER_LABEL: Record<ChatToolName, string> = {
+  get_quote: 'калькулятора конфигурации',
+  search_prices: 'прайс-листа',
+  compare_unit_price: 'кросс-провайдерной аналитики',
+};
+
+/**
+ * Strip / rewrite leaked tool names in user-facing answers (footnotes like
+ * «из `get_quote`»). Keeps the answer readable without exposing internals.
+ */
+export function sanitizeUserFacingAnswer(text: string): string {
+  if (!text) return text;
+  let out = text;
+  for (const name of CHAT_TOOL_NAMES) {
+    const label = TOOL_NAME_USER_LABEL[name];
+    out = out.replace(new RegExp(`из\\s*\`?${name}\`?`, 'gi'), `из ${label}`);
+    out = out.replace(new RegExp(`\`${name}\``, 'g'), label);
+    out = out.replace(new RegExp(`\\b${name}\\b`, 'g'), label);
+  }
+  return out.replace(/[ \t]{2,}/g, ' ').replace(/ \n/g, '\n');
+}
+
 const LEAK_PATTERNS: RegExp[] = [
   /\bwe (?:will|need to|should|must|are going to) (?:call|use|invoke|produce)\b/i,
   /\blet'?s (?:call|use|invoke|do it)\b/i,
