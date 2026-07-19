@@ -47,8 +47,9 @@ spec:
           period: month
         formula: 1.5075 RUB excluding VAT × 1.22
         vat: included
-    notes: Действующая ставка взята из тарифного PDF; 15 ГБ бесплатного объема подтверждены правилами
-      тарификации.
+    notes: >
+      В каталоге — плата за гигабайт сверх бесплатного объёма. Первые 15 ГБ
+      Standard в месяц не тарифицируются; дальше — 1,83915 ₽/ГиБ·мес (с НДС).
   - sku: cloudru.object-storage.single-zone
     name: Объектное хранилище · Single-zone
     meter: storage.object.capacity

@@ -45,7 +45,9 @@ spec:
           period: month
         formula: native monthly rate
         vat: included
-    notes: Ставка подтверждается примером тарификации; первый 1 ГиБ стандартного класса в месяц не тарифицируется.
+    notes: >
+      В каталоге — плата за гигабайт сверх бесплатного объёма. Первый 1 ГиБ
+      стандартного класса в месяц не тарифицируется; дальше — 2,376 ₽/ГиБ·мес.
   - sku: yc.object-storage.cold
     name: Объектное хранилище · Cold
     meter: storage.object.capacity
@@ -195,7 +197,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-04-30'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs:
     - yc.object-storage
     dimensions:
@@ -203,6 +205,7 @@ spec:
       operation: PUT
       nativeBillingStepRequests: 1000
       nativeAmountPerStep: '0.5692'
+      freeTierRequestsMonth: 10000
     pricing:
       rate:
         amount: '0.0005692'
@@ -210,7 +213,10 @@ spec:
         unit: {quantity: request, period: usage}
         vat: included
         byteBasis: not-applicable
-    notes: Официально 0,5692 ₽ за 1 тыс. операций PUT/POST/PATCH/LIST (после free tier).
+    notes: >
+      В каталоге — ставка сверх бесплатного объёма. Первые 10 000 операций
+      PUT/POST/PATCH/LIST в стандартном классе в месяц не тарифицируются; дальше
+      0,5692 ₽ за каждую тысячу операций.
   - sku: yc.object-storage.standard.requests.get
     name: Объектное хранилище · Standard · GET
     meter: storage.object.requests
@@ -218,7 +224,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-04-30'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-19'
     sourceRefs:
     - yc.object-storage
     dimensions:
@@ -226,6 +232,7 @@ spec:
       operation: GET
       nativeBillingStepRequests: 10000
       nativeAmountPerStep: '0.46'
+      freeTierRequestsMonth: 100000
     pricing:
       rate:
         amount: '0.000046'
@@ -233,7 +240,10 @@ spec:
         unit: {quantity: request, period: usage}
         vat: included
         byteBasis: not-applicable
-    notes: Официально 0,46 ₽ за 10 тыс. операций GET/HEAD/OPTIONS (после free tier).
+    notes: >
+      В каталоге — ставка сверх бесплатного объёма. Первые 100 000 операций
+      GET/HEAD/OPTIONS в стандартном классе в месяц не тарифицируются; дальше
+      0,46 ₽ за каждые 10 000 операций.
   - sku: yc.object-storage.cold.requests.put
     name: Объектное хранилище · Cold · PUT
     meter: storage.object.requests
