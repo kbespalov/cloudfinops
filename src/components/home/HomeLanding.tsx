@@ -53,9 +53,9 @@ export function HomeLanding() {
             Сравнение цен облаков России
           </Text>
 
-          {/* Hero card is always warm/light — keep controls light so dark app theme
-              doesn't turn TextInput text invisible on the cream panel. */}
-          <ThemeProvider theme="light" scoped>
+          {/* Light scoped theme keeps SearchInput readable when the app is dark;
+              rootClassName clears .g-root's solid white square behind the card. */}
+          <ThemeProvider theme="light" scoped rootClassName={styles.searchTheme}>
             <form className={styles.searchCard} onSubmit={onSubmit}>
               <Flex className={styles.searchRow} gap={3} alignItems="center">
                 <TextInput

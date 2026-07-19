@@ -1,8 +1,8 @@
 .page {
   --cf-ink: #1a120c;
   --cf-ink-muted: rgba(40, 28, 18, 0.72);
-  --cf-panel: rgba(255, 252, 245, 0.94);
-  --cf-panel-border: rgba(26, 18, 12, 0.1);
+  --cf-panel: rgba(255, 244, 220, 0.4);
+  --cf-panel-border: rgba(26, 18, 12, 0.14);
   --cf-accent: #e8a54b;
   --cf-accent-soft: rgba(232, 165, 75, 0.18);
 
@@ -108,33 +108,47 @@
   color: var(--cf-ink-muted);
 }
 
-.searchCard {
+/* ThemeProvider scoped root is also .g-root (solid white by default) — clear it. */
+.searchTheme:global(.g-root) {
   width: 100%;
   margin-top: 12px;
-  padding: 14px;
+  background: transparent;
   border-radius: 24px;
-  background: var(--cf-panel);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.75) inset,
-    0 18px 48px rgba(40, 28, 18, 0.12),
-    0 2px 8px rgba(40, 28, 18, 0.06);
-  border: 1px solid var(--cf-panel-border);
+  color: var(--cf-ink);
+}
+
+.searchCard {
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
   animation: rise 0.95s ease-out 0.08s both;
+}
+
+.searchRow {
+  width: 100%;
+  padding: 10px;
+  border-radius: 28px;
+  background: var(--cf-panel);
+  -webkit-backdrop-filter: blur(18px) saturate(1.05);
+  backdrop-filter: blur(18px) saturate(1.05);
+  border: 1px solid var(--cf-panel-border);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.7) inset,
+    0 14px 40px rgba(40, 28, 18, 0.12),
+    0 2px 8px rgba(40, 28, 18, 0.05);
   transition:
     box-shadow 0.2s ease,
     border-color 0.2s ease;
 }
 
-.searchCard:focus-within {
+.searchCard:focus-within .searchRow {
   border-color: rgba(26, 18, 12, 0.18);
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.8) inset,
-    0 22px 56px rgba(40, 28, 18, 0.14),
+    0 18px 48px rgba(40, 28, 18, 0.14),
     0 0 0 3px var(--cf-accent-soft);
-}
-
-.searchRow {
-  width: 100%;
 }
 
 .searchInput {
@@ -142,14 +156,25 @@
   min-width: 0;
 }
 
-/* Belt-and-suspenders: keep typed/placeholder text readable on the cream panel
-   even if a parent dark theme leaks into the control. */
+/* Clear field chrome inside the glass row — avoid a second white box. */
 .searchInput :global(.g-text-input__content) {
+  color: var(--cf-ink);
+  border-radius: 14px;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.searchInput :global(.g-text-input__control) {
   color: var(--cf-ink);
 }
 
 .searchInput :global(.g-text-input__control::placeholder) {
   color: var(--cf-ink-muted);
+}
+
+.searchSubmit:global(.g-button) {
+  border-radius: 16px;
 }
 
 .searchIcon {
@@ -167,8 +192,8 @@
   gap: 8px;
   width: 100%;
   margin-top: 14px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(26, 18, 12, 0.08);
+  padding-top: 0;
+  border-top: none;
 }
 
 .chipWrap {
@@ -183,9 +208,11 @@
   width: 100%;
   margin: 0;
   padding: 7px 12px 7px 7px;
-  border: 1px solid rgba(26, 18, 12, 0.1);
+  border: 1px solid rgba(26, 18, 12, 0.12);
   border-radius: 999px;
-  background: #fffaf3;
+  background: rgba(255, 250, 243, 0.52);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   color: var(--cf-ink);
   font: inherit;
   font-size: 0.875rem;
@@ -276,14 +303,15 @@
     width: 100%;
   }
 
-  .searchCard {
-    padding: 12px;
+  .searchTheme:global(.g-root) {
     border-radius: 20px;
   }
 
   .searchRow {
     flex-direction: column;
     align-items: stretch;
+    border-radius: 20px;
+    padding: 10px;
   }
 
   .searchSubmit {
