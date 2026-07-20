@@ -2,6 +2,19 @@
 
 ## 2026-07-20
 
+### Калькулятор / массовая переработка (VM + Self-host LLM)
+
+Крупный релиз калькулятора: из одной витрины пресетов — два сценария с отдельными URL, живым сайдбаром цен и базой open-weight моделей под инференс.
+
+- **Два режима и маршруты:** `/calculator/vm` (виртуальные машины) и `/calculator/self-host` (подбор GPU под LLM); `/calculator` редиректит в self-host как основной AI-сценарий. В sitemap — оба URL.
+- **VM:** пресеты по семействам (Low-cost / General / High CPU / High Memory), слайдеры vCPU/RAM/диска, выбор **HDD/SSD**, сетка GPU-форм из каталога; сравнение офферов провайдеров в sticky-сайдбаре.
+- **Self-host LLM:** выбор модели → квант → лестница GPU-конфигов (VRAM / число карт) с ценами узлов РФ (H100, H200, A100, L40S, L4, B300…) и блоком Hosted API ₽/1M, если модель есть в каталоге токенов.
+- **База моделей расширена** с опорой на популярность self-host (июль 2026), а не только на SKU каталога: Llama 4 Scout / Maverick, DeepSeek R1 и R1 Distill 32B, gpt-oss-20b, Devstral Small / Devstral 2, Phi-4 14B, Qwen3 8B — рядом с уже бывшими GLM, Qwen3/Coder, Kimi, DeepSeek V3, Gemma, Mixtral, Mistral Small. API-only (Qwen3.7 Max) и weights-pending (Qwen3.8, Kimi K3) помечены явно.
+- **ИИ-ассистент:** gated tool `recommend_inference_infra` работает на той же базе; алиасы вроде «GPT-УСС» → gpt-oss; вопросы про ₽/1M токенов по-прежнему идут в обычный `search_prices`, не в подбор GPU.
+- **Качество котировок:** L4 больше не «ворует» host у L40S; для H100 по умолчанию shelf **80 GB** (не sole-offer 94 GB); sidebar пересчитывает с `gpuMemoryGb`; при смене модели/конфига не мелькает старая цена; Hosted API не подмешивает соседние SKU (Qwen 3.7 ↛ Coder-Next, R1 Distill ↛ V4 Flash).
+- **Новости:** запись о калькуляторе хостинга LLM → `/calculator/self-host`.
+- UI: бейджи семейств моделей (Qw / Ll / DS / …), пресет-гриды VM/GPU, упрощённый copy и контраст dark theme для поверхностей калькулятора.
+
 ### ИИ-ассистент / таблицы
 
 - Ширина чата выровнена с каталогом (**1200px**, как колонка с логотипом CF).
