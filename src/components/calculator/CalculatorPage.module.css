@@ -1,43 +1,50 @@
 .page {
+  /* Match CatalogPage content width. */
   max-width: 1200px;
   margin: 0 auto;
-  padding: 36px 24px 96px;
+  padding: 32px 24px 48px;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 20px;
 }
 
 .hero {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
+}
+
+.heroCopy {
+  min-width: 0;
 }
 
 .heroLead {
   max-width: 40rem;
 }
 
-.modeTabs {
-  align-self: flex-start;
-  max-width: 100%;
+.tabs {
+  width: 100%;
 }
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.9fr);
-  gap: 24px;
+  grid-template-columns: minmax(0, 1fr) clamp(360px, 29vw, 420px);
+  gap: 20px;
   align-items: start;
 }
 
-/* Panels return a Fragment: form column + sticky sidebar. */
+/* Panels return: form card + sticky result sidebar. */
 .workspace > :last-child {
   position: sticky;
-  top: 88px;
+  top: 80px;
+  align-self: start;
+  min-width: 0;
 }
 
 @media (max-width: 960px) {
   .workspace {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 
   .workspace > :last-child {
@@ -45,16 +52,9 @@
   }
 }
 
-/*
- * Dark: page plane is warm charcoal; float ≈ background → milky wash.
- * Lift the workspace slightly and keep controls on solid wells.
- */
 :global(.g-root_theme_dark) .page,
 :global(.g-root_theme_dark-hc) .page {
-  background:
-    radial-gradient(ellipse 80% 50% at 10% 0%, rgba(232, 165, 75, 0.06) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 40% at 90% 20%, rgba(90, 50, 120, 0.1) 0%, transparent 50%),
-    var(--g-color-base-background);
+  background: var(--g-color-base-background);
 }
 
 :global(.g-root_theme_dark) .heroLead:global(.g-text),

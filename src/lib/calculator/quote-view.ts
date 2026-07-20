@@ -2,7 +2,7 @@
 
 export type PeriodMode = 'unit' | 'month' | 'year';
 
-export type CostPartId = 'vcpu' | 'ram' | 'disk' | 'gpu' | 'bundle';
+export type CostPartId = 'vcpu' | 'ram' | 'disk' | 'gpu' | 'bundle' | 'ip';
 
 export type QuoteScope = 'compute' | 'gpu-only' | 'bundle' | 'gpu-synthetic';
 

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import {findInferenceModel} from '@/data/inference-models';
 import {matchInferenceIntent} from './inference-intent';
-import {recommendInferenceInfra} from './inference-recommend';
+import {defaultPricedConfigIndex, recommendInferenceInfra} from './inference-recommend';
 import {matchFastPath} from './fast-path';
 import {CHAT_TOOLS, CHAT_TOOLS_WITH_INFERENCE, runToolSync} from './tools';
 
@@ -32,6 +32,23 @@ describe('inference model KB', () => {
       'qwen3-coder-next',
     );
     assert.equal(findInferenceModel('qwen3-coder-480b-a35b')?.id, 'qwen3-coder-480b');
+  });
+
+  it('resolves popular July-2026 self-host models without collisions', () => {
+    assert.equal(findInferenceModel('Llama 4 Scout')?.id, 'llama-4-scout');
+    assert.equal(findInferenceModel('llama 4')?.id, 'llama-4-scout');
+    assert.equal(findInferenceModel('Llama 4 Maverick')?.id, 'llama-4-maverick');
+    assert.equal(findInferenceModel('DeepSeek R1')?.id, 'deepseek-r1');
+    assert.equal(findInferenceModel('DeepSeek R1 Distill 32B')?.id, 'deepseek-r1-distill-32b');
+    assert.equal(findInferenceModel('deepseek r1 32b')?.id, 'deepseek-r1-distill-32b');
+    assert.equal(findInferenceModel('gpt-oss-20b')?.id, 'gpt-oss-20b');
+    assert.equal(findInferenceModel('gpt-oss-120b')?.id, 'gpt-oss-120b');
+    assert.equal(findInferenceModel('GPT-УСС')?.id, 'gpt-oss-120b');
+    assert.equal(findInferenceModel('gpt vss')?.id, 'gpt-oss-120b');
+    assert.equal(findInferenceModel('Devstral Small 24B')?.id, 'devstral-small-24b');
+    assert.equal(findInferenceModel('Devstral 2')?.id, 'devstral-2-123b');
+    assert.equal(findInferenceModel('Phi-4')?.id, 'phi-4');
+    assert.equal(findInferenceModel('Qwen3 8B')?.id, 'qwen3-8b');
   });
 });
 
@@ -128,6 +145,55 @@ describe('recommendInferenceInfra', () => {
     assert.equal(result.configs?.length, 0);
     assert.equal(result.primaryRecommendation, null);
     assert.ok(result.answerHint?.toLowerCase().includes('api'));
+    // Broad «Qwen» must not invent Coder-Next / 3.6 as a Hosted API analog.
+    const hostedLabels =
+      result.hostedAlternative?.providersMatched.map((p) => p.label ?? '').join(' ') ?? '';
+    assert.equal(result.hostedAlternative, undefined);
+    assert.doesNotMatch(hostedLabels, /Coder-Next|3\.6|qwen3-32b/i);
+  });
+
+  it('prices L40S primary for Mistral/Devstral (L4 must not steal L40S host)', () => {
+    for (const model of ['Mistral Small 24B', 'Devstral Small 24B']) {
+      const result = recommendInferenceInfra({model, maxConfigs: 3});
+      assert.equal(result.ok, true, model);
+      assert.equal(result.primaryRecommendation?.gpuFamily, 'L40S', model);
+      assert.ok(
+        result.primaryRecommendation?.bestMonth != null,
+        `${model}: L40S primary must be priced`,
+      );
+      assert.equal(result.configs?.[0]?.host?.ramGiB, 112, `${model}: L40S host is 16/112`);
+      assert.notEqual(result.configs?.[0]?.host?.ramGiB, 72, `${model}: L4 16/72 must not win`);
+    }
+  });
+
+  it('does not attach sibling DeepSeek SKUs as R1 hosted alternative', () => {
+    const result = recommendInferenceInfra({model: 'DeepSeek R1', maxConfigs: 2});
+    assert.equal(result.ok, true);
+    const hostedLabels =
+      result.hostedAlternative?.providersMatched.map((p) => p.label ?? '').join(' ') ?? '';
+    assert.doesNotMatch(hostedLabels, /v4 flash|V4/i);
+  });
+
+  it('keeps R1 Distill hosted keys specific (not full R1 / bare deepseek)', () => {
+    const profile = findInferenceModel('DeepSeek R1 Distill 32B');
+    assert.ok(profile);
+    const keys = profile.hostedCatalogKeys ?? [];
+    assert.ok(keys.some((k) => /distill/i.test(k)));
+    assert.ok(!keys.some((k) => /^deepseek r1$/i.test(k.trim())));
+    assert.ok(!keys.some((k) => /^deepseek$/i.test(k.trim())));
+    const result = recommendInferenceInfra({model: 'DeepSeek R1 Distill 32B', maxConfigs: 2});
+    assert.equal(result.ok, true);
+    const hostedLabels =
+      result.hostedAlternative?.providersMatched.map((p) => p.label ?? '').join(' ') ?? '';
+    assert.doesNotMatch(hostedLabels, /v4 flash|V3\.2|v3\.2/i);
+  });
+
+  it('exposes gpuMemoryGb on host for sidebar re-quote parity', () => {
+    const result = recommendInferenceInfra({model: 'gpt-oss-120b', maxConfigs: 2});
+    assert.equal(result.ok, true);
+    const h100 = result.configs?.find((c) => c.gpuFamily === 'H100' && c.gpuCount === 1);
+    assert.ok(h100?.host, 'expected H100 host shape');
+    assert.equal(h100?.host?.gpuMemoryGb, 80);
   });
 
   it('sizes Kimi K3 as cluster-scale with B300 primary, not a fake single-GPU recipe', () => {
@@ -137,8 +203,23 @@ describe('recommendInferenceInfra', () => {
     assert.equal(result.model?.deployment, 'weights-pending');
     assert.equal(result.primaryRecommendation?.gpuFamily, 'B300');
     assert.equal(result.primaryRecommendation?.gpuCount, 8);
+    assert.equal(result.configs?.[0]?.host?.dedicated, true);
+    assert.ok(result.configs?.[0]?.best?.totalMonth != null, 'dedicated B300 must quote');
+    assert.equal(defaultPricedConfigIndex(result.configs ?? []), 0);
     assert.ok(!result.configs?.some((c) => c.gpuCount === 1));
     assert.ok(result.answerHint?.includes('64') || result.caveats?.some((c) => c.includes('64')));
+  });
+
+  it('defaultPricedConfigIndex skips unpriced rows', () => {
+    assert.equal(
+      defaultPricedConfigIndex([
+        {best: null},
+        {best: {totalMonth: 1_000_000}},
+        {best: {totalMonth: 500_000}},
+      ]),
+      1,
+    );
+    assert.equal(defaultPricedConfigIndex([{best: null}, {best: null}]), 0);
   });
 
   it('includes Qwen 3.8 as weights-pending fat MoE', () => {

@@ -487,6 +487,18 @@ export const newsItems: NewsItem[] = [
 
   // ——— Июль 2026 ———
   {
+    id: 'market-2026-07-cloudfinops-llm-calculator',
+    date: '2026-07-20',
+    provider: 'market',
+    providerName: 'Cloud FinOps',
+    title: 'Калькулятор self-host LLM: расчёт GPU под инференс моделей',
+    summary:
+      'В Cloud FinOps появился калькулятор хостинга LLM: можно подобрать GPU-инфраструктуру под open-weight модели (Qwen, Llama 4, DeepSeek R1, GLM, gpt-oss, Devstral и др.) и сразу сравнить аренду узлов в облаках РФ — H100, H200, A100, L40S, L4, B300. Для каждой модели есть ориентир по VRAM, кванту и числу карт, плюс рядом — Hosted API в ₽/1M токенов, если он есть в каталоге. Считать инфраструктуру под инференс можно в разделе «Калькулятор → Self-host LLM».',
+    tags: ['ai', 'compute', 'finops'],
+    sourceUrl: 'https://cloudfinops.ru/calculator/self-host',
+    sourceLabel: 'Cloud FinOps · калькулятор Self-host LLM',
+  },
+  {
     id: 'market-2026-07-kimi-k3-pause-subs',
     date: '2026-07-19',
     provider: 'market',

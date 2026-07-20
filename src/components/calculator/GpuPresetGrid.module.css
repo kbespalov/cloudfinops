@@ -1,0 +1,107 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding-top: 4px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 8px;
+}
+
+.card {
+  appearance: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--g-color-line-generic);
+  border-radius: var(--g-border-radius-m);
+  background: var(--g-color-base-background);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.12s ease;
+}
+
+.card:hover {
+  border-color: var(--g-color-line-generic-hover);
+}
+
+.card[data-active='true'] {
+  border-color: var(--g-color-line-brand);
+  box-shadow: inset 0 0 0 1px var(--g-color-line-brand);
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--g-color-line-focus);
+  outline-offset: 2px;
+}
+
+.cardHead {
+  min-width: 0;
+  width: 100%;
+}
+
+.countBadge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  padding: 2px 6px;
+  border-radius: var(--g-border-radius-s);
+  background: var(--g-color-base-brand);
+  color: var(--g-color-text-brand-contrast);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+
+.model {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  width: 100%;
+}
+
+.stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--g-color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat[data-tone='info'] {
+  color: var(--g-color-text-info);
+}
+
+.stat[data-tone='utility'] {
+  color: var(--g-color-text-utility);
+}
+
+.stat[data-tone='success'] {
+  color: var(--g-color-text-positive);
+}
+
+.price {
+  font-variant-numeric: tabular-nums;
+  color: var(--g-color-text-primary);
+}

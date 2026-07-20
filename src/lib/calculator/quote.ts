@@ -827,6 +827,46 @@ export function toViewQuote(result: PresetQuoteResult): ViewPresetQuote {
   };
 }
 
+/** Cheapest attached public IPv4 for a provider (on-demand). */
+function pickPublicIp(provider: string, period: PeriodMode): PricedMeter | null {
+  const attached = pricedList(provider, 'network.ipv4.attached', period, (m) => isOnDemand(m));
+  return attached[0] ?? null;
+}
+
+/**
+ * Add N public IPv4 addresses to an already-scaled compute view.
+ * Kept separate from vmCount scaling so IP count can differ from VM count.
+ */
+export function addPublicIpParts(
+  view: ViewPresetQuote,
+  count: number,
+  period: PeriodMode,
+): ViewPresetQuote {
+  if (!Number.isFinite(count) || count <= 0) return view;
+
+  const enrich = (q: ViewProviderQuote): ViewProviderQuote => {
+    if (q.parts.some((p) => p.id === 'ip')) return q;
+    const ip = pickPublicIp(q.provider, period);
+    if (!ip) return q;
+    const amount = ip.unit * count;
+    const label = count === 1 ? '1 × публичный IP' : `${count} × публичный IP`;
+    return {
+      ...q,
+      total: q.total + amount,
+      parts: [...q.parts, {id: 'ip', label, amount}],
+    };
+  };
+
+  const quotes = view.quotes.map(enrich).sort((a, b) => a.total - b.total);
+  const alternateQuotes = view.alternateQuotes.map(enrich).sort((a, b) => a.total - b.total);
+  return {
+    ...view,
+    quotes,
+    alternateQuotes,
+    best: quotes[0] ?? null,
+  };
+}
+
 let cachedQuotesByPeriod: QuotesByPeriod | null = null;
 
 /** Precompute all periods on the server so the client never loads the catalog. Cached per process. */

@@ -1,19 +1,58 @@
 'use client';
 
 import Link from 'next/link';
+import {useRouter} from 'next/navigation';
 import {startTransition, useState} from 'react';
-import {Button, Flex, Icon, SegmentedRadioGroup, Text} from '@gravity-ui/uikit';
-import {Calculator, ChevronRight, Cpu, Display} from '@gravity-ui/icons';
+import {
+  Button,
+  Flex,
+  Icon,
+  SegmentedRadioGroup,
+  Tab,
+  TabList,
+  TabProvider,
+  Text,
+} from '@gravity-ui/uikit';
+import {Calculator, ChevronRight} from '@gravity-ui/icons';
 import {AppHeader} from '@/components/AppHeader';
-import {VmCalculatorPanel} from '@/components/calculator/VmCalculatorPanel';
-import {InferenceCalculatorPanel} from '@/components/calculator/InferenceCalculatorPanel';
+import dynamic from 'next/dynamic';
+import type {GpuPreset} from '@/lib/calculator/presets';
 import type {PeriodMode} from '@/lib/calculator/quote-view';
 import styles from './CalculatorPage.module.css';
 
-type CalculatorTab = 'vm' | 'inference';
+/** Code-split panels so /calculator/vm never pulls the self-host recommend graph. */
+const VmCalculatorPanel = dynamic(
+  () => import('@/components/calculator/VmCalculatorPanel').then((m) => m.VmCalculatorPanel),
+  {ssr: true},
+);
+const InferenceCalculatorPanel = dynamic(
+  () =>
+    import('@/components/calculator/InferenceCalculatorPanel').then(
+      (m) => m.InferenceCalculatorPanel,
+    ),
+  {ssr: true},
+);
 
-export function CalculatorPage() {
-  const [tab, setTab] = useState<CalculatorTab>('vm');
+export type CalculatorMode = 'vm' | 'inference';
+
+const MODE_HREF: Record<CalculatorMode, string> = {
+  vm: '/calculator/vm',
+  inference: '/calculator/self-host',
+};
+
+const MODE_LEAD: Record<CalculatorMode, string> = {
+  vm: 'Сравнение цен ВМ и аренды GPU в облаках РФ',
+  inference: 'Подбор GPU под open-weight модель · self-host LLM',
+};
+
+export function CalculatorPage({
+  mode,
+  gpuPresets = [],
+}: {
+  mode: CalculatorMode;
+  gpuPresets?: GpuPreset[];
+}) {
+  const router = useRouter();
   const [period, setPeriod] = useState<PeriodMode>('month');
 
   return (
@@ -21,22 +60,24 @@ export function CalculatorPage() {
       <AppHeader />
       <main className={styles.page}>
         <header className={styles.hero}>
-          <Flex justifyContent="space-between" alignItems="flex-end" gap={4} wrap>
-            <Flex direction="column" gap={2}>
+          <Flex justifyContent="space-between" alignItems="flex-start" gap={4} wrap>
+            <Flex direction="column" gap={1} className={styles.heroCopy}>
               <Flex alignItems="center" gap={2}>
-                <Icon data={Calculator} size={24} />
+                <Icon data={Calculator} size={22} />
                 <Text variant="header-1">Калькулятор облачных нагрузок</Text>
               </Flex>
-              <Text variant="body-1" color="secondary" className={styles.heroLead}>
-                ВМ или GPU под open-source модель
+              <Text variant="body-2" color="secondary" className={styles.heroLead}>
+                {MODE_LEAD[mode]}
               </Text>
             </Flex>
+
             <SegmentedRadioGroup
               size="m"
               value={period}
               onUpdate={(v) => {
                 startTransition(() => setPeriod(v as PeriodMode));
               }}
+              aria-label="Период тарификации"
             >
               <SegmentedRadioGroup.Option value="unit">Час</SegmentedRadioGroup.Option>
               <SegmentedRadioGroup.Option value="month">Месяц</SegmentedRadioGroup.Option>
@@ -44,47 +85,49 @@ export function CalculatorPage() {
             </SegmentedRadioGroup>
           </Flex>
 
-          <SegmentedRadioGroup
-            size="l"
-            aria-label="Тип калькулятора"
-            value={tab}
+          <TabProvider
+            value={mode}
             onUpdate={(v) => {
-              startTransition(() => setTab(v as CalculatorTab));
+              const next = v as CalculatorMode;
+              startTransition(() => {
+                router.push(MODE_HREF[next]);
+              });
             }}
-            className={styles.modeTabs}
           >
-            <SegmentedRadioGroup.Option value="vm" title="Виртуальные машины">
-              <Flex alignItems="center" gap={2}>
-                <Icon data={Cpu} size={16} />
-                <span>Виртуальные машины</span>
-              </Flex>
-            </SegmentedRadioGroup.Option>
-            <SegmentedRadioGroup.Option value="inference" title="AI inference">
-              <Flex alignItems="center" gap={2}>
-                <Icon data={Display} size={16} />
-                <span>AI inference</span>
-              </Flex>
-            </SegmentedRadioGroup.Option>
-          </SegmentedRadioGroup>
+            <TabList size="l" className={styles.tabs}>
+              <Tab value="vm">Виртуальные машины</Tab>
+              <Tab value="inference">Self-host LLM</Tab>
+            </TabList>
+          </TabProvider>
         </header>
 
-        <div className={styles.workspace} data-tab={tab}>
-          {tab === 'vm' ? (
-            <VmCalculatorPanel period={period} />
+        <div className={styles.workspace} data-tab={mode}>
+          {mode === 'vm' ? (
+            <VmCalculatorPanel period={period} gpuPresets={gpuPresets} />
           ) : (
             <InferenceCalculatorPanel period={period} />
           )}
         </div>
 
-        <Flex justifyContent="center">
+        <Flex justifyContent="center" gap={3} wrap>
           <Button
             component={Link}
-            href="/catalog?category=compute"
+            href={mode === 'vm' ? '/calculator/self-host' : '/calculator/vm'}
             view="flat-secondary"
-            size="l"
+            size="m"
             prefetch
           >
-            Открыть полный каталог SKU
+            {mode === 'vm' ? 'Калькулятор Self-host LLM' : 'Калькулятор ВМ и GPU'}
+            <Icon data={ChevronRight} size={16} />
+          </Button>
+          <Button
+            component={Link}
+            href={mode === 'vm' ? '/catalog?category=compute' : '/catalog?category=gpu'}
+            view="flat-secondary"
+            size="m"
+            prefetch
+          >
+            Полный каталог SKU
             <Icon data={ChevronRight} size={16} />
           </Button>
         </Flex>

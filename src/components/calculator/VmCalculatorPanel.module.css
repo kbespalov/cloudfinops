@@ -1,102 +1,108 @@
-.root {
+.configCard {
+  min-width: 0;
+  padding: 16px;
+}
+
+.configInner {
+  padding: 0;
+}
+
+.familyBlock {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-}
-
-.block {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 20px;
-  border: 1px solid var(--g-color-line-generic);
-  border-radius: var(--g-border-radius-xl);
-  background: var(--g-color-base-float);
-}
-
-.fieldGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-@media (max-width: 640px) {
-  .fieldGrid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
 }
 
-.chips {
-  display: flex;
-  flex-wrap: wrap;
+.familyHint {
+  min-height: 1.2em;
+}
+
+.familyOption {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gpuOption {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--g-color-text-utility);
+  font-weight: 600;
+}
+
+.gpuSelectRow {
+  display: grid;
+  grid-template-columns: minmax(120px, 148px) minmax(0, 1fr);
+  align-items: center;
+  gap: 12px 16px;
+  min-width: 0;
+}
+
+.gpuSelectLabel {
+  min-width: 0;
+}
+
+.gpuHost {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
-}
-
-.chip {
-  appearance: none;
-  border: 1px solid var(--g-color-line-generic);
-  background: var(--g-color-base-background);
-  color: inherit;
-  border-radius: 999px;
-  padding: 6px 12px;
-  font: inherit;
-  cursor: pointer;
-  transition:
-    background 0.12s ease,
-    border-color 0.12s ease,
-    color 0.12s ease;
-}
-
-.chip:hover {
+  padding: 12px;
+  border-radius: var(--g-border-radius-m);
   background: var(--g-color-base-generic);
 }
 
-.chip[data-active='true'] {
-  border-color: var(--g-color-line-brand);
-  background: var(--g-color-base-selection);
-  color: var(--g-color-text-brand);
+.gpuHostStat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
-/* Dark: solid elevated panels + wells — avoid translucent generic mist. */
-:global(.g-root_theme_dark) .block,
-:global(.g-root_theme_dark-hc) .block {
-  background: var(--g-color-base-float-heavy);
-  border-color: var(--g-color-line-generic-solid);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.05) inset,
-    0 12px 32px rgba(0, 0, 0, 0.28);
+@media (max-width: 720px) {
+  .gpuSelectRow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .gpuHost {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
-:global(.g-root_theme_dark) .field :global(.g-text-input__content),
-:global(.g-root_theme_dark-hc) .field :global(.g-text-input__content) {
-  background: var(--g-color-base-generic-ultralight);
-  box-shadow: inset 0 0 0 1px var(--g-color-line-generic-solid);
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-:global(.g-root_theme_dark) .chip,
-:global(.g-root_theme_dark-hc) .chip {
-  background: var(--g-color-base-generic-ultralight);
-  border-color: var(--g-color-line-generic);
-  color: var(--g-color-text-primary);
+.diskBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-:global(.g-root_theme_dark) .chip:hover,
-:global(.g-root_theme_dark-hc) .chip:hover {
-  background: var(--g-color-base-float-hover);
-  border-color: var(--g-color-line-generic-hover);
+.diskTypeRow {
+  display: grid;
+  grid-template-columns: minmax(120px, 148px) auto;
+  align-items: center;
+  gap: 12px 16px;
+  min-width: 0;
 }
 
-:global(.g-root_theme_dark) .chip[data-active='true'],
-:global(.g-root_theme_dark-hc) .chip[data-active='true'] {
-  background: rgba(232, 165, 75, 0.16);
-  border-color: var(--g-color-line-brand);
-  color: var(--g-color-text-brand);
-  box-shadow: inset 0 0 0 1px rgba(232, 165, 75, 0.25);
+.diskTypeLabel {
+  min-width: 0;
+}
+
+.diskTypeIcon {
+  color: var(--g-color-text-secondary);
+  flex-shrink: 0;
+}
+
+@media (max-width: 720px) {
+  .diskTypeRow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
 }

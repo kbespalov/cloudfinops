@@ -1,11 +1,16 @@
+/* Visually hidden but kept in the DOM for crawlers / SEO.
+   Interactive calculator owns the viewport; this block must not create page scroll. */
 .seo {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 24px 80px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  color: var(--g-color-text-secondary);
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  pointer-events: none;
 }
 
 .title {
@@ -13,7 +18,6 @@
   font-size: 1.25rem;
   line-height: 1.3;
   font-weight: 600;
-  color: var(--g-color-text-primary);
 }
 
 .lead {
@@ -24,13 +28,11 @@
 }
 
 .lead strong {
-  color: var(--g-color-text-primary);
   font-weight: 600;
 }
 
 .list em {
   font-style: normal;
-  color: var(--g-color-text-complementary);
 }
 
 .grid {
@@ -44,7 +46,6 @@
   margin: 0 0 10px;
   font-size: 0.95rem;
   font-weight: 600;
-  color: var(--g-color-text-primary);
 }
 
 .list {
@@ -58,14 +59,12 @@
 }
 
 .list strong {
-  color: var(--g-color-text-primary);
   font-weight: 600;
 }
 
 .meta {
   margin: 10px 0 0;
   font-size: 0.8rem;
-  color: var(--g-color-text-hint);
 }
 
 .faq {
@@ -79,7 +78,6 @@
   margin: 0;
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--g-color-text-primary);
 }
 
 .faq dd {

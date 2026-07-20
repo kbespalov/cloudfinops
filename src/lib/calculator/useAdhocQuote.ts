@@ -13,6 +13,7 @@ export type AdhocComputeQuoteRequest = {
   diskMedia?: DiskMedia;
   family?: ComputeFamily;
   vmCount?: number;
+  publicIpCount?: number;
 };
 
 export type AdhocGpuQuoteRequest = {
@@ -24,6 +25,9 @@ export type AdhocGpuQuoteRequest = {
   ramGiB?: number;
   diskGiB?: number;
   gpuInterconnect?: string | null;
+  /** Selectel dedicated nodes (e.g. B300) — bundle without host vCPU/RAM. */
+  dedicated?: boolean;
+  gpuMemoryGb?: number | null;
 };
 
 export type AdhocQuoteRequest = AdhocComputeQuoteRequest | AdhocGpuQuoteRequest;
@@ -50,6 +54,9 @@ export function useAdhocQuote(request: AdhocQuoteRequest | null, debounceMs = 18
     const key = requestKey(request);
     let cancelled = false;
     const mySeq = ++seq.current;
+    // Drop the previous quote immediately so the sidebar does not show a stale
+    // provider/price while the new request is in flight.
+    setResult(null);
     setLoading(true);
     setError(null);
 

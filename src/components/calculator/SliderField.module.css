@@ -1,0 +1,53 @@
+.root {
+  display: grid;
+  grid-template-columns: minmax(120px, 148px) minmax(0, 1fr) 120px;
+  align-items: center;
+  gap: 12px 16px;
+  min-width: 0;
+}
+
+.label {
+  min-width: 0;
+}
+
+.icon {
+  color: var(--g-color-text-secondary);
+  flex-shrink: 0;
+}
+
+.slider {
+  width: 100%;
+  min-width: 0;
+}
+
+.input {
+  width: 100%;
+  min-width: 0;
+}
+
+.unit {
+  padding-inline-end: 4px;
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .root {
+    grid-template-columns: minmax(0, 1fr) 112px;
+    grid-template-areas:
+      'label input'
+      'slider slider';
+    gap: 8px 12px;
+  }
+
+  .label {
+    grid-area: label;
+  }
+
+  .slider {
+    grid-area: slider;
+  }
+
+  .input {
+    grid-area: input;
+  }
+}

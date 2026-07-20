@@ -1,31 +1,51 @@
 'use client';
 
 import {useEffect, useMemo, useState} from 'react';
-import {Flex, Label, Select, Text} from '@gravity-ui/uikit';
+import {
+  Card,
+  Divider,
+  Flex,
+  Icon,
+  Label,
+  SegmentedRadioGroup,
+  Select,
+  Text,
+} from '@gravity-ui/uikit';
+import {FaceRobot, Gpu} from '@gravity-ui/icons';
 import {INFERENCE_MODELS, type InferenceDtype} from '@/data/inference-models';
-import type {InferenceRecommendResult} from '@/lib/chat/inference-recommend';
-import type {PeriodMode} from '@/lib/calculator/quote-view';
+import {
+  defaultPricedConfigIndex,
+  type InferenceRecommendResult,
+} from '@/lib/chat/inference-recommend-view';
+import {
+  formatQuoteAmount,
+  periodShortLabel,
+  type PeriodMode,
+} from '@/lib/calculator/quote-view';
 import {useAdhocQuote} from '@/lib/calculator/useAdhocQuote';
 import {CalculatorSidebar} from './CalculatorSidebar';
+import {ModelFamilyMark} from './ModelFamilyMark';
 import styles from './InferenceCalculatorPanel.module.css';
 
 type QuantOption = InferenceDtype | 'auto';
 
-const QUANT_OPTIONS: {value: QuantOption; content: string}[] = [
-  {value: 'auto', content: 'Auto'},
-  {value: 'int4', content: 'INT4'},
-  {value: 'fp8', content: 'FP8'},
-  {value: 'bf16', content: 'BF16'},
-  {value: 'int8', content: 'INT8'},
+const QUANT_OPTIONS: {value: QuantOption; label: string}[] = [
+  {value: 'auto', label: 'Auto'},
+  {value: 'int4', label: 'INT4'},
+  {value: 'fp8', label: 'FP8'},
+  {value: 'bf16', label: 'BF16'},
+  {value: 'int8', label: 'INT8'},
 ];
 
 const DEFAULT_MODEL = 'Qwen3-Coder-Next';
 
 type ConfigPick = NonNullable<InferenceRecommendResult['configs']>[number];
 
-function formatRub(n: number | null | undefined): string {
-  if (n == null || !Number.isFinite(n)) return '—';
-  return new Intl.NumberFormat('ru-RU').format(Math.round(n));
+function monthToPeriod(month: number | null | undefined, period: PeriodMode): number | null {
+  if (month == null || !Number.isFinite(month)) return null;
+  if (period === 'month') return month;
+  if (period === 'year') return month * 12;
+  return month / 720;
 }
 
 function modelOptions() {
@@ -33,6 +53,23 @@ function modelOptions() {
     value: m.displayName,
     content: m.displayName,
   }));
+}
+
+function roleLabel(index: number): string {
+  if (index === 0) return 'Минимум';
+  if (index === 1) return 'Рекомендуемая';
+  return 'Ещё';
+}
+
+function ModelOptionRow({name, size = 20}: {name: string; size?: number}) {
+  return (
+    <Flex alignItems="center" gap={2} className={styles.modelOption}>
+      <ModelFamilyMark name={name} size={size} />
+      <Text variant="body-2" ellipsis>
+        {name}
+      </Text>
+    </Flex>
+  );
 }
 
 export function InferenceCalculatorPanel({period}: {period: PeriodMode}) {
@@ -48,7 +85,7 @@ export function InferenceCalculatorPanel({period}: {period: PeriodMode}) {
     const params = new URLSearchParams({
       model,
       quant,
-      maxConfigs: '5',
+      maxConfigs: '4',
     });
     fetch(`/api/calculator/inference?${params}`)
       .then((res) => {
@@ -58,7 +95,8 @@ export function InferenceCalculatorPanel({period}: {period: PeriodMode}) {
       .then((data) => {
         if (cancelled) return;
         setRec(data);
-        setSelectedIdx(0);
+        // Prefer first config with a catalog quote (e.g. skip unpriced B300 → H200).
+        setSelectedIdx(defaultPricedConfigIndex(data.configs ?? []));
       })
       .catch(() => {
         if (!cancelled) setRec(null);
@@ -76,16 +114,21 @@ export function InferenceCalculatorPanel({period}: {period: PeriodMode}) {
 
   const quoteRequest = useMemo(() => {
     if (!selected) return null;
-    const unitOnly = selected.host?.unitOnly;
+    const dedicated = selected.host?.dedicated === true;
+    const unitOnly = selected.host?.unitOnly === true;
+    const hostless = dedicated || unitOnly;
     return {
       kind: 'gpu' as const,
       period,
       gpuModelMatch: selected.gpuFamily,
       gpuCount: selected.gpuCount,
       gpuInterconnect: selected.interconnect ?? null,
-      vcpu: unitOnly ? undefined : selected.host?.vcpu,
-      ramGiB: unitOnly ? undefined : selected.host?.ramGiB,
-      diskGiB: unitOnly ? undefined : (selected.host?.diskGiB ?? 100),
+      vcpu: hostless ? undefined : selected.host?.vcpu,
+      ramGiB: hostless ? undefined : selected.host?.ramGiB,
+      diskGiB: hostless ? undefined : (selected.host?.diskGiB ?? 100),
+      dedicated: dedicated || undefined,
+      // Keep 80GB vs 94GB H100 (and similar) aligned with recommend quotes.
+      gpuMemoryGb: selected.host?.gpuMemoryGb ?? null,
     };
   }, [selected, period]);
 
@@ -96,164 +139,148 @@ export function InferenceCalculatorPanel({period}: {period: PeriodMode}) {
     modelMeta?.parameterCountB == null
       ? null
       : modelMeta.activeParameterCountB != null
-        ? `${modelMeta.parameterCountB}B / ${modelMeta.activeParameterCountB}B active`
+        ? `${modelMeta.parameterCountB}B · ${modelMeta.activeParameterCountB}B act`
         : `${modelMeta.parameterCountB}B`;
 
-  const hosted = rec?.hostedAlternative;
   const apiOnly = modelMeta?.deployment === 'api-only' || (!configs.length && rec?.ok);
-
-  const configSubtitle = selected
-    ? `${selected.gpuCount}×${selected.gpuFamily} · ${selected.quant.toUpperCase()}`
-    : undefined;
-
-  const hostedExtra = hosted?.providersMatched?.length ? (
-    <div className={styles.block} style={{padding: 16}}>
-      <Text variant="subheader-2">Hosted API · ₽ / 1M</Text>
-      <table className={styles.hostedTable}>
-        <thead>
-          <tr>
-            <th>
-              <Text variant="caption-2" color="complementary">
-                Провайдер
-              </Text>
-              </th>
-              <th>
-                <Text variant="caption-2" color="complementary">
-                  Input
-                </Text>
-              </th>
-              <th>
-                <Text variant="caption-2" color="complementary">
-                  Output
-                </Text>
-              </th>
-          </tr>
-        </thead>
-        <tbody>
-          {hosted.providersMatched.slice(0, 5).map((p) => (
-            <tr key={p.provider}>
-              <td>
-                <Text variant="body-2">{p.provider}</Text>
-              </td>
-              <td>
-                <Text variant="body-2">{formatRub(p.inputMonth ?? p.cheapestMonth)}</Text>
-              </td>
-              <td>
-                <Text variant="body-2">{formatRub(p.outputMonth)}</Text>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  ) : null;
 
   return (
     <>
-      <div className={styles.root}>
-        <section className={styles.block}>
-          <Text variant="subheader-2">Модель</Text>
-
-          <div className={styles.fieldGrid}>
+      <Card type="container" view="outlined" size="l" className={styles.configCard}>
+        <Flex direction="column" gap={4} className={styles.configInner}>
+          <div className={styles.fieldStack}>
             <label className={styles.field}>
-              <Text variant="caption-2" color="complementary">
-                Модель
-              </Text>
+              <Flex alignItems="center" gap={2} wrap className={styles.fieldHead}>
+                <Icon data={FaceRobot} size={14} className={styles.fieldIcon} />
+                <Text variant="body-2" color="complementary">
+                  Модель
+                </Text>
+                {paramsLabel ? (
+                  <Label size="xs" theme="unknown">
+                    {paramsLabel}
+                  </Label>
+                ) : null}
+                {modelMeta?.deployment === 'api-only' ? (
+                  <Label size="xs" theme="danger">
+                    API-only
+                  </Label>
+                ) : null}
+                {modelMeta?.deployment === 'weights-pending' ? (
+                  <Label size="xs" theme="warning">
+                    веса скоро
+                  </Label>
+                ) : null}
+              </Flex>
               <Select
-                size="l"
+                size="m"
                 filterable
+                width="max"
                 value={[model]}
                 options={modelOptions()}
                 onUpdate={(v) => setModel(v[0] ?? DEFAULT_MODEL)}
+                getOptionHeight={() => 32}
+                renderOption={(option) => (
+                  <ModelOptionRow name={String(option.value ?? option.content)} size={18} />
+                )}
+                renderSelectedOption={(option) => (
+                  <ModelOptionRow name={String(option.value ?? option.content)} size={16} />
+                )}
               />
             </label>
-            <label className={styles.field}>
-              <Text variant="caption-2" color="complementary">
+
+            <div className={styles.field}>
+              <Text variant="body-2" color="complementary">
                 Квант
               </Text>
-              <Select
-                size="l"
-                value={[quant]}
-                options={QUANT_OPTIONS}
-                onUpdate={(v) => setQuant((v[0] as QuantOption) ?? 'auto')}
-              />
-            </label>
+              <SegmentedRadioGroup
+                size="m"
+                width="max"
+                value={quant}
+                onUpdate={(v) => setQuant(v as QuantOption)}
+                aria-label="Квантизация"
+              >
+                {QUANT_OPTIONS.map((o) => (
+                  <SegmentedRadioGroup.Option key={o.value} value={o.value}>
+                    {o.label}
+                  </SegmentedRadioGroup.Option>
+                ))}
+              </SegmentedRadioGroup>
+            </div>
           </div>
 
-          {modelMeta ? (
-            <div className={styles.metaRow}>
-              {paramsLabel ? <Text variant="body-2">{paramsLabel}</Text> : null}
-              {modelMeta.deployment === 'api-only' ? (
-                <Label size="s" theme="danger">
-                  API-only
-                </Label>
-              ) : modelMeta.deployment === 'weights-pending' ? (
-                <Label size="s" theme="warning">
-                  веса скоро
-                </Label>
-              ) : null}
-            </div>
-          ) : null}
-        </section>
+          <Divider />
 
-        <section className={styles.block}>
-          <Text variant="subheader-2">GPU</Text>
+          <div className={styles.configSection}>
+            <Flex alignItems="center" gap={2}>
+              <Icon data={Gpu} size={16} />
+              <Text variant="subheader-2">GPU</Text>
+            </Flex>
 
-          {recLoading ? <Text variant="body-2">…</Text> : null}
+            {recLoading ? (
+              <Text variant="body-2" color="secondary">
+                …
+              </Text>
+            ) : null}
 
-          {apiOnly && !recLoading ? (
-            <Text variant="body-2">Self-host недоступен — смотрите Hosted API.</Text>
-          ) : null}
+            {apiOnly && !recLoading ? (
+              <Text variant="body-2" color="secondary">
+                Self-host недоступен для этой модели.
+              </Text>
+            ) : null}
 
-          {!apiOnly && configs.length ? (
-            <div className={styles.configGrid}>
-              {configs.slice(0, 4).map((c, i) => {
-                const isActive = selectedIdx === i;
-                const month = c.best?.totalMonth;
-                const role = i === 0 ? 'Минимум' : i === 1 ? 'Рекомендуемая' : 'Ещё';
-                return (
-                  <button
-                    key={`${c.gpuFamily}-${c.gpuCount}-${c.quant}-${i}`}
-                    type="button"
-                    className={styles.configCard}
-                    data-active={isActive ? 'true' : 'false'}
-                    onClick={() => setSelectedIdx(i)}
-                  >
-                    <Flex justifyContent="space-between" alignItems="center" gap={2}>
-                      <Label size="xs" theme={i === 0 ? 'info' : i === 1 ? 'success' : 'utility'}>
-                        {role}
-                      </Label>
-                      <Text variant="caption-2" color="secondary">
-                        ~{c.estimatedVramGiB} GiB
+            {!apiOnly && configs.length ? (
+              <div className={styles.configList} role="listbox" aria-label="Конфигурации GPU">
+                {configs.slice(0, 4).map((c, i) => {
+                  const isActive = selectedIdx === i;
+                  const amount = monthToPeriod(c.best?.totalMonth, period);
+                  return (
+                    <button
+                      key={`${c.gpuFamily}-${c.gpuCount}-${c.quant}-${i}`}
+                      type="button"
+                      role="option"
+                      aria-selected={isActive}
+                      className={styles.configRow}
+                      data-active={isActive ? 'true' : 'false'}
+                      onClick={() => setSelectedIdx(i)}
+                    >
+                      <span className={styles.configMain}>
+                        <Label
+                          size="xs"
+                          theme={i === 0 ? 'info' : i === 1 ? 'success' : 'normal'}
+                        >
+                          {roleLabel(i)}
+                        </Label>
+                        <Text variant="body-2">
+                          {c.gpuCount}× {c.gpuFamily} · {c.quant.toUpperCase()}
+                        </Text>
+                        <Text variant="caption-2" color="secondary">
+                          ~{c.estimatedVramGiB} GiB
+                        </Text>
+                      </span>
+                      <Text variant="subheader-2" className={styles.configPrice}>
+                        {amount != null
+                          ? `${formatQuoteAmount(amount, period).replace(/\s*₽$/, '')} ₽`
+                          : '—'}
+                        <span className={styles.configPeriod}>
+                          {' '}
+                          / {periodShortLabel(period)}
+                        </span>
                       </Text>
-                    </Flex>
-                    <Text variant="subheader-2">
-                      {c.gpuCount}× {c.gpuFamily} · {c.quant.toUpperCase()}
-                    </Text>
-                    <Flex alignItems="baseline" gap={1} className={styles.configPrice}>
-                      <Text variant="header-1">
-                        {month != null ? `${formatRub(month)} ₽` : '—'}
-                      </Text>
-                      <Text variant="body-2" color="secondary">
-                        / мес
-                      </Text>
-                    </Flex>
-                  </button>
-                );
-              })}
-            </div>
-          ) : null}
-        </section>
-      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : null}
+          </div>
+        </Flex>
+      </Card>
 
       <CalculatorSidebar
         period={period}
         result={apiOnly ? null : result}
         loading={recLoading || quoteLoading}
-        eyebrow={modelMeta?.displayName}
-        subtitle={configSubtitle}
-        emptyHint={apiOnly ? 'Только Hosted API' : 'Нет котировок'}
-        extras={hostedExtra}
+        eyebrow="Лучшее предложение"
+        emptyHint={apiOnly ? 'Self-host недоступен' : 'Нет котировок'}
       />
     </>
   );

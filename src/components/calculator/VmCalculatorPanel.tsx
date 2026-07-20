@@ -1,202 +1,473 @@
 'use client';
 
 import {useMemo, useState} from 'react';
-import {SegmentedRadioGroup, Text, TextInput} from '@gravity-ui/uikit';
+import {Card, Flex, Icon, SegmentedRadioGroup, Select, Text} from '@gravity-ui/uikit';
+import {
+  Cpu,
+  Cpus,
+  Gpu,
+  HardDrive,
+  Layers3Diagonal,
+  PlanetEarth,
+  ScalesBalanced,
+  Server,
+  TagRuble,
+  Thunderbolt,
+} from '@gravity-ui/icons';
 import {
   COMPUTE_FAMILY_TITLE,
-  COMPUTE_PRESETS,
   computePresetsByFamily,
   type ComputeFamily,
+  type ComputePreset,
   type DiskMedia,
+  type GpuPreset,
 } from '@/lib/calculator/presets';
-import type {PeriodMode} from '@/lib/calculator/quote-view';
+import {formatGiBCapacity, type PeriodMode} from '@/lib/calculator/quote-view';
 import {useAdhocQuote} from '@/lib/calculator/useAdhocQuote';
 import {CalculatorSidebar} from './CalculatorSidebar';
+import {GpuPresetGrid} from './GpuPresetGrid';
+import {IntegerSliderField, SliderField} from './SliderField';
+import {VmPresetGrid} from './VmPresetGrid';
 import styles from './VmCalculatorPanel.module.css';
 
 const FAMILIES: ComputeFamily[] = ['general', 'high-cpu', 'high-memory', 'low-cost'];
+
+const FAMILY_ICON: Record<ComputeFamily, typeof Cpu> = {
+  general: ScalesBalanced,
+  'high-cpu': Cpus,
+  'high-memory': Layers3Diagonal,
+  'low-cost': TagRuble,
+};
+
+type VmMode = ComputeFamily | 'gpu';
+
+const RAM_PER_VCPU: Record<ComputeFamily, number> = {
+  general: 4,
+  'high-cpu': 2,
+  'high-memory': 8,
+  'low-cost': 2,
+};
+
+const FAMILY_HINT: Record<ComputeFamily, string> = {
+  general: '1 vCPU → 4 GiB RAM',
+  'high-cpu': '1 vCPU → 2 GiB RAM',
+  'high-memory': '1 vCPU → 8 GiB RAM',
+  'low-cost': '1 vCPU → 2 GiB RAM · shared / preemptible',
+};
+
+const VCPU_STEPS: Record<ComputeFamily, number[]> = {
+  'low-cost': [1, 2, 4, 8, 16, 32],
+  general: [2, 4, 8, 16, 32, 64, 96, 128],
+  'high-cpu': [2, 4, 8, 16, 32, 64, 96, 128],
+  'high-memory': [2, 4, 8, 16, 32, 64, 96, 128],
+};
+
+const VM_STEPS = [1, 2, 4, 8, 16, 32, 64];
+/** Up to 10 TiB — discrete ladder for the volume slider. */
+const DISK_STEPS = [10, 20, 50, 100, 200, 500, 1000, 2000, 4000, 8000, 10240];
 
 const DEFAULT = {
   family: 'general' as ComputeFamily,
   vmCount: 1,
   vcpu: 4,
-  ramGiB: 16,
-  diskGiB: 100,
+  diskGiB: 10,
   diskMedia: 'ssd' as DiskMedia,
+  publicIpCount: 1,
 };
 
-function clampInt(raw: string, min: number, max: number, fallback: number): number {
-  const n = Number(raw.replace(/\s/g, ''));
-  if (!Number.isFinite(n)) return fallback;
-  return Math.min(max, Math.max(min, Math.round(n)));
+function nearestIn(options: number[], value: number): number {
+  if (!options.length) return value;
+  let best = options[0]!;
+  let bestDist = Math.abs(best - value);
+  for (const opt of options) {
+    const d = Math.abs(opt - value);
+    if (d < bestDist) {
+      best = opt;
+      bestDist = d;
+    }
+  }
+  return best;
 }
 
-export function VmCalculatorPanel({period}: {period: PeriodMode}) {
-  const [family, setFamily] = useState<ComputeFamily | 'custom'>(DEFAULT.family);
-  const [vmCount, setVmCount] = useState(String(DEFAULT.vmCount));
-  const [vcpu, setVcpu] = useState(String(DEFAULT.vcpu));
-  const [ramGiB, setRamGiB] = useState(String(DEFAULT.ramGiB));
-  const [diskGiB, setDiskGiB] = useState(String(DEFAULT.diskGiB));
-  const [diskMedia, setDiskMedia] = useState<DiskMedia>(DEFAULT.diskMedia);
+function ramFor(family: ComputeFamily, vcpu: number): number {
+  return vcpu * RAM_PER_VCPU[family];
+}
 
-  const parsed = useMemo(
-    () => ({
-      vmCount: clampInt(vmCount, 1, 64, DEFAULT.vmCount),
-      vcpu: clampInt(vcpu, 1, 128, DEFAULT.vcpu),
-      ramGiB: clampInt(ramGiB, 1, 1024, DEFAULT.ramGiB),
-      diskGiB: clampInt(diskGiB, 10, 4096, DEFAULT.diskGiB),
-      diskMedia,
-      family: family === 'custom' ? ('general' as ComputeFamily) : family,
-    }),
-    [vmCount, vcpu, ramGiB, diskGiB, diskMedia, family],
+function pickDefaultGpu(presets: GpuPreset[]): GpuPreset | null {
+  if (presets.length === 0) return null;
+  return (
+    presets.find((p) => p.gpuModelMatch === 'H100' && p.gpuCount === 1) ??
+    presets.find((p) => p.gpuModelMatch === 'H100') ??
+    presets[0]!
   );
+}
 
-  const request = useMemo(
-    () => ({
+function gpuModelOptions(presets: GpuPreset[]) {
+  const seen = new Set<string>();
+  const models: string[] = [];
+  for (const p of presets) {
+    if (seen.has(p.gpuModelMatch)) continue;
+    seen.add(p.gpuModelMatch);
+    models.push(p.gpuModelMatch);
+  }
+  return [
+    {value: 'all', content: 'Все карты'},
+    ...models.map((m) => ({value: m, content: m})),
+  ];
+}
+
+export function VmCalculatorPanel({
+  period,
+  gpuPresets = [],
+}: {
+  period: PeriodMode;
+  gpuPresets?: GpuPreset[];
+}) {
+  const [mode, setMode] = useState<VmMode>(DEFAULT.family);
+  const [family, setFamily] = useState<ComputeFamily>(DEFAULT.family);
+  const [customRam, setCustomRam] = useState(false);
+  const [vmCount, setVmCount] = useState(DEFAULT.vmCount);
+  const [vcpu, setVcpu] = useState(DEFAULT.vcpu);
+  const [ramGiB, setRamGiB] = useState(ramFor(DEFAULT.family, DEFAULT.vcpu));
+  const [diskGiB, setDiskGiB] = useState(DEFAULT.diskGiB);
+  const [diskMedia, setDiskMedia] = useState<DiskMedia>(DEFAULT.diskMedia);
+  const [publicIpCount, setPublicIpCount] = useState(DEFAULT.publicIpCount);
+
+  const defaultGpu = useMemo(() => pickDefaultGpu(gpuPresets), [gpuPresets]);
+  const [gpuFilter, setGpuFilter] = useState<string>('all');
+  const [selectedGpu, setSelectedGpu] = useState<GpuPreset | null>(null);
+
+  const activeGpu = selectedGpu ?? defaultGpu;
+  const isGpu = mode === 'gpu';
+
+  const filteredGpuPresets = useMemo(() => {
+    if (gpuFilter === 'all') return gpuPresets;
+    return gpuPresets.filter((p) => p.gpuModelMatch === gpuFilter);
+  }, [gpuPresets, gpuFilter]);
+
+  const vcpuOptions = VCPU_STEPS[family];
+  const ramOptions = vcpuOptions.map((v) => ramFor(family, v));
+
+  const request = useMemo(() => {
+    if (isGpu) {
+      if (!activeGpu) return null;
+      return {
+        kind: 'gpu' as const,
+        period,
+        gpuModelMatch: activeGpu.gpuModelMatch,
+        gpuCount: activeGpu.gpuCount,
+        gpuInterconnect: activeGpu.gpuInterconnect ?? null,
+        vcpu: activeGpu.vcpu,
+        ramGiB: activeGpu.ramGiB,
+        diskGiB: activeGpu.diskGiB,
+        dedicated: activeGpu.dedicated === true,
+        gpuMemoryGb: activeGpu.gpuMemoryGb ?? null,
+      };
+    }
+    return {
       kind: 'compute' as const,
       period,
-      vcpu: parsed.vcpu,
-      ramGiB: parsed.ramGiB,
-      diskGiB: parsed.diskGiB,
-      diskMedia: parsed.diskMedia,
-      family: parsed.family,
-      vmCount: parsed.vmCount,
-    }),
-    [period, parsed],
-  );
+      vcpu,
+      ramGiB,
+      diskGiB,
+      diskMedia,
+      family,
+      vmCount,
+      publicIpCount,
+    };
+  }, [
+    isGpu,
+    activeGpu,
+    period,
+    vcpu,
+    ramGiB,
+    diskGiB,
+    diskMedia,
+    family,
+    vmCount,
+    publicIpCount,
+  ]);
 
   const {result, loading} = useAdhocQuote(request);
 
+  function applyMode(next: VmMode) {
+    setMode(next);
+    if (next === 'gpu') {
+      if (!selectedGpu && defaultGpu) setSelectedGpu(defaultGpu);
+      return;
+    }
+    applyFamily(next);
+  }
+
   function applyFamily(next: ComputeFamily) {
-    const mid = computePresetsByFamily(next)[1] ?? COMPUTE_PRESETS.find((p) => p.family === next);
+    const steps = VCPU_STEPS[next];
+    const nextVcpu = nearestIn(steps, vcpu);
     setFamily(next);
-    if (!mid) return;
-    setVcpu(String(mid.vcpu));
-    setRamGiB(String(mid.ramGiB));
-    setDiskGiB(String(mid.diskGiB));
+    setCustomRam(false);
+    setVcpu(nextVcpu);
+    setRamGiB(ramFor(next, nextVcpu));
   }
 
-  function markCustom() {
-    setFamily('custom');
+  function onVmCountChange(next: number) {
+    setVmCount(next);
+    setPublicIpCount((ips) => Math.min(ips, next));
   }
 
-  const diskLabel = parsed.diskMedia === 'hdd' ? 'HDD' : 'SSD';
-  const summary = `${parsed.vmCount} × ${parsed.vcpu} vCPU · ${parsed.ramGiB} GiB · ${parsed.diskGiB} GiB ${diskLabel}`;
+  function onVcpuChange(next: number) {
+    setVcpu(next);
+    if (!customRam) setRamGiB(ramFor(family, next));
+  }
+
+  function onRamChange(next: number) {
+    setCustomRam(true);
+    setRamGiB(next);
+    const match = vcpuOptions.find((v) => ramFor(family, v) === next);
+    if (match != null) {
+      setVcpu(match);
+      setCustomRam(false);
+    }
+  }
+
+  function applyPreset(preset: ComputePreset) {
+    setMode(preset.family);
+    setFamily(preset.family);
+    setCustomRam(false);
+    setVcpu(preset.vcpu);
+    setRamGiB(preset.ramGiB);
+    setDiskGiB(nearestIn(DISK_STEPS, preset.diskGiB));
+  }
+
+  function applyGpuPreset(preset: GpuPreset) {
+    setMode('gpu');
+    setSelectedGpu(preset);
+    if (gpuFilter !== 'all' && gpuFilter !== preset.gpuModelMatch) {
+      setGpuFilter(preset.gpuModelMatch);
+    }
+  }
+
+  function onGpuFilterChange(values: string[]) {
+    const next = values[0] ?? 'all';
+    setGpuFilter(next);
+    const pool = next === 'all' ? gpuPresets : gpuPresets.filter((p) => p.gpuModelMatch === next);
+    if (pool.length === 0) return;
+    if (!activeGpu || (next !== 'all' && activeGpu.gpuModelMatch !== next)) {
+      setSelectedGpu(pool[0]!);
+    }
+  }
+
+  const activePresetId =
+    computePresetsByFamily(family).find((p) => p.vcpu === vcpu && p.ramGiB === ramGiB)?.id ??
+    null;
+
+  const gpuHostRam =
+    activeGpu?.ramGiB != null ? formatGiBCapacity(activeGpu.ramGiB) : '—';
 
   return (
     <>
-      <div className={styles.root}>
-        <section className={styles.block}>
-          <Text variant="subheader-2">Виртуальные машины</Text>
-
-          <div className={styles.chips} role="list">
-            <button
-              type="button"
-              className={styles.chip}
-              data-active={family === 'custom' ? 'true' : 'false'}
-              onClick={markCustom}
-            >
-              Своя
-            </button>
-            {FAMILIES.map((id) => (
-              <button
-                key={id}
-                type="button"
-                className={styles.chip}
-                data-active={family === id ? 'true' : 'false'}
-                onClick={() => applyFamily(id)}
-              >
-                {COMPUTE_FAMILY_TITLE[id]}
-              </button>
-            ))}
-          </div>
-
-          <div className={styles.fieldGrid}>
-            <label className={styles.field}>
-              <Text variant="caption-2" color="complementary">
-                VM
-              </Text>
-              <TextInput
-                size="l"
-                type="number"
-                value={vmCount}
-                onUpdate={(v) => {
-                  markCustom();
-                  setVmCount(v);
-                }}
-              />
-            </label>
-            <label className={styles.field}>
-              <Text variant="caption-2" color="complementary">
-                vCPU
-              </Text>
-              <TextInput
-                size="l"
-                type="number"
-                value={vcpu}
-                onUpdate={(v) => {
-                  markCustom();
-                  setVcpu(v);
-                }}
-              />
-            </label>
-            <label className={styles.field}>
-              <Text variant="caption-2" color="complementary">
-                RAM, GiB
-              </Text>
-              <TextInput
-                size="l"
-                type="number"
-                value={ramGiB}
-                onUpdate={(v) => {
-                  markCustom();
-                  setRamGiB(v);
-                }}
-              />
-            </label>
-            <label className={styles.field}>
-              <Text variant="caption-2" color="complementary">
-                Диск, GiB
-              </Text>
-              <TextInput
-                size="l"
-                type="number"
-                value={diskGiB}
-                onUpdate={(v) => {
-                  markCustom();
-                  setDiskGiB(v);
-                }}
-              />
-            </label>
-          </div>
-
-          <div className={styles.field}>
-            <Text variant="caption-2" color="complementary">
-              Тип диска
-            </Text>
+      <Card type="container" view="outlined" size="l" className={styles.configCard}>
+        <Flex direction="column" gap={4} className={styles.configInner}>
+          <div className={styles.familyBlock} data-mode={mode}>
             <SegmentedRadioGroup
               size="m"
-              value={diskMedia}
-              onUpdate={(v) => {
-                markCustom();
-                setDiskMedia(v as DiskMedia);
-              }}
+              width="max"
+              value={mode}
+              onUpdate={(v) => applyMode(v as VmMode)}
+              aria-label="Семейство ВМ"
             >
-              <SegmentedRadioGroup.Option value="ssd">SSD</SegmentedRadioGroup.Option>
-              <SegmentedRadioGroup.Option value="hdd">HDD</SegmentedRadioGroup.Option>
+              {[
+                ...FAMILIES.map((id) => (
+                  <SegmentedRadioGroup.Option key={id} value={id}>
+                    <span className={styles.familyOption}>
+                      <Icon data={FAMILY_ICON[id]} size={14} />
+                      {COMPUTE_FAMILY_TITLE[id]}
+                    </span>
+                  </SegmentedRadioGroup.Option>
+                )),
+                <SegmentedRadioGroup.Option key="gpu" value="gpu">
+                  <span className={styles.gpuOption}>
+                    <Icon data={Gpu} size={14} />
+                    GPU
+                  </span>
+                </SegmentedRadioGroup.Option>,
+              ]}
             </SegmentedRadioGroup>
+            <Text
+              variant="caption-2"
+              color={isGpu ? 'utility' : 'secondary'}
+              className={styles.familyHint}
+            >
+              {isGpu
+                ? 'Flavor с GPU · host vCPU/RAM фиксированы карточкой'
+                : customRam
+                  ? 'Своя RAM · пропорция семейства отключена'
+                  : FAMILY_HINT[family]}
+            </Text>
           </div>
 
-          <Text variant="body-2">{summary}</Text>
-        </section>
-      </div>
+          {isGpu ? (
+            <>
+              <div className={styles.gpuSelectRow}>
+                <Flex alignItems="center" gap={2} className={styles.gpuSelectLabel}>
+                  <Icon data={Gpu} size={16} className={styles.diskTypeIcon} />
+                  <Text variant="body-2">GPU</Text>
+                </Flex>
+                <Select
+                  size="m"
+                  width="max"
+                  value={[gpuFilter]}
+                  options={gpuModelOptions(gpuPresets)}
+                  onUpdate={onGpuFilterChange}
+                  placeholder="Карта"
+                  disabled={gpuPresets.length === 0}
+                />
+              </div>
+
+              <div className={styles.gpuHost}>
+                <div className={styles.gpuHostStat}>
+                  <Text variant="caption-2" color="secondary">
+                    Карты
+                  </Text>
+                  <Text variant="subheader-2">
+                    {activeGpu ? `${activeGpu.gpuCount}× ${activeGpu.gpuModelMatch}` : '—'}
+                  </Text>
+                </div>
+                <div className={styles.gpuHostStat}>
+                  <Text variant="caption-2" color="secondary">
+                    vCPU
+                  </Text>
+                  <Text variant="subheader-2">
+                    {activeGpu?.vcpu != null ? activeGpu.vcpu : '—'}
+                  </Text>
+                </div>
+                <div className={styles.gpuHostStat}>
+                  <Text variant="caption-2" color="secondary">
+                    RAM
+                  </Text>
+                  <Text variant="subheader-2">{gpuHostRam}</Text>
+                </div>
+                <div className={styles.gpuHostStat}>
+                  <Text variant="caption-2" color="secondary">
+                    Диск
+                  </Text>
+                  <Text variant="subheader-2">
+                    {activeGpu?.diskGiB != null
+                      ? `${activeGpu.diskGiB} GiB SSD`
+                      : activeGpu?.dedicated
+                        ? 'dedicated'
+                        : '—'}
+                  </Text>
+                </div>
+              </div>
+
+              <GpuPresetGrid
+                presets={filteredGpuPresets}
+                period={period}
+                activePresetId={activeGpu?.id ?? null}
+                onSelect={applyGpuPreset}
+              />
+            </>
+          ) : (
+            <>
+              <div className={styles.fields}>
+                <SliderField
+                  icon={Server}
+                  label="Число VM"
+                  value={vmCount}
+                  options={VM_STEPS}
+                  scaleMin={1}
+                  scaleMax={64}
+                  unit="шт"
+                  onUpdate={onVmCountChange}
+                />
+                <SliderField
+                  icon={Cpu}
+                  label="vCPU на VM"
+                  value={vcpu}
+                  options={vcpuOptions}
+                  scaleMin={1}
+                  scaleMax={128}
+                  unit="vCPU"
+                  onUpdate={onVcpuChange}
+                />
+                <SliderField
+                  icon={Layers3Diagonal}
+                  label="RAM на VM"
+                  value={ramGiB}
+                  options={ramOptions}
+                  scaleMin={1}
+                  scaleMax={1024}
+                  unit="GiB"
+                  onUpdate={onRamChange}
+                />
+              </div>
+
+              <div className={styles.diskBlock}>
+                <div className={styles.diskTypeRow}>
+                  <Flex alignItems="center" gap={2} className={styles.diskTypeLabel}>
+                    <Icon data={HardDrive} size={16} className={styles.diskTypeIcon} />
+                    <Text variant="body-2">Диск</Text>
+                  </Flex>
+                  <SegmentedRadioGroup
+                    size="m"
+                    value={diskMedia}
+                    onUpdate={(v) => setDiskMedia(v as DiskMedia)}
+                    aria-label="Тип диска"
+                  >
+                    <SegmentedRadioGroup.Option value="ssd">
+                      <Flex alignItems="center" gap={1}>
+                        <Icon data={Thunderbolt} size={14} />
+                        SSD
+                      </Flex>
+                    </SegmentedRadioGroup.Option>
+                    <SegmentedRadioGroup.Option value="hdd">
+                      <Flex alignItems="center" gap={1}>
+                        <Icon data={HardDrive} size={14} />
+                        HDD
+                      </Flex>
+                    </SegmentedRadioGroup.Option>
+                  </SegmentedRadioGroup>
+                </div>
+                <SliderField
+                  icon={HardDrive}
+                  label="Объём"
+                  value={diskGiB}
+                  options={DISK_STEPS}
+                  scaleMin={10}
+                  scaleMax={10240}
+                  unit="GiB"
+                  onUpdate={setDiskGiB}
+                />
+              </div>
+
+              <IntegerSliderField
+                icon={PlanetEarth}
+                label="Публичные IP"
+                value={publicIpCount}
+                min={0}
+                max={vmCount}
+                unit="шт"
+                onUpdate={setPublicIpCount}
+              />
+
+              <VmPresetGrid
+                family={family}
+                period={period}
+                vmCount={vmCount}
+                diskMedia={diskMedia}
+                publicIpCount={publicIpCount}
+                activePresetId={activePresetId}
+                onSelect={applyPreset}
+              />
+            </>
+          )}
+        </Flex>
+      </Card>
 
       <CalculatorSidebar
         period={period}
         result={result}
         loading={loading}
-        eyebrow="Лучший оффер"
-        subtitle={summary}
+        eyebrow={isGpu ? 'Лучшее предложение GPU' : 'Лучшее предложение'}
         emptyHint="Нет котировок"
       />
     </>

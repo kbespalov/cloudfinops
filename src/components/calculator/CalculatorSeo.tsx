@@ -5,6 +5,7 @@ import {
   type ComputeFamily,
   type GpuPreset,
 } from '@/lib/calculator/presets';
+import {INFERENCE_MODELS} from '@/data/inference-models';
 import styles from './CalculatorSeo.module.css';
 
 const FAMILIES: ComputeFamily[] = ['low-cost', 'general', 'high-cpu', 'high-memory'];
@@ -18,11 +19,42 @@ const PROVIDERS = [
   'T1 Cloud',
 ];
 
-/**
- * Server-rendered SEO copy: real content for crawlers (not cloaked),
- * calm footer block so the interactive calculator stays the focus.
- */
-export function CalculatorSeo({
+/** Featured NVIDIA SKUs people search for (calculator + SEO). */
+const GPU_CARDS = [
+  {
+    id: 'b300',
+    title: 'NVIDIA B300',
+    text: 'Выделенный 8×B300 288GB (Selectel) — калькулятор показывает bundle dedicated-узла, не облачную GPU-ВМ.',
+  },
+  {
+    id: 'h100',
+    title: 'NVIDIA H100 80GB',
+    text: '1× и 8× H100 PCIe/NVLink: сравнение Cloud.ru flavor и сборки GPU + host у Selectel / T1 / других.',
+  },
+  {
+    id: 'h200',
+    title: 'NVIDIA H200 141GB',
+    text: '1× и 8× H200 под крупные MoE и длинный контекст — Best offer по публичным тарифам РФ.',
+  },
+  {
+    id: 'a100',
+    title: 'NVIDIA A100 80GB',
+    text: 'Классика датацентрового инференса и обучения; flavor и unit-цены в одном сравнении.',
+  },
+  {
+    id: 'l4',
+    title: 'NVIDIA L4 24GB',
+    text: 'Экономичный inference / embedding; часто дешевле H100 при подходящем размере модели.',
+  },
+  {
+    id: 'v100',
+    title: 'NVIDIA V100 32GB',
+    text: 'Legacy-карта в каталоге — полезно для оценки миграции со старых кластеров.',
+  },
+] as const;
+
+/** Server-rendered SEO: in DOM for crawlers, visually hidden (interactive UI owns viewport). */
+export function VmCalculatorSeo({
   gpuPresets,
   gpuShapeCount,
 }: {
@@ -30,53 +62,63 @@ export function CalculatorSeo({
   gpuShapeCount: number;
 }) {
   return (
-    <section className={styles.seo} aria-labelledby="calculator-seo-title">
-      <h2 id="calculator-seo-title" className={styles.title}>
-        Калькулятор облаков и аренды GPU в России
+    <section className={styles.seo} aria-labelledby="calculator-vm-seo-title">
+      <h2 id="calculator-vm-seo-title" className={styles.title}>
+        Калькулятор стоимости ВМ и аренды GPU H100, H200, B300 в облаках России
       </h2>
       <p className={styles.lead}>
-        Сравните публичные цены на виртуальные машины и подберите GPU под open-weight LLM у
-        российских облачных провайдеров: {PROVIDERS.join(', ')}. Вкладка ВМ считает Best offer по
-        vCPU/RAM/SSD; вкладка AI inference использует базу self-host рецептов Cloud FinOps и
-        публичный каталог GPU — без промо-тарифов, которых нет в открытом прайсе.
+        Сравните публичные цены на виртуальные машины (vCPU, RAM, SSD/NVMe, публичный IP) и аренду
+        видеокарт NVIDIA — <strong>B300</strong>, <strong>H100</strong>, <strong>H200</strong>,{' '}
+        <strong>A100</strong>, <strong>L4</strong>, <strong>V100</strong> — у {PROVIDERS.join(', ')}.
+        Best offer — минимальная ордерабельная конфигурация по открытому каталогу Cloud FinOps, без
+        промо-тарифов.
       </p>
 
-      <h3 className={styles.subtitle}>Как считается цена</h3>
-      <p className={styles.lead}>
-        Калькулятор работает только с публичным каталогом SKU Cloud FinOps. Для каждого пресета и
-        каждого провайдера подбирается <strong>ордерабельная</strong> конфигурация — такая, которую
-        реально можно заказать: компоненты из одного региона, совместимая CPU-платформа, есть
-        загрузочный диск. Затем выбирается минимальная итоговая цена (Best offer).
-      </p>
+      <h3 className={styles.subtitle}>Для кого этот калькулятор</h3>
       <ul className={styles.list}>
         <li>
-          <strong>Unit-тариф (vCPU + RAM + SSD)</strong> — если провайдер публикует отдельные цены
-          за ядро и гигабайт памяти (Yandex Cloud, VK Cloud, Selectel, MWS, T1). Складываем:{' '}
-          <em>N × цена vCPU + M × цена RAM + 100 GiB × цена SSD</em>.
+          <strong>FinOps и закупки</strong> — быстрый ориентир «сколько стоит 4/16 или 8/32 в РФ»
+          без ручного сбора прайсов.
         </li>
         <li>
-          <strong>Flavor / готовая ВМ</strong> — если unit-цен нет, а есть готовые конфигурации
-          (типичный случай Cloud.ru: SKU «4 vCPU / 8 GiB»). Берём точный flavor под пресет и
-          добавляем SSD отдельно — в тарифе диск обычно не входит в цену ВМ.
+          <strong>Архитекторы и DevOps</strong> — сравнение General / High CPU / High Memory /
+          Low-cost и вкладки GPU с flavor-пресетами.
         </li>
         <li>
-          <strong>General / High CPU / High Memory</strong> — только on-demand и выделенные ядра
-          (100% guarantee). Shared (1:N), burstable 5–50% и preemptible в эти полки не попадают.
+          <strong>AI-команды</strong> — оценка аренды H100 / H200 / B300 до детального self-host
+          расчёта на <a href="/calculator/self-host">калькуляторе Self-host LLM</a>.
+        </li>
+      </ul>
+
+      <h3 className={styles.subtitle}>Калькулятор по видеокартам</h3>
+      <ul className={styles.list}>
+        {GPU_CARDS.map((card) => (
+          <li key={card.id}>
+            <strong>{card.title}</strong> — {card.text}
+          </li>
+        ))}
+      </ul>
+
+      <h3 className={styles.subtitle}>Как считается цена ВМ</h3>
+      <ul className={styles.list}>
+        <li>
+          <strong>Unit-тариф</strong> — складываем N × vCPU + M × RAM + диск (по умолчанию 10 GiB
+          SSD/NVMe) + публичные IP, если включены.
         </li>
         <li>
-          <strong>Low-cost</strong> — самые дешёвые ордерабельные варианты: preemptible, shared /
-          oversubscribed vCPU и flavor с долей ядра &lt;100% (например 10%/30% у Cloud.ru). Дробные
-          unit-ядра Yandex (5%/20%/50%) не используем: на них нельзя честно собрать «8 vCPU».
+          <strong>Flavor</strong> — готовая ВМ (типично Cloud.ru) + диск отдельно, если не входит в
+          SKU.
         </li>
         <li>
-          <strong>GPU</strong> — строки таблицы = flavor Cloud.ru + уникальные формы VK/Selectel
-          (в т.ч. B300). У провайдера без flavor собираем GPU + те же vCPU/RAM (+ SSD). Exact flavor
-          имеет приоритет над сборкой.
+          <strong>General / High CPU / High Memory</strong> — только on-demand с гарантией ядра
+          100%. Shared и preemptible — в Low-cost.
         </li>
         <li>
-          <strong>Что отбрасываем</strong> — SKU с пометкой «наличие не подтверждено», снятые с
-          продажи и тарифы без публичной цены. Месяц = 720 часов; сеть, IP, образы и бэкапы в
-          пресет не входят.
+          <strong>GPU</strong> — flavor Cloud.ru и уникальные формы VK/Selectel (в т.ч. dedicated
+          B300); иначе GPU unit + host vCPU/RAM.
+        </li>
+        <li>
+          Месяц = 720 часов. Неподтверждённые и снятые SKU не участвуют.
         </li>
       </ul>
 
@@ -90,133 +132,203 @@ export function CalculatorSeo({
                 .join(', ');
               return (
                 <li key={family}>
-                  <strong>{COMPUTE_FAMILY_TITLE[family]}</strong> — {samples} (vCPU / GiB RAM) + 100
-                  GiB SSD
+                  <strong>{COMPUTE_FAMILY_TITLE[family]}</strong> — {samples} (vCPU / GiB) + 10 GiB
+                  SSD
                 </li>
               );
             })}
           </ul>
-          <p className={styles.meta}>
-            {COMPUTE_PRESETS.length} конфигураций ВМ · Low-cost / General / High CPU / High Memory
-          </p>
+          <p className={styles.meta}>{COMPUTE_PRESETS.length} конфигураций ВМ</p>
         </div>
-
         <div>
           <h3 className={styles.subtitle}>Пресеты GPU</h3>
           <ul className={styles.list}>
             {gpuPresets.map((p) => (
               <li key={p.id}>
                 <strong>{p.title}</strong> — {p.subtitle}
-                {p.highlight ? ' · выделено' : ''}
               </li>
             ))}
           </ul>
-          <p className={styles.meta}>
-            {gpuShapeCount} GPU-форм · Cloud.ru flavors + уникальные VK/Selectel · B300 dedicated
-          </p>
+          <p className={styles.meta}>{gpuShapeCount} GPU-форм в каталоге</p>
         </div>
       </div>
 
-      <h3 className={styles.subtitle}>Частые вопросы</h3>
+      <h3 className={styles.subtitle}>Частые вопросы · калькулятор ВМ и GPU</h3>
       <dl className={styles.faq}>
-        <div>
-          <dt>Как считается стоимость ВМ в калькуляторе?</dt>
-          <dd>
-            Либо складываем публичные unit-цены vCPU + RAM + SSD одного региона и платформы, либо
-            берём точный flavor (готовая ВМ) и добавляем SSD. Среди провайдеров выбираем минимум —
-            Best offer. Пример: у Cloud.ru нет отдельных цен за ядро, поэтому в расчёт идут их
-            flavor SKU.
-          </dd>
-        </div>
-        <div>
-          <dt>Почему у части пресетов нет Cloud.ru?</dt>
-          <dd>
-            Cloud.ru продаёт фиксированные размеры ВМ. Если в тарифе нет точного совпадения по vCPU
-            и RAM (например High CPU без точного flavor или High Memory 32/256), провайдера в
-            карточке нет — мы не подставляем «похожий» размер и не занижаем цену.
-          </dd>
-        </div>
-        <div>
-          <dt>Чем Low-cost отличается от General?</dt>
-          <dd>
-            Low-cost — preemptible, shared и flavor с долей vCPU &lt;100%, где они есть в каталоге.
-            General / High CPU / High Memory — только on-demand с гарантией 100% ядра.
-          </dd>
-        </div>
-        <div>
-          <dt>Почему цена GPU H100 у провайдеров отличается так сильно?</dt>
-          <dd>
-            Часть облаков продаёт только GPU (unit), часть — готовую ВМ с ядрами и памятью (flavor).
-            Списки разделены: «только GPU» не сравнивается с «vCPU + RAM + GPU» в одном Best offer.
-          </dd>
-        </div>
-        <div>
-          <dt>Какие облака сравниваются?</dt>
-          <dd>
-            {PROVIDERS.join(', ')} — по единой таксономии SKU Cloud FinOps и только по публичным
-            тарифам.
-          </dd>
-        </div>
-        <div>
-          <dt>Как рассчитать GPU под инференс LLM, а не просто аренду карты?</dt>
-          <dd>
-            Калькулятор сравнивает готовые GPU-пресеты (H100, H200, A100…). Чтобы подобрать число
-            карт и квант под конкретную модель (Qwen, GLM, Kimi), откройте{' '}
-            <a href="/chat">чат FinOps</a> с вопросом «расчёт конфигурации под инференс» — там
-            учитываются VRAM и self-host recipe, а цены узлов берутся из того же каталога.
-          </dd>
-        </div>
+        {VM_FAQ.map((item) => (
+          <div key={item.question}>
+            <dt>{item.question}</dt>
+            <dd>{item.answer}</dd>
+          </div>
+        ))}
       </dl>
     </section>
   );
 }
 
-export function calculatorJsonLd() {
-  const faq = [
-    {
-      question: 'Как считается стоимость ВМ в калькуляторе Cloud FinOps?',
-      answer:
-        'Складываем публичные unit-цены vCPU, RAM и SSD одного региона и CPU-платформы либо берём точный flavor (готовая ВМ, как у Cloud.ru) плюс SSD. Best offer — минимальная ордерабельная цена среди провайдеров. Месяц = 720 часов.',
-    },
-    {
-      question: 'Почему у части пресетов нет Cloud.ru?',
-      answer:
-        'Cloud.ru публикует фиксированные flavor SKU. Если нет точного совпадения vCPU/RAM с пресетом, провайдер не показывается — похожие размеры не подставляются.',
-    },
-    {
-      question: 'Какие GPU можно сравнить в калькуляторе?',
-      answer:
-        'Строки GPU = flavor Cloud.ru (vCPU+RAM+GPU) плюс уникальные формы VK и Selectel, включая выделенный B300. У провайдеров без flavor цена собирается как GPU + те же vCPU/RAM.',
-    },
-    {
-      question: 'Какие облачные провайдеры России есть в калькуляторе?',
-      answer: `${PROVIDERS.join(', ')}.`,
-    },
-    {
-      question: 'Как рассчитать GPU под инференс LLM, а не просто аренду карты?',
-      answer:
-        'Калькулятор сравнивает GPU-пресеты. Подбор числа карт и кванта под модель (Qwen, GLM, Kimi) — в чате FinOps («расчёт конфигурации под инференс»); цены узлов из того же каталога Cloud FinOps.',
-    },
-  ];
+export function SelfHostCalculatorSeo() {
+  const modelNames = INFERENCE_MODELS.map((m) => m.displayName).slice(0, 12);
 
+  return (
+    <section className={styles.seo} aria-labelledby="calculator-llm-seo-title">
+      <h2 id="calculator-llm-seo-title" className={styles.title}>
+        Калькулятор GPU H100, H200, B300 для self-host LLM и инференса
+      </h2>
+      <p className={styles.lead}>
+        Подберите конфигурацию под open-weight модель (квант INT4 / FP8 / BF16 / INT8) и сравните
+        аренду <strong>NVIDIA H100</strong>, <strong>H200</strong>, <strong>A100</strong>,{' '}
+        <strong>L4</strong> и выделенного <strong>B300</strong> у {PROVIDERS.join(', ')}. Калькулятор
+        оценивает VRAM и число карт, показывает Best offer по публичным тарифам — рядом ориентир
+        Hosted API ₽/1M токенов, где модель есть в каталоге.
+      </p>
+
+      <h3 className={styles.subtitle}>Ключевые сценарии</h3>
+      <ul className={styles.list}>
+        <li>
+          <strong>Сколько GPU нужно для модели</strong> — ориентир по параметрам и кванту (например
+          Qwen3-Coder-Next 80B/3B active → 1×H100 INT4).
+        </li>
+        <li>
+          <strong>Аренда H100 / H200 / B300 под инференс</strong> — сравнение Selectel, Cloud.ru, T1,
+          MWS, VK, Yandex по публичным SKU.
+        </li>
+        <li>
+          <strong>Self-host vs API</strong> — фиксированная цена GPU-узла против ₽/1M input/output
+          у hosted API того же семейства моделей.
+        </li>
+        <li>
+          Для сырого сравнения flavor без модели (включая B300 dedicated) откройте{' '}
+          <a href="/calculator/vm">калькулятор ВМ и GPU</a>.
+        </li>
+      </ul>
+
+      <h3 className={styles.subtitle}>Карты в расчёте self-host</h3>
+      <ul className={styles.list}>
+        {GPU_CARDS.map((card) => (
+          <li key={card.id}>
+            <strong>{card.title}</strong> — {card.text}
+          </li>
+        ))}
+      </ul>
+
+      <h3 className={styles.subtitle}>Модели в базе self-host</h3>
+      <p className={styles.lead}>
+        {modelNames.join(', ')}
+        {INFERENCE_MODELS.length > modelNames.length
+          ? ` и ещё ${INFERENCE_MODELS.length - modelNames.length}`
+          : ''}
+        . Рецепты — инженерные оценки VRAM (weights + запас), не лабораторные бенчмарки.
+      </p>
+
+      <h3 className={styles.subtitle}>Как считается конфигурация</h3>
+      <ul className={styles.list}>
+        <li>Выбираете модель и квант (Auto подставляет рекомендуемый).</li>
+        <li>Сервис отдаёт минимум / рекомендуемую / запасные GPU-сборки с оценкой VRAM.</li>
+        <li>
+          Цена узла — quote GPU из каталога (bundle flavor или GPU + host). Месяц = 720 часов.
+        </li>
+        <li>API-only модели (без публичных весов) показывают только Hosted API.</li>
+      </ul>
+
+      <h3 className={styles.subtitle}>Частые вопросы · Self-host LLM</h3>
+      <dl className={styles.faq}>
+        {SELF_HOST_FAQ.map((item) => (
+          <div key={item.question}>
+            <dt>{item.question}</dt>
+            <dd>{item.answer}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  );
+}
+
+/** @deprecated use VmCalculatorSeo */
+export const CalculatorSeo = VmCalculatorSeo;
+
+const VM_FAQ = [
+  {
+    question: 'Как считается стоимость ВМ в калькуляторе Cloud FinOps?',
+    answer:
+      'Складываем публичные unit-цены vCPU, RAM и диск одного региона и платформы либо берём точный flavor плюс SSD. Best offer — минимальная ордерабельная цена среди провайдеров. Месяц = 720 часов.',
+  },
+  {
+    question: 'Какие облака России сравниваются?',
+    answer: `${PROVIDERS.join(', ')} — по единой таксономии SKU Cloud FinOps.`,
+  },
+  {
+    question: 'Можно ли посчитать аренду GPU H100, H200 или B300?',
+    answer:
+      'Да. Во вкладке GPU сравниваются пресеты NVIDIA L4, A100, H100 (1×/8×), H200 (1×/8×), V100 и dedicated B300 8× у Selectel — по публичным ценам каталога Cloud FinOps.',
+  },
+  {
+    question: 'Сколько стоит аренда NVIDIA B300 в калькуляторе?',
+    answer:
+      'B300 в каталоге — выделенный узел Selectel (8×GPU), не обычная облачная GPU-ВМ. Калькулятор показывает bundle-цену dedicated; host vCPU/RAM в SKU не разложены.',
+  },
+  {
+    question: 'Чем этот калькулятор отличается от калькулятора провайдера?',
+    answer:
+      'Мы сравниваем несколько облаков РФ на одних и тех же пресетах H100/H200/B300/A100/L4. Калькуляторы Selectel или Yandex Cloud считают только свой прайс.',
+  },
+];
+
+const SELF_HOST_FAQ = [
+  {
+    question: 'Как рассчитать GPU под инференс LLM (self-host)?',
+    answer:
+      'Выберите open-weight модель и квант. Калькулятор оценит VRAM, предложит конфигурации (1×H100, 1×H200, multi-GPU) и сравнит цены аренды у облаков России по публичным тарифам.',
+  },
+  {
+    question: 'Сколько стоит аренда H100 или H200 для self-host в России?',
+    answer:
+      'Зависит от flavor vs unit GPU + host. Для 1×H100 80GB и 1×H200 141GB смотрите актуальный Best offer на странице (Selectel / Cloud.ru / T1 и др.); месяц = 720 часов. 8× узлы считаются отдельными пресетами.',
+  },
+  {
+    question: 'Нужен ли B300 для self-host LLM?',
+    answer:
+      'B300 — топовый dedicated-узел (Selectel). Для многих open-weight моделей достаточно 1×H100/H200; B300 имеет смысл для максимальной плотности и спец. нагрузок. Цену B300 удобнее смотреть на /calculator/vm во вкладке GPU.',
+  },
+  {
+    question: 'Чем INT4 отличается от FP8 и BF16 в калькуляторе?',
+    answer:
+      'Квант уменьшает VRAM под веса: INT4 — максимум экономии карт (часто 1×H100 вместо multi-GPU), FP8 — частый баланс на H100/H200, BF16 — ближе к полному качеству и требует больше памяти.',
+  },
+  {
+    question: 'Какие модели поддерживаются для self-host расчёта?',
+    answer: `В базе: ${INFERENCE_MODELS.map((m) => m.displayName).join(', ')}. Часть моделей API-only — для них показывается только Hosted API.`,
+  },
+  {
+    question: 'Self-host дешевле Hosted API?',
+    answer:
+      'Только при высокой утилизации GPU. Калькулятор показывает фиксированную стоимость узла и ориентир ₽/1M токенов API — точку безубыточности считайте по своему tok/s и смеси input/output.',
+  },
+];
+
+export function vmCalculatorJsonLd(gpuShapeCount: number) {
   return {
     '@context': 'https://schema.org',
     '@graph': [
       {
         '@type': 'WebApplication',
-        '@id': 'https://cloudfinops.ru/calculator#app',
-        name: 'Калькулятор облаков и GPU · Cloud FinOps',
-        url: 'https://cloudfinops.ru/calculator',
+        '@id': 'https://cloudfinops.ru/calculator/vm#app',
+        name: 'Калькулятор ВМ и GPU H100 H200 B300 · Cloud FinOps',
+        url: 'https://cloudfinops.ru/calculator/vm',
         applicationCategory: 'BusinessApplication',
         operatingSystem: 'Web',
         inLanguage: 'ru-RU',
         description:
-          'Калькулятор стоимости облачных ВМ и аренды GPU в России: сравнение цен Yandex Cloud, VK Cloud, Selectel, Cloud.ru, MWS и T1 по пресетам compute и NVIDIA L4/A100/H100/H200. Учитываются unit-тарифы и flavor SKU, ордерабельность региона и платформы.',
-        offers: {
-          '@type': 'Offer',
-          price: '0',
-          priceCurrency: 'RUB',
-        },
+          'Калькулятор стоимости виртуальных машин и аренды GPU NVIDIA H100, H200, B300, A100, L4, V100 в России: сравнение Yandex Cloud, VK Cloud, Selectel, Cloud.ru, MWS и T1.',
+        featureList: [
+          'Калькулятор стоимости ВМ',
+          'Сравнение цен облаков России',
+          'Калькулятор аренды H100',
+          'Калькулятор аренды H200',
+          'Калькулятор аренды B300',
+          'Аренда A100 и L4',
+          'Пресеты General High CPU High Memory Low-cost',
+        ],
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'RUB' },
         publisher: {
           '@type': 'Organization',
           name: 'Cloud FinOps',
@@ -225,14 +337,11 @@ export function calculatorJsonLd() {
       },
       {
         '@type': 'FAQPage',
-        '@id': 'https://cloudfinops.ru/calculator#faq',
-        mainEntity: faq.map((item) => ({
+        '@id': 'https://cloudfinops.ru/calculator/vm#faq',
+        mainEntity: VM_FAQ.map((item) => ({
           '@type': 'Question',
           name: item.question,
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: item.answer,
-          },
+          acceptedAnswer: { '@type': 'Answer', text: item.answer },
         })),
       },
       {
@@ -247,11 +356,81 @@ export function calculatorJsonLd() {
           {
             '@type': 'ListItem',
             position: 2,
-            name: 'Калькулятор',
-            item: 'https://cloudfinops.ru/calculator',
+            name: 'Калькулятор ВМ и GPU',
+            item: 'https://cloudfinops.ru/calculator/vm',
+          },
+        ],
+      },
+      {
+        '@type': 'ItemList',
+        name: 'GPU-формы в каталоге Cloud FinOps',
+        numberOfItems: gpuShapeCount,
+        itemListOrder: 'https://schema.org/ItemListUnordered',
+      },
+    ],
+  };
+}
+
+export function selfHostCalculatorJsonLd() {
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebApplication',
+        '@id': 'https://cloudfinops.ru/calculator/self-host#app',
+        name: 'Калькулятор Self-host LLM H100 H200 B300 · Cloud FinOps',
+        url: 'https://cloudfinops.ru/calculator/self-host',
+        applicationCategory: 'BusinessApplication',
+        operatingSystem: 'Web',
+        inLanguage: 'ru-RU',
+        description:
+          'Калькулятор GPU под self-host и инференс open-weight LLM: подбор NVIDIA H100, H200, A100, L4 и ориентир по B300; сравнение аренды в облаках России и Hosted API ₽/1M.',
+        featureList: [
+          'Калькулятор GPU для LLM',
+          'Self-host LLM на H100',
+          'Self-host LLM на H200',
+          'Калькулятор инференса B300',
+          'Аренда A100 L4 под модель',
+          'Сравнение с Hosted API',
+        ],
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'RUB' },
+        publisher: {
+          '@type': 'Organization',
+          name: 'Cloud FinOps',
+          url: 'https://cloudfinops.ru',
+        },
+      },
+      {
+        '@type': 'FAQPage',
+        '@id': 'https://cloudfinops.ru/calculator/self-host#faq',
+        mainEntity: SELF_HOST_FAQ.map((item) => ({
+          '@type': 'Question',
+          name: item.question,
+          acceptedAnswer: { '@type': 'Answer', text: item.answer },
+        })),
+      },
+      {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          {
+            '@type': 'ListItem',
+            position: 1,
+            name: 'Cloud FinOps',
+            item: 'https://cloudfinops.ru/',
+          },
+          {
+            '@type': 'ListItem',
+            position: 2,
+            name: 'Self-host LLM',
+            item: 'https://cloudfinops.ru/calculator/self-host',
           },
         ],
       },
     ],
   };
+}
+
+/** @deprecated use vmCalculatorJsonLd */
+export function calculatorJsonLd() {
+  return vmCalculatorJsonLd(0);
 }

@@ -1,5 +1,5 @@
 import {NextResponse} from 'next/server';
-import {quotePreset, toViewQuote} from '@/lib/calculator/quote';
+import {addPublicIpParts, quotePreset, toViewQuote} from '@/lib/calculator/quote';
 import type {
   ComputeFamily,
   ComputePreset,
@@ -21,6 +21,8 @@ type ComputeBody = {
   diskMedia?: DiskMedia;
   family?: ComputeFamily;
   vmCount?: number;
+  /** Public IPv4 count; capped by vmCount. */
+  publicIpCount?: number;
 };
 
 type GpuBody = {
@@ -33,6 +35,7 @@ type GpuBody = {
   diskGiB?: number;
   gpuInterconnect?: string | null;
   dedicated?: boolean;
+  gpuMemoryGb?: number | null;
 };
 
 type QuoteBody = ComputeBody | GpuBody;
@@ -79,9 +82,19 @@ export async function POST(request: Request) {
     if (!vcpu || !ramGiB || !diskGiB) {
       return NextResponse.json({error: 'vcpu, ramGiB, diskGiB required'}, {status: 400});
     }
+    if (vcpu > 256) {
+      return NextResponse.json({error: 'vcpu too large'}, {status: 400});
+    }
     if (vmCount > 64) {
       return NextResponse.json({error: 'vmCount too large'}, {status: 400});
     }
+    if (diskGiB > 10240) {
+      return NextResponse.json({error: 'diskGiB too large'}, {status: 400});
+    }
+    const rawIps = Number(body.publicIpCount ?? 0);
+    const publicIpCount = Number.isFinite(rawIps)
+      ? Math.min(Math.max(0, Math.round(rawIps)), vmCount)
+      : 0;
     const family: ComputeFamily =
       body.family && FAMILIES.has(body.family) ? body.family : 'general';
     const diskMedia: DiskMedia =
@@ -98,7 +111,11 @@ export async function POST(request: Request) {
       diskGiB,
       diskMedia,
     };
-    const view = scaleQuote(toViewQuote(quotePreset(preset, body.period)), vmCount);
+    const view = addPublicIpParts(
+      scaleQuote(toViewQuote(quotePreset(preset, body.period)), vmCount),
+      publicIpCount,
+      body.period,
+    );
     return NextResponse.json(view);
   }
 
@@ -112,8 +129,13 @@ export async function POST(request: Request) {
     const vcpu = body.vcpu != null ? parsePositiveInt(body.vcpu) : undefined;
     const ramGiB = body.ramGiB != null ? parsePositiveInt(body.ramGiB) : undefined;
     const diskGiB = body.diskGiB != null ? parsePositiveInt(body.diskGiB) : undefined;
+    const dedicated = body.dedicated === true;
+    const gpuMemoryGb =
+      typeof body.gpuMemoryGb === 'number' && Number.isFinite(body.gpuMemoryGb)
+        ? body.gpuMemoryGb
+        : undefined;
     const preset: GpuPreset = {
-      id: `adhoc-gpu-${gpuModelMatch}-${gpuCount}`,
+      id: `adhoc-gpu-${gpuModelMatch}-${gpuCount}${dedicated ? '-dedicated' : ''}`,
       kind: 'gpu',
       title: `${gpuModelMatch} ×${gpuCount}`,
       subtitle: 'Calculator ad-hoc GPU',
@@ -121,9 +143,11 @@ export async function POST(request: Request) {
       gpuCount,
       vcpu: vcpu ?? undefined,
       ramGiB: ramGiB ?? undefined,
-      diskGiB: diskGiB ?? 100,
+      // Dedicated nodes have no cloud boot disk in the SKU — omit default 100 GiB.
+      diskGiB: diskGiB ?? (dedicated ? undefined : 100),
       gpuInterconnect: body.gpuInterconnect ?? null,
-      dedicated: body.dedicated,
+      dedicated: dedicated || undefined,
+      gpuMemoryGb: gpuMemoryGb ?? null,
     };
     const view = toViewQuote(quotePreset(preset, body.period));
     return NextResponse.json(view);

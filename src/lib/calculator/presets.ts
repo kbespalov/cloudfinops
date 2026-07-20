@@ -65,7 +65,7 @@ function computePreset(
   family: ComputeFamily,
   vcpu: number,
   ramGiB: number,
-  diskGiB = 100,
+  diskGiB = 10,
 ): ComputePreset {
   const prefix =
     family === 'low-cost'
