@@ -82,13 +82,17 @@ export const metadata: Metadata = {
     },
   },
   icons: {
+    // Absolute URLs + 120×120 PNG: Yandex Webmaster favicon requirements
     icon: [
-      {url: '/favicon.ico', sizes: 'any'},
-      {url: '/favicon.svg', type: 'image/svg+xml'},
-      {url: '/favicon-32.png', sizes: '32x32', type: 'image/png'},
-      {url: '/icon-192.png', sizes: '192x192', type: 'image/png'},
+      {url: `${SITE_URL}/favicon.svg`, type: 'image/svg+xml'},
+      {url: `${SITE_URL}/favicon-120.png`, sizes: '120x120', type: 'image/png'},
+      {url: `${SITE_URL}/favicon-32.png`, sizes: '32x32', type: 'image/png'},
+      {url: `${SITE_URL}/favicon.ico`, sizes: 'any', type: 'image/x-icon'},
+      {url: `${SITE_URL}/icon-192.png`, sizes: '192x192', type: 'image/png'},
     ],
-    apple: [{url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png'}],
+    apple: [
+      {url: `${SITE_URL}/apple-touch-icon.png`, sizes: '180x180', type: 'image/png'},
+    ],
   },
   manifest: '/site.webmanifest',
 };
