@@ -2,7 +2,12 @@ import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import {chatUrlForQuery} from '@/components/home/homePrompts';
 import {catalog, type CatalogMeter} from '@/lib/catalog';
-import {buildSkuComparePrompt} from '@/lib/catalog/skuComparePrompt';
+import {
+  aiModelLabelForPrompt,
+  buildSkuComparePrompt,
+  buildSkuSelfHostPrompt,
+  canSelfHostAiMeter,
+} from '@/lib/catalog/skuComparePrompt';
 
 function fixtureMeter(overrides: Partial<CatalogMeter> = {}): CatalogMeter {
   return {
@@ -127,5 +132,59 @@ describe('buildSkuComparePrompt', () => {
     const q = decodeURIComponent(url.slice('/chat?q='.length));
     assert.equal(q, prompt);
     assert.match(q, new RegExp(meter.sku.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
+  });
+});
+
+describe('buildSkuSelfHostPrompt', () => {
+  it('allows self-host CTA only for open-weight AI meters', () => {
+    const open = fixtureMeter({
+      categoryKey: 'ai',
+      category: 'ai.inference',
+      sku: 'cloudru.ai.qwen3.6-35b-a3b.input',
+      name: 'Qwen3.6-35B-A3B · input',
+      meter: 'ai.tokens.input',
+      unitQuantity: '1M-token',
+      dimensions: {
+        modelFamily: 'Qwen3.6-35B-A3B',
+        modelId: 'qwen3.6-35b-a3b',
+        parameterCountB: 35,
+        activeParameterCountB: 3,
+        tokenDirection: 'input',
+        openWeights: true,
+      },
+    });
+    const closed = fixtureMeter({
+      categoryKey: 'ai',
+      category: 'ai.inference',
+      sku: 'yandex.ai.alice-ai-llm.input',
+      name: 'Alice AI LLM · input',
+      meter: 'ai.tokens.input',
+      unitQuantity: '1M-token',
+      dimensions: {
+        modelFamily: 'Alice AI LLM',
+        modelId: 'alice-ai-llm',
+        openWeights: false,
+        tokenDirection: 'input',
+      },
+    });
+
+    assert.equal(canSelfHostAiMeter(open), true);
+    assert.equal(canSelfHostAiMeter(closed), false);
+    assert.equal(aiModelLabelForPrompt(open), 'Qwen3.6-35B-A3B');
+
+    const prompt = buildSkuSelfHostPrompt(open);
+    assert.match(prompt, /развернуть «Qwen3\.6-35B-A3B» \(35B · 3B active\)/);
+    assert.match(prompt, /self-host \/ dedicated/);
+    assert.match(prompt, /число карт/);
+    assert.match(prompt, /hosted API|токенам/i);
+    assert.doesNotMatch(prompt, /1M ток/);
+
+    const url = chatUrlForQuery(prompt);
+    assert.ok(url.startsWith('/chat?q='));
+    assert.equal(decodeURIComponent(url.slice('/chat?q='.length)), prompt);
+  });
+
+  it('does not treat compute meters as AI self-host CTAs', () => {
+    assert.equal(canSelfHostAiMeter(fixtureMeter()), false);
   });
 });

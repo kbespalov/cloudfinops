@@ -114,3 +114,14 @@ spec:
     covers:
     - ai.inference.tokens.input
     - ai.inference.tokens.output
+  - id: cloudru.ml-inference
+    title: Тарифы Evolution ML Inference (7.EVO.11.1)
+    url: https://cloud.ru/documents/tariffs/evolution/evolution-ml-inference.html
+    type: html
+    access: public
+    priority: 2
+    documentVersion: '260619'
+    covers:
+    - ai.ml.requests
+    - ai.ml.gpu.gb
+    - compute.flavor

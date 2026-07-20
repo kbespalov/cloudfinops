@@ -5,7 +5,7 @@ import {HomeSeo, homeJsonLd} from '@/components/home/HomeSeo';
 export const metadata: Metadata = {
   title: 'Cloud FinOps — сравнение цен облаков России',
   description:
-    'Сравнение цен облаков России: калькулятор стоимости ВМ и GPU, расчёт конфигураций и каталог SKU. Yandex Cloud, VK Cloud, Selectel, Cloud.ru, MWS и T1 — публичные тарифы в рублях с НДС.',
+    'Сравнение цен облаков России: калькулятор ВМ и GPU, расчёт конфигурации под инференс LLM (Qwen, GLM, Kimi), каталог SKU. Yandex Cloud, VK Cloud, Selectel, Cloud.ru, MWS и T1 — публичные тарифы в рублях с НДС.',
   keywords: [
     'сравнение цен облаков России',
     'сравнение облаков',
@@ -18,6 +18,15 @@ export const metadata: Metadata = {
     'цена облака',
     'калькулятор ВМ',
     'калькулятор GPU',
+    'расчет GPU для инференса',
+    'расчёт GPU для инференса',
+    'расчет конфигурации под инференс',
+    'сколько GPU для LLM',
+    'VRAM для модели',
+    'self-host LLM GPU',
+    'GPU для Qwen',
+    'GPU для GLM',
+    'инференс в облаке РФ',
     'Yandex Cloud цены',
     'VK Cloud цены',
     'Selectel цены',
@@ -47,7 +56,7 @@ export const metadata: Metadata = {
     siteName: 'Cloud FinOps',
     title: 'Cloud FinOps — сравнение цен облаков России',
     description:
-      'Калькулятор цен, расчёт стоимости ВМ и GPU и сравнение тарифов шести облаков РФ по публичным SKU.',
+      'Калькулятор ВМ и GPU, расчёт конфигурации под инференс LLM и сравнение тарифов шести облаков РФ по публичным SKU.',
   },
   twitter: {
     card: 'summary_large_image',

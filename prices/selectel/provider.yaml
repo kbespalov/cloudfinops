@@ -82,3 +82,22 @@ spec:
     - storage.object.requests
     - network.traffic.ingress
     - network.traffic.egress
+  - id: selectel.fmc
+    title: Foundation Models Catalog
+    url: https://selectel.ru/services/cloud/foundation-models-catalog/
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - ai.fmc.inference
+  - id: selectel.fmc-payment
+    title: Модель оплаты Foundation Models Catalog
+    url: https://docs.selectel.ru/foundation-models-catalog/about/payment/
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - ai.fmc.inference
+    - compute.gpu
+    - compute.vcpu
+    - compute.ram

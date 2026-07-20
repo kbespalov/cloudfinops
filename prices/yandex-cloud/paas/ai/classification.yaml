@@ -8,6 +8,7 @@ metadata:
   title: AI Studio — text classification
 # Classification PriceBook — dimensions
 #   modelCapability: text-classification
+#   openWeights            — true if public open weights exist (self-host possible); false for proprietary API-only
 # Billing unit is a request chunk (Lite ≤1000 tokens, Pro/tuned ≤250 tokens), not 1M-token.
 spec:
   meters:
@@ -23,6 +24,7 @@ spec:
     dimensions:
       modelFamily: YandexGPT Lite Classifier
       modelId: yandexgpt-lite-classifier
+      openWeights: false
       modelCapability: text-classification
       classificationUnitTokens: 1000
       inferenceScope: local
@@ -48,6 +50,7 @@ spec:
     dimensions:
       modelFamily: YandexGPT Pro Classifier
       modelId: yandexgpt-pro-classifier
+      openWeights: false
       modelCapability: text-classification
       classificationUnitTokens: 250
       inferenceScope: local
@@ -73,6 +76,7 @@ spec:
     dimensions:
       modelFamily: Fine-tuned Classifier
       modelId: tuned-classifier
+      openWeights: false
       modelCapability: text-classification
       classificationUnitTokens: 250
       inferenceScope: local

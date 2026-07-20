@@ -11,4 +11,5 @@ export const CHAT_SUGGESTIONS: SuggestionsItem[] = [
   {id: 's3-standard', title: 'Сравни S3 Standard по провайдерам за GiB·мес'},
   {id: 's3-dwh', title: 'Сколько стоит 50 ТБ DWH в объектном хранилище Standard?'},
   {id: 'glm', title: 'Сколько стоит GLM 5.2 у MWS?'},
+  {id: 'kimi-k3-infra', title: 'Какая инфраструктура нужна, чтобы развернуть Kimi K3 self-host в РФ?'},
 ];

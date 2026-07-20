@@ -8,6 +8,7 @@ metadata:
   title: AI Studio — image generation
 # Image generation PriceBook — dimensions
 #   modelCapability: image-generation
+#   openWeights            — true if public open weights exist (self-host possible); false for proprietary API-only
 # Flat per-request rate in AI Studio pricing (2,23 ₽ / image request).
 spec:
   meters:
@@ -23,6 +24,7 @@ spec:
     dimensions:
       modelFamily: Alice AI ART
       modelId: aliceai-image-art-3.0
+      openWeights: false
       modelCapability: image-generation
       inferenceScope: local
       serviceProduct: ai-studio
@@ -46,6 +48,7 @@ spec:
     dimensions:
       modelFamily: YandexART
       modelId: yandex-art-2.0
+      openWeights: false
       modelCapability: image-generation
       inferenceScope: local
       serviceProduct: ai-studio

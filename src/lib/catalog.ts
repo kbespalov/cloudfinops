@@ -661,6 +661,23 @@ export function extractAiModelFamily(meter: CatalogMeter): string | null {
   return null;
 }
 
+/**
+ * Whether the model has public open weights suitable for self-host / dedicated GPU.
+ * Sourced from PriceBook `dimensions.openWeights` (boolean). Missing → unknown (null).
+ */
+export function extractOpenWeights(meter: CatalogMeter): boolean | null {
+  const v = meter.dimensions.openWeights;
+  if (typeof v === 'boolean') return v;
+  if (v === 'true' || v === 1 || v === '1') return true;
+  if (v === 'false' || v === 0 || v === '0') return false;
+  return null;
+}
+
+/** AI meter with public open weights (Развернуть / self-host CTA). */
+export function isOpenWeightAiMeter(meter: CatalogMeter): boolean {
+  return meter.categoryKey === 'ai' && extractOpenWeights(meter) === true;
+}
+
 export function extractAiTokenDirection(meter: CatalogMeter): 'input' | 'output' | null {
   const dims = meter.dimensions;
   if (dims.tokenDirection === 'input' || meter.meter === 'ai.inference.tokens.input') return 'input';

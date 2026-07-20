@@ -1,6 +1,7 @@
 import {
   Bucket,
   Boxes3,
+  CircleDollar,
   Code,
   FaceRobot,
   Gpu,
@@ -53,22 +54,47 @@ export const HOME_EXAMPLES: HomeExample[] = [
     icon: Layers3Diagonal,
   },
   {
+    id: 'glm-infra',
+    label: 'GLM 5.2 GPU',
+    prompt: 'Какая инфраструктура нужна, чтобы запустить GLM 5.2 на своих GPU в РФ?',
+    icon: Gpu,
+  },
+  {
+    id: 'kimi-k3-infra',
+    label: 'Kimi K3 GPU',
+    prompt: 'Какая инфраструктура нужна, чтобы развернуть Kimi K3 self-host в РФ?',
+    icon: Gpu,
+  },
+  {
+    id: 'qwen38-infra',
+    label: 'Qwen 3.8 GPU',
+    prompt: 'Какая инфраструктура нужна, чтобы развернуть Qwen 3.8 self-host в РФ?',
+    icon: Gpu,
+  },
+  {
+    id: 'coder-next-infra',
+    label: 'Coder-Next GPU',
+    prompt:
+      'Какая инфраструктура нужна, чтобы развернуть Qwen3-Coder-Next self-host в РФ?',
+    icon: Code,
+  },
+  {
     id: 'glm',
     label: 'GLM 5.2',
     prompt: 'Сколько стоит GLM 5.2 у MWS за 1M токенов?',
     icon: FaceRobot,
   },
   {
-    id: 'qwen',
-    label: 'Qwen 3.6',
-    prompt: 'Сравни цены Qwen 3.6 по провайдерам за 1M токенов',
-    icon: Code,
-  },
-  {
     id: 'ai',
     label: 'AI API',
     prompt: 'Сравни цены AI API / токенов по провайдерам',
     icon: Sparkles,
+  },
+  {
+    id: 'budget-100k',
+    label: 'Бюджет 100 000 ₽',
+    prompt: 'Бюджет 100 000 ₽/мес — что можно позволить?',
+    icon: CircleDollar,
   },
 ];
 

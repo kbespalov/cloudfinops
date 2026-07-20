@@ -23,9 +23,14 @@ import {
   type ChatMessage,
 } from '../../src/lib/chat/gigachat';
 import {tryRunFastPath} from '../../src/lib/chat/fast-path';
+import {
+  INFERENCE_SYSTEM_ADDENDUM,
+  matchInferenceIntent,
+} from '../../src/lib/chat/inference-intent';
 import {CHAT_LIMITS} from '../../src/lib/chat/limits';
 import {sanitizeUserFacingAnswer} from '../../src/lib/chat/tool-call-recovery';
 import {runToolLoop} from '../../src/lib/chat/tool-loop';
+import {CHAT_TOOLS, CHAT_TOOLS_WITH_INFERENCE} from '../../src/lib/chat/tools';
 
 const MAX_TOOL_ROUNDS = CHAT_LIMITS.maxToolRounds;
 
@@ -62,8 +67,13 @@ export async function runChat(
 
   const t0 = Date.now();
   const model = getChatModel();
+  const inferenceIntent = matchInferenceIntent(question);
+  const effectiveSystem = inferenceIntent.matched
+    ? `${systemPrompt}\n\n${INFERENCE_SYSTEM_ADDENDUM}`
+    : systemPrompt;
+  const planningTools = inferenceIntent.matched ? CHAT_TOOLS_WITH_INFERENCE : CHAT_TOOLS;
   const messages: ChatMessage[] = [
-    {role: 'system', content: systemPrompt},
+    {role: 'system', content: effectiveSystem},
     {role: 'user', content: question},
   ];
   const toolCalls: {name: string; arguments: string}[] = [];
@@ -96,6 +106,7 @@ export async function runChat(
       fast ??
       (await runToolLoop({
         messages,
+        tools: planningTools,
         maxRounds: Math.min(MAX_TOOL_ROUNDS, 3),
         onEvent: (event) => {
           if (event.type === 'tool_call') onToolCall(event.name, event.arguments);

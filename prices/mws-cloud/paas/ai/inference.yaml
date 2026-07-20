@@ -11,6 +11,7 @@ metadata:
 #   (text-embedding ≈ Feature Structuring / векторизация)
 #   parameterCountB        — total parameters, billions (e.g. 120 = 120B, 1000 = 1T)
 #   activeParameterCountB  — MoE active parameters per token, billions (omit for dense)
+#   openWeights            — true if public open weights exist (self-host possible); false for proprietary API-only
 # Proprietary models without a public size leave these keys unset.
 spec:
   meters:
@@ -26,6 +27,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-120b
       modelId: gpt-oss-120b
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 120  # total params, billions
       inferenceScope: local
@@ -51,6 +53,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-120b
       modelId: gpt-oss-120b
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 120  # total params, billions
       inferenceScope: local
@@ -76,6 +79,7 @@ spec:
     dimensions:
       modelFamily: gemma-3-27b-it
       modelId: gemma-3-27b-it
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 27  # total params, billions
       inferenceScope: local
@@ -101,6 +105,7 @@ spec:
     dimensions:
       modelFamily: gemma-3-27b-it
       modelId: gemma-3-27b-it
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 27  # total params, billions
       inferenceScope: local
@@ -126,6 +131,7 @@ spec:
     dimensions:
       modelFamily: gemma-4-31b-it
       modelId: gemma-4-31b-it
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 31  # total params, billions
       inferenceScope: local
@@ -151,6 +157,7 @@ spec:
     dimensions:
       modelFamily: gemma-4-31b-it
       modelId: gemma-4-31b-it
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 31  # total params, billions
       inferenceScope: local
@@ -176,6 +183,7 @@ spec:
     dimensions:
       modelFamily: qwen3-32b
       modelId: qwen3-32b
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 32  # total params, billions
       inferenceScope: local
@@ -201,6 +209,7 @@ spec:
     dimensions:
       modelFamily: qwen3-32b
       modelId: qwen3-32b
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 32  # total params, billions
       inferenceScope: local
@@ -226,6 +235,7 @@ spec:
     dimensions:
       modelFamily: qwen3.6-35b-a3b
       modelId: qwen3.6-35b-a3b
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 35  # total params, billions
       activeParameterCountB: 3  # MoE active params, billions
@@ -252,6 +262,7 @@ spec:
     dimensions:
       modelFamily: qwen3.6-35b-a3b
       modelId: qwen3.6-35b-a3b
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 35  # total params, billions
       activeParameterCountB: 3  # MoE active params, billions
@@ -278,6 +289,7 @@ spec:
     dimensions:
       modelFamily: qwen3-235b-instruct
       modelId: qwen3-235b-instruct
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 235  # total params, billions
       activeParameterCountB: 22  # MoE active params, billions
@@ -304,6 +316,7 @@ spec:
     dimensions:
       modelFamily: qwen3-235b-instruct
       modelId: qwen3-235b-instruct
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 235  # total params, billions
       activeParameterCountB: 22  # MoE active params, billions
@@ -330,6 +343,7 @@ spec:
     dimensions:
       modelFamily: qwen3-coder-480b-a35b
       modelId: qwen3-coder-480b-a35b
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 480  # total params, billions
       activeParameterCountB: 35  # MoE active params, billions
@@ -356,6 +370,7 @@ spec:
     dimensions:
       modelFamily: qwen3-coder-480b-a35b
       modelId: qwen3-coder-480b-a35b
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 480  # total params, billions
       activeParameterCountB: 35  # MoE active params, billions
@@ -382,6 +397,7 @@ spec:
     dimensions:
       modelFamily: glm-5.2
       modelId: glm-5.2
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 744  # total params, billions
       activeParameterCountB: 40  # MoE active params, billions
@@ -408,6 +424,7 @@ spec:
     dimensions:
       modelFamily: glm-5.2
       modelId: glm-5.2
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 744  # total params, billions
       activeParameterCountB: 40  # MoE active params, billions
@@ -434,6 +451,7 @@ spec:
     dimensions:
       modelFamily: glm-4.6-357b
       modelId: glm-4.6-357b
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 357  # total params, billions
       inferenceScope: local
@@ -459,6 +477,7 @@ spec:
     dimensions:
       modelFamily: glm-4.6-357b
       modelId: glm-4.6-357b
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 357  # total params, billions
       inferenceScope: local
@@ -484,6 +503,7 @@ spec:
     dimensions:
       modelFamily: kimi-k2.6
       modelId: kimi-k2.6
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 1000  # total params, billions
       activeParameterCountB: 32  # MoE active params, billions
@@ -510,6 +530,7 @@ spec:
     dimensions:
       modelFamily: kimi-k2.6
       modelId: kimi-k2.6
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 1000  # total params, billions
       activeParameterCountB: 32  # MoE active params, billions
@@ -536,6 +557,7 @@ spec:
     dimensions:
       modelFamily: kimi-k2-instruct
       modelId: kimi-k2-instruct
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 1000  # total params, billions
       activeParameterCountB: 32  # MoE active params, billions
@@ -562,6 +584,7 @@ spec:
     dimensions:
       modelFamily: kimi-k2-instruct
       modelId: kimi-k2-instruct
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 1000  # total params, billions
       activeParameterCountB: 32  # MoE active params, billions
@@ -588,6 +611,7 @@ spec:
     dimensions:
       modelFamily: bge-m3
       modelId: bge-m3
+      openWeights: true
       modelCapability: text-embedding
       inferenceScope: local
       serviceProduct: gpt-model-hub
@@ -612,6 +636,7 @@ spec:
     dimensions:
       modelFamily: bge-multilingual-gemma2
       modelId: bge-multilingual-gemma2
+      openWeights: true
       modelCapability: text-embedding
       inferenceScope: local
       serviceProduct: gpt-model-hub

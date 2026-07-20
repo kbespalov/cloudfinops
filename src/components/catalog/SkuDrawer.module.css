@@ -19,6 +19,15 @@
   border-top: 1px solid var(--g-color-line-generic);
 }
 
+.footerActions {
+  width: 100%;
+}
+
+.footerActions > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
 /* Purple CTA — stand out from yellow brand actions elsewhere. */
 .compareButton:global(.g-button_view_action) {
   --g-color-base-brand: var(--g-color-base-utility-heavy);

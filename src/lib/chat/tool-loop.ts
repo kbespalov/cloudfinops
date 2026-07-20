@@ -8,6 +8,8 @@ import {chatCompletion, type ChatMessage} from './gigachat';
 import {resolveToolCalls, sanitizeUserFacingAnswer} from './tool-call-recovery';
 import {CHAT_TOOLS, runTool} from './tools';
 
+export type ChatToolsParam = typeof CHAT_TOOLS | readonly unknown[];
+
 export type ToolLoopEvent =
   | {type: 'tool_call'; name: string; arguments: string; recoveredFromLeak: boolean}
   | {type: 'tool_leak'; action: 'recovered' | 'retry_required' | 'dropped'; preview: string};
@@ -54,8 +56,11 @@ export async function runToolLoop(options: {
   maxRounds: number;
   signal?: AbortSignal;
   onEvent?: (event: ToolLoopEvent) => void;
+  /** Defaults to baseline CHAT_TOOLS — pass CHAT_TOOLS_WITH_INFERENCE only when gated. */
+  tools?: ChatToolsParam;
 }): Promise<ToolLoopResult> {
   const messages = options.messages;
+  const tools = options.tools ?? CHAT_TOOLS;
   let toolRounds = 0;
   let toolCallsTotal = 0;
   let leaksRecovered = 0;
@@ -66,7 +71,7 @@ export async function runToolLoop(options: {
   let emptyAfterToolsNudgeUsed = false;
 
   for (let round = 0; round < options.maxRounds; round++) {
-    const reply = await chatCompletion(messages, CHAT_TOOLS, {
+    const reply = await chatCompletion(messages, tools, {
       signal: options.signal,
       toolChoice: 'auto',
     });
@@ -81,7 +86,7 @@ export async function runToolLoop(options: {
         action: 'retry_required',
         preview: resolved.leakedContent.slice(0, 200),
       });
-      const retry = await chatCompletion(messages, CHAT_TOOLS, {
+      const retry = await chatCompletion(messages, tools, {
         signal: options.signal,
         toolChoice: 'required',
       });

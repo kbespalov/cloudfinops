@@ -8,6 +8,7 @@ metadata:
   title: AI Studio — text embeddings
 # Embeddings PriceBook — dimensions
 #   modelCapability: text-embedding  (Feature Structuring / векторизация)
+#   openWeights            — true if public open weights exist (self-host possible); false for proprietary API-only
 # Flat rate for all embedding models in AI Studio pricing (0,0101 ₽ / 1k tokens).
 spec:
   meters:
@@ -23,6 +24,7 @@ spec:
     dimensions:
       modelFamily: Yandex Text Embeddings (doc)
       modelId: text-search-doc
+      openWeights: false
       modelCapability: text-embedding
       embeddingVersion: 1
       embeddingRole: doc
@@ -48,6 +50,7 @@ spec:
     dimensions:
       modelFamily: Yandex Text Embeddings (query)
       modelId: text-search-query
+      openWeights: false
       modelCapability: text-embedding
       embeddingVersion: 1
       embeddingRole: query
@@ -73,6 +76,7 @@ spec:
     dimensions:
       modelFamily: Yandex Text Embeddings v2 (doc)
       modelId: text-embeddings-v2-doc
+      openWeights: false
       modelCapability: text-embedding
       embeddingVersion: 2
       embeddingRole: doc
@@ -98,6 +102,7 @@ spec:
     dimensions:
       modelFamily: Yandex Text Embeddings v2 (query)
       modelId: text-embeddings-v2-query
+      openWeights: false
       modelCapability: text-embedding
       embeddingVersion: 2
       embeddingRole: query

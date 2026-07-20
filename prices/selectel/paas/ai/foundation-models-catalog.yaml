@@ -1,0 +1,31 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: selectel
+  layer: paas
+  service: ai
+  category: paas.ai.foundation-models-catalog
+  title: Foundation Models Catalog — inference services
+# Selectel FMC: OpenAI-compatible inference services with preset model configs.
+# Billing = Cloud Platform resources (GPU + vCPU + RAM + disk), NOT ₽/1M tokens.
+# See https://docs.selectel.ru/foundation-models-catalog/about/payment/
+spec:
+  meters:
+  - sku: selectel.fmc.inference-service
+    name: Foundation Models Catalog · inference-сервис
+    meter: ai.fmc.inference
+    status: available
+    pricingMode: status-only
+    region: Россия / ru-7
+    effectiveFrom: null
+    checkedAt: '2026-07-20'
+    sourceRefs: [selectel.fmc, selectel.fmc-payment, selectel.calculator]
+    dimensions:
+      serviceProduct: foundation-models-catalog
+      billingModel: underlying-cloud-resources
+      tokenBilling: false
+      openWeights: true
+    notes: >
+      Отдельной ставки за токены нет: стоимость = GPU/vCPU/RAM/диск облачной платформы
+      (в т.ч. линейки H100/H200/B300/L4/RTX 4090 в пуле FMC). Сравнивайте с IaaS GPU
+      Selectel и с token API у Yandex / Cloud.ru / MWS. Конфигуратор — в панели FMC.

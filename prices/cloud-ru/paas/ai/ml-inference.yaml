@@ -1,0 +1,256 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: cloud-ru
+  layer: paas
+  service: ai
+  category: paas.ai.ml-inference
+  title: Evolution ML Inference — GPU/node tariffs
+# Evolution ML Inference (7.EVO.11.1) — managed model serving on GPU nodes.
+# Distinct from Foundation Models token API (7.EVO.11.2).
+#   openWeights            — not applicable (infra SKUs, not model tokens)
+#   gpuModel / interconnect / packSize — node or per-GB-GPU units
+spec:
+  meters:
+  - sku: cloudru.ml.requests.1m
+    name: ML Inference · 1M requests
+    meter: ai.ml.requests
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-20'
+    sourceRefs: [cloudru.ml-inference]
+    dimensions:
+      serviceProduct: ml-inference
+      meterKind: requests
+    notes: Тариф 7.EVO.11.1 п.1 — запросы к ML Inference (не токены Foundation Models).
+    pricing:
+      rate:
+        amount: '15.616'
+        currency: RUB
+        unit: {quantity: 1M-request, period: month}
+        vat: included
+        byteBasis: not-applicable
+
+  - sku: cloudru.ml.a100-nvlink.gb
+    name: ML Inference · A100 NVLink · 1 GB GPU
+    meter: ai.ml.gpu.gb
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-20'
+    sourceRefs: [cloudru.ml-inference]
+    dimensions:
+      serviceProduct: ml-inference
+      gpuModel: NVIDIA A100
+      gpuInterconnect: NVLink
+      meterUnit: GB-GPU
+      vcpuPerGb: 0.13
+      ramGbPerGb: 1.5
+    notes: 1 GB GPU + 0.13 vCPU + 1,5 GB RAM. Полный A100 80GB ≈ ×80 к этой ставке.
+    pricing:
+      rate:
+        amount: '4.4225'
+        currency: RUB
+        unit: {quantity: GB-GPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+
+  - sku: cloudru.ml.a100-pcie.gb
+    name: ML Inference · A100 PCIe · 1 GB GPU
+    meter: ai.ml.gpu.gb
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-20'
+    sourceRefs: [cloudru.ml-inference]
+    dimensions:
+      serviceProduct: ml-inference
+      gpuModel: NVIDIA A100
+      gpuInterconnect: PCIe
+      meterUnit: GB-GPU
+      vcpuPerGb: 0.13
+      ramGbPerGb: 1.5
+    pricing:
+      rate:
+        amount: '3.965'
+        currency: RUB
+        unit: {quantity: GB-GPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+
+  - sku: cloudru.ml.h100-nvlink.gb
+    name: ML Inference · H100 NVLink · 1 GB GPU
+    meter: ai.ml.gpu.gb
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-20'
+    sourceRefs: [cloudru.ml-inference]
+    dimensions:
+      serviceProduct: ml-inference
+      gpuModel: NVIDIA H100
+      gpuInterconnect: NVLink
+      meterUnit: GB-GPU
+      vcpuPerGb: 0.5
+      ramGbPerGb: 2
+    pricing:
+      rate:
+        amount: '10.675'
+        currency: RUB
+        unit: {quantity: GB-GPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+
+  - sku: cloudru.ml.h100-pcie.gb
+    name: ML Inference · H100 PCIe · 1 GB GPU
+    meter: ai.ml.gpu.gb
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-20'
+    sourceRefs: [cloudru.ml-inference]
+    dimensions:
+      serviceProduct: ml-inference
+      gpuModel: NVIDIA H100
+      gpuInterconnect: PCIe
+      meterUnit: GB-GPU
+      vcpuPerGb: 0.13
+      ramGbPerGb: 1.5
+    pricing:
+      rate:
+        amount: '6.8625'
+        currency: RUB
+        unit: {quantity: GB-GPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+
+  - sku: cloudru.ml.v100-nvlink.gb
+    name: ML Inference · V100 NVLink · 1 GB GPU
+    meter: ai.ml.gpu.gb
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-20'
+    sourceRefs: [cloudru.ml-inference]
+    dimensions:
+      serviceProduct: ml-inference
+      gpuModel: NVIDIA V100
+      gpuInterconnect: NVLink
+      meterUnit: GB-GPU
+      vcpuPerGb: 0.125
+      ramGbPerGb: 2
+    pricing:
+      rate:
+        amount: '7.625'
+        currency: RUB
+        unit: {quantity: GB-GPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+
+  - sku: cloudru.ml.a100-nvlink-1
+    name: ML Inference · 1×A100 NVLink · 16 vCPU · 256 GiB
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-20'
+    sourceRefs: [cloudru.ml-inference]
+    dimensions:
+      serviceProduct: ml-inference
+      gpuModel: NVIDIA A100
+      gpuInterconnect: NVLink
+      gpuCount: 1
+      vcpu: 16
+      ramGiB: 256
+      ramGb: 256
+    notes: Готовый узел ML Inference (не IaaS VM flavor).
+    pricing:
+      rate:
+        amount: '353.8'
+        currency: RUB
+        unit: {quantity: flavor, period: hour}
+        vat: included
+        byteBasis: not-applicable
+
+  - sku: cloudru.ml.a100-nvlink-2
+    name: ML Inference · 2×A100 NVLink · 32 vCPU · 512 GiB
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-20'
+    sourceRefs: [cloudru.ml-inference]
+    dimensions:
+      serviceProduct: ml-inference
+      gpuModel: NVIDIA A100
+      gpuInterconnect: NVLink
+      gpuCount: 2
+      vcpu: 32
+      ramGiB: 512
+      ramGb: 512
+    pricing:
+      rate:
+        amount: '707.6'
+        currency: RUB
+        unit: {quantity: flavor, period: hour}
+        vat: included
+        byteBasis: not-applicable
+
+  - sku: cloudru.ml.a100-nvlink-4
+    name: ML Inference · 4×A100 NVLink · 64 vCPU · 1024 GiB
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-20'
+    sourceRefs: [cloudru.ml-inference]
+    dimensions:
+      serviceProduct: ml-inference
+      gpuModel: NVIDIA A100
+      gpuInterconnect: NVLink
+      gpuCount: 4
+      vcpu: 64
+      ramGiB: 1024
+      ramGb: 1024
+    pricing:
+      rate:
+        amount: '1415.2'
+        currency: RUB
+        unit: {quantity: flavor, period: hour}
+        vat: included
+        byteBasis: not-applicable
+
+  - sku: cloudru.ml.a100-nvlink-6
+    name: ML Inference · 6×A100 NVLink · 96 vCPU · 1536 GiB
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-20'
+    sourceRefs: [cloudru.ml-inference]
+    dimensions:
+      serviceProduct: ml-inference
+      gpuModel: NVIDIA A100
+      gpuInterconnect: NVLink
+      gpuCount: 6
+      vcpu: 96
+      ramGiB: 1536
+      ramGb: 1536
+    pricing:
+      rate:
+        amount: '2122.8'
+        currency: RUB
+        unit: {quantity: flavor, period: hour}
+        vat: included
+        byteBasis: not-applicable

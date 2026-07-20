@@ -12,6 +12,7 @@ metadata:
 #     (text-embedding ≈ Feature Structuring / векторизация)
 #   parameterCountB        — total parameters, billions (e.g. 120 = 120B, 1000 = 1T)
 #   activeParameterCountB  — MoE active parameters per token, billions (omit for dense)
+#   openWeights            — true if public open weights exist (self-host possible); false for proprietary API-only
 # Proprietary models without a public size leave these keys unset.
 # Source: aistudio.yandex.ru docs + pricing (checked 2026-07-19).
 spec:
@@ -28,6 +29,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-120b
       modelId: gpt-oss-120b
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 120  # total params, billions
       inferenceScope: local
@@ -55,6 +57,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-120b
       modelId: gpt-oss-120b
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 120  # total params, billions
       inferenceScope: local
@@ -82,6 +85,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-20b
       modelId: gpt-oss-20b
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 20  # total params, billions
       inferenceScope: local
@@ -109,6 +113,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-20b
       modelId: gpt-oss-20b
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 20  # total params, billions
       inferenceScope: local
@@ -136,6 +141,7 @@ spec:
     dimensions:
       modelFamily: Gemma3 27B
       modelId: gemma3-27b
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 27  # total params, billions
       inferenceScope: local
@@ -163,6 +169,7 @@ spec:
     dimensions:
       modelFamily: Gemma3 27B
       modelId: gemma3-27b
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 27  # total params, billions
       inferenceScope: local
@@ -190,6 +197,7 @@ spec:
     dimensions:
       modelFamily: Qwen 3.6 35B
       modelId: qwen-3.6-35b
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 35  # total params, billions
       activeParameterCountB: 3  # MoE active params, billions
@@ -218,6 +226,7 @@ spec:
     dimensions:
       modelFamily: Qwen 3.6 35B
       modelId: qwen-3.6-35b
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 35  # total params, billions
       activeParameterCountB: 3  # MoE active params, billions
@@ -246,6 +255,7 @@ spec:
     dimensions:
       modelFamily: Qwen 3.5 35B
       modelId: qwen-3.5-35b
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 35  # total params, billions
       inferenceScope: local
@@ -273,6 +283,7 @@ spec:
     dimensions:
       modelFamily: Qwen 3.5 35B
       modelId: qwen-3.5-35b
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 35  # total params, billions
       inferenceScope: local
@@ -300,6 +311,7 @@ spec:
     dimensions:
       modelFamily: Qwen3 235B
       modelId: qwen3-235b
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 235  # total params, billions
       activeParameterCountB: 22  # MoE active params, billions
@@ -328,6 +340,7 @@ spec:
     dimensions:
       modelFamily: Qwen3 235B
       modelId: qwen3-235b
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 235  # total params, billions
       activeParameterCountB: 22  # MoE active params, billions
@@ -356,6 +369,7 @@ spec:
     dimensions:
       modelFamily: YandexGPT Lite 5
       modelId: yandexgpt-lite-5
+      openWeights: false
       modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
@@ -383,6 +397,7 @@ spec:
     dimensions:
       modelFamily: YandexGPT Lite 5
       modelId: yandexgpt-lite-5
+      openWeights: false
       modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
@@ -410,6 +425,7 @@ spec:
     dimensions:
       modelFamily: YandexGPT Pro 5
       modelId: yandexgpt-pro-5
+      openWeights: false
       modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
@@ -437,6 +453,7 @@ spec:
     dimensions:
       modelFamily: YandexGPT Pro 5
       modelId: yandexgpt-pro-5
+      openWeights: false
       modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
@@ -464,6 +481,7 @@ spec:
     dimensions:
       modelFamily: YandexGPT Pro 5.1
       modelId: yandexgpt-pro-5.1
+      openWeights: false
       modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
@@ -491,6 +509,7 @@ spec:
     dimensions:
       modelFamily: YandexGPT Pro 5.1
       modelId: yandexgpt-pro-5.1
+      openWeights: false
       modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
@@ -518,6 +537,7 @@ spec:
     dimensions:
       modelFamily: Alice AI LLM
       modelId: alice-ai-llm
+      openWeights: false
       modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
@@ -545,6 +565,7 @@ spec:
     dimensions:
       modelFamily: Alice AI LLM
       modelId: alice-ai-llm
+      openWeights: false
       modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
@@ -572,6 +593,7 @@ spec:
     dimensions:
       modelFamily: Alice AI LLM Flash
       modelId: alice-ai-llm-flash
+      openWeights: false
       modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
@@ -599,6 +621,7 @@ spec:
     dimensions:
       modelFamily: Alice AI LLM Flash
       modelId: alice-ai-llm-flash
+      openWeights: false
       modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
       inferenceScope: local
@@ -626,6 +649,7 @@ spec:
     dimensions:
       modelFamily: DeepSeek v3.2
       modelId: deepseek-v3.2
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 671  # total params, billions
       activeParameterCountB: 37  # MoE active params, billions
@@ -654,6 +678,7 @@ spec:
     dimensions:
       modelFamily: DeepSeek v3.2
       modelId: deepseek-v3.2
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 671  # total params, billions
       activeParameterCountB: 37  # MoE active params, billions
@@ -682,6 +707,7 @@ spec:
     dimensions:
       modelFamily: DeepSeek v4 flash
       modelId: deepseek-v4-flash
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 284  # total params, billions
       activeParameterCountB: 13  # MoE active params, billions
@@ -710,6 +736,7 @@ spec:
     dimensions:
       modelFamily: DeepSeek v4 flash
       modelId: deepseek-v4-flash
+      openWeights: true
       modelCapability: text-generation
       parameterCountB: 284  # total params, billions
       activeParameterCountB: 13  # MoE active params, billions
@@ -738,6 +765,7 @@ spec:
     dimensions:
       modelFamily: Speech Realtime 260528
       modelId: speech-realtime-260528
+      openWeights: false
       modelCapability: speech
       # parameterCountB: unset — size undisclosed
       inferenceScope: local
@@ -764,6 +792,7 @@ spec:
     dimensions:
       modelFamily: Speech Realtime 260528
       modelId: speech-realtime-260528
+      openWeights: false
       modelCapability: speech
       # parameterCountB: unset — size undisclosed
       inferenceScope: local
@@ -790,6 +819,7 @@ spec:
     dimensions:
       modelFamily: Speech Realtime 250923
       modelId: speech-realtime-250923
+      openWeights: false
       modelCapability: speech
       # parameterCountB: unset — size undisclosed
       inferenceScope: local
@@ -816,6 +846,7 @@ spec:
     dimensions:
       modelFamily: Speech Realtime 250923
       modelId: speech-realtime-250923
+      openWeights: false
       modelCapability: speech
       # parameterCountB: unset — size undisclosed
       inferenceScope: local

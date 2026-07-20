@@ -14,8 +14,13 @@ import {
 import {chatLog, clientIp} from '@/lib/chat/log';
 import {SYSTEM_PROMPT} from '@/lib/chat/system-prompt';
 import {tryRunFastPath} from '@/lib/chat/fast-path';
+import {
+  INFERENCE_SYSTEM_ADDENDUM,
+  matchInferenceIntent,
+} from '@/lib/chat/inference-intent';
 import {sanitizeUserFacingAnswer} from '@/lib/chat/tool-call-recovery';
 import {runToolLoop} from '@/lib/chat/tool-loop';
+import {CHAT_TOOLS, CHAT_TOOLS_WITH_INFERENCE} from '@/lib/chat/tools';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -94,7 +99,12 @@ export async function POST(req: Request) {
 
   const history = sanitized.messages;
   const userText = lastUserText(history);
-  const messages: ChatMessage[] = [{role: 'system', content: SYSTEM_PROMPT}, ...history];
+  const inferenceIntent = matchInferenceIntent(userText);
+  const systemContent = inferenceIntent.matched
+    ? `${SYSTEM_PROMPT}\n\n${INFERENCE_SYSTEM_ADDENDUM}`
+    : SYSTEM_PROMPT;
+  const planningTools = inferenceIntent.matched ? CHAT_TOOLS_WITH_INFERENCE : CHAT_TOOLS;
+  const messages: ChatMessage[] = [{role: 'system', content: systemContent}, ...history];
   const inputTokens = estimateMessagesTokens(messages);
   const reservedTokens = reserveTokensForRequest(inputTokens);
   const budget = chatRateLimiter.tryAcquire(ip, reservedTokens);
@@ -132,6 +142,8 @@ export async function POST(req: Request) {
     inputTokensEst: inputTokens,
     reservedTokens,
     historyTruncated: sanitized.truncated,
+    inferenceIntent: inferenceIntent.matched,
+    inferenceReason: inferenceIntent.reason,
     ...chatRateLimiter.snapshot(),
   });
 
@@ -191,6 +203,7 @@ export async function POST(req: Request) {
           fast ??
           (await runToolLoop({
             messages,
+            tools: planningTools,
             // First user turn: prefer 1–2 tool rounds, not long retry chains.
             maxRounds:
               history.length <= 1

@@ -14,7 +14,7 @@ import {
   Link,
   Text,
 } from '@gravity-ui/uikit';
-import {ArrowUpRightFromSquare, Sparkles, Xmark} from '@gravity-ui/icons';
+import {ArrowUpRightFromSquare, Display, Sparkles, Xmark} from '@gravity-ui/icons';
 import {chatUrlForQuery} from '@/components/home/homePrompts';
 import {
   CATEGORY_TITLE,
@@ -22,6 +22,7 @@ import {
   displayAmount,
   displayMeterName,
   extractDiskIopsLimits,
+  extractOpenWeights,
   formatAsOf,
   formatParameterCount,
   formatPlatform,
@@ -36,7 +37,11 @@ import {
   type CatalogMeter,
   type PeriodMode,
 } from '@/lib/catalog';
-import {buildSkuComparePrompt} from '@/lib/catalog/skuComparePrompt';
+import {
+  buildSkuComparePrompt,
+  buildSkuSelfHostPrompt,
+  canSelfHostAiMeter,
+} from '@/lib/catalog/skuComparePrompt';
 import {categoryLabelTheme} from '@/lib/labelTheme';
 import styles from './SkuDrawer.module.css';
 
@@ -88,6 +93,10 @@ export function SkuDrawer({
   const compareHref = meter
     ? chatUrlForQuery(buildSkuComparePrompt(meter, period))
     : '/chat';
+  const showSelfHost = Boolean(meter && canSelfHostAiMeter(meter));
+  const selfHostHref =
+    meter && showSelfHost ? chatUrlForQuery(buildSkuSelfHostPrompt(meter)) : '/chat';
+  const openWeights = meter ? extractOpenWeights(meter) : null;
 
   return (
     <Drawer
@@ -154,6 +163,11 @@ export function SkuDrawer({
                 ) : null}
                 {parameterCount ? (
                   <DefinitionList.Item name="Параметры модели">{parameterCount}</DefinitionList.Item>
+                ) : null}
+                {openWeights != null ? (
+                  <DefinitionList.Item name="Веса">
+                    {openWeights ? 'Open-source (можно self-host)' : 'Закрытые (только API)'}
+                  </DefinitionList.Item>
                 ) : null}
                 {billingUnit ? (
                   <DefinitionList.Item name="Единица биллинга">{billingUnit}</DefinitionList.Item>
@@ -233,18 +247,33 @@ export function SkuDrawer({
           </div>
 
           <div className={styles.footer}>
-            <Button
-              component={NextLink}
-              href={compareHref}
-              view="action"
-              size="l"
-              width="max"
-              prefetch
-              className={styles.compareButton}
-            >
-              <Icon data={Sparkles} size={16} />
-              Сравнить
-            </Button>
+            <Flex gap={2} className={styles.footerActions}>
+              <Button
+                component={NextLink}
+                href={compareHref}
+                view="action"
+                size="l"
+                width="max"
+                prefetch
+                className={styles.compareButton}
+              >
+                <Icon data={Sparkles} size={16} />
+                Сравнить
+              </Button>
+              {showSelfHost ? (
+                <Button
+                  component={NextLink}
+                  href={selfHostHref}
+                  view="action"
+                  size="l"
+                  width="max"
+                  prefetch
+                >
+                  <Icon data={Display} size={16} />
+                  Развернуть
+                </Button>
+              ) : null}
+            </Flex>
           </div>
         </div>
       ) : null}

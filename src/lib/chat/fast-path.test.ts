@@ -58,4 +58,71 @@ describe('matchFastPath', () => {
     assert.match(md, /best/);
     assert.match(md, /\+20%/);
   });
+
+  it('formats recommend_inference_infra with readable markdown sections', () => {
+    const md = formatFastPathAnswer('coder-next-infra', [
+      {
+        name: 'recommend_inference_infra',
+        content: JSON.stringify({
+          ok: true,
+          model: {
+            displayName: 'Qwen3-Coder-Next',
+            parameterCountB: 80,
+            activeParameterCountB: 3,
+            confidence: 'high',
+            contextDefault: 262144,
+            deployment: 'self-host',
+          },
+          primaryRecommendation: {
+            why: 'Стартовый минимум: 1×H100 INT4.',
+          },
+          configs: [
+            {
+              gpuFamily: 'H100',
+              gpuCount: 1,
+              quant: 'int4',
+              estimatedVramGiB: 80,
+              notes: 'PoC / лёгкий agent.',
+              why: 'long why ignored when notes present',
+              best: {provider: 'Selectel', totalMonth: 340000},
+              quotes: [],
+              assumedHost: null,
+            },
+            {
+              gpuFamily: 'H200',
+              gpuCount: 1,
+              quant: 'fp8',
+              estimatedVramGiB: 141,
+              notes: 'Минимум без INT4.',
+              why: 'alt why',
+              best: {provider: 'T1 Cloud', totalMonth: 500000},
+              quotes: [],
+              assumedHost: null,
+            },
+          ],
+          hostedAlternative: {
+            providersMatched: [
+              {
+                provider: 'Cloud.ru',
+                cheapestMonth: 122,
+                inputMonth: 122,
+                outputMonth: 244,
+              },
+            ],
+          },
+          caveats: ['Не путать с Coder-480B.'],
+        }),
+      },
+    ]);
+    assert.ok(md);
+    assert.match(md, /### Self-host: Qwen3-Coder-Next/);
+    assert.match(md, /### Почему так/);
+    assert.match(md, /### Цены узлов/);
+    assert.match(md, /### Альтернативы/);
+    assert.match(md, /### Hosted API/);
+    assert.match(md, /### Оговорки/);
+    assert.match(md, /Input/);
+    assert.match(md, /Output/);
+    assert.match(md, /PoC \/ лёгкий agent/);
+  });
 });

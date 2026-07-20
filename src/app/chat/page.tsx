@@ -6,7 +6,7 @@ import {ChatSeo, chatJsonLd} from '@/components/chat/ChatSeo';
 export const metadata: Metadata = {
   title: 'ИИ-ассистент FinOps — чат по ценам облаков РФ, GPU, ВМ',
   description:
-    'ИИ-ассистент FinOps: спросите про цены облаков России и получите ответ таблицей. Рекомендательная система подбирает оптимального провайдера, аналитика цен сравнивает ВМ, GPU (H100, H200, A100, B300), хранилище, трафик и AI-модели у Yandex Cloud, VK Cloud, Selectel, Cloud.ru, MWS и T1.',
+    'ИИ-ассистент FinOps: цены облаков РФ, расчёт GPU под инференс LLM (Qwen, GLM, Kimi, gpt-oss), сравнение ВМ, H100/H200/A100 и AI API. Yandex Cloud, VK Cloud, Selectel, Cloud.ru, MWS и T1 — таблицы с НДС.',
   keywords: [
     'ИИ FinOps',
     'ИИ ассистент FinOps',
@@ -26,6 +26,15 @@ export const metadata: Metadata = {
     'стоимость GPU облако',
     'сравнение цен облаков',
     'аренда GPU H100',
+    'расчет GPU для инференса',
+    'расчёт GPU для инференса',
+    'расчет конфигурации под инференс',
+    'сколько H100 для Qwen',
+    'сколько GPU для GLM',
+    'VRAM для Qwen',
+    'self-host LLM в облаке',
+    'подбор GPU под модель',
+    'инференс LLM Россия',
     'GigaChat',
   ],
   alternates: {
@@ -38,7 +47,7 @@ export const metadata: Metadata = {
     siteName: 'Cloud FinOps',
     title: 'ИИ-ассистент FinOps — цены облаков РФ · Cloud FinOps',
     description:
-      'Специализированный ИИ-чат по ценам облаков России: рекомендательная система и аналитика цен ищут по каталогу, считают конфигурации и отвечают таблицами.',
+      'ИИ-чат по ценам облаков РФ: подбор ВМ/GPU, расчёт GPU под инференс LLM (Qwen, GLM, Kimi) и сравнение тарифов таблицами.',
   },
   twitter: {
     card: 'summary_large_image',

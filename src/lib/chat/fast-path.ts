@@ -54,6 +54,25 @@ function normalizeQuery(text: string): string {
 
 /** Extra first-turn aliases beyond exact HOME_EXAMPLES prompts. */
 const ALIAS_PLANS: {id: string; match: RegExp; tools: FastPathTool[]}[] = [
+  // Self-host inference — before token-price aliases for the same model names.
+  {
+    id: 'inference-glm-52',
+    match:
+      /(?:запуск|запустить|развернуть|инфраструктур|свои[хм]|self[-\s]?host|сколько\s+gpu|vram).{0,80}glm\s*5\.2|glm\s*5\.2.{0,80}(?:запуск|запустить|развернуть|инфраструктур|свои[хм]|gpu|vram)/i,
+    tools: [{name: 'recommend_inference_infra', args: {model: 'GLM 5.2', maxConfigs: 3}}],
+  },
+  {
+    id: 'inference-qwen3-235b',
+    match:
+      /(?:запуск|запустить|развернуть|инфраструктур|свои[хм]|self[-\s]?host|сколько\s+gpu).{0,80}qwen3?\s*[-.]?\s*235|qwen3?\s*[-.]?\s*235.{0,80}(?:запуск|инфраструктур|gpu)/i,
+    tools: [{name: 'recommend_inference_infra', args: {model: 'Qwen3 235B', maxConfigs: 3}}],
+  },
+  {
+    id: 'inference-kimi',
+    match:
+      /(?:запуск|запустить|развернуть|инфраструктур|свои[хм]|self[-\s]?host|сколько\s+gpu).{0,80}kimi|kimi.{0,80}(?:запуск|инфраструктур|свои[хм]|gpu)/i,
+    tools: [{name: 'recommend_inference_infra', args: {model: 'Kimi K2.6', maxConfigs: 3}}],
+  },
   {
     id: 'vm-8-32',
     match: /(?:вм|vm).{0,40}8\s*vcpu.{0,20}32\s*gi?b/i,
@@ -103,7 +122,8 @@ const ALIAS_PLANS: {id: string; match: RegExp; tools: FastPathTool[]}[] = [
   },
   {
     id: 'glm-52-mws',
-    match: /glm\s*5\.2/i,
+    // Token/API price only — self-host infra matches earlier aliases.
+    match: /glm\s*5\.2.{0,60}(?:токен|1m|mws|стоит|цен)/i,
     tools: [
       {
         name: 'search_prices',
@@ -119,7 +139,7 @@ const ALIAS_PLANS: {id: string; match: RegExp; tools: FastPathTool[]}[] = [
   },
   {
     id: 'qwen-36',
-    match: /qwen\s*3\.6/i,
+    match: /qwen\s*3\.6.{0,60}(?:токен|1m|цен|сравни)|(?:токен|цен|сравни).{0,40}qwen\s*3\.6/i,
     tools: [
       {
         name: 'search_prices',
@@ -190,6 +210,28 @@ const HOME_EXACT: {id: string; prompt: string; tools: FastPathTool[]}[] = [
     ],
   },
   {
+    id: 'glm-infra',
+    prompt: 'Какая инфраструктура нужна, чтобы запустить GLM 5.2 на своих GPU в РФ?',
+    tools: [{name: 'recommend_inference_infra', args: {model: 'GLM 5.2', maxConfigs: 3}}],
+  },
+  {
+    id: 'kimi-k3-infra',
+    prompt: 'Какая инфраструктура нужна, чтобы развернуть Kimi K3 self-host в РФ?',
+    tools: [{name: 'recommend_inference_infra', args: {model: 'Kimi K3', maxConfigs: 3}}],
+  },
+  {
+    id: 'qwen38-infra',
+    prompt: 'Какая инфраструктура нужна, чтобы развернуть Qwen 3.8 self-host в РФ?',
+    tools: [{name: 'recommend_inference_infra', args: {model: 'Qwen 3.8', maxConfigs: 3}}],
+  },
+  {
+    id: 'coder-next-infra',
+    prompt: 'Какая инфраструктура нужна, чтобы развернуть Qwen3-Coder-Next self-host в РФ?',
+    tools: [
+      {name: 'recommend_inference_infra', args: {model: 'Qwen3-Coder-Next', maxConfigs: 5}},
+    ],
+  },
+  {
     id: 'glm',
     prompt: 'Сколько стоит GLM 5.2 у MWS за 1M токенов?',
     tools: [
@@ -206,16 +248,6 @@ const HOME_EXACT: {id: string; prompt: string; tools: FastPathTool[]}[] = [
     ],
   },
   {
-    id: 'qwen',
-    prompt: 'Сравни цены Qwen 3.6 по провайдерам за 1M токенов',
-    tools: [
-      {
-        name: 'search_prices',
-        args: {query: 'Qwen 3.6', category: 'ai', aiModel: 'Qwen 3.6', limit: 12},
-      },
-    ],
-  },
-  {
     id: 'ai',
     prompt: 'Сравни цены AI API / токенов по провайдерам',
     tools: [
@@ -224,6 +256,11 @@ const HOME_EXACT: {id: string; prompt: string; tools: FastPathTool[]}[] = [
         args: {query: 'AI inference tokens', category: 'ai', limit: 20},
       },
     ],
+  },
+  {
+    id: 'budget-100k',
+    prompt: 'Бюджет 100 000 ₽/мес — что можно позволить?',
+    tools: [{name: 'fit_budget', args: {budgetMonthRub: 100_000, profile: 'general'}}],
   },
 ];
 
@@ -317,6 +354,165 @@ export function formatFastPathAnswer(
   if (!primary) return null;
   const data = parseJson(primary.content);
   if (!data || data.error) return null;
+
+  if (primary.name === 'recommend_inference_infra' && data.ok && data.model) {
+    type Cfg = {
+      gpuFamily: string;
+      gpuCount: number;
+      quant: string;
+      estimatedVramGiB: number;
+      assumedHost: string | null;
+      best: {provider: string; totalMonth: number | null} | null;
+      quotes: {provider: string; totalMonth: number | null}[];
+      notes?: string;
+      why?: string;
+    };
+    const model = data.model as {
+      displayName: string;
+      parameterCountB?: number;
+      activeParameterCountB?: number;
+      parameterCountNote?: string;
+      deployment?: string;
+      confidence: string;
+      contextDefault?: number;
+    };
+    const configs = (data.configs as Cfg[] | undefined) ?? [];
+    const params =
+      model.parameterCountB == null
+        ? model.parameterCountNote || 'параметры не раскрыты'
+        : model.activeParameterCountB != null
+          ? `${model.parameterCountB}B (${model.activeParameterCountB}B active)`
+          : `${model.parameterCountB}B`;
+    const ctxBit =
+      typeof model.contextDefault === 'number' && model.contextDefault > 0
+        ? `, ctx ${model.contextDefault.toLocaleString('ru-RU')}`
+        : '';
+    const hosted = data.hostedAlternative as
+      | {
+          providersMatched?: {
+            provider: string;
+            cheapestMonth: number | null;
+            inputMonth?: number | null;
+            outputMonth?: number | null;
+          }[];
+        }
+      | undefined;
+    const hostedBlock = hosted?.providersMatched?.length
+      ? [
+          '',
+          '### Hosted API',
+          '',
+          '₽ за **1M токенов** (не за GPU-узел). Считайте **input + output**.',
+          '',
+          '| Провайдер | Input | Output |',
+          '|---|---:|---:|',
+          ...hosted.providersMatched.slice(0, 4).map((p) => {
+            const inn =
+              p.inputMonth != null
+                ? formatRub(p.inputMonth)
+                : p.cheapestMonth != null
+                  ? formatRub(p.cheapestMonth)
+                  : '—';
+            const out = p.outputMonth != null ? formatRub(p.outputMonth) : '—';
+            return `| ${p.provider} | ${inn} | ${out} |`;
+          }),
+        ].join('\n')
+      : '';
+    const caveats = Array.isArray(data.caveats)
+      ? (data.caveats as string[]).filter(Boolean)
+      : [];
+    const caveatBlock = caveats.length
+      ? ['', '### Оговорки', '', ...caveats.slice(0, 4).map((c) => `- ${c}`)].join('\n')
+      : '';
+
+    if (model.deployment === 'api-only' || !configs.length) {
+      return [
+        `### ${model.displayName}`,
+        '',
+        `${params} · confidence: **${model.confidence}**`,
+        '',
+        '### Self-host',
+        '',
+        'Публичного checkpoint нет (**API-only**) — число GPU честно не подобрать.',
+        '',
+        'Смотрите open-weight соседние модели или hosted/API.',
+        hostedBlock,
+        caveatBlock,
+      ]
+        .filter((line) => line != null)
+        .join('\n');
+    }
+
+    const primaryWhy =
+      (data.primaryRecommendation as {why?: string} | undefined)?.why ||
+      configs[0]?.why ||
+      '';
+    const primaryNotes = configs[0]?.notes?.trim() || '';
+    const whyShort =
+      primaryNotes ||
+      (primaryWhy.length > 220 ? `${primaryWhy.slice(0, 200).trim()}…` : primaryWhy);
+    const whyBlock = whyShort
+      ? ['### Почему так', '', whyShort].join('\n')
+      : '';
+    const rows = configs
+      .map((c) => {
+        const best = c.best?.totalMonth;
+        const label = `${c.gpuCount}×${c.gpuFamily} · ${c.quant}`;
+        const price = typeof best === 'number' ? formatRub(best) : '—';
+        const who = c.best?.provider ?? '—';
+        return `| ${label} | ~${c.estimatedVramGiB} GiB | ${who} | ${price} |`;
+      })
+      .join('\n');
+    const altBlock = configs.slice(1, 4).length
+      ? [
+          '',
+          '### Альтернативы',
+          '',
+          ...configs.slice(1, 4).map((c) => {
+            const title = `**${c.gpuCount}×${c.gpuFamily} · ${c.quant}**`;
+            const blurb = (c.notes || c.why || '').trim();
+            const short =
+              blurb.length > 160 ? `${blurb.slice(0, 140).trim()}…` : blurb;
+            return short ? `- ${title} — ${short}` : `- ${title}`;
+          }),
+        ].join('\n')
+      : '';
+    const pendingNote =
+      model.deployment === 'weights-pending'
+        ? '\n\n> Веса open-weight ещё не вышли или только анонсированы — конфиги предварительные.'
+        : '';
+    const metaBits = [
+      params,
+      ctxBit.replace(/^,\s*/, '') || null,
+      `confidence: **${model.confidence}**`,
+    ].filter(Boolean);
+
+    return [
+      `### Self-host: ${model.displayName}`,
+      '',
+      metaBits.join(' · '),
+      '',
+      whyBlock,
+      '',
+      '### Цены узлов',
+      '',
+      'НДС вкл., месяц = 720 ч. Цена — лучший паритетный узел в каталоге.',
+      '',
+      `| Конфиг | VRAM | Провайдер | ₽/мес |`,
+      `|---|---:|---|---:|`,
+      rows,
+      altBlock,
+      hostedBlock,
+      caveatBlock,
+      pendingNote,
+      '',
+      '> Цены и VRAM — ориентиры Cloud FinOps; tok/s не оцениваем.',
+    ]
+      .filter((line, i, arr) => !(line === '' && arr[i - 1] === ''))
+      .join('\n')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
 
   if (primary.name === 'get_quote' && Array.isArray(data.quotes)) {
     type Q = {provider: string; total: number | null; scopeNote?: string};

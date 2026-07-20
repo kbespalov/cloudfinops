@@ -5,7 +5,7 @@ import {CatalogPage} from '@/components/catalog/CatalogPage';
 export const metadata: Metadata = {
   title: 'Каталог SKU — цены облаков РФ',
   description:
-    'Каталог SKU публичных облаков России: цены на compute, GPU, диски, object storage, сеть, Kubernetes и AI inference. Сравнение Yandex Cloud, VK Cloud, Selectel, Cloud.ru, MWS и T1.',
+    'Каталог SKU облаков России: compute, GPU, диски, S3, сеть, Kubernetes и AI inference. Open-weight модели — кнопка «Развернуть» для расчёта GPU под self-host. Yandex Cloud, VK Cloud, Selectel, Cloud.ru, MWS, T1.',
   keywords: [
     'каталог SKU',
     'SKU облако',
@@ -16,6 +16,10 @@ export const metadata: Metadata = {
     'цена GPU облако',
     'цена токенов LLM',
     'AI inference',
+    'open-source LLM каталог',
+    'self-host модель облако',
+    'развернуть LLM на GPU',
+    'расчет GPU для инференса',
     'FinOps',
   ],
   alternates: {

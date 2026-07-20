@@ -14,7 +14,9 @@ import {
 import {quotePreset, listGpuPresets} from '@/lib/calculator/quote';
 import {compareUnitPrice, type UnitComponent} from './analytics';
 import {fitBudget, type FitBudgetProfile} from './fit-budget';
+import {recommendInferenceInfra} from './inference-recommend';
 import type {ComputePreset, GpuPreset, CalculatorPreset} from '@/lib/calculator/presets';
+import type {InferenceDtype} from '@/data/inference-models';
 
 export type ChatToolCall = {
   id: string;
@@ -41,7 +43,36 @@ const PROVIDER_IDS = [
   'mws-cloud',
 ];
 
-/** OpenAI-compatible tool schema array sent with every completion request. */
+/** Gated tool — attach only when inference-intent matches (not on every turn). */
+export const RECOMMEND_INFERENCE_INFRA_TOOL = {
+  type: 'function' as const,
+  function: {
+    name: 'recommend_inference_infra',
+    description:
+      'Подобрать self-host GPU-инфраструктуру для open-weight модели (VRAM/число карт/квант) и сравнить цены узлов в РФ-облаках. Также вернёт hosted API альтернативу из каталога токенов, если модель там есть. Используй когда спрашивают «как запустить GLM/Qwen/Kimi на своих GPU», инфраструктуру для инференса, сколько H100 нужно — НЕ для цены ₽/1M токенов.',
+    parameters: {
+      type: 'object',
+      properties: {
+        model: {
+          type: 'string',
+          description: 'Название модели: «GLM 5.2», «Qwen3 32B», «Kimi K2.6», «Llama 3.3 70B»…',
+        },
+        quant: {
+          type: 'string',
+          enum: ['auto', 'bf16', 'fp8', 'int4', 'int8'],
+          description: 'Предпочтительная квантизация (по умолчанию auto — рецепты из базы).',
+        },
+        maxConfigs: {
+          type: 'integer',
+          description: 'Сколько альтернативных GPU-конфигов вернуть (1–5, по умолчанию 3).',
+        },
+      },
+      required: ['model'],
+    },
+  },
+};
+
+/** Baseline tools for every planning turn (do not add gated tools here). */
 export const CHAT_TOOLS = [
   {
     type: 'function',
@@ -175,7 +206,26 @@ export const CHAT_TOOLS = [
   },
 ] as const;
 
+/** Baseline + gated inference recommender (attach only on matching intents). */
+export const CHAT_TOOLS_WITH_INFERENCE = [...CHAT_TOOLS, RECOMMEND_INFERENCE_INFRA_TOOL];
+
 const FIT_PROFILES: FitBudgetProfile[] = ['general', 'high-cpu', 'gpu-l4', 'gpu-h100'];
+
+const INFERENCE_QUANTS: InferenceDtype[] = ['bf16', 'fp8', 'int4', 'int8'];
+
+function runRecommendInference(args: Record<string, unknown>): unknown {
+  const model = typeof args.model === 'string' ? args.model : '';
+  const quantRaw = typeof args.quant === 'string' ? args.quant : 'auto';
+  const quant =
+    quantRaw === 'auto' || INFERENCE_QUANTS.includes(quantRaw as InferenceDtype)
+      ? (quantRaw as InferenceDtype | 'auto')
+      : 'auto';
+  const maxConfigs =
+    typeof args.maxConfigs === 'number' && Number.isFinite(args.maxConfigs)
+      ? args.maxConfigs
+      : undefined;
+  return recommendInferenceInfra({model, quant, maxConfigs});
+}
 
 function runFitBudget(args: Record<string, unknown>): unknown {
   const budget = num(args.budgetMonthRub);
@@ -516,6 +566,7 @@ export function runToolSync(name: string, rawArgs: string): string {
     if (name === 'get_quote') return JSON.stringify(runQuote(args));
     if (name === 'compare_unit_price') return JSON.stringify(runCompareUnitPrice(args));
     if (name === 'fit_budget') return JSON.stringify(runFitBudget(args));
+    if (name === 'recommend_inference_infra') return JSON.stringify(runRecommendInference(args));
     return JSON.stringify({error: `Неизвестный инструмент: ${name}`});
   } catch (err) {
     return toolError(err);
@@ -532,6 +583,7 @@ export async function runTool(name: string, rawArgs: string): Promise<string> {
     if (name === 'get_quote') return JSON.stringify(runQuote(args));
     if (name === 'compare_unit_price') return JSON.stringify(runCompareUnitPrice(args));
     if (name === 'fit_budget') return JSON.stringify(runFitBudget(args));
+    if (name === 'recommend_inference_infra') return JSON.stringify(runRecommendInference(args));
     return JSON.stringify({error: `Неизвестный инструмент: ${name}`});
   } catch (err) {
     return toolError(err);
