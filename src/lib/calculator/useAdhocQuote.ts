@@ -1,0 +1,86 @@
+'use client';
+
+import {useEffect, useRef, useState} from 'react';
+import type {ComputeFamily} from '@/lib/calculator/presets';
+import type {PeriodMode, ViewPresetQuote} from '@/lib/calculator/quote-view';
+
+export type AdhocComputeQuoteRequest = {
+  kind: 'compute';
+  period: PeriodMode;
+  vcpu: number;
+  ramGiB: number;
+  diskGiB: number;
+  family?: ComputeFamily;
+  vmCount?: number;
+};
+
+export type AdhocGpuQuoteRequest = {
+  kind: 'gpu';
+  period: PeriodMode;
+  gpuModelMatch: string;
+  gpuCount: number;
+  vcpu?: number;
+  ramGiB?: number;
+  diskGiB?: number;
+  gpuInterconnect?: string | null;
+};
+
+export type AdhocQuoteRequest = AdhocComputeQuoteRequest | AdhocGpuQuoteRequest;
+
+function requestKey(req: AdhocQuoteRequest | null): string {
+  return req ? JSON.stringify(req) : '';
+}
+
+/** Debounced POST /api/calculator/quote for live calculator sidebar. */
+export function useAdhocQuote(request: AdhocQuoteRequest | null, debounceMs = 180) {
+  const [result, setResult] = useState<ViewPresetQuote | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const seq = useRef(0);
+
+  useEffect(() => {
+    if (!request) {
+      setResult(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
+    const key = requestKey(request);
+    let cancelled = false;
+    const mySeq = ++seq.current;
+    setLoading(true);
+    setError(null);
+
+    const timer = window.setTimeout(() => {
+      fetch('/api/calculator/quote', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: key,
+      })
+        .then(async (res) => {
+          if (!res.ok) throw new Error(`quote ${res.status}`);
+          return res.json() as Promise<ViewPresetQuote>;
+        })
+        .then((data) => {
+          if (cancelled || mySeq !== seq.current) return;
+          setResult(data);
+        })
+        .catch((err: unknown) => {
+          if (cancelled || mySeq !== seq.current) return;
+          setResult(null);
+          setError(err instanceof Error ? err.message : 'quote failed');
+        })
+        .finally(() => {
+          if (!cancelled && mySeq === seq.current) setLoading(false);
+        });
+    }, debounceMs);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [request, debounceMs]);
+
+  return {result, loading, error};
+}

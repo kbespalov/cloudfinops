@@ -36,6 +36,14 @@ export type InferenceConfigRow = {
   /** Short RU rationale for this recipe (for the assistant to surface). */
   why: string;
   assumedHost: string | null;
+  /** Structured host for calculator quoting (null when unknown). */
+  host: {
+    vcpu: number;
+    ramGiB: number;
+    diskGiB: number;
+    /** GPU-only tariff — vCPU/RAM billed separately. */
+    unitOnly: boolean;
+  } | null;
   best: {provider: string; totalMonth: number | null} | null;
   quotes: InferenceConfigQuote[];
 };
@@ -232,6 +240,14 @@ function quoteConfig(
       : unitOnly
         ? `GPU-only тариф (vCPU/RAM отдельно; источник формы: ${host.source})`
         : `${host.vcpu} vCPU + ${host.ramGiB} GiB RAM + ${host.diskGiB} GiB диск (форма: ${host.source})`,
+    host: !host
+      ? null
+      : {
+          vcpu: host.vcpu,
+          ramGiB: host.ramGiB,
+          diskGiB: host.diskGiB,
+          unitOnly,
+        },
     best,
     quotes: quotes.slice(0, 8),
   };

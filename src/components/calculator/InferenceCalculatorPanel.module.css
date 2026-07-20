@@ -1,0 +1,128 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid var(--g-color-line-generic);
+  border-radius: var(--g-border-radius-xl);
+  background: var(--g-color-base-float);
+}
+
+.blockHead {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.step {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--g-color-base-brand);
+  color: var(--g-color-text-brand-contrast);
+  font-size: 13px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .fieldGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.configGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 720px) {
+  .configGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.configCard {
+  appearance: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+  padding: 14px;
+  border: 1px solid var(--g-color-line-generic);
+  border-radius: var(--g-border-radius-l);
+  background: var(--g-color-base-background);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.configCard:hover {
+  background: var(--g-color-base-generic);
+}
+
+.configCard[data-active='true'] {
+  border-color: var(--g-color-line-brand);
+  background: var(--g-color-base-selection);
+}
+
+.configPrice {
+  font-variant-numeric: tabular-nums;
+}
+
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.hostedTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.hostedTable th,
+.hostedTable td {
+  padding: 6px 0;
+  text-align: left;
+  border-bottom: 1px solid var(--g-color-line-generic);
+}
+
+.hostedTable th:not(:first-child),
+.hostedTable td:not(:first-child) {
+  text-align: right;
+}
+
+.caveatList {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
