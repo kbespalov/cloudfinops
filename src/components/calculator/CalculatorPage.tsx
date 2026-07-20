@@ -28,8 +28,7 @@ export function CalculatorPage() {
                 <Text variant="header-1">Калькулятор облачных нагрузок</Text>
               </Flex>
               <Text variant="body-1" color="secondary" className={styles.heroLead}>
-                Рассчитайте виртуальную машину или подберите GPU-конфигурацию под open-source
-                модель. Сравнение провайдеров — всегда справа.
+                ВМ или GPU под open-source модель
               </Text>
             </Flex>
             <SegmentedRadioGroup

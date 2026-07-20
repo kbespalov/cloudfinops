@@ -2,6 +2,8 @@
 
 export type ComputeFamily = 'low-cost' | 'general' | 'high-cpu' | 'high-memory';
 
+export type DiskMedia = 'ssd' | 'hdd';
+
 export type ComputePreset = {
   id: string;
   kind: 'compute';
@@ -10,8 +12,10 @@ export type ComputePreset = {
   subtitle: string;
   vcpu: number;
   ramGiB: number;
-  /** Assumed system disk for composition bar (GiB SSD / NVMe). */
+  /** Assumed system disk for composition bar (GiB). */
   diskGiB: number;
+  /** Block storage media — default SSD. */
+  diskMedia?: DiskMedia;
   /** Prefer NVMe block storage when composing the disk line. */
   preferNvme?: boolean;
 };

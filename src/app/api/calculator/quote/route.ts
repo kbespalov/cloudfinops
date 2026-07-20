@@ -1,10 +1,16 @@
 import {NextResponse} from 'next/server';
 import {quotePreset, toViewQuote} from '@/lib/calculator/quote';
-import type {ComputeFamily, ComputePreset, GpuPreset} from '@/lib/calculator/presets';
+import type {
+  ComputeFamily,
+  ComputePreset,
+  DiskMedia,
+  GpuPreset,
+} from '@/lib/calculator/presets';
 import type {PeriodMode, ViewPresetQuote} from '@/lib/calculator/quote-view';
 
 const PERIODS = new Set<PeriodMode>(['unit', 'month', 'year']);
 const FAMILIES = new Set<ComputeFamily>(['low-cost', 'general', 'high-cpu', 'high-memory']);
+const DISK_MEDIA = new Set<DiskMedia>(['ssd', 'hdd']);
 
 type ComputeBody = {
   kind: 'compute';
@@ -12,6 +18,7 @@ type ComputeBody = {
   vcpu: number;
   ramGiB: number;
   diskGiB: number;
+  diskMedia?: DiskMedia;
   family?: ComputeFamily;
   vmCount?: number;
 };
@@ -77,15 +84,19 @@ export async function POST(request: Request) {
     }
     const family: ComputeFamily =
       body.family && FAMILIES.has(body.family) ? body.family : 'general';
+    const diskMedia: DiskMedia =
+      body.diskMedia && DISK_MEDIA.has(body.diskMedia) ? body.diskMedia : 'ssd';
+    const diskLabel = diskMedia === 'hdd' ? 'HDD' : 'SSD';
     const preset: ComputePreset = {
-      id: `adhoc-${family}-${vcpu}-${ramGiB}-${diskGiB}`,
+      id: `adhoc-${family}-${vcpu}-${ramGiB}-${diskGiB}-${diskMedia}`,
       kind: 'compute',
       family,
       title: `${vcpu} / ${ramGiB}`,
-      subtitle: `${vcpu} vCPU · ${ramGiB} GiB · ${diskGiB} GiB SSD`,
+      subtitle: `${vcpu} vCPU · ${ramGiB} GiB · ${diskGiB} GiB ${diskLabel}`,
       vcpu,
       ramGiB,
       diskGiB,
+      diskMedia,
     };
     const view = scaleQuote(toViewQuote(quotePreset(preset, body.period)), vmCount);
     return NextResponse.json(view);

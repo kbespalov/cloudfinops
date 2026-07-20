@@ -157,13 +157,6 @@
   flex-shrink: 0;
 }
 
-.footerNote {
-  padding: 10px 12px;
-  border-radius: var(--g-border-radius-l);
-  background: var(--g-color-base-warning-light);
-  color: var(--g-color-text-warning-heavy);
-}
-
 .skeleton {
   min-height: 120px;
   border-radius: var(--g-border-radius-xl);

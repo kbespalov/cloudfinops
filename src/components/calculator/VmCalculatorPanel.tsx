@@ -1,13 +1,13 @@
 'use client';
 
 import {useMemo, useState} from 'react';
-import {Flex, Text, TextInput} from '@gravity-ui/uikit';
+import {SegmentedRadioGroup, Text, TextInput} from '@gravity-ui/uikit';
 import {
-  COMPUTE_FAMILY_HINT,
   COMPUTE_FAMILY_TITLE,
   COMPUTE_PRESETS,
   computePresetsByFamily,
   type ComputeFamily,
+  type DiskMedia,
 } from '@/lib/calculator/presets';
 import type {PeriodMode} from '@/lib/calculator/quote-view';
 import {useAdhocQuote} from '@/lib/calculator/useAdhocQuote';
@@ -22,6 +22,7 @@ const DEFAULT = {
   vcpu: 4,
   ramGiB: 16,
   diskGiB: 100,
+  diskMedia: 'ssd' as DiskMedia,
 };
 
 function clampInt(raw: string, min: number, max: number, fallback: number): number {
@@ -36,6 +37,7 @@ export function VmCalculatorPanel({period}: {period: PeriodMode}) {
   const [vcpu, setVcpu] = useState(String(DEFAULT.vcpu));
   const [ramGiB, setRamGiB] = useState(String(DEFAULT.ramGiB));
   const [diskGiB, setDiskGiB] = useState(String(DEFAULT.diskGiB));
+  const [diskMedia, setDiskMedia] = useState<DiskMedia>(DEFAULT.diskMedia);
 
   const parsed = useMemo(
     () => ({
@@ -43,9 +45,10 @@ export function VmCalculatorPanel({period}: {period: PeriodMode}) {
       vcpu: clampInt(vcpu, 1, 128, DEFAULT.vcpu),
       ramGiB: clampInt(ramGiB, 1, 1024, DEFAULT.ramGiB),
       diskGiB: clampInt(diskGiB, 10, 4096, DEFAULT.diskGiB),
+      diskMedia,
       family: family === 'custom' ? ('general' as ComputeFamily) : family,
     }),
-    [vmCount, vcpu, ramGiB, diskGiB, family],
+    [vmCount, vcpu, ramGiB, diskGiB, diskMedia, family],
   );
 
   const request = useMemo(
@@ -55,6 +58,7 @@ export function VmCalculatorPanel({period}: {period: PeriodMode}) {
       vcpu: parsed.vcpu,
       ramGiB: parsed.ramGiB,
       diskGiB: parsed.diskGiB,
+      diskMedia: parsed.diskMedia,
       family: parsed.family,
       vmCount: parsed.vmCount,
     }),
@@ -76,21 +80,14 @@ export function VmCalculatorPanel({period}: {period: PeriodMode}) {
     setFamily('custom');
   }
 
-  const summary = `${parsed.vmCount} × ${parsed.vcpu} vCPU · ${parsed.ramGiB} GiB RAM · ${parsed.diskGiB} GiB SSD`;
+  const diskLabel = parsed.diskMedia === 'hdd' ? 'HDD' : 'SSD';
+  const summary = `${parsed.vmCount} × ${parsed.vcpu} vCPU · ${parsed.ramGiB} GiB · ${parsed.diskGiB} GiB ${diskLabel}`;
 
   return (
     <>
       <div className={styles.root}>
         <section className={styles.block}>
-          <div className={styles.blockHead}>
-            <span className={styles.step}>1</span>
-            <Flex direction="column" gap={0}>
-              <Text variant="subheader-2">Виртуальные машины</Text>
-              <Text variant="caption-2" color="secondary">
-                Выберите семейство или задайте свою конфигурацию
-              </Text>
-            </Flex>
-          </div>
+          <Text variant="subheader-2">Виртуальные машины</Text>
 
           <div className={styles.chips} role="list">
             <button
@@ -99,7 +96,7 @@ export function VmCalculatorPanel({period}: {period: PeriodMode}) {
               data-active={family === 'custom' ? 'true' : 'false'}
               onClick={markCustom}
             >
-              Своя конфигурация
+              Своя
             </button>
             {FAMILIES.map((id) => (
               <button
@@ -114,16 +111,10 @@ export function VmCalculatorPanel({period}: {period: PeriodMode}) {
             ))}
           </div>
 
-          {family !== 'custom' ? (
-            <Text variant="body-2" color="secondary">
-              {COMPUTE_FAMILY_HINT[family]}
-            </Text>
-          ) : null}
-
           <div className={styles.fieldGrid}>
             <label className={styles.field}>
               <Text variant="caption-2" color="secondary">
-                Количество VM
+                VM
               </Text>
               <TextInput
                 size="l"
@@ -137,7 +128,7 @@ export function VmCalculatorPanel({period}: {period: PeriodMode}) {
             </label>
             <label className={styles.field}>
               <Text variant="caption-2" color="secondary">
-                vCPU на VM
+                vCPU
               </Text>
               <TextInput
                 size="l"
@@ -151,7 +142,7 @@ export function VmCalculatorPanel({period}: {period: PeriodMode}) {
             </label>
             <label className={styles.field}>
               <Text variant="caption-2" color="secondary">
-                RAM на VM, GiB
+                RAM, GiB
               </Text>
               <TextInput
                 size="l"
@@ -165,7 +156,7 @@ export function VmCalculatorPanel({period}: {period: PeriodMode}) {
             </label>
             <label className={styles.field}>
               <Text variant="caption-2" color="secondary">
-                SSD на VM, GiB
+                Диск, GiB
               </Text>
               <TextInput
                 size="l"
@@ -179,12 +170,24 @@ export function VmCalculatorPanel({period}: {period: PeriodMode}) {
             </label>
           </div>
 
-          <div className={styles.summary}>
-            <Text variant="body-2">Итого: {summary}</Text>
-            <Text variant="body-2" color="secondary">
-              НДС вкл. · месяц = 720 ч
+          <div className={styles.field}>
+            <Text variant="caption-2" color="secondary">
+              Тип диска
             </Text>
+            <SegmentedRadioGroup
+              size="m"
+              value={diskMedia}
+              onUpdate={(v) => {
+                markCustom();
+                setDiskMedia(v as DiskMedia);
+              }}
+            >
+              <SegmentedRadioGroup.Option value="ssd">SSD</SegmentedRadioGroup.Option>
+              <SegmentedRadioGroup.Option value="hdd">HDD</SegmentedRadioGroup.Option>
+            </SegmentedRadioGroup>
           </div>
+
+          <Text variant="body-2">{summary}</Text>
         </section>
       </div>
 
@@ -192,14 +195,9 @@ export function VmCalculatorPanel({period}: {period: PeriodMode}) {
         period={period}
         result={result}
         loading={loading}
-        eyebrow="Оптимальный вариант"
+        eyebrow="Лучший оффер"
         subtitle={summary}
-        emptyHint="Нет публичных котировок для этой конфигурации"
-        footer={
-          <Text variant="caption-2" color="secondary">
-            Сеть, IP, образы и бэкапы не входят в пресет — смотрите каталог SKU.
-          </Text>
-        }
+        emptyHint="Нет котировок"
       />
     </>
   );

@@ -14,26 +14,6 @@
   background: var(--g-color-base-float);
 }
 
-.blockHead {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.step {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  background: var(--g-color-base-brand);
-  color: var(--g-color-text-brand-contrast);
-  font-size: 13px;
-  font-weight: 600;
-  flex-shrink: 0;
-}
-
 .fieldGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

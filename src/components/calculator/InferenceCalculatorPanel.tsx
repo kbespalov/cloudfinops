@@ -2,15 +2,9 @@
 
 import {useEffect, useMemo, useState} from 'react';
 import {Flex, Label, Select, Text} from '@gravity-ui/uikit';
-import {
-  INFERENCE_MODELS,
-  type InferenceDtype,
-} from '@/data/inference-models';
+import {INFERENCE_MODELS, type InferenceDtype} from '@/data/inference-models';
 import type {InferenceRecommendResult} from '@/lib/chat/inference-recommend';
-import {
-  formatQuoteAmount,
-  type PeriodMode,
-} from '@/lib/calculator/quote-view';
+import type {PeriodMode} from '@/lib/calculator/quote-view';
 import {useAdhocQuote} from '@/lib/calculator/useAdhocQuote';
 import {CalculatorSidebar} from './CalculatorSidebar';
 import styles from './InferenceCalculatorPanel.module.css';
@@ -18,8 +12,8 @@ import styles from './InferenceCalculatorPanel.module.css';
 type QuantOption = InferenceDtype | 'auto';
 
 const QUANT_OPTIONS: {value: QuantOption; content: string}[] = [
-  {value: 'auto', content: 'Auto (рецепты из базы)'},
-  {value: 'int4', content: 'INT4 / AWQ'},
+  {value: 'auto', content: 'Auto'},
+  {value: 'int4', content: 'INT4'},
   {value: 'fp8', content: 'FP8'},
   {value: 'bf16', content: 'BF16'},
   {value: 'int8', content: 'INT8'},
@@ -37,12 +31,7 @@ function formatRub(n: number | null | undefined): string {
 function modelOptions() {
   return INFERENCE_MODELS.map((m) => ({
     value: m.displayName,
-    content:
-      m.deployment === 'api-only'
-        ? `${m.displayName} · API-only`
-        : m.deployment === 'weights-pending'
-          ? `${m.displayName} · веса скоро`
-          : m.displayName,
+    content: m.displayName,
   }));
 }
 
@@ -105,9 +94,9 @@ export function InferenceCalculatorPanel({period}: {period: PeriodMode}) {
   const modelMeta = rec?.model;
   const paramsLabel =
     modelMeta?.parameterCountB == null
-      ? modelMeta?.parameterCountNote || 'параметры не раскрыты'
+      ? null
       : modelMeta.activeParameterCountB != null
-        ? `${modelMeta.parameterCountB}B (${modelMeta.activeParameterCountB}B active)`
+        ? `${modelMeta.parameterCountB}B / ${modelMeta.activeParameterCountB}B active`
         : `${modelMeta.parameterCountB}B`;
 
   const hosted = rec?.hostedAlternative;
@@ -117,88 +106,58 @@ export function InferenceCalculatorPanel({period}: {period: PeriodMode}) {
     ? `${selected.gpuCount}×${selected.gpuFamily} · ${selected.quant.toUpperCase()}`
     : undefined;
 
-  const hostedExtra =
-    hosted?.providersMatched?.length ? (
-      <div className={styles.block} style={{padding: 16}}>
-        <Text variant="subheader-2">Hosted API · ₽ / 1M токенов</Text>
-        <Text variant="caption-2" color="secondary">
-          Считайте input + output. Не путать с арендой GPU-узла.
-        </Text>
-        <table className={styles.hostedTable}>
-          <thead>
-            <tr>
-              <th>
-                <Text variant="caption-2" color="secondary">
-                  Провайдер
-                </Text>
-              </th>
-              <th>
-                <Text variant="caption-2" color="secondary">
-                  Input
-                </Text>
-              </th>
-              <th>
-                <Text variant="caption-2" color="secondary">
-                  Output
-                </Text>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {hosted.providersMatched.slice(0, 5).map((p) => (
-              <tr key={p.provider}>
-                <td>
-                  <Text variant="body-2">{p.provider}</Text>
-                </td>
-                <td>
-                  <Text variant="body-2">
-                    {formatRub(p.inputMonth ?? p.cheapestMonth)}
-                  </Text>
-                </td>
-                <td>
-                  <Text variant="body-2">{formatRub(p.outputMonth)}</Text>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    ) : null;
-
-  const caveatsExtra =
-    rec?.caveats?.length ? (
-      <div className={styles.block} style={{padding: 16}}>
-        <Text variant="subheader-2">Оговорки</Text>
-        <ul className={styles.caveatList}>
-          {rec.caveats.slice(0, 4).map((c) => (
-            <li key={c}>
-              <Text variant="body-2" color="secondary">
-                {c}
+  const hostedExtra = hosted?.providersMatched?.length ? (
+    <div className={styles.block} style={{padding: 16}}>
+      <Text variant="subheader-2">Hosted API · ₽ / 1M</Text>
+      <table className={styles.hostedTable}>
+        <thead>
+          <tr>
+            <th>
+              <Text variant="caption-2" color="secondary">
+                Провайдер
               </Text>
-            </li>
+            </th>
+            <th>
+              <Text variant="caption-2" color="secondary">
+                Input
+              </Text>
+            </th>
+            <th>
+              <Text variant="caption-2" color="secondary">
+                Output
+              </Text>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {hosted.providersMatched.slice(0, 5).map((p) => (
+            <tr key={p.provider}>
+              <td>
+                <Text variant="body-2">{p.provider}</Text>
+              </td>
+              <td>
+                <Text variant="body-2">{formatRub(p.inputMonth ?? p.cheapestMonth)}</Text>
+              </td>
+              <td>
+                <Text variant="body-2">{formatRub(p.outputMonth)}</Text>
+              </td>
+            </tr>
           ))}
-        </ul>
-      </div>
-    ) : null;
+        </tbody>
+      </table>
+    </div>
+  ) : null;
 
   return (
     <>
       <div className={styles.root}>
         <section className={styles.block}>
-          <div className={styles.blockHead}>
-            <span className={styles.step}>1</span>
-            <Flex direction="column" gap={0}>
-              <Text variant="subheader-2">Модель и квант</Text>
-              <Text variant="caption-2" color="secondary">
-                Open-weight модели из базы Cloud FinOps
-              </Text>
-            </Flex>
-          </div>
+          <Text variant="subheader-2">Модель</Text>
 
           <div className={styles.fieldGrid}>
             <label className={styles.field}>
               <Text variant="caption-2" color="secondary">
-                Open-source модель
+                Модель
               </Text>
               <Select
                 size="l"
@@ -210,7 +169,7 @@ export function InferenceCalculatorPanel({period}: {period: PeriodMode}) {
             </label>
             <label className={styles.field}>
               <Text variant="caption-2" color="secondary">
-                Квантование
+                Квант
               </Text>
               <Select
                 size="l"
@@ -223,57 +182,27 @@ export function InferenceCalculatorPanel({period}: {period: PeriodMode}) {
 
           {modelMeta ? (
             <div className={styles.metaRow}>
-              <Text variant="body-2">{paramsLabel}</Text>
-              {typeof modelMeta.contextDefault === 'number' ? (
-                <Text variant="body-2" color="secondary">
-                  ctx {modelMeta.contextDefault.toLocaleString('ru-RU')}
-                </Text>
+              {paramsLabel ? <Text variant="body-2">{paramsLabel}</Text> : null}
+              {modelMeta.deployment === 'api-only' ? (
+                <Label size="s" theme="danger">
+                  API-only
+                </Label>
+              ) : modelMeta.deployment === 'weights-pending' ? (
+                <Label size="s" theme="warning">
+                  веса скоро
+                </Label>
               ) : null}
-              <Label
-                size="s"
-                theme={
-                  modelMeta.deployment === 'api-only'
-                    ? 'danger'
-                    : modelMeta.deployment === 'weights-pending'
-                      ? 'warning'
-                      : 'success'
-                }
-              >
-                {modelMeta.deployment === 'api-only'
-                  ? 'API-only'
-                  : modelMeta.deployment === 'weights-pending'
-                    ? 'веса скоро'
-                    : 'self-host'}
-              </Label>
-              <Label size="s" theme="utility">
-                {modelMeta.confidence}
-              </Label>
             </div>
           ) : null}
         </section>
 
         <section className={styles.block}>
-          <div className={styles.blockHead}>
-            <span className={styles.step}>2</span>
-            <Flex direction="column" gap={0}>
-              <Text variant="subheader-2">Подобранная GPU-конфигурация</Text>
-              <Text variant="caption-2" color="secondary">
-                Рецепты из базы · без выдуманного tok/s
-              </Text>
-            </Flex>
-          </div>
+          <Text variant="subheader-2">GPU</Text>
 
-          {recLoading ? (
-            <Text variant="body-2" color="secondary">
-              Подбираем конфигурации…
-            </Text>
-          ) : null}
+          {recLoading ? <Text variant="body-2">…</Text> : null}
 
           {apiOnly && !recLoading ? (
-            <Text variant="body-2" color="secondary">
-              Публичного checkpoint нет — число GPU честно не подобрать. Смотрите hosted API
-              справа или соседние open-weight модели.
-            </Text>
+            <Text variant="body-2">Self-host недоступен — смотрите Hosted API.</Text>
           ) : null}
 
           {!apiOnly && configs.length ? (
@@ -281,7 +210,7 @@ export function InferenceCalculatorPanel({period}: {period: PeriodMode}) {
               {configs.slice(0, 4).map((c, i) => {
                 const isActive = selectedIdx === i;
                 const month = c.best?.totalMonth;
-                const role = i === 0 ? 'Минимум / старт' : i === 1 ? 'Рекомендуемая' : 'Альтернатива';
+                const role = i === 0 ? 'Минимум' : i === 1 ? 'Рекомендуемая' : 'Ещё';
                 return (
                   <button
                     key={`${c.gpuFamily}-${c.gpuCount}-${c.quant}-${i}`}
@@ -309,26 +238,10 @@ export function InferenceCalculatorPanel({period}: {period: PeriodMode}) {
                         / мес
                       </Text>
                     </Flex>
-                    {c.best?.provider ? (
-                      <Text variant="caption-2" color="secondary">
-                        best · {c.best.provider}
-                      </Text>
-                    ) : null}
-                    {c.notes ? (
-                      <Text variant="caption-2" color="secondary" ellipsis>
-                        {c.notes}
-                      </Text>
-                    ) : null}
                   </button>
                 );
               })}
             </div>
-          ) : null}
-
-          {selected?.why ? (
-            <Text variant="body-2" color="secondary">
-              {selected.why}
-            </Text>
           ) : null}
         </section>
       </div>
@@ -337,31 +250,10 @@ export function InferenceCalculatorPanel({period}: {period: PeriodMode}) {
         period={period}
         result={apiOnly ? null : result}
         loading={recLoading || quoteLoading}
-        eyebrow={modelMeta?.displayName ?? 'GPU self-host'}
+        eyebrow={modelMeta?.displayName}
         subtitle={configSubtitle}
-        emptyHint={
-          apiOnly
-            ? 'Self-host недоступен для этой модели — смотрите Hosted API ниже'
-            : 'Нет публичных GPU-котировок для этой формы'
-        }
-        extras={
-          <>
-            {hostedExtra}
-            {caveatsExtra}
-          </>
-        }
-        footer={
-          period !== 'month' && result?.best ? (
-            <Text variant="caption-2" color="secondary">
-              Карточки слева показывают ₽/мес; справа — пересчёт на выбранный период (
-              {formatQuoteAmount(result.best.total, period)}).
-            </Text>
-          ) : (
-            <Text variant="caption-2" color="secondary">
-              VRAM и число GPU — инженерные ориентиры, не SLA. tok/s не оцениваем.
-            </Text>
-          )
-        }
+        emptyHint={apiOnly ? 'Только Hosted API' : 'Нет котировок'}
+        extras={hostedExtra}
       />
     </>
   );
