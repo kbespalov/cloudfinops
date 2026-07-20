@@ -4,16 +4,15 @@
 
 ### Калькулятор / массовая переработка (VM + Self-host LLM)
 
-Крупный релиз калькулятора: из одной витрины пресетов — два сценария с отдельными URL, живым сайдбаром цен и базой open-weight моделей под инференс.
+Калькулятор разделён на два сценария с отдельными страницами и общим живым сравнением цен по провайдерам РФ.
 
-- **Два режима и маршруты:** `/calculator/vm` (виртуальные машины) и `/calculator/self-host` (подбор GPU под LLM); `/calculator` редиректит в self-host как основной AI-сценарий. В sitemap — оба URL.
-- **VM:** пресеты по семействам (Low-cost / General / High CPU / High Memory), слайдеры vCPU/RAM/диска, выбор **HDD/SSD**, сетка GPU-форм из каталога; сравнение офферов провайдеров в sticky-сайдбаре.
-- **Self-host LLM:** выбор модели → квант → лестница GPU-конфигов (VRAM / число карт) с ценами узлов РФ (H100, H200, A100, L40S, L4, B300…) и блоком Hosted API ₽/1M, если модель есть в каталоге токенов.
-- **База моделей расширена** с опорой на популярность self-host (июль 2026), а не только на SKU каталога: Llama 4 Scout / Maverick, DeepSeek R1 и R1 Distill 32B, gpt-oss-20b, Devstral Small / Devstral 2, Phi-4 14B, Qwen3 8B — рядом с уже бывшими GLM, Qwen3/Coder, Kimi, DeepSeek V3, Gemma, Mixtral, Mistral Small. API-only (Qwen3.7 Max) и weights-pending (Qwen3.8, Kimi K3) помечены явно.
-- **ИИ-ассистент:** gated tool `recommend_inference_infra` работает на той же базе; алиасы вроде «GPT-УСС» → gpt-oss; вопросы про ₽/1M токенов по-прежнему идут в обычный `search_prices`, не в подбор GPU.
-- **Качество котировок:** L4 больше не «ворует» host у L40S; для H100 по умолчанию shelf **80 GB** (не sole-offer 94 GB); sidebar пересчитывает с `gpuMemoryGb`; при смене модели/конфига не мелькает старая цена; Hosted API не подмешивает соседние SKU (Qwen 3.7 ↛ Coder-Next, R1 Distill ↛ V4 Flash).
-- **Новости:** запись о калькуляторе хостинга LLM → `/calculator/self-host`.
-- UI: бейджи семейств моделей (Qw / Ll / DS / …), пресет-гриды VM/GPU, упрощённый copy и контраст dark theme для поверхностей калькулятора.
+- Маршруты: `/calculator/vm` (ВМ) и `/calculator/self-host` (GPU под LLM); `/calculator` ведёт в self-host. Оба URL — в sitemap.
+- **VM:** семейства Low-cost / General / High CPU / High Memory, слайдеры vCPU · RAM · диск, выбор HDD/SSD, сетка GPU-форм из каталога, sticky-сайдбар с офферами.
+- **Self-host LLM:** модель → квант → лестница GPU-конфигов (VRAM, число карт) с арендой H100 / H200 / A100 / L40S / L4 / B300 и рядом Hosted API в ₽/1M токенов, если модель есть в каталоге.
+- База open-weight выросла до ~26 профилей по популярности self-host (июль 2026), а не только по SKU: Llama 4 Scout/Maverick, DeepSeek R1 (+ Distill 32B), gpt-oss-20b, Devstral, Phi-4, Qwen3 8B — плюс GLM, Qwen3/Coder, Kimi, DeepSeek V3, Gemma, Mixtral, Mistral Small. API-only и «веса скоро» помечены отдельно.
+- Тот же каталог моделей питает ИИ-ассистента (`recommend_inference_infra`); «GPT-УСС» → gpt-oss; вопросы про цену токенов остаются на `search_prices`.
+- Фиксы котировок: L4 ≠ L40S, H100 по умолчанию 80 GB (не 94 GB sole-offer), sidebar не путает memory-tier и не показывает старую цену при смене конфига, Hosted API без подмены соседними SKU.
+- В `/news` — анонс калькулятора хостинга LLM. UI: бейджи семейств моделей, пресет-гриды, проще copy и контраст в dark theme.
 
 ### ИИ-ассистент / таблицы
 
