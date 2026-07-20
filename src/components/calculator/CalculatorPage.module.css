@@ -44,3 +44,20 @@
     position: static;
   }
 }
+
+/*
+ * Dark: page plane is warm charcoal; float ≈ background → milky wash.
+ * Lift the workspace slightly and keep controls on solid wells.
+ */
+:global(.g-root_theme_dark) .page,
+:global(.g-root_theme_dark-hc) .page {
+  background:
+    radial-gradient(ellipse 80% 50% at 10% 0%, rgba(232, 165, 75, 0.06) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 40% at 90% 20%, rgba(90, 50, 120, 0.1) 0%, transparent 50%),
+    var(--g-color-base-background);
+}
+
+:global(.g-root_theme_dark) .heroLead:global(.g-text),
+:global(.g-root_theme_dark-hc) .heroLead:global(.g-text) {
+  color: var(--g-color-text-complementary);
+}

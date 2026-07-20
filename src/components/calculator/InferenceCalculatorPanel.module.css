@@ -60,7 +60,8 @@
   cursor: pointer;
   transition:
     background 0.12s ease,
-    border-color 0.12s ease;
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
 }
 
 .configCard:hover {
@@ -80,6 +81,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px 16px;
+  align-items: center;
 }
 
 .hostedTable {
@@ -99,10 +101,43 @@
   text-align: right;
 }
 
-.caveatList {
-  margin: 0;
-  padding-left: 1.1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+:global(.g-root_theme_dark) .block,
+:global(.g-root_theme_dark-hc) .block {
+  background: var(--g-color-base-float-heavy);
+  border-color: var(--g-color-line-generic-solid);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.05) inset,
+    0 12px 32px rgba(0, 0, 0, 0.28);
+}
+
+:global(.g-root_theme_dark) .field :global(.g-select-control),
+:global(.g-root_theme_dark-hc) .field :global(.g-select-control) {
+  background: var(--g-color-base-generic-ultralight);
+}
+
+:global(.g-root_theme_dark) .configCard,
+:global(.g-root_theme_dark-hc) .configCard {
+  background: var(--g-color-base-generic-ultralight);
+  border-color: var(--g-color-line-generic);
+  color: var(--g-color-text-primary);
+}
+
+:global(.g-root_theme_dark) .configCard:hover,
+:global(.g-root_theme_dark-hc) .configCard:hover {
+  background: var(--g-color-base-float-hover);
+  border-color: var(--g-color-line-generic-hover);
+}
+
+:global(.g-root_theme_dark) .configCard[data-active='true'],
+:global(.g-root_theme_dark-hc) .configCard[data-active='true'] {
+  background: rgba(232, 165, 75, 0.14);
+  border-color: var(--g-color-line-brand);
+  box-shadow: inset 0 0 0 1px rgba(232, 165, 75, 0.28);
+}
+
+:global(.g-root_theme_dark) .hostedTable th,
+:global(.g-root_theme_dark) .hostedTable td,
+:global(.g-root_theme_dark-hc) .hostedTable th,
+:global(.g-root_theme_dark-hc) .hostedTable td {
+  border-bottom-color: var(--g-color-line-generic);
 }

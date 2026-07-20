@@ -113,7 +113,7 @@ export function VmCalculatorPanel({period}: {period: PeriodMode}) {
 
           <div className={styles.fieldGrid}>
             <label className={styles.field}>
-              <Text variant="caption-2" color="secondary">
+              <Text variant="caption-2" color="complementary">
                 VM
               </Text>
               <TextInput
@@ -127,7 +127,7 @@ export function VmCalculatorPanel({period}: {period: PeriodMode}) {
               />
             </label>
             <label className={styles.field}>
-              <Text variant="caption-2" color="secondary">
+              <Text variant="caption-2" color="complementary">
                 vCPU
               </Text>
               <TextInput
@@ -141,7 +141,7 @@ export function VmCalculatorPanel({period}: {period: PeriodMode}) {
               />
             </label>
             <label className={styles.field}>
-              <Text variant="caption-2" color="secondary">
+              <Text variant="caption-2" color="complementary">
                 RAM, GiB
               </Text>
               <TextInput
@@ -155,7 +155,7 @@ export function VmCalculatorPanel({period}: {period: PeriodMode}) {
               />
             </label>
             <label className={styles.field}>
-              <Text variant="caption-2" color="secondary">
+              <Text variant="caption-2" color="complementary">
                 Диск, GiB
               </Text>
               <TextInput
@@ -171,7 +171,7 @@ export function VmCalculatorPanel({period}: {period: PeriodMode}) {
           </div>
 
           <div className={styles.field}>
-            <Text variant="caption-2" color="secondary">
+            <Text variant="caption-2" color="complementary">
               Тип диска
             </Text>
             <SegmentedRadioGroup

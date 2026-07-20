@@ -8,6 +8,12 @@
   gap: 2px;
 }
 
+:global(.g-root_theme_dark) .bar,
+:global(.g-root_theme_dark-hc) .bar {
+  background: var(--g-color-base-generic-ultralight);
+  box-shadow: inset 0 0 0 1px var(--g-color-line-generic);
+}
+
 .segment {
   min-width: 0;
   height: 100%;

@@ -113,20 +113,20 @@ export function InferenceCalculatorPanel({period}: {period: PeriodMode}) {
         <thead>
           <tr>
             <th>
-              <Text variant="caption-2" color="secondary">
+              <Text variant="caption-2" color="complementary">
                 Провайдер
               </Text>
-            </th>
-            <th>
-              <Text variant="caption-2" color="secondary">
-                Input
-              </Text>
-            </th>
-            <th>
-              <Text variant="caption-2" color="secondary">
-                Output
-              </Text>
-            </th>
+              </th>
+              <th>
+                <Text variant="caption-2" color="complementary">
+                  Input
+                </Text>
+              </th>
+              <th>
+                <Text variant="caption-2" color="complementary">
+                  Output
+                </Text>
+              </th>
           </tr>
         </thead>
         <tbody>
@@ -156,7 +156,7 @@ export function InferenceCalculatorPanel({period}: {period: PeriodMode}) {
 
           <div className={styles.fieldGrid}>
             <label className={styles.field}>
-              <Text variant="caption-2" color="secondary">
+              <Text variant="caption-2" color="complementary">
                 Модель
               </Text>
               <Select
@@ -168,7 +168,7 @@ export function InferenceCalculatorPanel({period}: {period: PeriodMode}) {
               />
             </label>
             <label className={styles.field}>
-              <Text variant="caption-2" color="secondary">
+              <Text variant="caption-2" color="complementary">
                 Квант
               </Text>
               <Select
