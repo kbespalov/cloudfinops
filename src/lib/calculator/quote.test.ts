@@ -8,6 +8,7 @@ import {
   type GpuPreset,
 } from '@/lib/calculator/presets';
 import {
+  addPublicIpParts,
   buildQuotesByPeriod,
   quoteAllPresets,
   quotePreset,
@@ -303,7 +304,7 @@ describe('calculator quote arbitration', () => {
       if (q.parts.some((p) => p.id === 'bundle')) {
         assert.equal(q.parts[0]!.label, '8 vCPU + 16 GiB RAM');
         assert.equal(q.parts.at(-1)!.id, 'disk');
-        assert.match(q.parts.at(-1)!.label, /^100 GiB (SSD|NVMe)$/);
+        assert.match(q.parts.at(-1)!.label, /^10 GiB (SSD|NVMe)$/);
         continue;
       }
       assert.deepEqual(
@@ -312,7 +313,7 @@ describe('calculator quote arbitration', () => {
       );
       assert.equal(q.parts[0]!.label, '8 vCPU');
       assert.equal(q.parts[1]!.label, '16 GiB RAM');
-      assert.match(q.parts[2]!.label, /^100 GiB (SSD|NVMe)$/);
+      assert.match(q.parts[2]!.label, /^10 GiB (SSD|NVMe)$/);
     }
   });
 
@@ -519,5 +520,19 @@ describe('calculator quote arbitration', () => {
     const unitBest = byPeriod.unit[sampleId]!.best!;
     const monthBest = byPeriod.month[sampleId]!.best!;
     assert.ok(monthBest.total > unitBest.total * 100);
+  });
+
+  it('addPublicIpParts appends attached IPv4 without double-scaling VMs', () => {
+    const base = toViewQuote(quotePreset(COMPUTE_PRESETS[0]!, 'month'));
+    const withIp = addPublicIpParts(base, 2, 'month');
+    assert.ok(withIp.best);
+    const ipPart = withIp.best!.parts.find((p) => p.id === 'ip');
+    assert.ok(ipPart, 'expected ip cost part');
+    assert.match(ipPart!.label, /2 ×/);
+    assert.ok(ipPart!.amount > 0);
+    assert.ok(withIp.best!.total > base.best!.total);
+    // Idempotent: second call must not stack another IP line.
+    const twice = addPublicIpParts(withIp, 2, 'month');
+    assert.equal(twice.best!.parts.filter((p) => p.id === 'ip').length, 1);
   });
 });

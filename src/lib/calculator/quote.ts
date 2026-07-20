@@ -185,6 +185,11 @@ function isSsd(meter: CatalogMeter): boolean {
   return /ssd|nvme/.test(hay) && !/hdd/.test(hay);
 }
 
+function isHdd(meter: CatalogMeter): boolean {
+  const hay = diskHay(meter);
+  return /hdd/.test(hay) && !/ssd|nvme/.test(hay);
+}
+
 type PricedMeter = {m: CatalogMeter; unit: number};
 
 function pricedList(
@@ -231,12 +236,16 @@ function pickDiskForRegion(
   period: PeriodMode,
   lowCost: boolean,
   region: string,
-  preferNvme = false,
+  opts: {preferNvme?: boolean; diskMedia?: 'ssd' | 'hdd'} = {},
 ): PricedMeter | null {
   const componentPred = lowCost ? () => true : (m: CatalogMeter) => isOnDemand(m);
   const disks = pricedList(provider, 'storage.block.capacity', period, componentPred);
   const sameRegion = disks.filter((disk) => regionKey(disk.m) === region);
-  if (preferNvme) {
+  if (opts.diskMedia === 'hdd') {
+    // Strict: do not silently substitute SSD when the user asked for HDD.
+    return sameRegion.find((disk) => isHdd(disk.m)) ?? null;
+  }
+  if (opts.preferNvme) {
     return (
       sameRegion.find((disk) => isNvme(disk.m)) ??
       sameRegion.find((disk) => isSsd(disk.m)) ??
@@ -292,13 +301,10 @@ function pickUnitComputeCombo(
   for (const vcpu of vcpus) {
     const ram = rams.find((r) => ramCompatible(vcpu.m, r.m));
     if (!ram) continue;
-    const disk = pickDiskForRegion(
-      provider,
-      period,
-      lowCost,
-      regionKey(vcpu.m),
-      Boolean(preset.preferNvme),
-    );
+    const disk = pickDiskForRegion(provider, period, lowCost, regionKey(vcpu.m), {
+      preferNvme: preset.preferNvme,
+      diskMedia: preset.diskMedia,
+    });
     // A real VM needs a boot disk: if the provider sells block storage but none is
     // available in this vCPU's region, the combo is not orderable — skip it.
     if (providerHasDisks && !disk) continue;
@@ -342,13 +348,10 @@ function pickFlavorComputeCombo(
     period,
     lowCost ? () => true : (m) => isOnDemand(m),
   );
-  const disk = pickDiskForRegion(
-    provider,
-    period,
-    lowCost,
-    regionKey(flavor.m),
-    Boolean(preset.preferNvme),
-  );
+  const disk = pickDiskForRegion(provider, period, lowCost, regionKey(flavor.m), {
+    preferNvme: preset.preferNvme,
+    diskMedia: preset.diskMedia,
+  });
   if (disks.length > 0 && !disk) return null;
 
   const total = flavor.unit + (disk ? disk.unit * preset.diskGiB : 0);
@@ -475,6 +478,7 @@ function isGpuBundle(meter: CatalogMeter): boolean {
 }
 
 function diskMediaLabel(meter: CatalogMeter, preferNvme?: boolean): string {
+  if (isHdd(meter)) return 'HDD';
   if (isNvme(meter)) return 'NVMe';
   if (preferNvme) return 'SSD';
   return 'SSD';
@@ -820,6 +824,46 @@ export function toViewQuote(result: PresetQuoteResult): ViewPresetQuote {
     quotes: result.quotes.map(stripMeters),
     alternateQuotes: result.alternateQuotes.map(stripMeters),
     best: result.best ? stripMeters(result.best) : null,
+  };
+}
+
+/** Cheapest attached public IPv4 for a provider (on-demand). */
+function pickPublicIp(provider: string, period: PeriodMode): PricedMeter | null {
+  const attached = pricedList(provider, 'network.ipv4.attached', period, (m) => isOnDemand(m));
+  return attached[0] ?? null;
+}
+
+/**
+ * Add N public IPv4 addresses to an already-scaled compute view.
+ * Kept separate from vmCount scaling so IP count can differ from VM count.
+ */
+export function addPublicIpParts(
+  view: ViewPresetQuote,
+  count: number,
+  period: PeriodMode,
+): ViewPresetQuote {
+  if (!Number.isFinite(count) || count <= 0) return view;
+
+  const enrich = (q: ViewProviderQuote): ViewProviderQuote => {
+    if (q.parts.some((p) => p.id === 'ip')) return q;
+    const ip = pickPublicIp(q.provider, period);
+    if (!ip) return q;
+    const amount = ip.unit * count;
+    const label = count === 1 ? '1 × публичный IP' : `${count} × публичный IP`;
+    return {
+      ...q,
+      total: q.total + amount,
+      parts: [...q.parts, {id: 'ip', label, amount}],
+    };
+  };
+
+  const quotes = view.quotes.map(enrich).sort((a, b) => a.total - b.total);
+  const alternateQuotes = view.alternateQuotes.map(enrich).sort((a, b) => a.total - b.total);
+  return {
+    ...view,
+    quotes,
+    alternateQuotes,
+    best: quotes[0] ?? null,
   };
 }
 

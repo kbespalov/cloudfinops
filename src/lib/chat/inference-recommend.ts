@@ -12,77 +12,22 @@ import {
   type InferenceGpuRec,
   type InferenceModelProfile,
 } from '@/data/inference-models';
+import type {
+  InferenceConfigRow,
+  InferenceRecommendResult,
+} from './inference-recommend-view';
+
+export type {
+  InferenceConfigQuote,
+  InferenceConfigRow,
+  InferenceRecommendResult,
+} from './inference-recommend-view';
+export {defaultPricedConfigIndex} from './inference-recommend-view';
 
 export type InferenceRecommendArgs = {
   model: string;
   quant?: InferenceDtype | 'auto';
   maxConfigs?: number;
-};
-
-export type InferenceConfigQuote = {
-  provider: string;
-  totalMonth: number | null;
-  scope: string;
-  note?: string | null;
-};
-
-export type InferenceConfigRow = {
-  gpuFamily: string;
-  gpuCount: number;
-  quant: InferenceDtype;
-  interconnect?: string;
-  estimatedVramGiB: number;
-  notes?: string;
-  /** Short RU rationale for this recipe (for the assistant to surface). */
-  why: string;
-  assumedHost: string | null;
-  best: {provider: string; totalMonth: number | null} | null;
-  quotes: InferenceConfigQuote[];
-};
-
-export type InferenceRecommendResult = {
-  ok: boolean;
-  notFound?: boolean;
-  model?: {
-    id: string;
-    displayName: string;
-    arch: string;
-    parameterCountB?: number;
-    activeParameterCountB?: number;
-    parameterCountNote?: string;
-    deployment: 'self-host' | 'api-only' | 'weights-pending';
-    confidence: string;
-    contextDefault: number;
-  };
-  selectedQuant?: InferenceDtype | 'mixed';
-  primaryRecommendation?: {
-    gpuFamily: string;
-    gpuCount: number;
-    quant: InferenceDtype;
-    bestProvider: string | null;
-    bestMonth: number | null;
-    why: string;
-  } | null;
-  configs?: InferenceConfigRow[];
-  /** Instruction for the LLM final answer shape. */
-  answerHint?: string;
-  hostedAlternative?: {
-    query: string;
-    providersMatched: {
-      provider: string;
-      offerings: number;
-      cheapestMonth: number | null;
-      label: string | null;
-      /** ₽ / 1M input tokens when separable from output. */
-      inputMonth: number | null;
-      /** ₽ / 1M output tokens when separable. */
-      outputMonth: number | null;
-    }[];
-    note: string;
-  };
-  caveats?: string[];
-  disclaimer?: string;
-  error?: string;
 };
 
 function round(n: number | null | undefined): number | null {
@@ -101,37 +46,71 @@ function pickRecs(
   return (filtered.length ? filtered : profile.recommended).slice();
 }
 
+type AssumedGpuHost = {
+  vcpu: number;
+  ramGiB: number;
+  diskGiB: number;
+  source: string;
+  interconnect?: string;
+  dedicated: boolean;
+  unitOnly: boolean;
+  gpuMemoryGb?: number | null;
+};
+
+/**
+ * Exact family token match only.
+ * Substring checks are unsafe: «L40S».includes(«L4») and «A100».includes(«A10»).
+ */
+function presetMatchesGpuFamily(presetMatch: string, family: string): boolean {
+  return presetMatch.trim().toLowerCase() === family.trim().toLowerCase();
+}
+
 function defaultGpuHost(
   gpuFamily: string,
   gpuCount: number,
   interconnect?: string,
-): {vcpu: number; ramGiB: number; diskGiB: number; source: string; interconnect?: string} | null {
-  const q = gpuFamily.toLowerCase();
+): AssumedGpuHost | null {
   const candidates = listGpuPresets().filter(
-    (p) =>
-      p.gpuCount === gpuCount &&
-      (q.includes(p.gpuModelMatch.toLowerCase()) ||
-        p.gpuModelMatch.toLowerCase().includes(q) ||
-        p.gpuModelMatch.toLowerCase() === q),
+    (p) => p.gpuCount === gpuCount && presetMatchesGpuFamily(p.gpuModelMatch, gpuFamily),
   );
   if (!candidates.length) return null;
 
   const wantLink = (interconnect || '').toLowerCase();
+  const family = gpuFamily.toUpperCase();
   const ranked = candidates.slice().sort((a, b) => {
     const aLink = `${a.gpuInterconnect || ''} ${a.title}`.toLowerCase();
     const bLink = `${b.gpuInterconnect || ''} ${b.title}`.toLowerCase();
     const aMatch = wantLink && aLink.includes(wantLink) ? 0 : 1;
     const bMatch = wantLink && bLink.includes(wantLink) ? 0 : 1;
     if (aMatch !== bMatch) return aMatch - bMatch;
-    const aHost = a.vcpu != null && a.ramGiB != null ? 0 : 1;
-    const bHost = b.vcpu != null && b.ramGiB != null ? 0 : 1;
-    if (aHost !== bHost) return aHost - bHost;
+    // Prefer dedicated / flavor hosts over bare GPU-unit rows.
+    const aKind = a.dedicated ? 0 : a.vcpu != null && a.ramGiB != null ? 1 : 2;
+    const bKind = b.dedicated ? 0 : b.vcpu != null && b.ramGiB != null ? 1 : 2;
+    if (aKind !== bKind) return aKind - bKind;
+    // H100 shelf default is 80GB PCIe — Cloud.ru also has a sole-offer 94GB tier.
+    if (family === 'H100') {
+      const a80 = a.gpuMemoryGb === 80 ? 0 : 1;
+      const b80 = b.gpuMemoryGb === 80 ? 0 : 1;
+      if (a80 !== b80) return a80 - b80;
+    }
     const aRu = a.shapeSource === 'cloud-ru' ? 0 : 1;
     const bRu = b.shapeSource === 'cloud-ru' ? 0 : 1;
     if (aRu !== bRu) return aRu - bRu;
     return (a.vcpu ?? 0) - (b.vcpu ?? 0);
   });
   const chosen = ranked[0]!;
+  if (chosen.dedicated) {
+    return {
+      vcpu: 0,
+      ramGiB: 0,
+      diskGiB: 0,
+      source: chosen.shapeSource ?? 'catalog',
+      interconnect: chosen.gpuInterconnect || interconnect,
+      dedicated: true,
+      unitOnly: false,
+      gpuMemoryGb: chosen.gpuMemoryGb ?? null,
+    };
+  }
   if (chosen.vcpu == null || chosen.ramGiB == null) {
     // Unit GPU (e.g. Selectel RTX 6000 Pro) — quote GPU-only; host billed separately.
     return {
@@ -140,6 +119,9 @@ function defaultGpuHost(
       diskGiB: 0,
       source: chosen.shapeSource ?? 'catalog',
       interconnect: chosen.gpuInterconnect || interconnect,
+      dedicated: false,
+      unitOnly: true,
+      gpuMemoryGb: chosen.gpuMemoryGb ?? null,
     };
   }
   return {
@@ -148,6 +130,9 @@ function defaultGpuHost(
     diskGiB: chosen.diskGiB ?? 100,
     source: chosen.shapeSource ?? 'catalog',
     interconnect: chosen.gpuInterconnect || interconnect,
+    dedicated: false,
+    unitOnly: false,
+    gpuMemoryGb: chosen.gpuMemoryGb ?? null,
   };
 }
 
@@ -190,7 +175,9 @@ function quoteConfig(
   isPrimary: boolean,
 ): InferenceConfigRow {
   const host = defaultGpuHost(rec.gpuFamily, rec.gpuCount, rec.interconnect);
-  const unitOnly = Boolean(host && host.vcpu === 0 && host.ramGiB === 0);
+  const dedicated = Boolean(host?.dedicated);
+  const unitOnly = Boolean(host?.unitOnly);
+  const hostless = dedicated || unitOnly;
   const preset: GpuPreset = {
     id: `inference-${rec.gpuFamily}-${rec.gpuCount}-${rec.quant}`,
     kind: 'gpu',
@@ -198,10 +185,12 @@ function quoteConfig(
     subtitle: 'Inference recommender',
     gpuModelMatch: rec.gpuFamily,
     gpuCount: rec.gpuCount,
-    vcpu: unitOnly ? undefined : host?.vcpu,
-    ramGiB: unitOnly ? undefined : host?.ramGiB,
-    diskGiB: unitOnly ? undefined : (host?.diskGiB ?? 100),
+    vcpu: hostless ? undefined : host?.vcpu,
+    ramGiB: hostless ? undefined : host?.ramGiB,
+    diskGiB: hostless ? undefined : (host?.diskGiB ?? 100),
     gpuInterconnect: rec.interconnect ?? host?.interconnect ?? null,
+    dedicated: dedicated || undefined,
+    gpuMemoryGb: host?.gpuMemoryGb ?? null,
   };
 
   const result = quotePreset(preset, 'month');
@@ -229,9 +218,21 @@ function quoteConfig(
     why: buildConfigWhy(profile, rec, best?.provider ?? null, isPrimary),
     assumedHost: !host
       ? null
-      : unitOnly
-        ? `GPU-only тариф (vCPU/RAM отдельно; источник формы: ${host.source})`
-        : `${host.vcpu} vCPU + ${host.ramGiB} GiB RAM + ${host.diskGiB} GiB диск (форма: ${host.source})`,
+      : dedicated
+        ? `Dedicated GPU-узел (форма: ${host.source})`
+        : unitOnly
+          ? `GPU-only тариф (vCPU/RAM отдельно; источник формы: ${host.source})`
+          : `${host.vcpu} vCPU + ${host.ramGiB} GiB RAM + ${host.diskGiB} GiB диск (форма: ${host.source})`,
+    host: !host
+      ? null
+      : {
+          vcpu: host.vcpu,
+          ramGiB: host.ramGiB,
+          diskGiB: host.diskGiB,
+          unitOnly,
+          dedicated,
+          gpuMemoryGb: host.gpuMemoryGb ?? null,
+        },
     best,
     quotes: quotes.slice(0, 8),
   };
@@ -243,12 +244,19 @@ function tokenDirectionFromLabel(label: string): 'input' | 'output' | null {
   return null;
 }
 
+/** Family-only needles match sibling SKUs (Qwen→Coder-Next, DeepSeek→V4 Flash). */
+function isBroadHostedKey(key: string): boolean {
+  return /^(qwen|glm|deepseek|llama|mistral|gemma|kimi|phi|mixtral|gpt-oss|devstral)$/i.test(
+    key.trim(),
+  );
+}
+
 function hostedAlternative(profile: InferenceModelProfile) {
   const keys = [
     ...(profile.hostedCatalogKeys ?? []),
     profile.displayName,
     profile.id,
-  ].filter(Boolean);
+  ].filter((k): k is string => Boolean(k) && !isBroadHostedKey(k));
   let best:
     | ReturnType<typeof searchPricesDetailed>
     | undefined;

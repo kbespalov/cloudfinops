@@ -195,6 +195,47 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
     confidence: 'high',
   },
   {
+    id: 'qwen3-8b',
+    displayName: 'Qwen3 8B',
+    aliases: ['qwen3 8b', 'qwen3-8b', 'qwen 3 8b', 'qwen3:8b'],
+    arch: 'dense',
+    parameterCountB: 8,
+    weights: [
+      {dtype: 'bf16', weightsVramGiB: 16},
+      {dtype: 'fp8', weightsVramGiB: 9},
+      {dtype: 'int4', weightsVramGiB: 5},
+    ],
+    contextDefault: 32_768,
+    minGpuMemoryGiB: 8,
+    recommended: [
+      {
+        gpuFamily: 'L4',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 24,
+        notes: 'Самый популярный single-GPU / laptop tier Qwen3; BF16 комфортно на L4.',
+      },
+      {
+        gpuFamily: 'L40S',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 48,
+      },
+      {
+        gpuFamily: 'A100',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 80,
+        notes: 'Запас под длинный контекст / высокий batch.',
+      },
+    ],
+    hostedCatalogKeys: ['Qwen3 8B', 'qwen3-8b', 'qwen'],
+    sources: ['Qwen3-8B model card', 'Hugging Face download charts (local default)'],
+    checkedAt: '2026-07-20',
+    caveats: ['Для production coding чаще берут 32B; 8B — дешёвый / edge путь.'],
+    confidence: 'high',
+  },
+  {
     id: 'qwen3.6-35b-a3b',
     displayName: 'Qwen3.6 35B-A3B',
     aliases: [
@@ -594,7 +635,8 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
     contextDefault: 1_000_000,
     minGpuMemoryGiB: 0,
     recommended: [],
-    hostedCatalogKeys: ['Qwen', 'qwen3.7', 'qwen'],
+    // No bare «Qwen» — search would match Coder-Next / 3.6 and invent a false API analog.
+    hostedCatalogKeys: ['qwen3.7', 'Qwen3.7 Max', 'qwen3.7-max'],
     sources: [
       'https://www.qwencloud.com/models/qwen3.7-max',
       'Alibaba Cloud Summit / Qwen3.7-Max (API-only, params undisclosed)',
@@ -602,6 +644,7 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
     checkedAt: '2026-07-20',
     caveats: [
       'Self-host невозможен: нет публичного checkpoint.',
+      'В каталоге РФ token API для 3.7 Max может отсутствовать — не подставляй цены соседних Qwen.',
       'Для своей инфры смотрите open-weight линейку (Qwen3.6 / ожидаемый Qwen3.8) или hosted API.',
     ],
     confidence: 'high',
@@ -642,6 +685,122 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
     confidence: 'medium',
   },
   {
+    id: 'deepseek-r1',
+    displayName: 'DeepSeek R1',
+    aliases: [
+      'deepseek r1',
+      'deepseek-r1',
+      'deepseek r1 671b',
+      'deepseek-r1-671b',
+      'дипсик r1',
+    ],
+    arch: 'moe',
+    parameterCountB: 671,
+    activeParameterCountB: 37,
+    parameterCountNote:
+      'Reasoning MoE на базе V3-класса (671B / ~37B active). По VRAM почти как DeepSeek V3; compute выше из‑за CoT.',
+    weights: [
+      {dtype: 'fp8', weightsVramGiB: 350},
+      {dtype: 'int4', weightsVramGiB: 200},
+    ],
+    contextDefault: 128_000,
+    minGpuMemoryGiB: 320,
+    recommended: [
+      {
+        gpuFamily: 'H200',
+        gpuCount: 4,
+        quant: 'fp8',
+        interconnect: 'NVLink',
+        estimatedVramGiB: 564,
+        notes: 'Практичный узел под full R1 FP8; для длинного CoT запас по KV важнее, чем у V3.',
+      },
+      {
+        gpuFamily: 'H100',
+        gpuCount: 8,
+        quant: 'fp8',
+        interconnect: 'NVLink',
+        estimatedVramGiB: 640,
+      },
+      {
+        gpuFamily: 'H200',
+        gpuCount: 8,
+        quant: 'fp8',
+        interconnect: 'NVLink',
+        estimatedVramGiB: 1128,
+        notes: 'Запас под длинный reasoning-контекст и batch.',
+      },
+    ],
+    hostedCatalogKeys: ['DeepSeek R1', 'deepseek-r1', 'deepseek'],
+    sources: [
+      'https://github.com/deepseek-ai/DeepSeek-R1',
+      'DeepSeek-R1 model card (MIT, same weight class as V3)',
+    ],
+    checkedAt: '2026-07-20',
+    caveats: [
+      'Full R1 — datacenter-класс; для single/dual GPU смотрите Distill 32B.',
+      'Не путать с distill-вариантами (8B/14B/32B/70B) — у них другой footprint.',
+    ],
+    confidence: 'high',
+  },
+  {
+    id: 'deepseek-r1-distill-32b',
+    displayName: 'DeepSeek R1 Distill 32B',
+    aliases: [
+      'deepseek r1 distill 32b',
+      'deepseek-r1-distill-32b',
+      'deepseek r1 32b',
+      'deepseek-r1-32b',
+      'r1 distill 32b',
+      'r1 32b',
+    ],
+    arch: 'dense',
+    parameterCountB: 32,
+    parameterCountNote:
+      'Dense distill от R1 на базе Qwen2.5-32B — то, что чаще всего self-hostят локально / на 1×GPU.',
+    weights: [
+      {dtype: 'bf16', weightsVramGiB: 64},
+      {dtype: 'fp8', weightsVramGiB: 34},
+      {dtype: 'int4', weightsVramGiB: 18},
+    ],
+    contextDefault: 32_768,
+    minGpuMemoryGiB: 24,
+    recommended: [
+      {
+        gpuFamily: 'A100',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 80,
+        notes: '1×A100 80GB — комфортный BF16 путь для самого популярного R1-distill.',
+      },
+      {
+        gpuFamily: 'L40S',
+        gpuCount: 1,
+        quant: 'fp8',
+        estimatedVramGiB: 48,
+      },
+      {
+        gpuFamily: 'L4',
+        gpuCount: 1,
+        quant: 'int4',
+        estimatedVramGiB: 24,
+        notes: 'INT4 на L4 — бюджетный single-GPU reasoning.',
+      },
+    ],
+    // Distill-only keys — never «DeepSeek R1» (full MoE) or bare «deepseek».
+    hostedCatalogKeys: [
+      'deepseek-r1-distill-32b',
+      'DeepSeek R1 Distill 32B',
+      'DeepSeek-R1-Distill-Qwen-32B',
+    ],
+    sources: [
+      'https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-32B',
+      'DeepSeek-R1 distill release notes',
+    ],
+    checkedAt: '2026-07-20',
+    caveats: ['Не путать с full DeepSeek R1 671B — VRAM и цена узла на порядок меньше.'],
+    confidence: 'high',
+  },
+  {
     id: 'gpt-oss-120b',
     displayName: 'gpt-oss-120b',
     aliases: [
@@ -651,6 +810,11 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
       'gpt oss 120',
       'gpt-oss',
       'gpt oss',
+      'gpt усс',
+      'gpt-усс',
+      'gptuss',
+      'gpt vss',
+      'gpt-vss',
       'gpt усс 120',
       'gptuss 120',
     ],
@@ -708,6 +872,56 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
     confidence: 'high',
   },
   {
+    id: 'gpt-oss-20b',
+    displayName: 'gpt-oss-20b',
+    aliases: [
+      'gpt-oss-20b',
+      'gpt oss 20b',
+      'gpt-oss 20b',
+      'gpt oss 20',
+      'gpt-oss20b',
+    ],
+    arch: 'dense',
+    parameterCountB: 20,
+    weights: [
+      {dtype: 'int4', weightsVramGiB: 12},
+      {dtype: 'fp8', weightsVramGiB: 22},
+      {dtype: 'bf16', weightsVramGiB: 40},
+    ],
+    contextDefault: 128_000,
+    minGpuMemoryGiB: 16,
+    recommended: [
+      {
+        gpuFamily: 'L4',
+        gpuCount: 1,
+        quant: 'int4',
+        estimatedVramGiB: 24,
+        notes: 'OpenAI: ~16 GB memory path — INT4/MXFP4 на L4.',
+      },
+      {
+        gpuFamily: 'L40S',
+        gpuCount: 1,
+        quant: 'fp8',
+        estimatedVramGiB: 48,
+      },
+      {
+        gpuFamily: 'A100',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 80,
+        notes: 'BF16 с запасом под контекст; для edge обычно достаточно L4/L40S.',
+      },
+    ],
+    hostedCatalogKeys: ['gpt-oss-20b', 'gpt-oss'],
+    sources: [
+      'OpenAI gpt-oss model card (20B fits ~16GB with MXFP4)',
+      'Apache 2.0 open-weight reasoning twin of gpt-oss-120b',
+    ],
+    checkedAt: '2026-07-20',
+    caveats: ['Не путать с gpt-oss-120b — другой класс VRAM и цены узла.'],
+    confidence: 'high',
+  },
+  {
     id: 'gemma-3-27b',
     displayName: 'Gemma 3 27B',
     aliases: ['gemma 3 27b', 'gemma-3-27b', 'gemma3 27b', 'gemma 3', 'gemma-3'],
@@ -744,6 +958,135 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
     sources: ['Google Gemma 3 model card', 'MWS catalog'],
     checkedAt: '2026-07-20',
     caveats: [],
+    confidence: 'high',
+  },
+  {
+    id: 'llama-4-scout',
+    displayName: 'Llama 4 Scout',
+    aliases: [
+      'llama 4 scout',
+      'llama4 scout',
+      'llama-4-scout',
+      'llama 4',
+      'llama4',
+    ],
+    arch: 'moe',
+    parameterCountB: 109,
+    activeParameterCountB: 17,
+    parameterCountNote:
+      '17B active × 16 experts (109B total). Все эксперты в VRAM; Meta: INT4 on-the-fly на 1×H100. Контекст до 10M.',
+    weights: [
+      {dtype: 'int4', weightsVramGiB: 62},
+      {dtype: 'fp8', weightsVramGiB: 110},
+      {dtype: 'bf16', weightsVramGiB: 218},
+    ],
+    contextDefault: 10_000_000,
+    minGpuMemoryGiB: 48,
+    recommended: [
+      {
+        gpuFamily: 'H100',
+        gpuCount: 1,
+        quant: 'int4',
+        estimatedVramGiB: 80,
+        notes:
+          'Официальный single-H100 путь: on-the-fly INT4 (~55–65 GiB весов). Самый частый self-host Llama 4.',
+      },
+      {
+        gpuFamily: 'A100',
+        gpuCount: 1,
+        quant: 'int4',
+        estimatedVramGiB: 80,
+      },
+      {
+        gpuFamily: 'H200',
+        gpuCount: 1,
+        quant: 'fp8',
+        estimatedVramGiB: 141,
+        notes: '1×H200 — FP8 без агрессивной 4-bit квантизации + запас под длинный контекст.',
+      },
+      {
+        gpuFamily: 'H100',
+        gpuCount: 2,
+        quant: 'fp8',
+        interconnect: 'NVLink',
+        estimatedVramGiB: 160,
+        notes: 'FP8 / больший batch без INT4.',
+      },
+    ],
+    hostedCatalogKeys: ['Llama 4', 'llama-4-scout', 'llama4', 'llama'],
+    sources: [
+      'https://github.com/meta-llama/llama-models/blob/main/models/llama4/MODEL_CARD.md',
+      'Meta Llama 4 Scout (17B×16E, 109B total, 10M context)',
+    ],
+    checkedAt: '2026-07-20',
+    caveats: [
+      'MoE: active 17B ≠ VRAM 17B — нужны все 109B весов.',
+      'Лицензия Llama 4 Community (не Apache); для большинства команд ок, юридический review желателен.',
+    ],
+    confidence: 'high',
+  },
+  {
+    id: 'llama-4-maverick',
+    displayName: 'Llama 4 Maverick',
+    aliases: [
+      'llama 4 maverick',
+      'llama4 maverick',
+      'llama-4-maverick',
+    ],
+    arch: 'moe',
+    parameterCountB: 400,
+    activeParameterCountB: 17,
+    parameterCountNote:
+      '17B active × 128 experts (400B total). Meta: FP8 на одном HGX H100 host (8×); INT4 ~200+ GiB.',
+    weights: [
+      {dtype: 'int4', weightsVramGiB: 220},
+      {dtype: 'fp8', weightsVramGiB: 420},
+      {dtype: 'bf16', weightsVramGiB: 800},
+    ],
+    contextDefault: 1_000_000,
+    minGpuMemoryGiB: 160,
+    recommended: [
+      {
+        gpuFamily: 'H100',
+        gpuCount: 4,
+        quant: 'int4',
+        interconnect: 'NVLink',
+        estimatedVramGiB: 320,
+        notes: 'Нижняя практическая полка INT4 (~200–240 GiB весов).',
+      },
+      {
+        gpuFamily: 'H200',
+        gpuCount: 2,
+        quant: 'int4',
+        interconnect: 'NVLink',
+        estimatedVramGiB: 282,
+      },
+      {
+        gpuFamily: 'H100',
+        gpuCount: 8,
+        quant: 'fp8',
+        interconnect: 'NVLink',
+        estimatedVramGiB: 640,
+        notes: 'Meta FP8 recipe: цельный 8×H100 host.',
+      },
+      {
+        gpuFamily: 'H200',
+        gpuCount: 4,
+        quant: 'fp8',
+        interconnect: 'NVLink',
+        estimatedVramGiB: 564,
+      },
+    ],
+    hostedCatalogKeys: ['Llama 4', 'llama-4-maverick', 'llama4', 'llama'],
+    sources: [
+      'https://github.com/meta-llama/llama-models/blob/main/models/llama4/MODEL_CARD.md',
+      'Meta Llama 4 Maverick (17B×128E, 400B total)',
+    ],
+    checkedAt: '2026-07-20',
+    caveats: [
+      'Существенно дороже Scout; для long-context RAG чаще хватает Scout.',
+      'Лицензия Llama 4 Community.',
+    ],
     confidence: 'high',
   },
   {
@@ -881,11 +1224,172 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
     caveats: [],
     confidence: 'high',
   },
+  {
+    id: 'devstral-small-24b',
+    displayName: 'Devstral Small 24B',
+    aliases: [
+      'devstral small',
+      'devstral-small',
+      'devstral small 24b',
+      'devstral-small-24b',
+      'devstral small 2',
+      'devstral',
+    ],
+    arch: 'dense',
+    parameterCountB: 24,
+    weights: [
+      {dtype: 'bf16', weightsVramGiB: 48},
+      {dtype: 'fp8', weightsVramGiB: 26},
+      {dtype: 'int4', weightsVramGiB: 14},
+    ],
+    contextDefault: 256_000,
+    minGpuMemoryGiB: 24,
+    recommended: [
+      {
+        gpuFamily: 'L40S',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 48,
+        notes: 'Агентный coding на одной карте; vendor target — класс RTX 4090 / 24–48 GB.',
+      },
+      {
+        gpuFamily: 'A100',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 80,
+      },
+      {
+        gpuFamily: 'L4',
+        gpuCount: 1,
+        quant: 'int4',
+        estimatedVramGiB: 24,
+        notes: 'INT4 — бюджетный local agent path.',
+      },
+    ],
+    hostedCatalogKeys: ['Devstral', 'devstral-small', 'mistral'],
+    sources: [
+      'https://huggingface.co/mistralai/Devstral-Small-2-24B-Instruct-2512',
+      'Mistral Devstral Small 2 (24B, agentic coding, Apache-friendly)',
+    ],
+    checkedAt: '2026-07-20',
+    caveats: [
+      'Не путать с Devstral 2 123B — другой класс железа.',
+      'Заточен под agent scaffolds (SWE-bench), не общий chat.',
+    ],
+    confidence: 'high',
+  },
+  {
+    id: 'devstral-2-123b',
+    displayName: 'Devstral 2 123B',
+    aliases: [
+      'devstral 2',
+      'devstral-2',
+      'devstral 2 123b',
+      'devstral-2-123b',
+      'devstral 123b',
+    ],
+    arch: 'dense',
+    parameterCountB: 123,
+    weights: [
+      {dtype: 'int4', weightsVramGiB: 70},
+      {dtype: 'fp8', weightsVramGiB: 130},
+      {dtype: 'bf16', weightsVramGiB: 246},
+    ],
+    contextDefault: 256_000,
+    minGpuMemoryGiB: 70,
+    recommended: [
+      {
+        gpuFamily: 'H100',
+        gpuCount: 1,
+        quant: 'int4',
+        estimatedVramGiB: 80,
+        notes: 'INT4 на 1×H100 — production floor для large Devstral.',
+      },
+      {
+        gpuFamily: 'H200',
+        gpuCount: 1,
+        quant: 'fp8',
+        estimatedVramGiB: 141,
+      },
+      {
+        gpuFamily: 'H100',
+        gpuCount: 2,
+        quant: 'fp8',
+        interconnect: 'NVLink',
+        estimatedVramGiB: 160,
+        notes: 'FP8 / длинный agent-контекст без агрессивной 4-bit.',
+      },
+    ],
+    hostedCatalogKeys: ['Devstral', 'devstral-2', 'mistral'],
+    sources: [
+      'Mistral Devstral 2 (123B) release / model card',
+      'SWE-bench open-weight coding agent leaderboard coverage',
+    ],
+    checkedAt: '2026-07-20',
+    caveats: ['Для большинства команд Small 24B дешевле и достаточен; 123B — когда нужен max SWE-bench.'],
+    confidence: 'medium',
+  },
+  {
+    id: 'phi-4',
+    displayName: 'Phi-4 14B',
+    aliases: [
+      'phi-4',
+      'phi 4',
+      'phi4',
+      'phi-4 14b',
+      'phi 4 14b',
+      'phi-4-14b',
+      'microsoft phi-4',
+    ],
+    arch: 'dense',
+    parameterCountB: 14,
+    weights: [
+      {dtype: 'bf16', weightsVramGiB: 28},
+      {dtype: 'fp8', weightsVramGiB: 16},
+      {dtype: 'int4', weightsVramGiB: 8},
+    ],
+    contextDefault: 16_000,
+    minGpuMemoryGiB: 16,
+    recommended: [
+      {
+        gpuFamily: 'L4',
+        gpuCount: 1,
+        quant: 'fp8',
+        estimatedVramGiB: 24,
+        notes: 'Популярный small / edge модель; FP8 комфортно на L4.',
+      },
+      {
+        gpuFamily: 'L40S',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 48,
+      },
+      {
+        gpuFamily: 'A100',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 80,
+      },
+    ],
+    hostedCatalogKeys: ['Phi-4', 'phi-4', 'phi'],
+    sources: [
+      'https://huggingface.co/microsoft/phi-4',
+      'Microsoft Phi-4 14B (MIT) — local / low-VRAM tier',
+    ],
+    checkedAt: '2026-07-20',
+    caveats: ['Сильнее на reasoning/math в своём размере, чем на длинном agentic coding.'],
+    confidence: 'high',
+  },
 ];
 
 function normalizeAlias(text: string): string {
   return text
     .toLowerCase()
+    // RU phonetic spellings of gpt-oss («усс» / «vss»)
+    .replace(/gpt[\s\-]?усс/gi, 'gpt oss')
+    .replace(/gpt[\s\-]?vss/gi, 'gpt oss')
+    .replace(/gptuss/gi, 'gpt oss')
+    .replace(/gptvss/gi, 'gpt oss')
     .replace(/×/g, 'x')
     .replace(/[._]+/g, ' ')
     .replace(/\s+/g, ' ')
@@ -915,7 +1419,7 @@ function aliasMatchScore(query: string, alias: string): number | null {
       .trim();
     if (
       leftover &&
-      /\b(next|480b?|235b?|32b|35b|397b|a3b|a17b|a22b|a35b|flash|lite|pro|max)\b/i.test(
+      /\b(next|480b?|235b?|123b?|120b?|20b|14b|8b|32b|35b|70b|109b|397b|a3b|a17b|a22b|a35b|scout|maverick|r1|distill|devstral|flash|lite|pro|max|\d)\b/i.test(
         leftover,
       )
     ) {
@@ -933,7 +1437,7 @@ function aliasMatchScore(query: string, alias: string): number | null {
       .trim();
     if (
       leftover &&
-      /\b(next|480b?|235b?|32b|35b|397b|a3b|a17b|a22b|a35b|flash|lite|pro|max)\b/i.test(
+      /\b(next|480b?|235b?|123b?|120b?|20b|14b|8b|32b|35b|70b|109b|397b|a3b|a17b|a22b|a35b|scout|maverick|r1|distill|devstral|flash|lite|pro|max|\d)\b/i.test(
         leftover,
       )
     ) {
