@@ -50,6 +50,15 @@ describe('inference model KB', () => {
     assert.equal(findInferenceModel('Phi-4')?.id, 'phi-4');
     assert.equal(findInferenceModel('Qwen3 8B')?.id, 'qwen3-8b');
   });
+
+  it('resolves speech / T-Search / rerank profiles', () => {
+    assert.equal(findInferenceModel('GigaAM-v3')?.id, 'gigaam-v3');
+    assert.equal(findInferenceModel('гигаам')?.id, 'gigaam-v3');
+    assert.equal(findInferenceModel('Whisper large-v3-turbo')?.id, 'whisper-large-v3-turbo');
+    assert.equal(findInferenceModel('T-Search')?.id, 't-search');
+    assert.equal(findInferenceModel('Qwen3-Embedding-8B')?.id, 'qwen3-embedding-8b');
+    assert.equal(findInferenceModel('реранкер')?.id, 'qwen3-reranker-0.6b');
+  });
 });
 
 describe('matchInferenceIntent', () => {

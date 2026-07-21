@@ -34,4 +34,13 @@ describe('model-picker-catalog', () => {
     const coder = catalog.filter((m) => matchesQuickFilter(m, 'coder'));
     assert.ok(coder.some((m) => m.id === 'qwen3-coder-next'));
   });
+
+  it('indexes speech / search / rerank models with labs', () => {
+    const catalog = getModelPickerCatalog();
+    assert.ok(catalog.some((m) => m.id === 'gigaam-v3' && m.tasks.includes('speech')));
+    assert.ok(catalog.some((m) => m.id === 't-search' && m.lab === 'ttech'));
+    assert.ok(catalog.some((m) => m.id === 'qwen3-reranker-0.6b' && m.tasks.includes('rerank')));
+    assert.ok(searchModels('транскриб', catalog).some((m) => m.id === 'gigaam-v3'));
+    assert.ok(searchModels('t-search', catalog).some((m) => m.id === 't-search'));
+  });
 });

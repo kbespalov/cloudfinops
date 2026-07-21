@@ -23,6 +23,8 @@ const BRAND_COLOR: Partial<Record<ModelFamily, string>> = {
   mistral: '#FF7000',
   'gpt-oss': '#10A37F',
   phi: '#0078D4',
+  giga: '#21A038',
+  ttech: '#FFDD2D',
 };
 
 function BrandSvg({
@@ -93,6 +95,47 @@ function GlmMark({size, className}: {size: number; className?: string}) {
         fill="#1A6CFF"
         d="M4 5.5A1.5 1.5 0 0 1 5.5 4h5.2c.5 0 .9.2 1.2.6l7.6 9.2c.5.6.1 1.6-.7 1.6H13l6.2 3.7c.7.4.4 1.5-.4 1.5H5.5A1.5 1.5 0 0 1 4 18.5v-13zm3.2 2.3v8.4h3.1l5.4-6.5H7.2z"
       />
+    </svg>
+  );
+}
+
+/** Sber / GigaAM — green rounded mark. */
+function GigaMark({size, className}: {size: number; className?: string}) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      className={className}
+      focusable="false"
+      aria-hidden
+    >
+      <title>Sber / Giga</title>
+      <rect width="24" height="24" rx="6" fill="#21A038" />
+      <path
+        fill="#fff"
+        d="M12 5.2c-3.7 0-6.6 2.4-6.6 5.5 0 2.2 1.5 4.1 3.8 5l-1.4 2.8c-.2.4.2.8.6.6l3.2-1.7c.1 0 .3 0 .4 0 3.7 0 6.6-2.4 6.6-5.5S15.7 5.2 12 5.2zm0 8.8c-2.3 0-4.1-1.4-4.1-3.3S9.7 7.4 12 7.4s4.1 1.4 4.1 3.3S14.3 14 12 14z"
+      />
+    </svg>
+  );
+}
+
+/** T-Tech — yellow tile with dark T (T-Bank family). */
+function TtechMark({size, className}: {size: number; className?: string}) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      className={className}
+      focusable="false"
+      aria-hidden
+    >
+      <title>T-Tech</title>
+      <rect width="24" height="24" rx="6" fill="#FFDD2D" />
+      <path fill="#333" d="M6.5 6.8h11v2.6h-4.1V17.5h-2.8V9.4H6.5V6.8z" />
     </svg>
   );
 }
@@ -175,6 +218,10 @@ export function ModelFamilyMark({
     mark = <KimiMark size={size} />;
   } else if (family === 'glm') {
     mark = <GlmMark size={size} />;
+  } else if (family === 'giga') {
+    mark = <GigaMark size={size} />;
+  } else if (family === 'ttech') {
+    mark = <TtechMark size={size} />;
   } else if (iconKey) {
     mark = (
       <BrandSvg

@@ -12,6 +12,9 @@ export type ModelTask =
   | 'reasoning'
   | 'general'
   | 'vision'
+  | 'speech'
+  | 'search'
+  | 'rerank'
   | 'long-context'
   | 'budget';
 
@@ -58,6 +61,8 @@ const LAB_TITLE: Record<ModelFamily, string> = {
   mistral: 'Mistral',
   'gpt-oss': 'OpenAI',
   phi: 'Phi',
+  giga: 'Sber / Giga',
+  ttech: 'T-Tech',
   other: 'Другие',
 };
 
@@ -72,6 +77,8 @@ const LAB_LETTERS: Record<ModelFamily, string> = {
   mistral: 'Mi',
   'gpt-oss': 'O',
   phi: 'Ph',
+  giga: 'Gi',
+  ttech: 'T',
   other: 'AI',
 };
 
@@ -80,9 +87,10 @@ export const FEATURED_LAB_IDS: LabId[] = [
   'qwen',
   'deepseek',
   'glm',
+  'giga',
+  'ttech',
   'kimi',
   'llama',
-  'gemma',
   'gpt-oss',
   'all',
 ];
@@ -91,10 +99,11 @@ export const HOME_TASK_CHIPS: {id: ModelTask | 'vram-24' | 'vram-80' | 'single-g
   [
     {id: 'coder', label: 'Для кода'},
     {id: 'reasoning', label: 'Reasoning'},
+    {id: 'speech', label: 'Речь / STT'},
+    {id: 'search', label: 'Поиск'},
+    {id: 'rerank', label: 'Rerank'},
     {id: 'general', label: 'Универсальные'},
-    {id: 'long-context', label: 'Большой контекст'},
     {id: 'budget', label: 'Недорогой запуск'},
-    {id: 'vram-80', label: 'До 80 GiB'},
     {id: 'single-gpu', label: 'Одна GPU'},
   ];
 
@@ -102,8 +111,10 @@ export const LAB_TASK_CHIPS: {id: 'all' | ModelTask | 'dense' | 'moe'; label: st
   {id: 'all', label: 'Все'},
   {id: 'coder', label: 'Coder'},
   {id: 'reasoning', label: 'Reasoning'},
+  {id: 'speech', label: 'Речь'},
+  {id: 'search', label: 'Поиск'},
+  {id: 'rerank', label: 'Rerank'},
   {id: 'general', label: 'General'},
-  {id: 'vision', label: 'Vision'},
   {id: 'dense', label: 'Dense'},
   {id: 'moe', label: 'MoE'},
 ];
@@ -112,29 +123,43 @@ const POPULAR_IDS = new Set([
   'qwen3-coder-next',
   'deepseek-r1',
   'glm-5.2',
+  'gigaam-v3',
+  't-search',
   'qwen3-32b',
-  'kimi-k2.6',
 ]);
 
 const RECOMMENDED_IDS = new Set([
   'qwen3-coder-next',
   'deepseek-r1',
   'glm-5.2',
-  'gpt-oss-120b',
-  'qwen3-235b',
+  'gigaam-v3',
+  't-search',
+  'qwen3-embedding-8b',
+  'qwen3-reranker-0.6b',
 ]);
 
 function detectTasks(profile: InferenceModelProfile): ModelTask[] {
   const blob = `${profile.displayName} ${profile.aliases.join(' ')} ${profile.id}`.toLowerCase();
   const tasks = new Set<ModelTask>();
+  const modality = profile.modality ?? 'llm';
+  if (modality === 'speech' || /gigaam|whisper|asr|stt|speech|audio|транскриб|голос/.test(blob)) {
+    tasks.add('speech');
+  }
+  if (modality === 'search' || /t-search|retriev|поиск/.test(blob)) tasks.add('search');
+  if (modality === 'embed' || /embedding|эмбед/.test(blob)) tasks.add('search');
+  if (modality === 'rerank' || /rerank|реранк/.test(blob)) tasks.add('rerank');
   if (/coder|code|devstral|coding/.test(blob)) tasks.add('coder');
   if (/\br1\b|reason|thinking|scout|maverick/.test(blob)) tasks.add('reasoning');
   if (/vision|vl|multimodal|gemma 3/.test(blob)) tasks.add('vision');
   if (profile.contextDefault >= 200_000) tasks.add('long-context');
-  if ((profile.minGpuMemoryGiB > 0 && profile.minGpuMemoryGiB <= 48) || /8b|14b|20b|24b|27b|32b/.test(blob)) {
+  if (
+    (profile.minGpuMemoryGiB > 0 && profile.minGpuMemoryGiB <= 48) ||
+    /8b|14b|20b|24b|27b|32b|0\.6b|0\.24|0\.8/.test(blob)
+  ) {
     if (profile.minGpuMemoryGiB <= 80) tasks.add('budget');
   }
-  if (tasks.size === 0 || (!tasks.has('coder') && !tasks.has('reasoning') && !tasks.has('vision'))) {
+  const specialized = ['coder', 'reasoning', 'vision', 'speech', 'search', 'rerank'] as const;
+  if (![...specialized].some((t) => tasks.has(t))) {
     tasks.add('general');
   }
   return [...tasks];
@@ -144,12 +169,16 @@ function sizeLabel(profile: InferenceModelProfile): string {
   if (profile.parameterCountB == null) return '—';
   const n = profile.parameterCountB;
   if (n >= 1000) return `${Math.round(n / 100) / 10}T`;
+  if (n < 1) return `${Math.round(n * 1000)}M`;
   return `${n}B`;
 }
 
 function buildMetaLine(profile: InferenceModelProfile, labTitle: string, tasks: ModelTask[]): string {
   const bits: string[] = [labTitle];
-  if (tasks.includes('coder')) bits.push('Coder');
+  if (tasks.includes('speech')) bits.push('Речь');
+  else if (tasks.includes('search')) bits.push('Поиск');
+  else if (tasks.includes('rerank')) bits.push('Rerank');
+  else if (tasks.includes('coder')) bits.push('Coder');
   else if (tasks.includes('reasoning')) bits.push('Reasoning');
   else if (tasks.includes('vision')) bits.push('Vision');
   else bits.push('General');
@@ -157,9 +186,15 @@ function buildMetaLine(profile: InferenceModelProfile, labTitle: string, tasks: 
   if (profile.activeParameterCountB != null) {
     bits.push(`${profile.activeParameterCountB}B active`);
   } else if (profile.parameterCountB != null) {
-    bits.push(`${profile.parameterCountB}B`);
+    bits.push(
+      profile.parameterCountB < 1
+        ? `${Math.round(profile.parameterCountB * 1000)}M`
+        : `${profile.parameterCountB}B`,
+    );
   }
-  bits.push(`${formatContextTokens(profile.contextDefault)} ctx`);
+  if ((profile.modality ?? 'llm') === 'llm') {
+    bits.push(`${formatContextTokens(profile.contextDefault)} ctx`);
+  }
   return bits.join(' · ');
 }
 
@@ -170,6 +205,7 @@ function buildSearchText(profile: InferenceModelProfile, labTitle: string, tasks
     ...profile.aliases,
     labTitle,
     profile.arch,
+    profile.modality ?? 'llm',
     ...tasks,
     profile.parameterCountB != null ? `${profile.parameterCountB}b` : '',
     profile.activeParameterCountB != null ? `${profile.activeParameterCountB}b active` : '',
@@ -177,6 +213,9 @@ function buildSearchText(profile: InferenceModelProfile, labTitle: string, tasks
     profile.contextDefault >= 200_000 ? 'long context большой контекст' : '',
     tasks.includes('coder') ? 'для кода code coding' : '',
     tasks.includes('reasoning') ? 'reasoning рассуждения' : '',
+    tasks.includes('speech') ? 'речь asr stt транскрибация голос audio speech' : '',
+    tasks.includes('search') ? 'поиск search retrieval embedding эмбеддинг' : '',
+    tasks.includes('rerank') ? 'rerank реранкер ranking' : '',
     tasks.includes('budget') ? 'недорогой бюджет cheap' : '',
   ];
   return parts.filter(Boolean).join(' ').toLowerCase();
@@ -262,6 +301,9 @@ export function matchesQuickFilter(item: ModelPickerItem, filter: QuickFilterId)
     case 'reasoning':
     case 'general':
     case 'vision':
+    case 'speech':
+    case 'search':
+    case 'rerank':
     case 'long-context':
     case 'budget':
       return item.tasks.includes(filter);

@@ -2,6 +2,15 @@
 
 ## 2026-07-21
 
+### Калькулятор / речь, T-Search и rerank
+
+В Self-host добавлены open-weight профили вне chat-LLM: ASR, agentic search и лёгкий retrieval-стек.
+
+- **Речь (топ для инференса):** GigaAM-v3, GigaAM Multilingual, Whisper large-v3-turbo; плюс GigaChat3.1-Audio-10B (audio-LLM).
+- **Поиск T-Tech:** T-Search (на базе Qwen3.6-35B-A3B, FP8/INT4 рецепты) + Qwen3-Embedding-8B из их бенчмарков.
+- **Rerank:** Qwen3-Reranker-0.6B / 4B.
+- Пicker: чипы «Речь / Поиск / Rerank», лаборатории Sber/Giga и T-Tech с марками.
+
 ### Калькулятор / UX polish + VRAM + Model Picker
 
 Довели калькулятор до рабочего инструмента: плотнее верх страницы, понятнее Self-host, жёстче проверки цен перед релизом.

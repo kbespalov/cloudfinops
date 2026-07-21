@@ -29,6 +29,9 @@ export type InferenceGpuRec = {
 
 export type InferenceDeployment = 'self-host' | 'api-only' | 'weights-pending';
 
+/** Workload class — drives picker chips; default is chat LLM. */
+export type InferenceModality = 'llm' | 'speech' | 'search' | 'embed' | 'rerank';
+
 export type InferenceModelProfile = {
   id: string;
   displayName: string;
@@ -45,6 +48,8 @@ export type InferenceModelProfile = {
    * api-only — no public checkpoint (hosted only).
    */
   deployment?: InferenceDeployment;
+  /** Default `llm` when omitted. */
+  modality?: InferenceModality;
   weights: InferenceWeightVariant[];
   contextDefault: number;
   /** Soft floor: configs below this total VRAM are rejected. */
@@ -1378,6 +1383,402 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
     ],
     checkedAt: '2026-07-20',
     caveats: ['Сильнее на reasoning/math в своём размере, чем на длинном agentic coding.'],
+    confidence: 'high',
+  },
+
+  // ── Speech / ASR (RU-first open weights) ─────────────────────────────
+  {
+    id: 'gigaam-v3',
+    displayName: 'GigaAM-v3',
+    aliases: [
+      'gigaam',
+      'gigaam v3',
+      'gigaam-v3',
+      'giga am',
+      'гигаам',
+      'сбер asr',
+      'sber asr',
+    ],
+    arch: 'dense',
+    parameterCountB: 0.24,
+    parameterCountNote: '~220–240M Conformer (e2e_rnnt / CTC)',
+    modality: 'speech',
+    deployment: 'self-host',
+    weights: [
+      {dtype: 'bf16', weightsVramGiB: 1.2},
+      {dtype: 'fp8', weightsVramGiB: 0.7},
+      {dtype: 'int8', weightsVramGiB: 0.4},
+    ],
+    contextDefault: 4_096,
+    minGpuMemoryGiB: 8,
+    recommended: [
+      {
+        gpuFamily: 'L4',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 24,
+        notes: 'SOTA RU ASR; e2e_rnnt с пунктуацией. Легко на L4 / даже CPU ONNX.',
+      },
+      {
+        gpuFamily: 'L40S',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 48,
+        notes: 'Запас под batch / длинные файлы и параллельные сессии.',
+      },
+    ],
+    sources: [
+      'https://huggingface.co/ai-sage/GigaAM-v3',
+      'https://github.com/salute-developers/GigaAM',
+      'SberDevices — MIT open weights',
+    ],
+    checkedAt: '2026-07-21',
+    caveats: [
+      'VRAM почти только веса + аудио-буферы (не KV LLM). Полоса «запас» в калькуляторе ориентировочная.',
+      'Лучший выбор для чистого русского; mixed RU+EN слабее Whisper.',
+    ],
+    confidence: 'high',
+  },
+  {
+    id: 'gigaam-multilingual',
+    displayName: 'GigaAM Multilingual',
+    aliases: [
+      'gigaam multilingual',
+      'gigaam-multilingual',
+      'gigaam large',
+      'gigaam 600m',
+    ],
+    arch: 'dense',
+    parameterCountB: 0.6,
+    parameterCountNote: '220M / 600M (large_ctc) encoders, 70+ languages',
+    modality: 'speech',
+    deployment: 'self-host',
+    weights: [
+      {dtype: 'bf16', weightsVramGiB: 2.4},
+      {dtype: 'fp8', weightsVramGiB: 1.3},
+      {dtype: 'int8', weightsVramGiB: 0.8},
+    ],
+    contextDefault: 4_096,
+    minGpuMemoryGiB: 8,
+    recommended: [
+      {
+        gpuFamily: 'L4',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 24,
+        notes: 'large_ctc ~600M; RU + KK/KY/UZ и др. CIS.',
+      },
+      {
+        gpuFamily: 'L40S',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 48,
+      },
+    ],
+    sources: [
+      'https://huggingface.co/ai-sage/GigaAM-Multilingual',
+      'arXiv:2607.10371 InterSpeech 2026',
+    ],
+    checkedAt: '2026-07-21',
+    caveats: ['English умеренный; для RU-only предпочтительнее GigaAM-v3.'],
+    confidence: 'high',
+  },
+  {
+    id: 'whisper-large-v3-turbo',
+    displayName: 'Whisper large-v3-turbo',
+    aliases: [
+      'whisper',
+      'whisper turbo',
+      'whisper large v3 turbo',
+      'whisper-large-v3-turbo',
+      'openai whisper',
+    ],
+    arch: 'dense',
+    parameterCountB: 0.81,
+    modality: 'speech',
+    deployment: 'self-host',
+    weights: [
+      {dtype: 'bf16', weightsVramGiB: 1.6},
+      {dtype: 'fp8', weightsVramGiB: 0.9},
+      {dtype: 'int8', weightsVramGiB: 0.6},
+    ],
+    contextDefault: 4_096,
+    minGpuMemoryGiB: 8,
+    recommended: [
+      {
+        gpuFamily: 'L4',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 24,
+        notes: 'Multilingual MIT; strong on mixed RU+EN. faster-whisper / CTranslate2.',
+      },
+      {
+        gpuFamily: 'L40S',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 48,
+        notes: 'Высокий throughput batch transcription.',
+      },
+    ],
+    sources: [
+      'https://huggingface.co/openai/whisper-large-v3-turbo',
+      'OpenAI Whisper — MIT',
+    ],
+    checkedAt: '2026-07-21',
+    caveats: [
+      'На чистом русском обычно слабее GigaAM-v3; выигрывает на multilingual / voice-prompting.',
+    ],
+    confidence: 'high',
+  },
+  {
+    id: 'gigachat-3.1-audio-10b',
+    displayName: 'GigaChat3.1-Audio-10B',
+    aliases: [
+      'gigachat audio',
+      'gigachat 3.1 audio',
+      'gigachat3.1-audio',
+      'gigachat3.1-audio-10b',
+      'giga chat audio',
+    ],
+    arch: 'moe',
+    parameterCountB: 10,
+    activeParameterCountB: 1.8,
+    modality: 'speech',
+    deployment: 'self-host',
+    weights: [
+      {dtype: 'bf16', weightsVramGiB: 22},
+      {dtype: 'fp8', weightsVramGiB: 12},
+    ],
+    contextDefault: 32_768,
+    minGpuMemoryGiB: 24,
+    recommended: [
+      {
+        gpuFamily: 'L40S',
+        gpuCount: 1,
+        quant: 'fp8',
+        estimatedVramGiB: 48,
+        notes: 'Audio-native LLM: транскрипт + саммаризация / timestamps до ~120 мин.',
+      },
+      {
+        gpuFamily: 'A100',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 80,
+      },
+      {
+        gpuFamily: 'L4',
+        gpuCount: 1,
+        quant: 'fp8',
+        estimatedVramGiB: 24,
+        notes: 'Впритык на FP8; для длинного аудио лучше L40S+.',
+      },
+    ],
+    sources: [
+      'https://huggingface.co/ai-sage/GigaChat3.1-Audio-10B-A1.8B',
+      'Sber — open audio LLM (InterSpeech 2026)',
+    ],
+    checkedAt: '2026-07-21',
+    caveats: [
+      'Это не чистый ASR-энкодер: тяжелее GigaAM, зато понимает длинное аудио и отвечает по смыслу.',
+    ],
+    confidence: 'medium',
+  },
+
+  // ── Search / retrieval (T-Tech + Qwen stack) ─────────────────────────
+  {
+    id: 't-search',
+    displayName: 'T-Search',
+    aliases: [
+      't-search',
+      't search',
+      'tsearch',
+      'т-search',
+      'т search',
+      'tbank search',
+      't-tech search',
+    ],
+    arch: 'moe',
+    parameterCountB: 35,
+    activeParameterCountB: 3,
+    parameterCountNote: 'Finetune of Qwen3.6-35B-A3B; agentic retriever',
+    modality: 'search',
+    deployment: 'self-host',
+    weights: [
+      {dtype: 'bf16', weightsVramGiB: 70},
+      {dtype: 'fp8', weightsVramGiB: 38},
+      {dtype: 'int4', weightsVramGiB: 20},
+    ],
+    contextDefault: 65_536,
+    minGpuMemoryGiB: 24,
+    recommended: [
+      {
+        gpuFamily: 'A100',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 80,
+        notes: 'Офиц. serve ~65k ctx; нужен T-Search harness + corpus search backend.',
+      },
+      {
+        gpuFamily: 'L40S',
+        gpuCount: 1,
+        quant: 'fp8',
+        estimatedVramGiB: 48,
+        notes: 't-tech/T-Search-FP8 — практичный single-GPU деплой.',
+      },
+      {
+        gpuFamily: 'L4',
+        gpuCount: 1,
+        quant: 'int4',
+        estimatedVramGiB: 24,
+        notes: 'NVFP4/INT4 — минимум; проверьте harness + quality.',
+      },
+    ],
+    sources: [
+      'https://huggingface.co/t-tech/T-Search',
+      'https://huggingface.co/t-tech/T-Search-FP8',
+      'https://habr.com/ru/companies/tbank/articles/1060262/',
+    ],
+    checkedAt: '2026-07-21',
+    caveats: [
+      'Не пишет ответ — отдаёт ranked chunks; генерацию делает отдельная LLM.',
+      'В бенчмарках T-Tech лучший avg с Qwen3-Embedding-8B (+ опциональный LLM rerank).',
+    ],
+    confidence: 'high',
+  },
+  {
+    id: 'qwen3-embedding-8b',
+    displayName: 'Qwen3-Embedding-8B',
+    aliases: [
+      'qwen3 embedding',
+      'qwen3-embedding-8b',
+      'qwen embedding 8b',
+      'embedding 8b',
+    ],
+    arch: 'dense',
+    parameterCountB: 8,
+    modality: 'embed',
+    deployment: 'self-host',
+    weights: [
+      {dtype: 'bf16', weightsVramGiB: 16},
+      {dtype: 'fp8', weightsVramGiB: 9},
+      {dtype: 'int4', weightsVramGiB: 5},
+    ],
+    contextDefault: 32_768,
+    minGpuMemoryGiB: 16,
+    recommended: [
+      {
+        gpuFamily: 'L40S',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 48,
+        notes: 'Dense retriever из бенчмарков T-Search (Recall@10).',
+      },
+      {
+        gpuFamily: 'A100',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 80,
+      },
+      {
+        gpuFamily: 'L4',
+        gpuCount: 1,
+        quant: 'fp8',
+        estimatedVramGiB: 24,
+      },
+    ],
+    sources: [
+      'https://huggingface.co/Qwen/Qwen3-Embedding-8B',
+      'Apache-2.0; paired with T-Search eval tables',
+    ],
+    checkedAt: '2026-07-21',
+    caveats: ['Embedding throughput ≫ chat LLM; batch size важнее KV.'],
+    confidence: 'high',
+  },
+  {
+    id: 'qwen3-reranker-0.6b',
+    displayName: 'Qwen3-Reranker-0.6B',
+    aliases: [
+      'qwen3 reranker',
+      'qwen3-reranker',
+      'qwen3-reranker-0.6b',
+      'reranker 0.6b',
+      'реранкер',
+    ],
+    arch: 'dense',
+    parameterCountB: 0.6,
+    modality: 'rerank',
+    deployment: 'self-host',
+    weights: [
+      {dtype: 'bf16', weightsVramGiB: 1.3},
+      {dtype: 'fp8', weightsVramGiB: 0.8},
+      {dtype: 'int4', weightsVramGiB: 0.5},
+    ],
+    contextDefault: 32_768,
+    minGpuMemoryGiB: 8,
+    recommended: [
+      {
+        gpuFamily: 'L4',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 24,
+        notes: 'Лёгкий cross-encoder после dense retrieve / рядом с T-Search.',
+      },
+      {
+        gpuFamily: 'L40S',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 48,
+        notes: 'Высокий QPS rerank top-k.',
+      },
+    ],
+    sources: [
+      'https://huggingface.co/Qwen/Qwen3-Reranker-0.6B',
+      'Qwen3 Embedding blog — open Apache-2.0',
+    ],
+    checkedAt: '2026-07-21',
+    caveats: [
+      'Для максимального качества в таблицах T-Tech иногда LLM-rerank; 0.6B — дешёвый baseline.',
+    ],
+    confidence: 'high',
+  },
+  {
+    id: 'qwen3-reranker-4b',
+    displayName: 'Qwen3-Reranker-4B',
+    aliases: ['qwen3-reranker-4b', 'reranker 4b', 'qwen reranker 4b'],
+    arch: 'dense',
+    parameterCountB: 4,
+    modality: 'rerank',
+    deployment: 'self-host',
+    weights: [
+      {dtype: 'bf16', weightsVramGiB: 8},
+      {dtype: 'fp8', weightsVramGiB: 4.5},
+      {dtype: 'int4', weightsVramGiB: 2.5},
+    ],
+    contextDefault: 32_768,
+    minGpuMemoryGiB: 16,
+    recommended: [
+      {
+        gpuFamily: 'L4',
+        gpuCount: 1,
+        quant: 'fp8',
+        estimatedVramGiB: 24,
+      },
+      {
+        gpuFamily: 'L40S',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 48,
+      },
+      {
+        gpuFamily: 'A100',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 80,
+      },
+    ],
+    sources: ['https://huggingface.co/Qwen/Qwen3-Reranker-4B'],
+    checkedAt: '2026-07-21',
+    caveats: ['Сильнее 0.6B на MTEB-R / MLDR; дороже в latency.'],
     confidence: 'high',
   },
 ];
