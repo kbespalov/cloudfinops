@@ -223,6 +223,10 @@ function quoteConfig(
   const vramBreakdown = weight
     ? buildVramBreakdown({
         weightsGiB: weight.weightsVramGiB,
+        weightVariant: weight,
+        totalParametersB: profile.parameterCountB,
+        activeParameterCountB: profile.activeParameterCountB,
+        attention: profile.attention,
         recipeTotalGiB: canonicalRecipeTotalGiB(
           weight.weightsVramGiB,
           recipeEstimates.length ? recipeEstimates : [rec.estimatedVramGiB],

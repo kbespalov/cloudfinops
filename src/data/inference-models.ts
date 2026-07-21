@@ -2,18 +2,41 @@
  * Curated open-weight model → self-host GPU sizing knowledge base.
  * Used only by the gated inference recommender (not injected into every chat turn).
  *
- * VRAM figures are engineering estimates (weights + modest KV/activation headroom),
- * not lab benchmarks. Prefer fewer accurate profiles over speculative ones.
+ * Weight memory prefers checkpoint profiles (see weight-formats.ts).
+ * MoE VRAM always uses total resident parameters — never active experts.
  */
+
+import type {AttentionProfile} from '@/lib/calculator/inference-sizing';
+import type {
+  WeightConfidence,
+  WeightFormatId,
+} from '@/lib/calculator/weight-formats';
 
 export type InferenceArch = 'dense' | 'moe';
 
 export type InferenceDtype = 'bf16' | 'fp8' | 'int4' | 'int8';
 
 export type InferenceWeightVariant = {
+  /** UI / API quant key (int4 may map to nvfp4 / awq-int4 via weightFormat). */
   dtype: InferenceDtype;
-  /** Approximate VRAM for weights alone (GiB), before KV/runtime overhead. */
+  /**
+   * Production resident weights in VRAM (GiB).
+   * For MoE must reflect ALL experts, not active_parameters.
+   */
   weightsVramGiB: number;
+  /** Concrete checkpoint format (preferred over abstract dtype). */
+  weightFormat?: WeightFormatId;
+  checkpointSizeGiB?: number;
+  /** Naive params×bits/8 — theoretical lower bound only. */
+  theoreticalLowerBoundGiB?: number;
+  effectiveBitsPerWeight?: number;
+  quantizedComponents?: string;
+  unquantizedComponents?: string;
+  compatibleRuntimes?: string[];
+  supportedGpuArch?: string[];
+  qualityImpact?: string;
+  source?: string;
+  confidence?: WeightConfidence;
 };
 
 export type InferenceGpuRec = {
@@ -51,6 +74,8 @@ export type InferenceModelProfile = {
   /** Default `llm` when omitted. */
   modality?: InferenceModality;
   weights: InferenceWeightVariant[];
+  /** Attention / KV architecture — drives bytes-per-token when present. */
+  attention?: AttentionProfile;
   contextDefault: number;
   /** Soft floor: configs below this total VRAM are rejected. */
   minGpuMemoryGiB: number;
@@ -71,38 +96,73 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
     arch: 'moe',
     parameterCountB: 744,
     activeParameterCountB: 40,
-    // MoE: all expert weights in VRAM. FP8 ≈ 744B×1 B ≈ 693 GiB (+scales); not 40B active.
+    // MoE: all 744B experts resident. active≈40B is compute-only — never for weights.
     weights: [
-      {dtype: 'fp8', weightsVramGiB: 700},
-      {dtype: 'int4', weightsVramGiB: 400},
+      {
+        dtype: 'fp8',
+        weightFormat: 'fp8',
+        checkpointSizeGiB: 756,
+        weightsVramGiB: 743,
+        theoreticalLowerBoundGiB: 693, // 744B × 1 byte
+        effectiveBitsPerWeight: 8,
+        quantizedComponents: 'experts + most dense projections',
+        unquantizedComponents: 'selected norms / lm_head (typical)',
+        compatibleRuntimes: ['vLLM', 'SGLang', 'TensorRT-LLM'],
+        supportedGpuArch: ['Hopper', 'Blackwell'],
+        qualityImpact: 'near-BF16 for most chat workloads',
+        source: 'Z.AI / community FP8 checkpoint size ≈756 GB; runtime ~743 GiB',
+        confidence: 'estimated',
+      },
+      {
+        dtype: 'int4',
+        weightFormat: 'nvfp4',
+        checkpointSizeGiB: 465,
+        weightsVramGiB: 450,
+        theoreticalLowerBoundGiB: 372, // naive 744B × 0.5 byte — NOT production
+        effectiveBitsPerWeight: 4,
+        quantizedComponents: 'NVFP4 expert weights',
+        unquantizedComponents: 'scales + residual BF16/FP8 layers',
+        compatibleRuntimes: ['TensorRT-LLM', 'vLLM (NVFP4)'],
+        supportedGpuArch: ['Blackwell', 'Hopper (limited)'],
+        qualityImpact: 'higher than theoretical INT4; prefer over naive INT4 bound',
+        source: 'NVFP4 checkpoint ≈465 GB; production memory ~450 GiB (not 700 GiB)',
+        confidence: 'estimated',
+      },
     ],
+    attention: {
+      type: 'mla',
+      numLayers: 80,
+      latentDim: 512,
+      // Measured-class estimate for MLA-style KV; independent of weight format.
+      kvBytesPerTokenEstimated: 120,
+    },
     contextDefault: 128_000,
-    minGpuMemoryGiB: 700,
+    minGpuMemoryGiB: 450,
     recommended: [
       {
         gpuFamily: 'H200',
         gpuCount: 8,
         quant: 'fp8',
         interconnect: 'NVLink',
-        estimatedVramGiB: 780,
+        estimatedVramGiB: 820,
         notes:
-          'Минимум под полные FP8-веса (~700 GiB): 8×H200 ≈ 1128 GiB. 4×H200 (564 GiB) физически не вмещает веса.',
+          'FP8 weights ~743 GiB: 8×H200 raw 1128 GiB. 4×H200 (564 GiB) не вмещает веса.',
       },
       {
         gpuFamily: 'H200',
         gpuCount: 8,
         quant: 'int4',
         interconnect: 'NVLink',
-        estimatedVramGiB: 480,
-        notes: 'INT4 / AWQ — запас по KV на том же 8×H200 узле.',
+        estimatedVramGiB: 520,
+        notes: 'NVFP4 (~450 GiB веса) — сотни GiB свободнее FP8 на том же 8×H200.',
       },
       {
         gpuFamily: 'H200',
         gpuCount: 4,
         quant: 'int4',
         interconnect: 'NVLink',
-        estimatedVramGiB: 480,
-        notes: '4×H200 только для INT4 (~400 GiB веса); FP8 на 4× не помещается.',
+        estimatedVramGiB: 520,
+        notes: '4×H200 (564 GiB) только для NVFP4/INT4; FP8 на 4× не помещается.',
       },
     ],
     hostedCatalogKeys: ['GLM 5.2', 'glm-5.2', 'glm'],
@@ -110,11 +170,12 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
       'https://mws.ru/news/mws-cloud-pervoj-v-rossii-razvernula-glm-5-2-v-sobstvennom-oblake/',
       'Z.AI / GLM public model cards (MoE ~744B / ~40B active)',
     ],
-    checkedAt: '2026-07-21',
+    checkedAt: '2026-07-22',
     caveats: [
       'Active ~40B — compute/token; VRAM задают все эксперты (~744B), не active.',
+      'UI «INT4» для GLM 5.2 = NVFP4 checkpoint (~450 GiB), не naive INT4 372 GiB и не FP8 743 GiB.',
       '8×H100 80GB (640 GiB) недостаточно для FP8-весов GLM 5.2.',
-      'Оценки VRAM приблизительные; длинный контекст упирается в KV-cache.',
+      'Throughput/SLA ноды не выводятся без бенчмарка tok/s.',
     ],
     confidence: 'medium',
   },

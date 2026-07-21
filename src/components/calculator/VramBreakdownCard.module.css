@@ -105,3 +105,10 @@
   background: transparent;
   border: 1px solid var(--g-color-line-generic-solid);
 }
+
+.debug {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-top: 2px;
+}

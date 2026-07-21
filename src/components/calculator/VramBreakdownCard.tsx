@@ -2,6 +2,10 @@
 
 import {Text} from '@gravity-ui/uikit';
 import {
+  bottleneckLabel,
+  formatFreeOnNode,
+} from '@/lib/calculator/inference-sizing';
+import {
   vramPartTone,
   type VramPartId,
   type VramBreakdown,
@@ -27,13 +31,21 @@ export function VramBreakdownCard({
   breakdown: VramBreakdown;
   embedded?: boolean;
 }) {
+  const sizing = breakdown.sizing;
+  const budget = sizing?.perNode;
   const partsSum = breakdown.parts.reduce((s, p) => s + p.gib, 0);
   const used = partsSum > 0 ? partsSum : breakdown.totalGiB;
   const Root = embedded ? 'section' : 'div';
-  const capacity = breakdown.capacityGiB;
+  const capacity = budget?.rawVramGiB ?? breakdown.capacityGiB;
+  const usable = budget?.usableVramGiB ?? capacity;
   const freeGiB =
-    capacity != null ? Math.max(0, Math.round((capacity - used) * 10) / 10) : null;
-  const scale = capacity != null && capacity > 0 ? Math.max(capacity, used) : used;
+    budget != null
+      ? budget.freeReserveGiB
+      : capacity != null
+        ? Math.max(0, Math.round((capacity - used) * 10) / 10)
+        : null;
+  const scale =
+    usable != null && usable > 0 ? Math.max(usable, used) : used;
 
   const legendItems = [
     ...breakdown.parts
@@ -95,6 +107,30 @@ export function VramBreakdownCard({
           </li>
         ))}
       </ul>
+
+      {sizing && budget ? (
+        <div className={styles.debug}>
+          <Text variant="caption-2" color="hint">
+            Raw {formatGiB(budget.rawVramGiB)} · usable {formatGiB(budget.usableVramGiB)} (
+            {Math.round(budget.gpuMemoryUtilization * 100)}%) · weights{' '}
+            {formatGiB(budget.weightsGiB)} · runtime{' '}
+            {formatGiB(budget.modelRuntimeMemoryGiB)} · KV {formatGiB(budget.kvCacheGiB)} ·{' '}
+            {formatFreeOnNode(budget)}
+          </Text>
+          <Text variant="caption-2" color="hint">
+            {bottleneckLabel(sizing.bottleneck)} · nodes {sizing.nodeCount} (fit{' '}
+            {sizing.nodesForModelFit} / kv {sizing.nodesForKvCapacity}
+            {sizing.nodesForThroughput != null
+              ? ` / thr ${sizing.nodesForThroughput}`
+              : ' / thr n/a'}
+            ) · {sizing.weightFormatLabel} + KV {sizing.kvCacheDtype.toUpperCase()} ·{' '}
+            {(sizing.residentTokens / 1e6).toFixed(2)}M tokens · {sizing.confidence}
+            {sizing.throughputStatus === 'insufficient_data'
+              ? ' · нет бенчмарка throughput'
+              : ''}
+          </Text>
+        </div>
+      ) : null}
     </Root>
   );
 }

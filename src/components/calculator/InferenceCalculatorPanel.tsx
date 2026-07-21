@@ -32,7 +32,11 @@ import {
   type SelfHostQuantParam,
 } from '@/lib/calculator/self-host-links';
 import {
-  canonicalRecipeTotalGiB,
+  bottleneckLabel,
+  formatFreeOnNode,
+} from '@/lib/calculator/inference-sizing';
+import {formatLabel} from '@/lib/calculator/weight-formats';
+import {
   CONTEXT_LENGTH_OPTIONS,
   formatContextTokens,
   formatNodeCount,
@@ -54,7 +58,7 @@ type QuantOption = SelfHostQuantParam;
 
 const QUANT_OPTIONS: {value: QuantOption; label: string}[] = [
   {value: 'auto', label: 'Auto'},
-  {value: 'int4', label: 'INT4'},
+  {value: 'int4', label: 'INT4 / NVFP4'},
   {value: 'fp8', label: 'FP8'},
   {value: 'bf16', label: 'BF16'},
   {value: 'int8', label: 'INT8'},
@@ -89,7 +93,6 @@ function contextOptions(contextDefault: number) {
 function planForConfig(
   config: ConfigPick,
   profile: (typeof INFERENCE_MODELS)[number],
-  recipeTotalGiB: number,
   concurrentRequests: number,
   avgContextTokens: number,
   maxContextTokens: number,
@@ -99,7 +102,10 @@ function planForConfig(
   if (!weight) return null;
   return planInferenceNodes({
     weightsGiB: weight.weightsVramGiB,
-    recipeTotalGiB,
+    weightVariant: weight,
+    totalParametersB: profile.parameterCountB,
+    activeParameterCountB: profile.activeParameterCountB,
+    attention: profile.attention,
     contextDefault: profile.contextDefault,
     avgContextTokens,
     maxContextTokens,
@@ -110,6 +116,13 @@ function planForConfig(
     gpuFamily: config.gpuFamily,
     gpuMemoryGb: config.host?.gpuMemoryGb ?? null,
   });
+}
+
+function quantDisplay(config: ConfigPick, plan: InferenceNodePlan | null): string {
+  if (plan?.sizing?.weightFormatLabel) return plan.sizing.weightFormatLabel;
+  return formatLabel(
+    config.quant === 'int4' ? 'int4' : (config.quant as 'fp8' | 'bf16' | 'int8'),
+  );
 }
 
 function defaultAvgContext(maxContext: number): number {
@@ -201,54 +214,12 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
 
   const configs = rec?.configs ?? [];
 
-  const recipeByQuant = useMemo(() => {
-    const map = new Map<string, number>();
-    if (!profile || !configs.length) return map;
-    const quants = new Set(configs.map((c) => c.quant));
-    for (const q of quants) {
-      const weight =
-        profile.weights.find((w) => w.dtype === q) ?? profile.weights[0];
-      if (!weight) continue;
-      const fromRows = configs
-        .filter((c) => c.quant === q)
-        .map((c) => c.estimatedVramGiB);
-      const fromProfile = profile.recommended
-        .filter((r) => r.quant === q)
-        .map((r) => r.estimatedVramGiB);
-      map.set(
-        q,
-        canonicalRecipeTotalGiB(
-          weight.weightsVramGiB,
-          [...fromRows, ...(fromRows.length ? [] : fromProfile)],
-          profile.contextDefault,
-        ),
-      );
-    }
-    return map;
-  }, [configs, profile]);
-
   const configPlans = useMemo(() => {
     if (!profile) return [] as Array<InferenceNodePlan | null>;
-    return configs.map((c) => {
-      const recipe = recipeByQuant.get(c.quant);
-      if (recipe == null || recipe <= 0) return null;
-      return planForConfig(
-        c,
-        profile,
-        recipe,
-        concurrentRequests,
-        avgContextTokens,
-        maxContextTokens,
-      );
-    });
-  }, [
-    configs,
-    profile,
-    recipeByQuant,
-    concurrentRequests,
-    avgContextTokens,
-    maxContextTokens,
-  ]);
+    return configs.map((c) =>
+      planForConfig(c, profile, concurrentRequests, avgContextTokens, maxContextTokens),
+    );
+  }, [configs, profile, concurrentRequests, avgContextTokens, maxContextTokens]);
 
   useEffect(() => {
     if (!configPlans.length) return;
@@ -355,7 +326,7 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
           <div className={styles.workload}>
             <div className={styles.field}>
               <Text variant="caption-2" color="secondary">
-                Одновременные запросы
+                Одновременные сессии
               </Text>
               <NumberInput
                 size="l"
@@ -366,7 +337,7 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
                   setConcurrentRequests(Math.max(1, Math.round(v ?? 1)))
                 }
                 controlProps={{
-                  'aria-label': 'Одновременные запросы',
+                  'aria-label': 'Одновременные сессии',
                 }}
               />
             </div>
@@ -436,7 +407,7 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
                     Использование VRAM
                   </Text>
                   <Text variant="caption-2" color="hint">
-                    Запас памяти
+                    Ноды / запас
                   </Text>
                   <Text variant="caption-2" color="hint" className={styles.configPrice}>
                     Стоимость
@@ -446,6 +417,7 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
                   const isActive = selectedIdx === i;
                   const plan = configPlans[i];
                   const bd = plan?.perNode ?? null;
+                  const sizing = plan?.sizing;
                   const nodes = plan?.kind === 'replicas' ? plan.nodeCount : 1;
                   const unitMonth = c.best?.totalMonth;
                   const amount = monthToPeriod(
@@ -456,22 +428,34 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
                   );
                   const load = bd?.loadBand ? loadBandLabel(bd.loadBand) : null;
                   const impossible = plan?.kind === 'impossible';
-                  const badge =
-                    impossible ||
-                    (bd?.loadBand != null && loadAsBadge(bd.loadBand));
                   const vramLabel = impossible
                     ? formatVramUsage(bd?.totalGiB ?? c.estimatedVramGiB, bd?.capacityGiB)
                     : bd != null
-                      ? formatVramUsage(bd.totalGiB, bd.capacityGiB)
+                      ? formatVramUsage(bd.totalGiB, bd?.capacityGiB)
                       : `~${c.estimatedVramGiB} GiB`;
-                  const loadText = impossible
+                  const nodesText = impossible
                     ? 'Не влезает'
-                    : plan?.kind === 'replicas'
-                      ? formatNodeCount(plan.nodeCount)
+                    : `Нужно нод: ${plan?.nodeCount ?? 1}`;
+                  const freeText =
+                    !impossible && sizing ? formatFreeOnNode(sizing.perNode) : null;
+                  const bottleneckText = impossible
+                    ? 'Ограничение: веса'
+                    : sizing
+                      ? bottleneckLabel(sizing.bottleneck)
                       : load?.text;
-                  const loadTitle = impossible
-                    ? 'Не влезает'
-                    : load?.text;
+                  const loadTitle = [
+                    nodesText,
+                    freeText,
+                    bottleneckText,
+                    sizing
+                      ? `KV dtype: ${sizing.kvCacheDtype.toUpperCase()} · confidence: ${sizing.confidence}`
+                      : null,
+                    sizing?.throughputStatus === 'insufficient_data'
+                      ? 'Throughput: недостаточно данных'
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join('\n');
                   return (
                     <button
                       key={`${c.gpuFamily}-${c.gpuCount}-${c.quant}-${i}`}
@@ -483,6 +467,7 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
                       data-overload={impossible ? 'true' : 'false'}
                       data-replicas={plan?.kind === 'replicas' ? 'true' : 'false'}
                       onClick={() => setSelectedIdx(i)}
+                      title={loadTitle}
                     >
                       <Text variant="body-2" ellipsis className={styles.configGpu}>
                         {c.gpuCount}× {c.gpuFamily}
@@ -494,35 +479,35 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
                         ) : null}
                       </Text>
                       <Text variant="body-2" color="secondary" className={styles.configQuant}>
-                        {c.quant.toUpperCase()}
+                        {quantDisplay(c, plan)}
                       </Text>
                       <Text
                         variant="body-2"
                         color="secondary"
                         className={styles.configVram}
-                        title={
-                          bd?.capacityGiB != null && !impossible
-                            ? `На одну ноду · свободно ${Math.max(0, Math.round((bd.capacityGiB - bd.totalGiB) * 10) / 10)} GiB`
-                            : loadTitle
-                        }
+                        title={loadTitle}
                       >
                         {vramLabel}
                       </Text>
                       <span className={styles.configLoad} title={loadTitle}>
-                        {loadText ? (
-                          badge || plan?.kind === 'replicas' ? (
-                            <Label
-                              size="xs"
-                              theme={plan?.kind === 'replicas' ? 'info' : 'normal'}
-                            >
-                              {loadText}
-                            </Label>
-                          ) : (
-                            <Text variant="caption-2" color="secondary">
-                              {loadText}
-                            </Text>
-                          )
-                        ) : null}
+                        {impossible || plan?.kind === 'replicas' || (bd?.loadBand != null && loadAsBadge(bd.loadBand)) ? (
+                          <Label
+                            size="xs"
+                            theme={
+                              impossible
+                                ? 'normal'
+                                : plan?.kind === 'replicas'
+                                  ? 'info'
+                                  : 'normal'
+                            }
+                          >
+                            {nodesText}
+                          </Label>
+                        ) : (
+                          <Text variant="caption-2" color="secondary">
+                            {nodesText}
+                          </Text>
+                        )}
                       </span>
                       <Text variant="subheader-2" className={styles.configPrice}>
                         {amount != null && !impossible

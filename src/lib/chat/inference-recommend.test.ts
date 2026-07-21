@@ -121,7 +121,7 @@ describe('recommendInferenceInfra', () => {
     assert.equal(result.notFound, undefined);
     assert.ok(result.configs?.length);
     assert.ok(result.configs!.some((c) => c.gpuFamily.includes('H200')));
-    // FP8 weights ~700 GiB — 4×H200 (564) must never appear as a viable node.
+    // FP8 weights ~743 GiB — 4×H200 (564) must never appear as a viable node.
     assert.ok(
       !result.configs!.some((c) => c.quant === 'fp8' && c.gpuCount === 4),
       '4×H200 FP8 must be filtered (weights do not fit)',
