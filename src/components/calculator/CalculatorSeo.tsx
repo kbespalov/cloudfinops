@@ -5,13 +5,14 @@ import {
   type ComputeFamily,
   type GpuPreset,
 } from '@/lib/calculator/presets';
+import {CALCULATOR_PROVIDER_SEO} from '@/data/calculator-providers-seo';
 import {INFERENCE_MODELS} from '@/data/inference-models';
 import styles from './CalculatorSeo.module.css';
 
 const FAMILIES: ComputeFamily[] = ['low-cost', 'general', 'high-cpu', 'high-memory'];
 
 const PROVIDERS = [
-  'Yandex Cloud',
+  'Яндекс.Облако (Yandex Cloud)',
   'VK Cloud',
   'Selectel',
   'Cloud.ru',
@@ -88,6 +89,20 @@ export function VmCalculatorSeo({
           <strong>AI-команды</strong> — оценка аренды H100 / H200 / B300 до детального self-host
           расчёта на <a href="/calculator/self-host">калькуляторе Self-host LLM</a>.
         </li>
+      </ul>
+
+      <h3 className={styles.subtitle}>Калькулятор по провайдеру</h3>
+      <ul className={styles.list}>
+        {CALCULATOR_PROVIDER_SEO.map((p) => (
+          <li key={p.slug}>
+            <a href={`/calculator/${p.slug}`}>
+              <strong>{p.h1}</strong>
+            </a>
+            {' — '}
+            {p.brandRu}
+            {p.aliases[0] ? ` / ${p.aliases[0]}` : ''}
+          </li>
+        ))}
       </ul>
 
       <h3 className={styles.subtitle}>Калькулятор по видеокартам</h3>
@@ -257,6 +272,16 @@ const VM_FAQ = [
     answer: `${PROVIDERS.join(', ')} — по единой таксономии SKU Cloud FinOps.`,
   },
   {
+    question: 'Есть ли калькулятор для Яндекс.Облака?',
+    answer:
+      'Да. Откройте /calculator/yandex-cloud или общую страницу /calculator/vm — в таблице есть колонка Яндекс.Облако (Yandex Cloud) рядом с VK Cloud, Selectel, Cloud.ru, MWS и T1.',
+  },
+  {
+    question: 'Есть ли калькулятор для VK Cloud и T1 Cloud?',
+    answer:
+      'Да. Отдельные страницы: /calculator/vk-cloud и /calculator/t1-cloud. Там же сравнение с Яндекс.Облаком, Selectel, Cloud.ru и MWS по публичным тарифам.',
+  },
+  {
     question: 'Можно ли посчитать аренду GPU H100, H200 или B300?',
     answer:
       'Да. Во вкладке GPU сравниваются пресеты NVIDIA L4, A100, H100 (1×/8×), H200 (1×/8×), V100 и dedicated B300 8× у Selectel — по публичным ценам каталога Cloud FinOps.',
@@ -269,7 +294,7 @@ const VM_FAQ = [
   {
     question: 'Чем этот калькулятор отличается от калькулятора провайдера?',
     answer:
-      'Мы сравниваем несколько облаков РФ на одних и тех же пресетах H100/H200/B300/A100/L4. Калькуляторы Selectel или Yandex Cloud считают только свой прайс.',
+      'Мы сравниваем несколько облаков РФ на одних и тех же пресетах H100/H200/B300/A100/L4. Калькуляторы Selectel или Яндекс.Облака считают только свой прайс.',
   },
 ];
 
@@ -312,20 +337,21 @@ export function vmCalculatorJsonLd(gpuShapeCount: number) {
       {
         '@type': 'WebApplication',
         '@id': 'https://cloudfinops.ru/calculator/vm#app',
-        name: 'Калькулятор ВМ и GPU H100 H200 B300 · Cloud FinOps',
+        name: 'Калькулятор ВМ и GPU · Cloud FinOps',
         url: 'https://cloudfinops.ru/calculator/vm',
         applicationCategory: 'BusinessApplication',
         operatingSystem: 'Web',
         inLanguage: 'ru-RU',
         description:
-          'Калькулятор стоимости виртуальных машин и аренды GPU NVIDIA H100, H200, B300, A100, L4, V100 в России: сравнение Yandex Cloud, VK Cloud, Selectel, Cloud.ru, MWS и T1.',
+          'Калькулятор стоимости виртуальных машин и аренды GPU NVIDIA H100, H200, B300, A100, L4 в России: сравнение Яндекс.Облако, VK Cloud, Selectel, Cloud.ru, MWS и T1 Cloud.',
         featureList: [
           'Калькулятор стоимости ВМ',
           'Сравнение цен облаков России',
-          'Калькулятор аренды H100',
-          'Калькулятор аренды H200',
-          'Калькулятор аренды B300',
-          'Аренда A100 и L4',
+          'Калькулятор Яндекс.Облако',
+          'Калькулятор VK Cloud',
+          'Калькулятор Selectel и B300',
+          'Калькулятор MWS и T1 Cloud',
+          'Калькулятор аренды H100 H200',
           'Пресеты General High CPU High Memory Low-cost',
         ],
         offers: { '@type': 'Offer', price: '0', priceCurrency: 'RUB' },

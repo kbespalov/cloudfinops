@@ -1,4 +1,5 @@
 import type {MetadataRoute} from 'next';
+import {CALCULATOR_PROVIDER_SEO} from '@/data/calculator-providers-seo';
 import {newsItems} from '@/data/news';
 
 const SITE_URL = 'https://cloudfinops.ru';
@@ -31,12 +32,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'daily',
       priority: 0.9,
     },
-    {
-      url: `${SITE_URL}/calculator`,
+    ...CALCULATOR_PROVIDER_SEO.map((p) => ({
+      url: `${SITE_URL}/calculator/${p.slug}`,
       lastModified,
-      changeFrequency: 'daily',
-      priority: 0.7,
-    },
+      changeFrequency: 'weekly' as const,
+      priority: 0.85,
+    })),
     {
       url: `${SITE_URL}/chat`,
       lastModified,

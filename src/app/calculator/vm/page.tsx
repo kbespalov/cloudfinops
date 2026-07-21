@@ -6,9 +6,9 @@ import {getGpuCardPresets, getGpuFlavorPresets} from '@/lib/calculator/quotes-ca
 export const dynamic = 'force-static';
 
 export const metadata: Metadata = {
-  title: 'Калькулятор ВМ и GPU H100 H200 B300 — цены облаков России',
+  title: 'Калькулятор ВМ и GPU — Яндекс.Облако, VK, Selectel, MWS, T1',
   description:
-    'Калькулятор стоимости ВМ и аренды GPU NVIDIA: H100, H200, B300, A100, L4, V100. Сравнение цен Yandex Cloud, VK Cloud, Selectel, Cloud.ru, MWS и T1 по публичным тарифам.',
+    'Калькулятор стоимости ВМ и аренды GPU NVIDIA (H100, H200, B300, A100, L4): сравнение Яндекс.Облако, VK Cloud, Selectel, Cloud.ru, MWS Cloud и T1 Cloud по публичным тарифам.',
   keywords: [
     'калькулятор облака',
     'калькулятор облаков',
@@ -36,9 +36,19 @@ export const metadata: Metadata = {
     'цена vCPU',
     'сравнение цен облако',
     'сравнение облаков России',
+    'калькулятор Яндекс.Облако',
+    'калькулятор Яндекс Облако',
     'калькулятор Yandex Cloud',
+    'калькулятор VK Cloud',
+    'калькулятор ВК Облако',
     'калькулятор Selectel',
     'калькулятор Cloud.ru',
+    'калькулятор MWS',
+    'калькулятор MWS Cloud',
+    'калькулятор МВС Облако',
+    'калькулятор T1 Cloud',
+    'калькулятор T1',
+    'калькулятор Т1 Облако',
     'FinOps калькулятор',
   ],
   alternates: {
@@ -59,15 +69,15 @@ export const metadata: Metadata = {
     locale: 'ru_RU',
     url: '/calculator/vm',
     siteName: 'Cloud FinOps',
-    title: 'Калькулятор ВМ и GPU H100 / H200 / B300 · Cloud FinOps',
+    title: 'Калькулятор ВМ и GPU · Яндекс.Облако, VK, Selectel',
     description:
-      'Сравните цены на ВМ и аренду NVIDIA H100, H200, B300, A100, L4 у облаков России.',
+      'Сравните цены на ВМ и аренду NVIDIA H100, H200, B300 у Яндекс.Облака, VK Cloud, Selectel, Cloud.ru, MWS и T1.',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Калькулятор ВМ и GPU H100 H200 B300 · Cloud FinOps',
+    title: 'Калькулятор ВМ и GPU · Cloud FinOps',
     description:
-      'Цены H100, H200, B300, A100, L4 и ВМ: Yandex, VK, Selectel, Cloud.ru, MWS, T1.',
+      'Цены ВМ и GPU: Яндекс.Облако, VK Cloud, Selectel, Cloud.ru, MWS, T1.',
   },
   category: 'technology',
 };

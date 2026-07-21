@@ -1,6 +1,6 @@
 import {redirect} from 'next/navigation';
 
-/** Legacy hub — shareable entry points are /calculator/vm and /calculator/self-host. */
+/** Shareable entry — interactive calculator lives at /calculator/vm. */
 export default function CalculatorIndex() {
   redirect('/calculator/vm');
 }

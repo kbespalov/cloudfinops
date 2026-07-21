@@ -40,20 +40,33 @@ const MODE_HREF: Record<CalculatorMode, string> = {
   inference: '/calculator/self-host',
 };
 
+const MODE_TITLE: Record<CalculatorMode, string> = {
+  vm: 'Калькулятор облачных нагрузок',
+  inference: 'Калькулятор облачных нагрузок',
+};
+
 const MODE_LEAD: Record<CalculatorMode, string> = {
-  vm: 'Сравнение цен ВМ и аренды GPU в облаках РФ',
+  vm: 'Сравнение цен ВМ и GPU: Яндекс.Облако, VK Cloud, Selectel, Cloud.ru, MWS, T1',
   inference: 'Подбор GPU под open-weight модель в облаках РФ',
 };
 
 export function CalculatorPage({
   mode,
   gpuPresets = [],
+  title,
+  lead,
 }: {
   mode: CalculatorMode;
   gpuPresets?: GpuPreset[];
+  /** Optional H1 override (provider landings). */
+  title?: string;
+  /** Optional lead override (provider landings). */
+  lead?: string;
 }) {
   const router = useRouter();
   const [period, setPeriod] = useState<PeriodMode>('month');
+  const heading = title ?? MODE_TITLE[mode];
+  const subtitle = lead ?? MODE_LEAD[mode];
 
   return (
     <>
@@ -65,11 +78,11 @@ export function CalculatorPage({
               <Flex alignItems="center" className={styles.heroTitleRow}>
                 <Icon data={Calculator} size={20} />
                 <Text as="h1" className={styles.heroTitle}>
-                  Калькулятор облачных нагрузок
+                  {heading}
                 </Text>
               </Flex>
               <Text color="secondary" className={styles.heroLead}>
-                {MODE_LEAD[mode]}
+                {subtitle}
               </Text>
             </Flex>
 

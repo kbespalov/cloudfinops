@@ -31,13 +31,10 @@
 }
 
 .heroLead {
-  max-width: 40rem;
+  max-width: 44rem;
   min-height: 20px;
   font-size: 14px;
   line-height: 20px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .tabs {

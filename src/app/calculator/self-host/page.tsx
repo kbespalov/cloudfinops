@@ -45,6 +45,10 @@ export const metadata: Metadata = {
     'DeepSeek GPU',
     'калькулятор self-host',
     'сравнение GPU облака Россия',
+    'калькулятор Яндекс.Облако GPU',
+    'калькулятор VK Cloud GPU',
+    'калькулятор MWS GPU',
+    'калькулятор T1 Cloud GPU',
   ],
   alternates: {
     canonical: '/calculator/self-host',
