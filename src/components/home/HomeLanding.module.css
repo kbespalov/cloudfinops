@@ -19,7 +19,8 @@
   inset: 0;
   z-index: 0;
   overflow: hidden;
-  filter: saturate(0.92) brightness(1.03);
+  /* Sphere fills the frame denser than waterPlane — ease saturation so UI stays readable */
+  filter: saturate(0.88) brightness(1.04) contrast(1.02);
 }
 
 .shaderCanvas {
@@ -34,9 +35,9 @@
   inset: 0;
   z-index: 0;
   background:
-    radial-gradient(ellipse 70% 55% at 28% 18%, #fff1d6 0%, transparent 55%),
-    radial-gradient(ellipse 55% 45% at 78% 70%, #f0c987 0%, transparent 55%),
-    linear-gradient(160deg, #fff8ea 0%, #f0c987 52%, #d9a45c 100%);
+    radial-gradient(ellipse 70% 55% at 28% 18%, #f4ecff 0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at 78% 70%, #b794f6 0%, transparent 55%),
+    linear-gradient(160deg, #faf5ff 0%, #b794f6 52%, #6d28d9 100%);
 }
 
 .veil {
@@ -46,9 +47,9 @@
   background:
     radial-gradient(
       ellipse 52% 46% at 50% 42%,
-      rgba(255, 252, 245, 0.7) 0%,
-      rgba(255, 248, 232, 0.32) 48%,
-      rgba(255, 244, 220, 0.08) 74%,
+      rgba(250, 245, 255, 0.72) 0%,
+      rgba(237, 233, 254, 0.34) 48%,
+      rgba(237, 233, 254, 0.08) 74%,
       transparent 100%
     );
   pointer-events: none;
@@ -62,23 +63,23 @@
 }
 
 :global(.g-root_theme_dark) .shaderWrap {
-  filter: saturate(1.08) brightness(0.9);
+  filter: saturate(1.12) brightness(0.88) contrast(1.04);
 }
 
 :global(.g-root_theme_dark) .bgFallback {
   background:
-    radial-gradient(ellipse 70% 55% at 26% 16%, #4a235a 0%, transparent 55%),
-    radial-gradient(ellipse 55% 45% at 80% 72%, #c9a14a 0%, transparent 52%),
-    linear-gradient(160deg, #1c100e 0%, #2b1810 48%, #3d2450 100%);
+    radial-gradient(ellipse 70% 55% at 26% 16%, #5b21b6 0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at 80% 72%, #c4b5fd 0%, transparent 52%),
+    linear-gradient(160deg, #12081f 0%, #1e1040 48%, #4c1d95 100%);
 }
 
 :global(.g-root_theme_dark) .veil {
   background:
     radial-gradient(
       ellipse 56% 50% at 50% 42%,
-      rgba(255, 236, 210, 0.16) 0%,
-      rgba(60, 36, 28, 0.22) 42%,
-      rgba(18, 10, 12, 0.12) 72%,
+      rgba(196, 181, 253, 0.14) 0%,
+      rgba(30, 16, 64, 0.28) 42%,
+      rgba(18, 8, 31, 0.12) 72%,
       transparent 100%
     );
 }

@@ -5,23 +5,24 @@ import {ShaderGradient, ShaderGradientCanvas} from '@shadergradient/react';
 import {useAppTheme} from '@/components/AppProviders';
 import styles from './HomeLanding.module.css';
 
-/** Warm honey / cream — keep in sync with `.bgFallback` in CSS. */
-const HONEY = {
-  color1: '#FFF1D6',
-  color2: '#F0C987',
-  color3: '#D9A45C',
+/** Soft lilac / violet — keep in sync with `.bgFallback` in CSS. */
+const LILAC = {
+  color1: '#F4ECFF',
+  color2: '#B794F6',
+  color3: '#6D28D9',
 } as const;
 
-/** Dark cacao + violet + antique gold — keep in sync with dark `.bgFallback`. */
-const CACAO = {
-  color1: '#1C100E',
-  color2: '#4A235A',
-  color3: '#C9A14A',
+/** Deep indigo + electric violet — keep in sync with dark `.bgFallback`. */
+const INDIGO = {
+  color1: '#12081F',
+  color2: '#5B21B6',
+  color3: '#C4B5FD',
 } as const;
 
 export function HeroShaderBg() {
   const {theme} = useAppTheme();
-  const palette = theme === 'dark' ? CACAO : HONEY;
+  const palette = theme === 'dark' ? INDIGO : LILAC;
+  const isDark = theme === 'dark';
   // null until mounted — avoids flashing WebGL for reduced-motion users
   const [reduceMotion, setReduceMotion] = useState<boolean | null>(null);
 
@@ -50,30 +51,34 @@ export function HeroShaderBg() {
         lazyLoad
         powerPreference="low-power"
       >
+        {/*
+          Sphere morph instead of flat waterPlane:
+          a soft molten orb that slowly spirals — more depth, less “wavy sheet”.
+        */}
         <ShaderGradient
           control="props"
           animate="on"
-          type="waterPlane"
+          type="sphere"
           {...palette}
-          uSpeed={0.12}
-          uStrength={theme === 'dark' ? 1.7 : 1.55}
-          uDensity={0.95}
-          uFrequency={4.4}
-          uAmplitude={1}
+          uSpeed={0.18}
+          uStrength={isDark ? 0.85 : 0.7}
+          uDensity={1.05}
+          uFrequency={5.2}
+          uAmplitude={isDark ? 2.4 : 2.1}
           positionX={0}
-          positionY={0.2}
+          positionY={isDark ? -0.05 : -0.1}
           positionZ={0}
-          rotationX={42}
-          rotationY={8}
-          rotationZ={0}
-          cAzimuthAngle={180}
-          cPolarAngle={95}
-          cDistance={4}
-          cameraZoom={1}
+          rotationX={12}
+          rotationY={-18}
+          rotationZ={40}
+          cAzimuthAngle={isDark ? 220 : 55}
+          cPolarAngle={isDark ? 125 : 95}
+          cDistance={3.8}
+          cameraZoom={isDark ? 14.2 : 13.6}
           lightType="3d"
-          brightness={theme === 'dark' ? 0.95 : 1.02}
+          brightness={isDark ? 1.05 : 1.2}
           grain="off"
-          reflection={theme === 'dark' ? 0.06 : 0.03}
+          reflection={0.08}
         />
       </ShaderGradientCanvas>
     </div>
