@@ -87,6 +87,30 @@ export function toSlimQuotesByPeriod(full: QuotesByPeriod): QuotesByPeriodSlim {
   return out;
 }
 
+/** Scale a one-node quote to N identical replica nodes. */
+export function scalePresetQuote(
+  view: ViewPresetQuote,
+  nodeCount: number,
+): ViewPresetQuote {
+  const n = Math.max(1, Math.round(nodeCount));
+  if (n === 1) return view;
+  const scaleQ = (q: ViewProviderQuote): ViewProviderQuote => ({
+    ...q,
+    total: q.total * n,
+    parts: q.parts.map((p) => ({...p, amount: p.amount * n})),
+  });
+  const quotes = view.quotes.map(scaleQ).sort((a, b) => a.total - b.total);
+  const alternateQuotes = view.alternateQuotes
+    .map(scaleQ)
+    .sort((a, b) => a.total - b.total);
+  return {
+    presetId: view.presetId,
+    quotes,
+    alternateQuotes,
+    best: quotes[0] ?? null,
+  };
+}
+
 /** Stable provider column order (matches prices/index.yaml). */
 export const CALCULATOR_PROVIDER_IDS = [
   'yandex-cloud',

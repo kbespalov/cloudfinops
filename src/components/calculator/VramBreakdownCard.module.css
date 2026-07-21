@@ -24,7 +24,7 @@
 .barTrack {
   display: flex;
   width: 100%;
-  height: 10px;
+  height: 12px;
   border-radius: var(--g-border-radius-m);
   overflow: hidden;
   background: var(--g-color-base-generic);
@@ -57,12 +57,51 @@
   background: var(--g-color-base-generic-accent);
 }
 
-.legendLine {
-  line-height: 1.35;
+.segment[data-tone='free'] {
+  background: transparent;
 }
 
-@media (max-width: 720px) {
-  .legendLine {
-    font-size: var(--g-text-caption-2-font-size);
-  }
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.swatch[data-tone='heavy'] {
+  background: var(--g-color-base-info-heavy);
+}
+
+.swatch[data-tone='medium'] {
+  background: var(--g-color-base-info-medium);
+}
+
+.swatch[data-tone='light'] {
+  background: var(--g-color-base-info-light);
+}
+
+.swatch[data-tone='muted'] {
+  background: var(--g-color-base-generic-accent);
+}
+
+.swatch[data-tone='free'] {
+  box-sizing: border-box;
+  background: transparent;
+  border: 1px solid var(--g-color-line-generic-solid);
 }

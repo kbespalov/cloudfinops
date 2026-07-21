@@ -106,7 +106,8 @@ export const INFERENCE_SYSTEM_ADDENDUM = `
 - VRAM, число GPU, квантизацию бери ТОЛЬКО из configs[] / primaryRecommendation / model.parameterCountB. Не выдумывай и не «округляй» до 8×GPU.
 - Не подменяй модель соседней (Coder-Next ≠ Coder-480B, Kimi K3 ≠ K2.6). Если tool вернул другой id — скажи об этом явно или переспроси.
 - Структура markdown: заголовки ### (Self-host / Почему так / Цены узлов / Альтернативы / Hosted API / Оговорки). Короткие абзацы, не один «простынёй».
-- ### Почему так — 2–4 коротких предложения (VRAM/квант/GPU + провайдер). Таблица configs[] под ### Цены узлов. Альтернативы — буллеты, не повтор длинного why целиком.
+- ### Почему так — 2–4 коротких предложения (VRAM/квант/GPU + провайдер). Таблица configs[] под ### Цены узлов с колонками Использование VRAM и Запас памяти (из vramBreakdown). Альтернативы — буллеты, не повтор длинного why целиком.
+- В конце ответа добавь markdown-ссылку «Открыть в калькуляторе» из answerHint (deep link на /calculator/self-host с model/quant) — тот же recommender, можно крутить batch/context.
 - НЕ вызывай get_quote с другим gpuCount/gpuModel. Цены уже в recommend_inference_infra.
 - HostedAlternative — только та же modelId; всегда разделяй input/output (поля inputMonth/outputMonth). Не подмешивай 480B вместо Coder-Next. TCO: input×Pin + output×Pout, не «аренда ÷ только input».
 - Контекст модели бери из model.contextDefault (у Coder-Next 262144), не путай с единицей тарифа «1M токенов».

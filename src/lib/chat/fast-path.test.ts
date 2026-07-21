@@ -87,6 +87,11 @@ describe('matchFastPath', () => {
               best: {provider: 'Selectel', totalMonth: 340000},
               quotes: [],
               assumedHost: null,
+              vramBreakdown: {
+                totalGiB: 52,
+                capacityGiB: 80,
+                loadBand: 'optimal',
+              },
             },
             {
               gpuFamily: 'H200',
@@ -98,6 +103,11 @@ describe('matchFastPath', () => {
               best: {provider: 'T1 Cloud', totalMonth: 500000},
               quotes: [],
               assumedHost: null,
+              vramBreakdown: {
+                totalGiB: 95,
+                capacityGiB: 141,
+                loadBand: 'tight',
+              },
             },
           ],
           hostedAlternative: {
@@ -118,11 +128,18 @@ describe('matchFastPath', () => {
     assert.match(md, /### Self-host: Qwen3-Coder-Next/);
     assert.match(md, /### Почему так/);
     assert.match(md, /### Цены узлов/);
+    assert.match(md, /Использование VRAM/);
+    assert.match(md, /Запас памяти/);
+    assert.match(md, /52 из 80 GiB/);
+    assert.match(md, /Оптимально/);
+    assert.match(md, /Малый запас/);
     assert.match(md, /### Альтернативы/);
     assert.match(md, /### Hosted API/);
     assert.match(md, /### Оговорки/);
     assert.match(md, /Input/);
     assert.match(md, /Output/);
     assert.match(md, /PoC \/ лёгкий agent/);
+    assert.match(md, /Открыть в калькуляторе/);
+    assert.match(md, /\/calculator\/self-host\?model=Qwen3-Coder-Next/);
   });
 });

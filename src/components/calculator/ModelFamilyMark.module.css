@@ -3,6 +3,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  vertical-align: middle;
   line-height: 0;
   user-select: none;
   border-radius: var(--g-border-radius-s);
@@ -12,4 +13,18 @@
 .mark svg {
   display: block;
   flex-shrink: 0;
+  width: 100%;
+  height: 100%;
+  /* Optical inset for path-only brand marks (DeepSeek, Meta, …). */
+  transform: scale(0.9);
+  transform-origin: center center;
+}
+
+.mark[data-size='s'] svg {
+  transform: scale(0.86);
+}
+
+/* Painted plates already fill the tile — scaling would leave empty corners. */
+.mark[data-plate='true'] svg {
+  transform: none;
 }

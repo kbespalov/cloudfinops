@@ -4,6 +4,11 @@
  * tools-free completion on a short system prompt.
  */
 
+import {
+  formatInferenceLoadBandCell,
+  formatInferenceVramCell,
+  selfHostCalculatorCtaMarkdown,
+} from '@/lib/calculator/self-host-links';
 import {chatCompletion, type ChatMessage} from './gigachat';
 import {sanitizeUserFacingAnswer} from './tool-call-recovery';
 import {runTool} from './tools';
@@ -366,6 +371,11 @@ export function formatFastPathAnswer(
       quotes: {provider: string; totalMonth: number | null}[];
       notes?: string;
       why?: string;
+      vramBreakdown?: {
+        totalGiB: number;
+        capacityGiB: number | null;
+        loadBand: 'excess' | 'optimal' | 'tight' | 'limit' | 'overload' | null;
+      } | null;
     };
     const model = data.model as {
       displayName: string;
@@ -460,9 +470,16 @@ export function formatFastPathAnswer(
         const label = `${c.gpuCount}×${c.gpuFamily} · ${c.quant}`;
         const price = typeof best === 'number' ? formatRub(best) : '—';
         const who = c.best?.provider ?? '—';
-        return `| ${label} | ~${c.estimatedVramGiB} GiB | ${who} | ${price} |`;
+        const vram = formatInferenceVramCell(c.vramBreakdown ?? null, c.estimatedVramGiB);
+        const load = formatInferenceLoadBandCell(c.vramBreakdown ?? null);
+        return `| ${label} | ${vram} | ${load} | ${who} | ${price} |`;
       })
       .join('\n');
+    const primaryQuant = configs[0]?.quant ?? null;
+    const calcCta = selfHostCalculatorCtaMarkdown({
+      model: model.displayName,
+      quant: primaryQuant,
+    });
     const altBlock = configs.slice(1, 4).length
       ? [
           '',
@@ -498,13 +515,15 @@ export function formatFastPathAnswer(
       '',
       'НДС вкл., месяц = 720 ч. Цена — лучший паритетный узел в каталоге.',
       '',
-      `| Конфиг | VRAM | Провайдер | ₽/мес |`,
-      `|---|---:|---|---:|`,
+      `| Конфиг | Использование VRAM | Запас памяти | Провайдер | ₽/мес |`,
+      `|---|---|---|---|---:|`,
       rows,
       altBlock,
       hostedBlock,
       caveatBlock,
       pendingNote,
+      '',
+      calcCta,
       '',
       '> Цены и VRAM — ориентиры Cloud FinOps; tok/s не оцениваем.',
     ]

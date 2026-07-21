@@ -487,6 +487,31 @@ export const newsItems: NewsItem[] = [
 
   // ——— Июль 2026 ———
   {
+    id: 'market-2026-07-qwen-image-30',
+    date: '2026-07-21',
+    provider: 'market',
+    providerName: 'Рынок РФ',
+    title: 'Вышла Qwen-Image-3.0',
+    summary:
+      'Команда Qwen (Alibaba) представила третье поколение модели генерации изображений. Фокус — на «полезных» картинках для работы: плотные layouts, инфографика, UI-макеты, мелкий текст и мультиязычный рендер. Доступ пока через Qwen Chat / Studio; открытых весов в анонсе нет.',
+    tags: ['ai'],
+    sourceUrl: 'https://qwen.ai/blog?id=qwen-image-3.0',
+    sourceLabel: 'Qwen Blog',
+  },
+  {
+    id: 'cloudru-2026-07-guardrails-oss',
+    date: '2026-07-20',
+    provider: 'cloud-ru',
+    providerName: 'Cloud.ru',
+    title: 'Open-source Guardrails Filter для LLM',
+    summary:
+      'Cloud.ru открыл исходный код Guardrails Filter — прокси между приложением и языковой моделью, который маскирует PII, API-ключи и пароли до инференса и восстанавливает их в ответе. Версии Standalone и ExtProc (Envoy) можно развернуть в своём контуре с моделями любых провайдеров; уже используется в AI Factory / Foundation Models. На pii-bench заявлены F1 93,1 и точность срабатываний 99,9%.',
+    tags: ['ai', 'security'],
+    sourceUrl:
+      'https://www.comnews.ru/content/246472/2026-07-20/2026-w30/1018/cloudru-otkryl-iskhodnyy-kod-guardrails-filter-instrumenta-dlya-bezopasnoy-raboty-ii-modelyami',
+    sourceLabel: 'ComNews / Cloud.ru',
+  },
+  {
     id: 'market-2026-07-cloudfinops-llm-calculator',
     date: '2026-07-20',
     provider: 'market',

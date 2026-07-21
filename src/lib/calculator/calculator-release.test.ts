@@ -350,9 +350,11 @@ describe('release: Self-host LLM models + VRAM + prices', () => {
           recipeTotalGiB: canonicalRecipeTotalGiB(
             weight.weightsVramGiB,
             recipes.length ? recipes : [c.estimatedVramGiB],
+            profile.contextDefault,
           ),
           contextDefault: profile.contextDefault,
-          contextTokens: profile.contextDefault,
+          avgContextTokens: Math.min(32_768, profile.contextDefault),
+          maxContextTokens: profile.contextDefault,
           batchSize: 1,
           concurrentUsers: 1,
           quant: c.quant,

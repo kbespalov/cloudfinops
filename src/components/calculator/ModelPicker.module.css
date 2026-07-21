@@ -246,3 +246,10 @@
 .recentChip {
   max-width: 100%;
 }
+
+.recentChip :global(.g-button__text) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1;
+}

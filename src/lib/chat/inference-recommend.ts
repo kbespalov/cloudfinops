@@ -5,9 +5,11 @@
 
 import {quotePreset, listGpuPresets} from '@/lib/calculator/quote';
 import type {GpuPreset} from '@/lib/calculator/presets';
+import {selfHostCalculatorUrl} from '@/lib/calculator/self-host-links';
 import {
   buildVramBreakdown,
   canonicalRecipeTotalGiB,
+  nodeFitsModelWeights,
 } from '@/lib/calculator/vram-breakdown';
 import {searchPricesDetailed} from './search';
 import {
@@ -217,14 +219,18 @@ function quoteConfig(
   const recipeEstimates = profile.recommended
     .filter((r) => r.quant === rec.quant)
     .map((r) => r.estimatedVramGiB);
+  const avgCtx = Math.min(32_768, profile.contextDefault);
   const vramBreakdown = weight
     ? buildVramBreakdown({
         weightsGiB: weight.weightsVramGiB,
-        recipeTotalGiB: canonicalRecipeTotalGiB(weight.weightsVramGiB, recipeEstimates.length
-          ? recipeEstimates
-          : [rec.estimatedVramGiB]),
+        recipeTotalGiB: canonicalRecipeTotalGiB(
+          weight.weightsVramGiB,
+          recipeEstimates.length ? recipeEstimates : [rec.estimatedVramGiB],
+          profile.contextDefault,
+        ),
         contextDefault: profile.contextDefault,
-        contextTokens: profile.contextDefault,
+        avgContextTokens: avgCtx,
+        maxContextTokens: profile.contextDefault,
         batchSize: 1,
         concurrentUsers: 1,
         quant: rec.quant,
@@ -376,8 +382,20 @@ export function recommendInferenceInfra(args: InferenceRecommendArgs): Inference
   }
 
   const maxConfigs = Math.min(Math.max(args.maxConfigs ?? 5, 1), 5);
-  const recs = pickRecs(profile, args.quant).slice(0, maxConfigs);
-  const configs = recs.map((rec, i) => quoteConfig(profile, rec, i === 0));
+  const recs = pickRecs(profile, args.quant).filter((rec) => {
+    const weight =
+      profile.weights.find((w) => w.dtype === rec.quant) ?? profile.weights[0];
+    if (!weight) return false;
+    // Probe host memory the same way quoteConfig will.
+    const host = defaultGpuHost(rec.gpuFamily, rec.gpuCount, rec.interconnect);
+    return nodeFitsModelWeights({
+      weightsGiB: weight.weightsVramGiB,
+      gpuCount: rec.gpuCount,
+      gpuFamily: rec.gpuFamily,
+      gpuMemoryGb: host?.gpuMemoryGb ?? null,
+    });
+  });
+  const configs = recs.slice(0, maxConfigs).map((rec, i) => quoteConfig(profile, rec, i === 0));
   const primary = configs[0] ?? null;
 
   const quants = new Set(configs.map((c) => c.quant));
@@ -388,6 +406,11 @@ export function recommendInferenceInfra(args: InferenceRecommendArgs): Inference
     deployment === 'weights-pending' || (profile.parameterCountB != null && profile.parameterCountB >= 1000)
       ? ' Это cluster-scale модель: явно скажи, что 8×GPU в таблице — ориентир узла/TCO из каталога РФ, а не «поставь и готово»; для production часто нужен multi-node (у Kimi K3 официально ≥64 accelerators). Сравни с hosted API.'
       : '';
+
+  const calcUrl = selfHostCalculatorUrl({
+    model: profile.displayName,
+    quant: selectedQuant === 'mixed' ? (primary?.quant ?? null) : selectedQuant,
+  });
 
   return {
     ok: true,
@@ -405,7 +428,9 @@ export function recommendInferenceInfra(args: InferenceRecommendArgs): Inference
       : null,
     configs,
     answerHint:
-      'Формат ответа (markdown): ### Self-host: {модель}; строка метаданных (параметры · ctx · confidence); ### Почему так (2–4 коротких предложения); ### Цены узлов + таблица configs[]; ### Альтернативы (буллеты по configs[1+], кратко); ### Hosted API (input/output отдельно, если есть); ### Оговорки (буллеты). Не лей всё в один абзац.' +
+      'Формат ответа (markdown): ### Self-host: {модель}; строка метаданных (параметры · ctx · confidence); ### Почему так (2–4 коротких предложения); ### Цены узлов + таблица configs[] с колонками Конфиг | Использование VRAM | Запас памяти | Провайдер | ₽/мес (Использование/Запас из configs[].vramBreakdown: «N из M GiB» и loadBand label — Впритык/Малый запас/Оптимально/Большой запас/Не влезает); ### Альтернативы (буллеты по configs[1+], кратко); ### Hosted API (input/output отдельно, если есть); ### Оговорки (буллеты). В конце обязательно ссылка: [Открыть в калькуляторе](' +
+      calcUrl +
+      '). Не лей всё в один абзац.' +
       fatHint,
     hostedAlternative: hostedAlternative(profile),
     caveats: profile.caveats,

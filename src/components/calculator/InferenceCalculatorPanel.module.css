@@ -35,6 +35,18 @@
   min-width: 0;
 }
 
+.chatBridge {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.configRow[data-replicas='true'] {
+  opacity: 1;
+}
+
 .fieldHead {
   display: flex;
   align-items: baseline;

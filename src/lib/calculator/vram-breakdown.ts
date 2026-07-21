@@ -2,11 +2,12 @@
  * Additive inference VRAM model:
  *   Total = Weights + KV_cache + Activations + Overhead
  *
- * Weights and overhead are ≈ constant for a model/quant.
- * KV scales with batch × concurrent users × (context / contextDefault).
- * Activations scale with batch only.
+ * Weights and overhead are ≈ constant for a model/quant (full MoE experts).
+ * KV scales with concurrent live sequences × (avgContext / contextDefault).
+ * Max context is a ceiling label — not “every sequence is always max”.
+ * Activations scale with engine batch (default 1; not “online users”).
  *
- * `recipeTotalGiB` is the light-load anchor at contextDefault (batch=1, users=1).
+ * `recipeTotalGiB` is the light-load anchor at contextDefault (1 sequence).
  * Catalog row estimates that are just host capacity must not be used as the
  * recipe — pass a canonical model recipe (usually the densest recommended node).
  */
@@ -35,8 +36,12 @@ export type VramBreakdown = {
   capacityGiB: number | null;
   utilizationPct: number | null;
   loadBand: VramLoadBand | null;
+  /** Effective context used for KV (avg live), tokens. */
   contextTokens: number;
+  avgContextTokens: number;
+  maxContextTokens: number;
   batchSize: number;
+  /** Concurrent live sequences (prefill/decode), not registered users. */
   concurrentUsers: number;
   quant: string;
 };
@@ -84,24 +89,71 @@ function clamp(n: number, lo: number, hi: number): number {
 }
 
 /**
+ * Common GPU VRAM SKUs. Catalog rows often store these as lazy "fits on this
+ * card" markers — not measured model need. Using them as recipeTotal makes
+ * every config show «N из N GiB» / Впритык.
+ */
+const HOST_SKU_GIB = new Set([
+  16, 24, 40, 48, 80, 96, 141, 160, 180, 192, 288, 282, 320, 384, 564, 576, 640,
+  1128, 1152, 2304,
+]);
+
+/**
+ * Physics floor for light-load need (batch=1, users=1) when the catalog only
+ * has host-capacity markers. KV scales gently with contextDefault.
+ */
+export function estimateLightLoadRecipeGiB(
+  weightsGiB: number,
+  contextDefault = 32_768,
+): number {
+  const weights = Math.max(0, weightsGiB);
+  const overhead = estimateOverheadGiB(weights);
+  const act = clamp(weights * ACT_WEIGHT_FRAC, 0.5, ACT_REF_MAX_GIB);
+  const ctxScale = Math.max(1_024, contextDefault) / 32_768;
+  const kv = clamp(weights * 0.025 * ctxScale, 0.75, Math.max(8, weights * 0.18));
+  return roundGiB(weights + overhead + act + kv);
+}
+
+/** True when estimate looks like "fits on this GPU SKU", not engineered need. */
+export function looksLikeHostSkuCapacity(estimate: number, weightsGiB: number): boolean {
+  if (!Number.isFinite(estimate) || estimate <= 0) return false;
+  const n = Math.round(estimate);
+  if (!HOST_SKU_GIB.has(n)) return false;
+  const weights = Math.max(0, weightsGiB);
+  const margin = estimate - weights;
+  if (margin < 0) return false;
+  // Thin fit: 38→48, 70→80 — "rounded up to the card".
+  if (margin <= Math.max(12, weights * 0.22)) return true;
+  // Fat overshoot on a node SKU: 1400→2304 (8×B300) — host capacity, not model need.
+  // Keep modest engineered headroom (95→141, 52→80) as real recipes.
+  if (margin >= Math.max(200, weights * 0.45)) return true;
+  return false;
+}
+
+/**
  * Canonical light-load VRAM for a quant.
- * Prefer the tightest catalog recipe that still covers weights (min of adequate).
- * Ignore sub-weight rows — those are host capacity, not model need.
+ * Prefer the tightest *engineered* catalog recipe that still covers weights.
+ * Ignore sub-weight rows and host-SKU markers (24/48/80/…) — those are capacity
+ * hints, not model need. Fall back to a weights-based floor.
  */
 export function canonicalRecipeTotalGiB(
   weightsGiB: number,
   estimatedVramGiBList: number[],
+  contextDefault = 32_768,
 ): number {
   const weights = Math.max(0, weightsGiB);
+  const floor = estimateLightLoadRecipeGiB(weights, contextDefault);
   const adequate: number[] = [];
   let peak = 0;
   for (const n of estimatedVramGiBList) {
     if (!Number.isFinite(n) || n <= 0) continue;
     if (n > peak) peak = n;
-    if (n >= weights) adequate.push(n);
+    if (n >= weights && !looksLikeHostSkuCapacity(n, weights)) {
+      adequate.push(n);
+    }
   }
   if (adequate.length) return Math.min(...adequate);
-  return Math.max(weights, peak);
+  return Math.max(floor, weights);
 }
 
 export function loadBandForUtilization(pct: number | null): VramLoadBand | null {
@@ -176,13 +228,19 @@ export function estimateOverheadGiB(weightsGiB: number): number {
 
 export function buildVramBreakdown(args: {
   weightsGiB: number;
-  /** Recipe total at light load (batch≈1, users≈1, context≈contextDefault). */
+  /** Recipe total at light load (batch≈1, 1 sequence, context≈contextDefault). */
   recipeTotalGiB: number;
   /** Context length that the recipe headroom assumes. */
   contextDefault: number;
   batchSize?: number;
+  /** Concurrent live sequences (not registered / online users). */
   concurrentUsers?: number;
+  /** @deprecated Prefer avgContextTokens — kept as alias for avg. */
   contextTokens?: number;
+  /** Mean live context across concurrent sequences (drives KV). */
+  avgContextTokens?: number;
+  /** Max context ceiling (display / hard cap); does not assume every seq is max. */
+  maxContextTokens?: number;
   quant: string;
   gpuCount: number;
   gpuFamily: string;
@@ -192,7 +250,17 @@ export function buildVramBreakdown(args: {
   const batchSize = Math.max(1, Math.round(args.batchSize ?? 1));
   const concurrentUsers = Math.max(1, Math.round(args.concurrentUsers ?? 1));
   const contextDefault = Math.max(1_024, args.contextDefault || 32_768);
-  const contextTokens = Math.max(1_024, args.contextTokens || contextDefault);
+  const maxContextTokens = Math.max(
+    1_024,
+    args.maxContextTokens || args.contextTokens || contextDefault,
+  );
+  const avgContextTokens = Math.max(
+    1_024,
+    Math.min(
+      maxContextTokens,
+      args.avgContextTokens ?? args.contextTokens ?? Math.min(32_768, maxContextTokens),
+    ),
+  );
 
   const overheadTarget = estimateOverheadGiB(weights);
   const actRefTarget = clamp(weights * ACT_WEIGHT_FRAC, 0.5, ACT_REF_MAX_GIB);
@@ -220,7 +288,8 @@ export function buildVramBreakdown(args: {
     kvRef = Math.max(0, rest - actRef);
   }
 
-  const ctxScale = contextTokens / contextDefault;
+  // Live KV uses average context — not “every sequence at max”.
+  const ctxScale = avgContextTokens / contextDefault;
   const kv = kvRef * batchSize * concurrentUsers * ctxScale;
   const activations = actRef * batchSize;
   const totalGiB = roundGiB(weights + kv + activations + overhead);
@@ -263,10 +332,161 @@ export function buildVramBreakdown(args: {
     capacityGiB,
     utilizationPct,
     loadBand: loadBandForUtilization(utilizationPct),
-    contextTokens,
+    contextTokens: avgContextTokens,
+    avgContextTokens,
+    maxContextTokens,
     batchSize,
     concurrentUsers,
     quant: args.quant,
+  };
+}
+
+/**
+ * Hard gate: full model weights must fit on the node.
+ * Runtime/KV are checked separately — do not add overhead here or exact
+ * card fits (48 GiB weights on L40S 48) get falsely rejected.
+ */
+export function nodeFitsModelWeights(args: {
+  weightsGiB: number;
+  gpuCount: number;
+  gpuFamily: string;
+  gpuMemoryGb?: number | null;
+}): boolean {
+  const perCard =
+    args.gpuMemoryGb != null && Number.isFinite(args.gpuMemoryGb) && args.gpuMemoryGb > 0
+      ? args.gpuMemoryGb
+      : defaultGpuMemoryGiB(args.gpuFamily);
+  if (perCard == null || args.gpuCount <= 0) return true;
+  const capacity = perCard * args.gpuCount;
+  return args.weightsGiB <= capacity * 1.005;
+}
+
+/**
+ * How to serve concurrent *sequences* on a GPU node (1 card or NVLink shelf).
+ *
+ * One model replica = one node. Extra live sequences that blow KV need more
+ * independent replicas — not tensor-parallel across nodes (no IB assumed).
+ * If weights alone do not fit the node, replicas cannot help (`impossible`).
+ * Replica count here is memory-bound only (no tok/s SLA benchmark).
+ */
+export type InferenceNodePlan = {
+  kind: 'fits' | 'replicas' | 'impossible';
+  nodeCount: number;
+  maxUsersPerNode: number;
+  usersPerNode: number;
+  requestedUsers: number;
+  /** One replica at the balanced usersPerNode (bands / bar). */
+  perNode: VramBreakdown;
+};
+
+export type BuildVramArgs = Parameters<typeof buildVramBreakdown>[0];
+
+function partGiB(b: VramBreakdown, id: VramPartId): number {
+  return b.parts.find((p) => p.id === id)?.gib ?? 0;
+}
+
+/** RU plural: 1 нода, 2 ноды, 5 нод. */
+export function formatNodeCount(n: number): string {
+  const abs = Math.max(0, Math.round(n));
+  const mod10 = abs % 10;
+  const mod100 = abs % 100;
+  if (mod100 >= 11 && mod100 <= 14) return `${abs} нод`;
+  if (mod10 === 1) return `${abs} нода`;
+  if (mod10 >= 2 && mod10 <= 4) return `${abs} ноды`;
+  return `${abs} нод`;
+}
+
+/**
+ * Pack concurrent live sequences onto replica nodes of the given GPU shape.
+ * `args.concurrentUsers` = concurrent requests/sequences (not registered users).
+ */
+export function planInferenceNodes(args: BuildVramArgs): InferenceNodePlan {
+  const requestedUsers = Math.max(1, Math.round(args.concurrentUsers ?? 1));
+  const weightsFit = nodeFitsModelWeights({
+    weightsGiB: args.weightsGiB,
+    gpuCount: args.gpuCount,
+    gpuFamily: args.gpuFamily,
+    gpuMemoryGb: args.gpuMemoryGb,
+  });
+  const base = buildVramBreakdown({...args, concurrentUsers: 1});
+  const capacity = base.capacityGiB;
+
+  if (!weightsFit || (capacity != null && partGiB(base, 'weights') > capacity)) {
+    return {
+      kind: 'impossible',
+      nodeCount: 1,
+      maxUsersPerNode: 0,
+      usersPerNode: 1,
+      requestedUsers,
+      perNode: base,
+    };
+  }
+
+  if (capacity == null || capacity <= 0) {
+    const full = buildVramBreakdown({...args, concurrentUsers: requestedUsers});
+    return {
+      kind: 'fits',
+      nodeCount: 1,
+      maxUsersPerNode: requestedUsers,
+      usersPerNode: requestedUsers,
+      requestedUsers,
+      perNode: full,
+    };
+  }
+
+  // One live sequence at avg context must fit (weights + runtime + its KV).
+  if (base.totalGiB > capacity) {
+    return {
+      kind: 'impossible',
+      nodeCount: 1,
+      maxUsersPerNode: 0,
+      usersPerNode: 1,
+      requestedUsers,
+      perNode: base,
+    };
+  }
+
+  const fixed =
+    partGiB(base, 'weights') + partGiB(base, 'overhead') + partGiB(base, 'activations');
+  const kvPerSeq = partGiB(base, 'kv');
+
+  let maxUsersPerNode = 1;
+  if (kvPerSeq <= 0.001) {
+    maxUsersPerNode = requestedUsers;
+  } else {
+    const slack = Math.max(0, capacity - fixed);
+    // Do NOT force ≥1 when slack < one sequence's KV — that case is impossible above.
+    maxUsersPerNode = Math.max(1, Math.floor((slack + 1e-9) / kvPerSeq));
+    while (maxUsersPerNode > 1) {
+      const probe = buildVramBreakdown({...args, concurrentUsers: maxUsersPerNode});
+      if ((probe.totalGiB ?? 0) <= capacity) break;
+      maxUsersPerNode -= 1;
+    }
+  }
+
+  if (requestedUsers <= maxUsersPerNode) {
+    const perNode = buildVramBreakdown({...args, concurrentUsers: requestedUsers});
+    return {
+      kind: 'fits',
+      nodeCount: 1,
+      maxUsersPerNode,
+      usersPerNode: requestedUsers,
+      requestedUsers,
+      perNode,
+    };
+  }
+
+  const nodeCount = Math.max(1, Math.ceil(requestedUsers / maxUsersPerNode));
+  const usersPerNode = Math.ceil(requestedUsers / nodeCount);
+  const perNode = buildVramBreakdown({...args, concurrentUsers: usersPerNode});
+
+  return {
+    kind: 'replicas',
+    nodeCount,
+    maxUsersPerNode,
+    usersPerNode,
+    requestedUsers,
+    perNode,
   };
 }
 

@@ -91,9 +91,10 @@ function GlmMark({size, className}: {size: number; className?: string}) {
       aria-hidden
     >
       <title>GLM</title>
+      {/* Slightly inset so the glyph reads centered in the 24 box at chip sizes. */}
       <path
         fill="#1A6CFF"
-        d="M4 5.5A1.5 1.5 0 0 1 5.5 4h5.2c.5 0 .9.2 1.2.6l7.6 9.2c.5.6.1 1.6-.7 1.6H13l6.2 3.7c.7.4.4 1.5-.4 1.5H5.5A1.5 1.5 0 0 1 4 18.5v-13zm3.2 2.3v8.4h3.1l5.4-6.5H7.2z"
+        d="M4.4 5.6A1.4 1.4 0 0 1 5.8 4.2h4.9c.5 0 .9.2 1.1.6l7.2 8.7c.5.6.1 1.5-.7 1.5h-5.5l5.8 3.5c.7.4.4 1.4-.4 1.4H5.8A1.4 1.4 0 0 1 4.4 18.5V5.6zm3 2.2v7.9h2.9l5.1-6.1H7.4z"
       />
     </svg>
   );
@@ -115,7 +116,7 @@ function GigaMark({size, className}: {size: number; className?: string}) {
       <rect width="24" height="24" rx="6" fill="#21A038" />
       <path
         fill="#fff"
-        d="M12 5.2c-3.7 0-6.6 2.4-6.6 5.5 0 2.2 1.5 4.1 3.8 5l-1.4 2.8c-.2.4.2.8.6.6l3.2-1.7c.1 0 .3 0 .4 0 3.7 0 6.6-2.4 6.6-5.5S15.7 5.2 12 5.2zm0 8.8c-2.3 0-4.1-1.4-4.1-3.3S9.7 7.4 12 7.4s4.1 1.4 4.1 3.3S14.3 14 12 14z"
+        d="M12 5.6c-3.5 0-6.3 2.3-6.3 5.2 0 2.1 1.4 3.9 3.6 4.7l-1.3 2.6c-.2.4.2.8.6.6l3-1.6h.4c3.5 0 6.3-2.3 6.3-5.3S15.5 5.6 12 5.6zm0 8.3c-2.2 0-3.9-1.3-3.9-3.1S9.8 7.7 12 7.7s3.9 1.3 3.9 3.1-1.7 3.1-3.9 3.1z"
       />
     </svg>
   );
@@ -135,7 +136,8 @@ function TtechMark({size, className}: {size: number; className?: string}) {
     >
       <title>T-Tech</title>
       <rect width="24" height="24" rx="6" fill="#FFDD2D" />
-      <path fill="#333" d="M6.5 6.8h11v2.6h-4.1V17.5h-2.8V9.4H6.5V6.8z" />
+      {/* Optically centered T (letterforms read high; nudge down + inset). */}
+      <path fill="#333" d="M6.2 7.4h11.6v2.4H13.4v8.2h-2.8V9.8H6.2V7.4z" />
     </svg>
   );
 }
@@ -165,8 +167,9 @@ function LetterFallback({
       <rect width="24" height="24" rx="6" fill={color} />
       <text
         x="12"
-        y="16"
+        y="12"
         textAnchor="middle"
+        dominantBaseline="central"
         fill="#fff"
         fontSize={fontSize}
         fontWeight="700"
@@ -214,14 +217,18 @@ export function ModelFamilyMark({
   const wrapClass = [styles.mark, className].filter(Boolean).join(' ');
 
   let mark: ReactNode;
+  /** Full-bleed painted plate — do not CSS-scale the whole SVG (leaves corner gaps). */
+  let paintedPlate = false;
   if (family === 'kimi') {
     mark = <KimiMark size={size} />;
   } else if (family === 'glm') {
     mark = <GlmMark size={size} />;
   } else if (family === 'giga') {
     mark = <GigaMark size={size} />;
+    paintedPlate = true;
   } else if (family === 'ttech') {
     mark = <TtechMark size={size} />;
+    paintedPlate = true;
   } else if (iconKey) {
     mark = (
       <BrandSvg
@@ -233,8 +240,13 @@ export function ModelFamilyMark({
     );
   } else {
     mark = (
-      <LetterFallback letters={meta.letters} size={size} color={color === 'var(--g-color-text-secondary)' ? '#8a8a8a' : color} />
+      <LetterFallback
+        letters={meta.letters}
+        size={size}
+        color={color === 'var(--g-color-text-secondary)' ? '#8a8a8a' : color}
+      />
     );
+    paintedPlate = true;
   }
 
   return (
@@ -242,6 +254,7 @@ export function ModelFamilyMark({
       className={wrapClass}
       data-family={family}
       data-size={size <= 16 ? 's' : 'm'}
+      data-plate={paintedPlate ? 'true' : undefined}
       title={meta.title}
       aria-hidden
       style={{width: size, height: size}}
