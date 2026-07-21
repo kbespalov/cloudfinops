@@ -37,7 +37,7 @@
 
 .divider {
   height: 1px;
-  margin: 12px 0;
+  margin: 16px 0;
   background: var(--g-color-line-generic);
 }
 
@@ -59,10 +59,19 @@
   min-width: 0;
 }
 
+.deploymentPrimary {
+  font-weight: 500;
+}
+
+.deploymentUnit {
+  line-height: 20px;
+}
+
 .totalsLine {
-  margin-top: 4px;
-  padding-top: 6px;
-  border-top: 1px dashed var(--g-color-line-generic);
+  margin-top: 4px; /* with gap 4px → ~8px under unit config */
+  padding-top: 0;
+  border-top: none;
+  line-height: 18px;
 }
 
 .root[data-stale='true'] .card {

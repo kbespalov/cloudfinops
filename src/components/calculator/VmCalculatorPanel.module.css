@@ -145,14 +145,17 @@
 
 .ipRow {
   display: grid;
-  grid-template-columns: 172px 120px minmax(0, 1fr);
-  align-items: center;
+  grid-template-columns: 172px minmax(0, 1fr);
+  align-items: start;
   gap: 8px 16px;
   min-width: 0;
-  min-height: 48px;
+  min-height: 44px;
 }
 
 .ipLabel {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
   min-width: 0;
 }
 
@@ -164,13 +167,47 @@
   white-space: nowrap;
 }
 
-.ipInput {
-  width: 120px;
+.ipControlBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   min-width: 0;
 }
 
-.ipQuick {
+.ipControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 14px;
   min-width: 0;
+}
+
+.ipModeGroup {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+/* Calm accent — same soft selected state as family segments. */
+.ipModeGroup :global(.g-segmented-radio-group__option.g-segmented-radio-group__option_checked)::after {
+  background-color: color-mix(in srgb, var(--g-color-base-brand) 14%, var(--g-color-base-background));
+  border-color: var(--g-color-line-brand);
+}
+
+.ipModeGroup
+  :global(.g-segmented-radio-group__option.g-segmented-radio-group__option_checked)
+  :global(.g-segmented-radio-group__option-text) {
+  color: var(--g-color-text-brand);
+}
+
+.ipInput {
+  width: 128px;
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+.ipHint {
+  margin: 0;
+  max-width: 36rem;
 }
 
 .diskTypeRow {
@@ -194,24 +231,26 @@
 
 @media (max-width: 720px) {
   .ipRow {
-    grid-template-columns: minmax(0, 1fr) 120px;
-    grid-template-areas:
-      'label input'
-      'quick quick';
-    gap: 8px 12px;
+    grid-template-columns: 1fr;
+    gap: 6px;
   }
 
   .ipLabel {
-    grid-area: label;
+    min-height: 0;
   }
 
-  .ipInput {
-    grid-area: input;
+  .ipControls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .ipModeGroup {
     width: 100%;
   }
 
-  .ipQuick {
-    grid-area: quick;
+  .ipInput {
+    width: 100%;
   }
 
   .diskTypeRow {

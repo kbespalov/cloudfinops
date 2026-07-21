@@ -29,6 +29,7 @@ export type ConfigSummary = {
   secondary?: string;
   tertiary?: string;
   quaternary?: string;
+  quinary?: string;
   /** Aggregate resources across the whole fleet. */
   totals?: string;
 };
@@ -233,9 +234,11 @@ export function CalculatorSidebar({
 
           {lines ? (
             <div className={styles.deployment}>
-              <Text variant="body-2">{lines.primary}</Text>
+              <Text variant="body-2" className={styles.deploymentPrimary}>
+                {lines.primary}
+              </Text>
               {lines.secondary ? (
-                <Text variant="caption-2" color="complementary">
+                <Text variant="body-2" color="complementary" className={styles.deploymentUnit}>
                   {lines.secondary}
                 </Text>
               ) : null}
@@ -249,8 +252,13 @@ export function CalculatorSidebar({
                   {lines.quaternary}
                 </Text>
               ) : null}
+              {lines.quinary ? (
+                <Text variant="caption-2" color="complementary">
+                  {lines.quinary}
+                </Text>
+              ) : null}
               {lines.totals ? (
-                <Text variant="caption-2" color="secondary" className={styles.totalsLine}>
+                <Text variant="caption-2" color="complementary" className={styles.totalsLine}>
                   {lines.totals}
                 </Text>
               ) : null}

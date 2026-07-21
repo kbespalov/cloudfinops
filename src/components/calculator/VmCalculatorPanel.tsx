@@ -86,6 +86,29 @@ const DEFAULT = {
   publicIpCount: 1,
 };
 
+type PublicIpMode = 'count' | 'per-vm';
+
+function pluralRu(n: number, one: string, few: string, many: string): string {
+  const abs = Math.abs(n) % 100;
+  const last = abs % 10;
+  if (abs >= 11 && abs <= 14) return many;
+  if (last === 1) return one;
+  if (last >= 2 && last <= 4) return few;
+  return many;
+}
+
+function ipv4PerVmHint(count: number): string {
+  const addr = pluralRu(count, 'IPv4-адрес', 'IPv4-адреса', 'IPv4-адресов');
+  const verb = count === 1 ? 'Будет выделен' : 'Будет выделено';
+  return `${verb} ${count} ${addr} для ${count} ВМ`;
+}
+
+function ipv4TotalsFragment(count: number): string {
+  if (count <= 0) return 'Без публичных IPv4';
+  if (count === 1) return '1 публичный IPv4';
+  return `${count} публичных IPv4`;
+}
+
 function nearestIn(options: number[], value: number): number {
   if (!options.length) return value;
   let best = options[0]!;
@@ -143,7 +166,10 @@ export function VmCalculatorPanel({
   const [ramGiB, setRamGiB] = useState(ramFor(DEFAULT.family, DEFAULT.vcpu));
   const [diskGiB, setDiskGiB] = useState(DEFAULT.diskGiB);
   const [diskMedia, setDiskMedia] = useState<DiskMedia>(DEFAULT.diskMedia);
-  const [publicIpCount, setPublicIpCount] = useState(DEFAULT.publicIpCount);
+  const [publicIpMode, setPublicIpMode] = useState<PublicIpMode>('count');
+  const [manualIpCount, setManualIpCount] = useState(DEFAULT.publicIpCount);
+  const publicIpCount =
+    publicIpMode === 'per-vm' ? vmCount : Math.min(manualIpCount, vmCount);
 
   const defaultGpu = useMemo(() => pickDefaultGpu(gpuPresets), [gpuPresets]);
   const [gpuFilter, setGpuFilter] = useState<string>('all');
@@ -222,7 +248,9 @@ export function VmCalculatorPanel({
 
   function onVmCountChange(next: number) {
     setVmCount(next);
-    setPublicIpCount((ips) => Math.min(ips, next));
+    // In count mode keep the fixed value, but never above the fleet size.
+    // In per-vm mode effective IPs follow vmCount via derivation — mode stays.
+    setManualIpCount((ips) => Math.min(ips, next));
   }
 
   function onVcpuChange(next: number) {
@@ -279,24 +307,16 @@ export function VmCalculatorPanel({
   const gpuHostRam =
     activeGpu?.ramGiB != null ? formatGiBCapacity(activeGpu.ramGiB) : '—';
 
-  const diskLabel = diskMedia === 'ssd' ? 'Сетевой SSD' : 'Сетевой HDD';
+  const diskShort = diskMedia === 'ssd' ? 'SSD' : 'HDD';
   const vmConfigSummary = isGpu
     ? null
     : {
         primary: vmCount === 1 ? '1 ВМ' : `${vmCount} ВМ`,
         secondary:
           vmCount === 1
-            ? `${vcpu} vCPU · ${formatGiBCapacity(ramGiB)} RAM`
-            : `${vcpu} vCPU · ${formatGiBCapacity(ramGiB)} RAM на одну ВМ`,
-        tertiary:
-          vmCount === 1
-            ? `${diskLabel}, ${diskGiB} GiB`
-            : `${diskLabel}, ${diskGiB} GiB на одну ВМ`,
-        quaternary:
-          vmCount === 1
-            ? `${publicIpCount} публичный IPv4`
-            : `${publicIpCount} публичный IPv4 всего`,
-        totals: `Итого: ${vmCount * vcpu} vCPU · ${formatGiBCapacity(vmCount * ramGiB)} RAM · ${formatGiBCapacity(vmCount * diskGiB)} ${diskMedia === 'ssd' ? 'SSD' : 'HDD'}`,
+            ? `${vcpu} vCPU · ${formatGiBCapacity(ramGiB)} RAM · ${diskShort} ${diskGiB} GiB`
+            : `${vcpu} vCPU · ${formatGiBCapacity(ramGiB)} RAM · ${diskShort} ${diskGiB} GiB на одну ВМ`,
+        totals: `Итого: ${vmCount * vcpu} vCPU · ${formatGiBCapacity(vmCount * ramGiB)} RAM · ${formatGiBCapacity(vmCount * diskGiB)} ${diskShort} · ${ipv4TotalsFragment(publicIpCount)}`,
       };
 
   return (
@@ -491,52 +511,55 @@ export function VmCalculatorPanel({
                       Публичные IPv4
                     </Text>
                     <HelpMark aria-label="Про публичные IPv4" iconSize="s">
-                      Общее количество публичных IPv4-адресов в конфигурации.
+                      Укажите общее количество публичных IPv4-адресов или назначьте по одному адресу
+                      каждой виртуальной машине.
                     </HelpMark>
                   </Flex>
-                  <NumberInput
-                    size="m"
-                    min={0}
-                    max={vmCount}
-                    step={1}
-                    allowDecimal={false}
-                    value={publicIpCount}
-                    onUpdate={(v) => {
-                      if (v == null || !Number.isFinite(v)) return;
-                      setPublicIpCount(Math.min(vmCount, Math.max(0, Math.round(v))));
-                    }}
-                    endContent={
-                      <Text variant="caption-1" color="secondary">
-                        шт
+                  <div className={styles.ipControlBlock}>
+                    <div className={styles.ipControls}>
+                      <SegmentedRadioGroup
+                        size="l"
+                        width="auto"
+                        className={styles.ipModeGroup}
+                        value={publicIpMode}
+                        onUpdate={(v) => setPublicIpMode(v as PublicIpMode)}
+                        aria-label="Режим публичных IPv4"
+                      >
+                        <SegmentedRadioGroup.Option value="count">
+                          Количество
+                        </SegmentedRadioGroup.Option>
+                        <SegmentedRadioGroup.Option value="per-vm">
+                          По одному на ВМ
+                        </SegmentedRadioGroup.Option>
+                      </SegmentedRadioGroup>
+                      {publicIpMode === 'count' ? (
+                        <NumberInput
+                          size="l"
+                          min={0}
+                          max={vmCount}
+                          step={1}
+                          allowDecimal={false}
+                          value={publicIpCount}
+                          onUpdate={(v) => {
+                            if (v == null || !Number.isFinite(v)) return;
+                            setManualIpCount(Math.min(vmCount, Math.max(0, Math.round(v))));
+                          }}
+                          endContent={
+                            <Text variant="caption-1" color="secondary">
+                              шт.
+                            </Text>
+                          }
+                          className={styles.ipInput}
+                          controlProps={{'aria-label': 'Количество публичных IPv4'}}
+                        />
+                      ) : null}
+                    </div>
+                    {publicIpMode === 'per-vm' ? (
+                      <Text variant="caption-2" color="secondary" className={styles.ipHint}>
+                        {ipv4PerVmHint(vmCount)}
                       </Text>
-                    }
-                    className={styles.ipInput}
-                    controlProps={{'aria-label': 'Публичные IPv4'}}
-                  />
-                  <Flex gap={1} wrap className={styles.ipQuick}>
-                    <Button
-                      size="s"
-                      view={publicIpCount === 0 ? 'outlined-action' : 'outlined'}
-                      onClick={() => setPublicIpCount(0)}
-                    >
-                      0
-                    </Button>
-                    <Button
-                      size="s"
-                      view={publicIpCount === 1 ? 'outlined-action' : 'outlined'}
-                      onClick={() => setPublicIpCount(Math.min(1, vmCount))}
-                    >
-                      1
-                    </Button>
-                    <Button
-                      size="s"
-                      view={publicIpCount === vmCount && vmCount > 1 ? 'outlined-action' : 'outlined'}
-                      onClick={() => setPublicIpCount(vmCount)}
-                      disabled={vmCount < 1}
-                    >
-                      По одному на ВМ
-                    </Button>
-                  </Flex>
+                    ) : null}
+                  </div>
                 </div>
               </section>
 
