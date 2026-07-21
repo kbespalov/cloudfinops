@@ -487,6 +487,19 @@ export const newsItems: NewsItem[] = [
 
   // ——— Июль 2026 ———
   {
+    id: 'gcp-2026-07-gemini-flash-36',
+    date: '2026-07-21',
+    provider: 'google-cloud',
+    providerName: 'Google Cloud',
+    title: 'Gemini 3.6 Flash, 3.5 Flash-Lite и Flash Cyber',
+    summary:
+      'Google выпустил три модели Flash-линейки для production-агентов: 3.6 Flash — workhorse с лучшим coding/multimodal и ~17% меньшей выдачей токенов при более низкой цене ($1.50 / $7.50 за 1M); 3.5 Flash-Lite — самый быстрый и дешёвый в классе 3.5 (~350 tok/s, $0.30 / $2.50 за 1M); 3.5 Flash Cyber — узкая модель под поиск и патчи уязвимостей в CodeMender, пока только governments и trusted partners. 3.5 Pro всё ещё в тестах с партнёрами; параллельно стартовал pre-training Gemini 4. 3.6 Flash и Flash-Lite доступны в Gemini API, AI Studio и Gemini Enterprise.',
+    tags: ['ai', 'finops', 'security'],
+    sourceUrl:
+      'https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-6-flash-3-5-flash-lite-3-5-flash-cyber/',
+    sourceLabel: 'Google Blog · Gemini',
+  },
+  {
     id: 'market-2026-07-qwen-image-30',
     date: '2026-07-21',
     provider: 'market',
