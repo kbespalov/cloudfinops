@@ -1,7 +1,8 @@
 'use client';
 
+import {useState} from 'react';
 import {Cpu} from '@gravity-ui/icons';
-import {Flex, Icon, NumberInput, Slider, Text} from '@gravity-ui/uikit';
+import {Flex, HelpMark, Icon, NumberInput, Slider, Text} from '@gravity-ui/uikit';
 import styles from './SliderField.module.css';
 
 type IconData = typeof Cpu;
@@ -15,6 +16,7 @@ type SliderFieldProps = {
   scaleMin?: number;
   scaleMax?: number;
   unit?: string;
+  hint?: string;
   onUpdate: (next: number) => void;
   'aria-label'?: string;
 };
@@ -69,6 +71,7 @@ export function SliderField({
   scaleMin,
   scaleMax,
   unit,
+  hint,
   onUpdate,
   'aria-label': ariaLabel,
 }: SliderFieldProps) {
@@ -80,31 +83,47 @@ export function SliderField({
   const posMin = toPos(absMin);
   const posMax = toPos(absMax);
   const pos = Math.min(posMax, Math.max(posMin, toPos(clamped)));
+  const [rangeError, setRangeError] = useState<string | null>(null);
 
   function handleSlider(nextPos: number) {
+    setRangeError(null);
     onUpdate(fromPos(nextPos, options));
   }
 
   function handleInput(next: number | null) {
     if (next == null || !Number.isFinite(next)) return;
-    if (next === value + 1) {
+    const rounded = Math.round(next);
+    if (rounded < absMin || rounded > absMax) {
+      // Do not silently clamp — keep previous value and surface the range.
+      setRangeError(`Допустимо от ${absMin} до ${absMax}`);
+      return;
+    }
+    setRangeError(null);
+    if (rounded === value + 1) {
       onUpdate(bump(options, value, 1));
       return;
     }
-    if (next === value - 1) {
+    if (rounded === value - 1) {
       onUpdate(bump(options, value, -1));
       return;
     }
-    onUpdate(nearestIn(options, next));
+    // Prefer ladder steps when close; otherwise keep typed value in range.
+    const nearest = nearestIn(options, rounded);
+    onUpdate(Math.abs(nearest - rounded) <= Math.max(1, rounded * 0.05) ? nearest : rounded);
   }
 
   return (
     <div className={styles.root}>
       <Flex alignItems="center" gap={2} className={styles.label}>
         <Icon data={icon} size={16} className={styles.icon} />
-        <Text variant="body-1" ellipsis>
+        <Text as="span" ellipsis className={styles.labelText}>
           {label}
         </Text>
+        {hint ? (
+          <HelpMark aria-label={`Про ${label}`} iconSize="s">
+            {hint}
+          </HelpMark>
+        ) : null}
       </Flex>
 
       <Slider
@@ -124,15 +143,17 @@ export function SliderField({
 
       <NumberInput
         size="m"
-        hiddenControls
-        min={minOpt}
-        max={maxOpt}
+        min={absMin}
+        max={absMax}
         step={1}
         allowDecimal={false}
-        value={clamped}
+        value={value}
         onUpdate={handleInput}
         endContent={<Unit unit={unit} />}
         className={styles.input}
+        validationState={rangeError ? 'invalid' : undefined}
+        errorMessage={rangeError ?? undefined}
+        errorPlacement="outside"
         controlProps={{'aria-label': ariaLabel ?? label}}
       />
     </div>
@@ -147,6 +168,7 @@ export function IntegerSliderField({
   min,
   max,
   unit,
+  hint,
   onUpdate,
   'aria-label': ariaLabel,
 }: {
@@ -156,6 +178,7 @@ export function IntegerSliderField({
   min: number;
   max: number;
   unit?: string;
+  hint?: string;
   onUpdate: (next: number) => void;
   'aria-label'?: string;
 }) {
@@ -166,9 +189,14 @@ export function IntegerSliderField({
     <div className={styles.root}>
       <Flex alignItems="center" gap={2} className={styles.label}>
         <Icon data={icon} size={16} className={styles.icon} />
-        <Text variant="body-1" ellipsis>
+        <Text as="span" ellipsis className={styles.labelText}>
           {label}
         </Text>
+        {hint ? (
+          <HelpMark aria-label={`Про ${label}`} iconSize="s">
+            {hint}
+          </HelpMark>
+        ) : null}
       </Flex>
 
       <Slider
@@ -188,7 +216,6 @@ export function IntegerSliderField({
 
       <NumberInput
         size="m"
-        hiddenControls
         min={min}
         max={safeMax}
         step={1}

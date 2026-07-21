@@ -6,6 +6,7 @@ import {startTransition, useState} from 'react';
 import {
   Button,
   Flex,
+  HelpMark,
   Icon,
   SegmentedRadioGroup,
   Tab,
@@ -46,8 +47,8 @@ const MODE_TITLE: Record<CalculatorMode, string> = {
 };
 
 const MODE_LEAD: Record<CalculatorMode, string> = {
-  vm: 'Сравнение цен ВМ и GPU: Яндекс.Облако, VK Cloud, Selectel, Cloud.ru, MWS, T1',
-  inference: 'Подбор GPU под open-weight модель в облаках РФ',
+  vm: 'Подбор конфигурации ВМ и сравнение цен в облаках РФ',
+  inference: 'Подбор GPU-конфигурации для open-weight моделей в облаках РФ',
 };
 
 export function CalculatorPage({
@@ -81,23 +82,29 @@ export function CalculatorPage({
                   {heading}
                 </Text>
               </Flex>
-              <Text color="secondary" className={styles.heroLead}>
+              <Text color="complementary" className={styles.heroLead}>
                 {subtitle}
               </Text>
             </Flex>
 
-            <SegmentedRadioGroup
-              size="m"
-              value={period}
-              onUpdate={(v) => {
-                startTransition(() => setPeriod(v as PeriodMode));
-              }}
-              aria-label="Период тарификации"
-            >
-              <SegmentedRadioGroup.Option value="unit">Час</SegmentedRadioGroup.Option>
-              <SegmentedRadioGroup.Option value="month">Месяц</SegmentedRadioGroup.Option>
-              <SegmentedRadioGroup.Option value="year">Год</SegmentedRadioGroup.Option>
-            </SegmentedRadioGroup>
+            <Flex alignItems="center" gap={2} className={styles.periodWrap}>
+              <SegmentedRadioGroup
+                size="m"
+                value={period}
+                onUpdate={(v) => {
+                  startTransition(() => setPeriod(v as PeriodMode));
+                }}
+                aria-label="Период тарификации"
+              >
+                <SegmentedRadioGroup.Option value="unit">Час</SegmentedRadioGroup.Option>
+                <SegmentedRadioGroup.Option value="month">Месяц</SegmentedRadioGroup.Option>
+                <SegmentedRadioGroup.Option value="year">Год</SegmentedRadioGroup.Option>
+              </SegmentedRadioGroup>
+              <HelpMark aria-label="Про период тарификации" iconSize="s">
+                Период отображения стоимости. Фактическая тарификация зависит от условий
+                провайдера.
+              </HelpMark>
+            </Flex>
           </Flex>
 
           <TabProvider
@@ -111,7 +118,7 @@ export function CalculatorPage({
           >
             <TabList size="l" className={styles.tabs}>
               <Tab value="vm">Виртуальные машины</Tab>
-              <Tab value="inference">Self-host LLM</Tab>
+              <Tab value="inference">Self-hosted LLM</Tab>
             </TabList>
           </TabProvider>
         </header>
@@ -133,7 +140,7 @@ export function CalculatorPage({
               size="m"
               prefetch
             >
-              {mode === 'vm' ? 'Калькулятор Self-host LLM' : 'Калькулятор ВМ и GPU'}
+              {mode === 'vm' ? 'Калькулятор Self-hosted LLM' : 'Калькулятор ВМ и GPU'}
               <Icon data={ChevronRight} size={16} />
             </Button>
             <Button

@@ -190,8 +190,10 @@ export function resolveKvBytesPerToken(args: {
     return {bytes: perToken, source: 'architectural'};
   }
 
+  // Rough GQA-scale floor when architecture is unknown. Previous min (~24 B/tok)
+  // rounded to 0 GiB at typical calculator defaults (few sessions × 32k).
   const params = args.totalParametersB ?? 7;
-  const fallback = clamp(params * 0.22, 24, 220) * dtypeScale;
+  const fallback = clamp(params * 2.4, 160, 1_200) * dtypeScale;
   return {bytes: fallback, source: 'fallback'};
 }
 

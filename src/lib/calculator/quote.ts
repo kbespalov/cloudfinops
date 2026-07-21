@@ -410,7 +410,7 @@ function quoteCompute(preset: ComputePreset, period: PeriodMode): ProviderQuote[
       parts = [
         {
           id: 'bundle',
-          label: `${preset.vcpu} vCPU + ${preset.ramGiB} GiB RAM`,
+          label: `ВМ: ${preset.vcpu} vCPU · ${preset.ramGiB} GiB RAM`,
           amount: combo.flavor.unit,
         },
       ];
@@ -419,7 +419,7 @@ function quoteCompute(preset: ComputePreset, period: PeriodMode): ProviderQuote[
         const diskMedia = diskMediaLabel(combo.disk.m, preset.preferNvme);
         parts.push({
           id: 'disk',
-          label: `${formatGiBCapacity(preset.diskGiB)} ${diskMedia}`,
+          label: `Диск: ${diskMedia}, ${formatGiBCapacity(preset.diskGiB)}`,
           amount: combo.disk.unit * preset.diskGiB,
         });
         meters.push(combo.disk.m);
@@ -427,15 +427,19 @@ function quoteCompute(preset: ComputePreset, period: PeriodMode): ProviderQuote[
     } else {
       noteMeter = combo.vcpu.m;
       parts = [
-        {id: 'vcpu', label: `${preset.vcpu} vCPU`, amount: combo.vcpu.unit * preset.vcpu},
-        {id: 'ram', label: `${formatGiBCapacity(preset.ramGiB)} RAM`, amount: combo.ram.unit * preset.ramGiB},
+        {id: 'vcpu', label: `CPU: ${preset.vcpu} vCPU`, amount: combo.vcpu.unit * preset.vcpu},
+        {
+          id: 'ram',
+          label: `RAM: ${formatGiBCapacity(preset.ramGiB)}`,
+          amount: combo.ram.unit * preset.ramGiB,
+        },
       ];
       meters = [combo.vcpu.m, combo.ram.m];
       if (combo.disk) {
         const diskMedia = diskMediaLabel(combo.disk.m, preset.preferNvme);
         parts.push({
           id: 'disk',
-          label: `${formatGiBCapacity(preset.diskGiB)} ${diskMedia}`,
+          label: `Диск: ${diskMedia}, ${formatGiBCapacity(preset.diskGiB)}`,
           amount: combo.disk.unit * preset.diskGiB,
         });
         meters.push(combo.disk.m);
@@ -573,7 +577,11 @@ function buildComposedGpuQuote(
   const ramGiB = preset.ramGiB!;
   const diskGiB = preset.diskGiB ?? 100;
   const parts: CostPart[] = [
-    {id: 'gpu', label: `${preset.title} GPU`, amount: gpu.amount},
+    {
+      id: 'gpu',
+      label: `GPU: ${preset.gpuCount}× ${preset.gpuModelMatch}`,
+      amount: gpu.amount,
+    },
   ];
   const meters: CatalogMeter[] = [gpu.m];
   let platformMeter: CatalogMeter = gpu.m;
@@ -582,7 +590,7 @@ function buildComposedGpuQuote(
     platformMeter = host.flavor.m;
     parts.push({
       id: 'bundle',
-      label: `${vcpu} vCPU + ${formatGiBCapacity(ramGiB)} RAM`,
+      label: `ВМ: ${vcpu} vCPU · ${formatGiBCapacity(ramGiB)} RAM`,
       amount: host.flavor.unit,
     });
     meters.push(host.flavor.m);
@@ -590,7 +598,7 @@ function buildComposedGpuQuote(
       const diskMedia = diskMediaLabel(host.disk.m);
       parts.push({
         id: 'disk',
-        label: `${formatGiBCapacity(diskGiB)} ${diskMedia}`,
+        label: `Диск: ${diskMedia}, ${formatGiBCapacity(diskGiB)}`,
         amount: host.disk.unit * diskGiB,
       });
       meters.push(host.disk.m);
@@ -598,15 +606,15 @@ function buildComposedGpuQuote(
   } else {
     platformMeter = host.vcpu.m;
     parts.push(
-      {id: 'vcpu', label: `${vcpu} vCPU`, amount: host.vcpu.unit * vcpu},
-      {id: 'ram', label: `${formatGiBCapacity(ramGiB)} RAM`, amount: host.ram.unit * ramGiB},
+      {id: 'vcpu', label: `CPU: ${vcpu} vCPU`, amount: host.vcpu.unit * vcpu},
+      {id: 'ram', label: `RAM: ${formatGiBCapacity(ramGiB)}`, amount: host.ram.unit * ramGiB},
     );
     meters.push(host.vcpu.m, host.ram.m);
     if (host.disk) {
       const diskMedia = diskMediaLabel(host.disk.m);
       parts.push({
         id: 'disk',
-        label: `${formatGiBCapacity(diskGiB)} ${diskMedia}`,
+        label: `Диск: ${diskMedia}, ${formatGiBCapacity(diskGiB)}`,
         amount: host.disk.unit * diskGiB,
       });
       meters.push(host.disk.m);
@@ -655,7 +663,13 @@ function buildBareGpuQuote(
     providerName: provider.name,
     total: amount,
     scope: 'gpu-only',
-    parts: [{id: 'gpu', label: `${preset.title} GPU`, amount}],
+    parts: [
+      {
+        id: 'gpu',
+        label: `GPU: ${preset.gpuCount}× ${preset.gpuModelMatch}`,
+        amount,
+      },
+    ],
     note: 'Только GPU; vCPU/RAM у провайдера отдельно или форма без хоста.',
     meters: [meter],
     hostConfig: {
@@ -849,7 +863,7 @@ export function addPublicIpParts(
     const ip = pickPublicIp(q.provider, period);
     if (!ip) return q;
     const amount = ip.unit * count;
-    const label = count === 1 ? '1 × публичный IP' : `${count} × публичный IP`;
+    const label = `Публичный IP: ${count}`;
     return {
       ...q,
       total: q.total + amount,

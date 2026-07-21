@@ -4,13 +4,17 @@ import Link from 'next/link';
 import {usePathname, useRouter, useSearchParams} from 'next/navigation';
 import {Suspense, useEffect, useMemo, useState} from 'react';
 import {
+  Alert,
   Button,
+  Flex,
+  HelpMark,
   Icon,
   Label,
   NumberInput,
   SegmentedRadioGroup,
   Select,
   Text,
+  Tooltip,
 } from '@gravity-ui/uikit';
 import {Sparkles} from '@gravity-ui/icons';
 import {INFERENCE_MODELS} from '@/data/inference-models';
@@ -20,6 +24,7 @@ import {
 } from '@/lib/chat/inference-recommend-view';
 import {
   formatQuoteAmount,
+  formatRuNumber,
   periodShortLabel,
   scalePresetQuote,
   type PeriodMode,
@@ -31,20 +36,14 @@ import {
   selfHostChatPrompt,
   type SelfHostQuantParam,
 } from '@/lib/calculator/self-host-links';
-import {
-  bottleneckLabel,
-  formatFreeOnNode,
-} from '@/lib/calculator/inference-sizing';
 import {formatLabel} from '@/lib/calculator/weight-formats';
 import {
   CONTEXT_LENGTH_OPTIONS,
   formatContextTokens,
   formatNodeCount,
   formatVramUsage,
-  loadBandLabel,
   planInferenceNodes,
   type InferenceNodePlan,
-  type VramLoadBand,
 } from '@/lib/calculator/vram-breakdown';
 import {useAdhocQuote} from '@/lib/calculator/useAdhocQuote';
 import {chatUrlForQuery} from '@/components/home/homePrompts';
@@ -65,11 +64,6 @@ const QUANT_OPTIONS: {value: QuantOption; label: string}[] = [
 ];
 
 const DEFAULT_MODEL = 'Qwen3-Coder-Next';
-
-/** Pills for extremes; mid bands stay plain text. */
-function loadAsBadge(band: VramLoadBand): boolean {
-  return band === 'limit' || band === 'tight' || band === 'overload';
-}
 
 type ConfigPick = NonNullable<InferenceRecommendResult['configs']>[number];
 
@@ -156,6 +150,8 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
   const [rec, setRec] = useState<InferenceRecommendResult | null>(null);
   const [recLoading, setRecLoading] = useState(false);
   const [selectedIdx, setSelectedIdx] = useState(0);
+  /** True when the user picked a row other than the algorithm recommendation. */
+  const [manualPick, setManualPick] = useState(false);
 
   const profile = useMemo(
     () => INFERENCE_MODELS.find((m) => m.displayName === model) ?? null,
@@ -191,7 +187,7 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
       quant,
       maxConfigs: '4',
     });
-    fetch(`/api/calculator/inference?${params}`)
+    fetch(`/api/calculator/inference?${params}`, {cache: 'no-store'})
       .then((res) => {
         if (!res.ok) throw new Error(`inference ${res.status}`);
         return res.json() as Promise<InferenceRecommendResult>;
@@ -199,6 +195,8 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
       .then((data) => {
         if (cancelled) return;
         setRec(data);
+        setManualPick(false);
+        // Index is refined once node plans are ready (cheapest fleet cost).
         setSelectedIdx(defaultPricedConfigIndex(data.configs ?? []));
       })
       .catch(() => {
@@ -221,29 +219,64 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
     );
   }, [configs, profile, concurrentRequests, avgContextTokens, maxContextTokens]);
 
-  useEffect(() => {
-    if (!configPlans.length) return;
-    setSelectedIdx((idx) => {
-      const rank = (p: InferenceNodePlan | null | undefined) => {
-        if (!p) return 999;
-        if (p.kind === 'fits') return 0;
-        if (p.kind === 'replicas') return 100 + p.nodeCount;
-        return 500;
-      };
-      const current = configPlans[idx];
-      if (current && rank(current) < 500) return idx;
-      let bestIdx = idx;
-      let bestRank = rank(current);
-      configPlans.forEach((p, i) => {
-        const r = rank(p);
-        if (r < bestRank) {
-          bestRank = r;
-          bestIdx = i;
-        }
-      });
-      return bestIdx;
+  /**
+   * Algorithm recommendation: cheapest fitting fleet (unit × nodes).
+   * Independent of the user's radio selection.
+   */
+  const recommendedIdx = useMemo(() => {
+    let bestIdx = -1;
+    let bestCost = Number.POSITIVE_INFINITY;
+    configs.forEach((c, i) => {
+      const plan = configPlans[i];
+      if (!plan || plan.kind === 'impossible') return;
+      const unit = c.best?.totalMonth;
+      if (unit == null || !Number.isFinite(unit)) return;
+      const nodes = plan.kind === 'replicas' ? plan.nodeCount : 1;
+      const cost = unit * nodes;
+      if (cost < bestCost) {
+        bestCost = cost;
+        bestIdx = i;
+      }
     });
-  }, [configPlans]);
+    if (bestIdx >= 0) return bestIdx;
+    return configs.length ? defaultPricedConfigIndex(configs) : 0;
+  }, [configs, configPlans]);
+
+  const recommendKey = useMemo(
+    () =>
+      configs
+        .map((c) => `${c.gpuFamily}:${c.gpuCount}:${c.quant}:${c.best?.totalMonth ?? ''}`)
+        .join('|'),
+    [configs],
+  );
+
+  useEffect(() => {
+    if (!configPlans.length || !configs.length) return;
+    // New recommendation payload → follow algorithm, clear manual pick.
+    setManualPick(false);
+    setSelectedIdx(recommendedIdx);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when recommend payload identity changes
+  }, [recommendKey]);
+
+  useEffect(() => {
+    if (!configPlans.length || !configs.length) return;
+    setSelectedIdx((idx) => {
+      const plan = configPlans[idx];
+      if (plan && plan.kind !== 'impossible') return idx;
+      setManualPick(false);
+      return recommendedIdx;
+    });
+  }, [configPlans, configs, recommendedIdx]);
+
+  function selectConfigRow(i: number) {
+    setSelectedIdx(i);
+    setManualPick(i !== recommendedIdx);
+  }
+
+  function returnToRecommendation() {
+    setManualPick(false);
+    setSelectedIdx(recommendedIdx);
+  }
 
   const selected: ConfigPick | null = configs[selectedIdx] ?? configs[0] ?? null;
   const selectedPlan = configPlans[selectedIdx] ?? null;
@@ -277,139 +310,308 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
   }, [rawQuote, selectedPlan]);
 
   const modelMeta = rec?.model;
-  const apiOnly = modelMeta?.deployment === 'api-only' || (!configs.length && rec?.ok);
+  // Only true API-only models. Empty configs for a self-host model (e.g. unsupported
+  // weight format) must show the empty state, not «Self-hosted недоступен».
+  const apiOnly = modelMeta?.deployment === 'api-only';
   const maxCtxOptions = contextOptions(profile?.contextDefault ?? 128_000);
   const avgCtxOptions = contextOptions(
     Math.max(avgContextTokens, Math.min(32_768, maxContextTokens)),
   ).filter((o) => Number(o.value) <= maxContextTokens);
 
+  const selectedNodes =
+    selectedPlan?.kind === 'impossible' ? 0 : (selectedPlan?.nodeCount ?? 1);
+  const selectedGpuTotal =
+    selected && selectedNodes > 0 ? selectedNodes * selected.gpuCount : null;
+
+  const recommendedConfig = configs[recommendedIdx] ?? null;
+  const recommendedPlan = configPlans[recommendedIdx] ?? null;
+  const recommendedQuantLabel = recommendedConfig
+    ? quantDisplay(recommendedConfig, recommendedPlan)
+    : null;
+  const recommendedGpuLabel = recommendedConfig
+    ? `${recommendedConfig.gpuCount}× ${recommendedConfig.gpuFamily}`
+    : null;
+  const selectedQuantLabel =
+    selected && !apiOnly ? quantDisplay(selected, selectedPlan) : null;
+  const selectedGpuLabel = selected
+    ? `${selected.gpuCount}× ${selected.gpuFamily}`
+    : null;
+  const selectedUtilPct =
+    selectedPlan?.perNode?.utilizationPct ??
+    (selectedPlan?.perNode?.capacityGiB && selectedPlan.perNode.capacityGiB > 0
+      ? (selectedPlan.perNode.totalGiB / selectedPlan.perNode.capacityGiB) * 100
+      : null);
+  const selectedLoadBand = selectedPlan?.perNode?.loadBand ?? null;
+  const showVramRisk =
+    selectedPlan?.kind !== 'impossible' &&
+    (selectedLoadBand === 'tight' ||
+      selectedLoadBand === 'limit' ||
+      (selectedUtilPct != null && selectedUtilPct >= 75 && selectedUtilPct < 100));
+  const vramRiskIsCritical =
+    selectedLoadBand === 'limit' ||
+    (selectedUtilPct != null && selectedUtilPct >= 90 && selectedUtilPct < 100);
+  const noFittingConfigs =
+    !recLoading && !apiOnly && configs.length > 0 && configs.every((_, i) => configPlans[i]?.kind === 'impossible');
+  const emptyConfigs = !recLoading && !apiOnly && configs.length === 0 && Boolean(rec?.ok);
+
   return (
     <>
       <div className={`${panelStyles.formColumn} ${styles.configCard}`}>
         <div className={styles.configInner}>
-          <div className={panelStyles.topSlot}>
-            <div className={panelStyles.topSlotGrow}>
-              <ModelPicker value={model} onUpdate={setModel} />
+          <section className={styles.group} aria-label="Модель">
+            <div className={panelStyles.topSlot}>
+              <div className={panelStyles.topSlotGrow}>
+                <ModelPicker value={model} onUpdate={setModel} />
+              </div>
+              {modelMeta?.deployment === 'api-only' ? (
+                <Label size="xs" theme="danger">
+                  API-only
+                </Label>
+              ) : null}
+              {modelMeta?.deployment === 'weights-pending' ? (
+                <Text variant="caption-2" color="warning">
+                  веса скоро
+                </Text>
+              ) : null}
             </div>
-            {modelMeta?.deployment === 'api-only' ? (
-              <Label size="xs" theme="danger">
-                API-only
-              </Label>
-            ) : null}
-            {modelMeta?.deployment === 'weights-pending' ? (
-              <Text variant="caption-2" color="warning">
-                веса скоро
-              </Text>
-            ) : null}
-          </div>
+          </section>
 
-          <div className={styles.controls}>
+          <section className={styles.group} aria-label="Формат весов и квантование">
             <div className={styles.field}>
-              <Text variant="caption-2" color="secondary">
-                Формат весов
-              </Text>
-              <SegmentedRadioGroup
-                size="l"
-                value={quant}
-                onUpdate={(v) => setQuant(v as QuantOption)}
-                aria-label="Формат весов"
-              >
-                {QUANT_OPTIONS.map((o) => (
-                  <SegmentedRadioGroup.Option key={o.value} value={o.value}>
-                    {o.label}
-                  </SegmentedRadioGroup.Option>
-                ))}
-              </SegmentedRadioGroup>
+              <div className={styles.fieldLabelRow}>
+                <Text as="span" className={styles.fieldLabel}>
+                  Формат весов
+                </Text>
+                <HelpMark aria-label="Про формат весов" iconSize="s">
+                  Формат хранения весов модели. Auto подбирает формат весов и рекомендуемую
+                  GPU-конфигурацию из доступных вариантов — самую дешёвую, которая помещает модель и
+                  рассчитанную нагрузку. INT4 / NVFP4: конкретный формат зависит от GPU и runtime.
+                </HelpMark>
+              </div>
+              <div className={styles.quantControl}>
+                <SegmentedRadioGroup
+                  size="l"
+                  width="max"
+                  value={quant}
+                  onUpdate={(v) => {
+                    setManualPick(false);
+                    setQuant(v as QuantOption);
+                  }}
+                  aria-label="Формат весов и квантование"
+                >
+                  {QUANT_OPTIONS.map((o) => (
+                    <SegmentedRadioGroup.Option key={o.value} value={o.value}>
+                      {o.label}
+                    </SegmentedRadioGroup.Option>
+                  ))}
+                </SegmentedRadioGroup>
+              </div>
+              {!apiOnly && recommendedQuantLabel && recommendedGpuLabel ? (
+                <div className={styles.autoHintRow}>
+                  {manualPick && selectedQuantLabel && selectedGpuLabel ? (
+                    <>
+                      <Text variant="caption-2" color="complementary" className={styles.autoHint}>
+                        Выбрано вручную: {selectedQuantLabel} · {selectedGpuLabel}
+                      </Text>
+                      <Button size="s" view="flat" onClick={returnToRecommendation}>
+                        Вернуться к рекомендации
+                      </Button>
+                    </>
+                  ) : (
+                    <Tooltip
+                      content={
+                        quant === 'auto'
+                          ? 'Auto выбрал самый дешёвый формат и GPU-конфигурацию, которые удовлетворяют требованиям по VRAM'
+                          : 'Самая дешёвая конфигурация среди подходящих при выбранном формате весов'
+                      }
+                      openDelay={200}
+                    >
+                      <Text variant="caption-2" color="complementary" className={styles.autoHint}>
+                        Рекомендовано: {recommendedQuantLabel} · {recommendedGpuLabel}
+                      </Text>
+                    </Tooltip>
+                  )}
+                </div>
+              ) : null}
             </div>
-          </div>
+          </section>
 
-          <div className={styles.workload}>
-            <div className={styles.field}>
-              <Text variant="caption-2" color="secondary">
-                Одновременные сессии
+          <section className={styles.group} aria-labelledby="workload-heading">
+            <div className={styles.sectionTitleRow}>
+              <Text as="h3" id="workload-heading" className={styles.sectionTitle}>
+                Нагрузка
               </Text>
-              <NumberInput
-                size="l"
-                min={1}
-                max={128}
-                value={concurrentRequests}
-                onUpdate={(v) =>
-                  setConcurrentRequests(Math.max(1, Math.round(v ?? 1)))
-                }
-                controlProps={{
-                  'aria-label': 'Одновременные сессии',
-                }}
-              />
+              <HelpMark aria-label="Про расчёт нагрузки" iconSize="s">
+                Расчёт оценивает требуемую VRAM. Фактическая пропускная способность зависит от
+                runtime, batch size, длины output и целевой задержки.
+              </HelpMark>
             </div>
-            <div className={styles.field}>
-              <Text variant="caption-2" color="secondary">
-                Средний контекст
-              </Text>
-              <Select
-                size="l"
-                width="max"
-                value={[String(avgContextTokens)]}
-                options={avgCtxOptions}
-                onUpdate={(v) => {
-                  const n = Number(v[0]);
-                  if (Number.isFinite(n) && n > 0) {
-                    setAvgContextTokens(Math.min(n, maxContextTokens));
+            <div className={styles.workload}>
+              <div className={styles.field}>
+                <div className={styles.fieldLabelRow}>
+                  <Text as="span" className={styles.fieldLabel}>
+                    Параллельные запросы
+                  </Text>
+                  <HelpMark aria-label="Про параллельные запросы" iconSize="s">
+                    Максимальное число запросов, которые одновременно находятся в генерации. Это не
+                    обязательно равно числу пользователей.
+                  </HelpMark>
+                </div>
+                <NumberInput
+                  size="l"
+                  min={1}
+                  max={128}
+                  value={concurrentRequests}
+                  onUpdate={(v) =>
+                    setConcurrentRequests(Math.max(1, Math.round(v ?? 1)))
                   }
-                }}
-              />
+                  controlProps={{
+                    'aria-label': 'Параллельные запросы',
+                  }}
+                />
+              </div>
+              <div className={styles.field}>
+                <div className={styles.fieldLabelRow}>
+                  <Text as="span" className={styles.fieldLabel}>
+                    Средняя длина последовательности
+                  </Text>
+                  <HelpMark aria-label="Про среднюю длину последовательности" iconSize="s">
+                    Среднее суммарное число входных и генерируемых токенов на запрос. Влияет на
+                    оценку KV cache. Отдельное поле длины ответа не используется — output входит в
+                    эту сумму.
+                  </HelpMark>
+                </div>
+                <Select
+                  size="l"
+                  width="max"
+                  value={[String(avgContextTokens)]}
+                  options={avgCtxOptions}
+                  onUpdate={(v) => {
+                    const n = Number(v[0]);
+                    if (Number.isFinite(n) && n > 0) {
+                      setAvgContextTokens(Math.min(n, maxContextTokens));
+                    }
+                  }}
+                />
+              </div>
+              <div className={styles.field}>
+                <div className={styles.fieldLabelRow}>
+                  <Text as="span" className={styles.fieldLabel}>
+                    Максимальная длина контекста
+                  </Text>
+                  <HelpMark aria-label="Про максимальную длину контекста" iconSize="s">
+                    Максимальное число токенов, которое модель должна поддерживать для одного
+                    запроса. Используется при расчёте KV cache и резерва памяти.
+                  </HelpMark>
+                </div>
+                <Select
+                  size="l"
+                  width="max"
+                  value={[String(maxContextTokens)]}
+                  options={maxCtxOptions}
+                  onUpdate={(v) => {
+                    const n = Number(v[0]);
+                    if (!Number.isFinite(n) || n <= 0) return;
+                    setMaxContextTokens(n);
+                    setAvgContextTokens((avg) => Math.min(avg, n));
+                  }}
+                />
+              </div>
             </div>
-            <div className={styles.field}>
-              <Text variant="caption-2" color="secondary">
-                Макс. контекст
-              </Text>
-              <Select
-                size="l"
-                width="max"
-                value={[String(maxContextTokens)]}
-                options={maxCtxOptions}
-                onUpdate={(v) => {
-                  const n = Number(v[0]);
-                  if (!Number.isFinite(n) || n <= 0) return;
-                  setMaxContextTokens(n);
-                  setAvgContextTokens((avg) => Math.min(avg, n));
-                }}
-              />
-            </div>
-          </div>
-
-            <div className={styles.configSection}>
-            <Text variant="subheader-1" className={styles.sectionTitle}>
-              GPU-конфигурации
+            <Text variant="caption-2" color="secondary" className={styles.workloadNote}>
+              Расчёт подбирает конфигурации, достаточные по VRAM. Фактическая скорость и задержка
+              зависят от runtime, batching, длины ответа и настроек инференса.
             </Text>
+          </section>
 
-            {recLoading ? (
-              <Text variant="body-2" color="secondary">
-                …
+          <div className={styles.configSection} data-stale={recLoading ? 'true' : 'false'}>
+            <div className={styles.sectionTitleRow}>
+              <Text as="h3" variant="subheader-1" className={styles.sectionTitle}>
+                Подходящие GPU-конфигурации
               </Text>
-            ) : null}
+              {!apiOnly && selected && selectedPlan?.kind !== 'impossible' ? (
+                <Tooltip
+                  content="Конфигурация помещает веса модели и рассчитанные компоненты памяти. Производительность не гарантируется этим расчётом."
+                  openDelay={200}
+                >
+                  <Text variant="caption-2" color="secondary">
+                    Достаточно по VRAM
+                  </Text>
+                </Tooltip>
+              ) : null}
+            </div>
 
             {apiOnly && !recLoading ? (
               <Text variant="body-2" color="secondary">
-                Self-host недоступен для этой модели.
+                Self-hosted недоступен для этой модели.
               </Text>
             ) : null}
 
-            {!apiOnly && configs.length ? (
-              <div className={styles.configList} role="listbox" aria-label="GPU-конфигурации">
+            {(emptyConfigs || noFittingConfigs) && !apiOnly ? (
+              <div className={styles.emptyState}>
+                <Text as="h4" variant="subheader-2" className={styles.emptyTitle}>
+                  Подходящие конфигурации не найдены
+                </Text>
+                <Text variant="body-2" color="secondary">
+                  Выбранная модель или нагрузка не помещается в доступные GPU-конфигурации.
+                </Text>
+                <Flex gap={2} wrap className={styles.emptyActions}>
+                  <Button size="s" view="outlined" onClick={() => setQuant('auto')}>
+                    Выбрать Auto
+                  </Button>
+                  <Button
+                    size="s"
+                    view="outlined"
+                    onClick={() => {
+                      const next = Math.max(4_096, Math.round(maxContextTokens / 2));
+                      setMaxContextTokens(next);
+                      setAvgContextTokens((avg) => Math.min(avg, next));
+                    }}
+                  >
+                    Уменьшить контекст
+                  </Button>
+                  <Button
+                    size="s"
+                    view="flat"
+                    onClick={() => {
+                      setConcurrentRequests(1);
+                      const def = defaultAvgContext(profile?.contextDefault ?? 128_000);
+                      setMaxContextTokens(profile?.contextDefault ?? 128_000);
+                      setAvgContextTokens(def);
+                    }}
+                  >
+                    Сбросить нагрузку
+                  </Button>
+                </Flex>
+              </div>
+            ) : null}
+
+            {!apiOnly && configs.length && !noFittingConfigs ? (
+              <div
+                className={styles.configList}
+                role="listbox"
+                aria-label="Подходящие GPU-конфигурации"
+              >
                 <div className={styles.configHead} aria-hidden="true">
-                  <Text variant="caption-2" color="hint">
+                  <span className={styles.configHeadSpacer} />
+                  <Text variant="caption-2" color="secondary">
                     GPU-конфигурация
                   </Text>
-                  <Text variant="caption-2" color="hint">
+                  <Text variant="caption-2" color="secondary">
                     Формат
                   </Text>
-                  <Text variant="caption-2" color="hint">
+                  <Text variant="caption-2" color="secondary">
                     Использование VRAM
                   </Text>
-                  <Text variant="caption-2" color="hint">
-                    Ноды / запас
+                  <Text
+                    variant="caption-2"
+                    color="secondary"
+                    className={styles.configLoad}
+                    title="Количество серверных узлов в конфигурации"
+                  >
+                    Ноды
                   </Text>
-                  <Text variant="caption-2" color="hint" className={styles.configPrice}>
+                  <Text variant="caption-2" color="secondary" className={styles.configPrice}>
                     Стоимость
                   </Text>
                 </div>
@@ -417,7 +619,6 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
                   const isActive = selectedIdx === i;
                   const plan = configPlans[i];
                   const bd = plan?.perNode ?? null;
-                  const sizing = plan?.sizing;
                   const nodes = plan?.kind === 'replicas' ? plan.nodeCount : 1;
                   const unitMonth = c.best?.totalMonth;
                   const amount = monthToPeriod(
@@ -426,36 +627,29 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
                       : unitMonth,
                     period,
                   );
-                  const load = bd?.loadBand ? loadBandLabel(bd.loadBand) : null;
                   const impossible = plan?.kind === 'impossible';
+                  const usedGiB = bd?.totalGiB ?? c.estimatedVramGiB;
+                  const capGiB = bd?.capacityGiB ?? null;
+                  const freeGiB =
+                    capGiB != null
+                      ? Math.max(0, Math.round((capGiB - usedGiB) * 10) / 10)
+                      : null;
+                  const utilPct =
+                    bd?.utilizationPct ??
+                    (capGiB != null && capGiB > 0
+                      ? Math.round((usedGiB / capGiB) * 1000) / 10
+                      : null);
                   const vramLabel = impossible
-                    ? formatVramUsage(bd?.totalGiB ?? c.estimatedVramGiB, bd?.capacityGiB)
+                    ? formatVramUsage(usedGiB, capGiB)
                     : bd != null
-                      ? formatVramUsage(bd.totalGiB, bd?.capacityGiB)
+                      ? formatVramUsage(bd.totalGiB, bd.capacityGiB)
                       : `~${c.estimatedVramGiB} GiB`;
-                  const nodesText = impossible
-                    ? 'Не влезает'
-                    : `Нужно нод: ${plan?.nodeCount ?? 1}`;
-                  const freeText =
-                    !impossible && sizing ? formatFreeOnNode(sizing.perNode) : null;
-                  const bottleneckText = impossible
-                    ? 'Ограничение: веса'
-                    : sizing
-                      ? bottleneckLabel(sizing.bottleneck)
-                      : load?.text;
-                  const loadTitle = [
-                    nodesText,
-                    freeText,
-                    bottleneckText,
-                    sizing
-                      ? `KV dtype: ${sizing.kvCacheDtype.toUpperCase()} · confidence: ${sizing.confidence}`
-                      : null,
-                    sizing?.throughputStatus === 'insufficient_data'
-                      ? 'Throughput: недостаточно данных'
-                      : null,
-                  ]
-                    .filter(Boolean)
-                    .join('\n');
+                  const isRecommended = i === recommendedIdx && !impossible;
+                  const tightVram =
+                    !impossible &&
+                    (bd?.loadBand === 'tight' ||
+                      bd?.loadBand === 'limit' ||
+                      (utilPct != null && utilPct >= 75 && utilPct < 100));
                   return (
                     <button
                       key={`${c.gpuFamily}-${c.gpuCount}-${c.quant}-${i}`}
@@ -464,64 +658,101 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
                       aria-selected={isActive}
                       className={styles.configRow}
                       data-active={isActive ? 'true' : 'false'}
+                      data-recommended={isRecommended && !isActive ? 'true' : 'false'}
                       data-overload={impossible ? 'true' : 'false'}
                       data-replicas={plan?.kind === 'replicas' ? 'true' : 'false'}
-                      onClick={() => setSelectedIdx(i)}
-                      title={loadTitle}
+                      onClick={() => selectConfigRow(i)}
                     >
-                      <Text variant="body-2" ellipsis className={styles.configGpu}>
-                        {c.gpuCount}× {c.gpuFamily}
-                        {plan?.kind === 'replicas' ? (
-                          <Text as="span" variant="caption-2" color="secondary">
-                            {' '}
-                            · {formatNodeCount(plan.nodeCount)}
-                          </Text>
-                        ) : null}
-                      </Text>
-                      <Text variant="body-2" color="secondary" className={styles.configQuant}>
-                        {quantDisplay(c, plan)}
-                      </Text>
-                      <Text
-                        variant="body-2"
-                        color="secondary"
-                        className={styles.configVram}
-                        title={loadTitle}
-                      >
-                        {vramLabel}
-                      </Text>
-                      <span className={styles.configLoad} title={loadTitle}>
-                        {impossible || plan?.kind === 'replicas' || (bd?.loadBand != null && loadAsBadge(bd.loadBand)) ? (
+                      <span
+                        className={styles.radio}
+                        data-checked={isActive ? 'true' : 'false'}
+                        aria-hidden
+                      />
+                      <span className={styles.configGpuCell}>
+                        <Text ellipsis className={styles.configGpu}>
+                          {c.gpuCount}×&nbsp;{c.gpuFamily}
+                        </Text>
+                        {isRecommended ? (
                           <Label
                             size="xs"
-                            theme={
-                              impossible
-                                ? 'normal'
-                                : plan?.kind === 'replicas'
-                                  ? 'info'
-                                  : 'normal'
-                            }
+                            theme="success"
+                            title="Самая дешёвая конфигурация, которая помещает модель и рассчитанную нагрузку"
                           >
-                            {nodesText}
+                            Минимальная цена
+                          </Label>
+                        ) : null}
+                        {tightVram ? (
+                          <Label
+                            size="xs"
+                            theme="warning"
+                            title="Свободно менее 10% памяти. Изменение batch size, длины контекста или runtime может привести к OOM"
+                          >
+                            Малый запас VRAM
+                          </Label>
+                        ) : null}
+                      </span>
+                      <Text color="secondary" className={styles.configQuant}>
+                        {quantDisplay(c, plan)}
+                      </Text>
+                      <span
+                        className={styles.configVram}
+                        title={
+                          !impossible && utilPct != null
+                            ? `${formatRuNumber(utilPct, 1)}% занято`
+                            : undefined
+                        }
+                      >
+                        <Text color="secondary" className={styles.configVramUsed}>
+                          {vramLabel}
+                        </Text>
+                        {!impossible && freeGiB != null ? (
+                          <span className={styles.configVramFree}>
+                            свободно&nbsp;{formatRuNumber(freeGiB, 1)}&nbsp;GiB
+                          </span>
+                        ) : null}
+                      </span>
+                      <span className={styles.configLoad}>
+                        {impossible ? (
+                          <Label size="xs" theme="normal">
+                            —
                           </Label>
                         ) : (
-                          <Text variant="caption-2" color="secondary">
-                            {nodesText}
+                          <Text color="secondary" title={formatNodeCount(plan?.nodeCount ?? 1)}>
+                            {plan?.nodeCount ?? 1}
                           </Text>
                         )}
                       </span>
-                      <Text variant="subheader-2" className={styles.configPrice}>
+                      <span className={styles.configPrice}>
                         {amount != null && !impossible
                           ? `${formatQuoteAmount(amount, period).replace(/\s*₽$/, '')} ₽`
                           : '—'}
-                        <Text as="span" variant="caption-2" className={styles.configPeriod}>
-                          {' '}
-                          / {periodShortLabel(period)}
-                        </Text>
-                      </Text>
+                        {amount != null && !impossible ? (
+                          <span className={styles.configPeriod}>/ {periodShortLabel(period)}</span>
+                        ) : null}
+                      </span>
                     </button>
                   );
                 })}
               </div>
+            ) : null}
+
+            {showVramRisk ? (
+              <Alert
+                theme="warning"
+                view="outlined"
+                size="s"
+                className={styles.vramWarning}
+                title={
+                  selectedUtilPct != null && selectedUtilPct >= 95
+                    ? 'Высокий риск нехватки VRAM'
+                    : 'Малый запас VRAM'
+                }
+                message={
+                  vramRiskIsCritical
+                    ? 'Свободно менее 10% памяти. Изменение batch size, длины контекста или runtime может привести к OOM.'
+                    : 'Свободно менее 25% памяти (порог расчётной модели). Изменение batch size, длины контекста или runtime может привести к OOM.'
+                }
+              />
             ) : null}
           </div>
 
@@ -529,7 +760,7 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
             <VramBreakdownCard breakdown={vramBreakdown} embedded />
           ) : null}
 
-          {!apiOnly && selected ? (
+          {!apiOnly && selected && selectedPlan?.kind !== 'impossible' ? (
             <div className={styles.chatBridge}>
               <Button
                 component={Link}
@@ -539,6 +770,15 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
                     quant: selected.quant,
                     gpuFamily: selected.gpuFamily,
                     gpuCount: selected.gpuCount,
+                    nodeCount: selectedNodes,
+                    vramLabel: vramBreakdown
+                      ? formatVramUsage(vramBreakdown.totalGiB, vramBreakdown.capacityGiB)
+                      : null,
+                    concurrentRequests,
+                    avgContextTokens,
+                    maxContextTokens,
+                    monthlyRub: result?.best?.total ?? null,
+                    providerName: result?.best?.providerName ?? null,
                   }),
                 )}
                 view="flat-secondary"
@@ -546,7 +786,7 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
                 prefetch
               >
                 <Icon data={Sparkles} size={16} />
-                Спросить ассистента про эту сборку
+                Разобрать конфигурацию с AI
               </Button>
             </div>
           ) : null}
@@ -559,10 +799,22 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
         loading={recLoading || quoteLoading}
         emptyHint={
           apiOnly
-            ? 'Self-host недоступен'
-            : selectedPlan?.kind === 'impossible'
-              ? 'Модель не влезает на узел'
-              : 'Нет котировок'
+            ? 'Self-hosted недоступен'
+            : emptyConfigs || noFittingConfigs || selectedPlan?.kind === 'impossible'
+              ? 'Подходящие конфигурации не найдены'
+              : 'Конфигурация найдена, но актуальные цены провайдеров недоступны'
+        }
+        bestPriceHint="Самая низкая стоимость текущей выбранной конфигурации среди найденных провайдеров"
+        bestPriceBadge="Самый дешёвый провайдер"
+        deploymentSummary={
+          selected && selectedPlan?.kind !== 'impossible'
+            ? {
+                nodeCount: selectedNodes,
+                gpuCount: selected.gpuCount,
+                gpuFamily: selected.gpuFamily,
+                totalGpus: selectedGpuTotal ?? selected.gpuCount,
+              }
+            : null
         }
       />
     </>

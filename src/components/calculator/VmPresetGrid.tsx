@@ -10,6 +10,7 @@ import {
 } from '@/lib/calculator/presets';
 import {
   formatQuoteAmount,
+  periodShortLabel,
   type PeriodMode,
   type ViewPresetQuote,
 } from '@/lib/calculator/quote-view';
@@ -22,7 +23,9 @@ type Props = {
   diskMedia: DiskMedia;
   publicIpCount: number;
   activePresetId: string | null;
+  customSelected: boolean;
   onSelect: (preset: ComputePreset) => void;
+  onSelectCustom: () => void;
 };
 
 export function VmPresetGrid({
@@ -32,7 +35,9 @@ export function VmPresetGrid({
   diskMedia,
   publicIpCount,
   activePresetId,
+  customSelected,
   onSelect,
+  onSelectCustom,
 }: Props) {
   const presets = useMemo(() => computePresetsByFamily(family), [family]);
   const [totals, setTotals] = useState<Record<string, number | null>>({});
@@ -79,10 +84,25 @@ export function VmPresetGrid({
 
   return (
     <div className={styles.root}>
-      <Text className={styles.sectionTitle}>Пресеты конфигураций</Text>
+      <div className={styles.sectionHead}>
+        <Text as="h3" className={styles.sectionTitle}>
+          Пресеты конфигураций
+        </Text>
+        {customSelected ? (
+          <button
+            type="button"
+            className={styles.customChip}
+            data-active="true"
+            onClick={onSelectCustom}
+            title="Текущие значения vCPU и RAM без привязки к пресету"
+          >
+            Своя конфигурация
+          </button>
+        ) : null}
+      </div>
       <div className={styles.grid} role="listbox" aria-label="Пресеты конфигурации">
         {presets.map((preset) => {
-          const active = preset.id === activePresetId;
+          const active = !customSelected && preset.id === activePresetId;
           const total = totals[preset.id];
           return (
             <button
@@ -93,13 +113,24 @@ export function VmPresetGrid({
               className={styles.card}
               data-active={active ? 'true' : 'false'}
               onClick={() => onSelect(preset)}
+              title={`${preset.vcpu} vCPU и ${preset.ramGiB} GiB RAM на одну ВМ`}
             >
-              <Text variant="body-2">{preset.vcpu} vCPU</Text>
-              <Text variant="caption-2" color="secondary">
-                {preset.ramGiB} GiB RAM
+              <Text variant="body-2">
+                {preset.vcpu} / {preset.ramGiB}
               </Text>
-              <Text variant="subheader-2" className={styles.price}>
-                {total != null ? formatQuoteAmount(total, period) : loading ? '…' : '—'}
+              <Text variant="caption-2" color="secondary">
+                {preset.vcpu} vCPU · {preset.ramGiB} GiB
+              </Text>
+              <Text
+                variant="caption-2"
+                className={styles.price}
+                title="Стоимость с текущими параметрами диска, сети, количества ВМ и периода"
+              >
+                {total != null
+                  ? `${formatQuoteAmount(total, period).replace(/\s*₽$/, '')} ₽/${periodShortLabel(period)}`
+                  : loading
+                    ? '…'
+                    : '—'}
               </Text>
             </button>
           );

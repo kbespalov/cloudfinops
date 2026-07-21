@@ -46,10 +46,26 @@ function pickRecs(
   quant: InferenceDtype | 'auto' | undefined,
 ): InferenceGpuRec[] {
   const wanted = quant && quant !== 'auto' ? quant : null;
-  const filtered = wanted
-    ? profile.recommended.filter((r) => r.quant === wanted)
-    : profile.recommended;
-  return (filtered.length ? filtered : profile.recommended).slice();
+  if (!wanted) {
+    return profile.recommended.slice();
+  }
+
+  const exact = profile.recommended.filter((r) => r.quant === wanted);
+  if (exact.length) return exact.slice();
+
+  // Explicit format with no curated recipes: reuse hardware shapes under the requested quant.
+  // Never silently fall back to other formats — that contradicts the UI selection.
+  if (!profile.weights.some((w) => w.dtype === wanted)) return [];
+
+  const seen = new Set<string>();
+  const synthesized: InferenceGpuRec[] = [];
+  for (const rec of profile.recommended) {
+    const key = `${rec.gpuFamily}:${rec.gpuCount}:${rec.interconnect ?? ''}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    synthesized.push({...rec, quant: wanted});
+  }
+  return synthesized;
 }
 
 type AssumedGpuHost = {

@@ -1,17 +1,17 @@
 .page {
-  /* Match CatalogPage content width. */
+  /* Same content width as catalog / AppHeader — no page-to-page stretch jump. */
   max-width: 1200px;
   margin: 0 auto;
-  padding: 32px 24px 48px;
+  padding: 24px 24px 40px;
   display: flex;
   flex-direction: column;
-  gap: 26px;
+  gap: 16px; /* scale: 4/8/12/16/24/32 */
 }
 
 .hero {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 12px;
 }
 
 .heroCopy {
@@ -21,6 +21,11 @@
 
 .heroTitleRow {
   gap: 10px;
+}
+
+.periodWrap {
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 .heroTitle {
@@ -35,6 +40,7 @@
   min-height: 20px;
   font-size: 14px;
   line-height: 20px;
+  color: var(--g-color-text-complementary);
 }
 
 .tabs {
@@ -46,8 +52,8 @@
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(280px, 24vw, 340px);
-  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) 420px;
+  gap: 20px;
   align-items: start;
 }
 
@@ -59,10 +65,17 @@
   min-width: 0;
 }
 
+@media (max-width: 1100px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr) 380px;
+    gap: 20px;
+  }
+}
+
 @media (max-width: 960px) {
   .workspace {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 20px;
   }
 
   .workspace > :last-child {
@@ -90,7 +103,3 @@
   opacity: 0.72;
 }
 
-:global(.g-root_theme_dark) .heroLead:global(.g-text),
-:global(.g-root_theme_dark-hc) .heroLead:global(.g-text) {
-  color: var(--g-color-text-complementary);
-}

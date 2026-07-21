@@ -315,7 +315,7 @@ export function PresetDrawer({
                     {scopeLabel(selected.scope)}
                   </Label>
                 </Flex>
-                <CostBreakdownBar parts={selected.parts} showLegend={false} />
+                <CostBreakdownBar parts={selected.parts} period={period} showLegend={false} />
                 <div className={styles.breakdownList}>
                   {selected.parts.map((part) => {
                     const pct =

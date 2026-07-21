@@ -1,15 +1,25 @@
 .root {
   display: grid;
-  grid-template-columns: minmax(120px, 140px) minmax(200px, 460px) 140px;
+  /* Cap the track column so the row doesn't stretch into empty space
+   * when the calculator form is wider than the control needs. */
+  grid-template-columns: 172px minmax(140px, 360px) 160px;
   align-items: center;
   justify-content: start;
-  gap: 8px 20px;
+  gap: 8px 16px;
   min-width: 0;
-  max-width: 780px;
+  min-height: 44px;
+  max-width: 720px;
 }
 
 .label {
   min-width: 0;
+}
+
+.labelText {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+  color: var(--g-color-text-complementary);
 }
 
 .icon {
@@ -21,12 +31,30 @@
 .slider {
   width: 100%;
   min-width: 0;
+  max-width: 360px;
+  /* Calm track — less visual weight than default brand fill. */
+  --g-slider-color-track: var(--g-color-base-generic);
+  --g-slider-color-range: color-mix(in srgb, var(--g-color-base-brand) 45%, transparent);
+  --g-slider-color-thumb: color-mix(in srgb, var(--g-color-base-brand) 88%, #fff);
+}
+
+.slider :global(.g-slider__thumb:focus-visible) {
+  outline: 2px solid var(--g-color-line-focus);
+  outline-offset: 2px;
+}
+
+.rangeError {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--g-color-text-danger);
 }
 
 .input {
-  width: 140px;
+  width: 160px;
   min-width: 0;
-  justify-self: start;
+  justify-self: end;
 }
 
 .unit {
@@ -36,7 +64,7 @@
 
 @media (max-width: 720px) {
   .root {
-    grid-template-columns: minmax(0, 1fr) 120px;
+    grid-template-columns: minmax(0, 1fr) 140px;
     grid-template-areas:
       'label input'
       'slider slider';
@@ -50,10 +78,12 @@
 
   .slider {
     grid-area: slider;
+    max-width: none;
   }
 
   .input {
     grid-area: input;
     width: 100%;
+    justify-self: stretch;
   }
 }

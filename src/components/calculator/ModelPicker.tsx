@@ -239,9 +239,11 @@ export function ModelPicker({
           {value}
         </Text>
         {selected ? (
-          <Text variant="caption-2" color="secondary" ellipsis className={styles.triggerMeta}>
-            {closedFieldMeta(selected)}
-          </Text>
+          <span className={styles.triggerMeta} title={closedFieldMeta(selected)}>
+            <Text variant="caption-2" color="complementary" ellipsis>
+              {closedFieldMeta(selected)}
+            </Text>
+          </span>
         ) : null}
         <Icon data={ChevronDown} size={16} className={styles.triggerChevron} />
       </button>

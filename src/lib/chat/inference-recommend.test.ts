@@ -268,6 +268,26 @@ describe('recommendInferenceInfra', () => {
     assert.ok(result.hostedAlternative?.note?.includes('input'));
   });
 
+  it('keeps explicit quant filter (no silent fallback to Auto recipes)', () => {
+    const bf16 = recommendInferenceInfra({
+      model: 'Qwen3-Coder-Next',
+      quant: 'bf16',
+      maxConfigs: 5,
+    });
+    assert.equal(bf16.ok, true);
+    assert.ok(bf16.configs?.length);
+    assert.ok(bf16.configs?.every((c) => c.quant === 'bf16'));
+    assert.ok(!bf16.configs?.some((c) => c.quant === 'int4' || c.quant === 'fp8'));
+
+    const int8 = recommendInferenceInfra({
+      model: 'Qwen3-Coder-Next',
+      quant: 'int8',
+      maxConfigs: 5,
+    });
+    assert.equal(int8.ok, true);
+    assert.equal(int8.configs?.length ?? 0, 0);
+  });
+
   it('is reachable via runToolSync', () => {
     const raw = runToolSync(
       'recommend_inference_infra',

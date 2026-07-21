@@ -3,7 +3,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .card {
@@ -17,8 +17,27 @@
 .head {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   min-width: 0;
+}
+
+.headMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  min-width: 0;
+}
+
+.headPct {
+  white-space: nowrap;
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 600;
 }
 
 .barTrack {
@@ -37,8 +56,9 @@
 }
 
 .segment {
-  min-width: 0;
+  min-width: 2px;
   height: 100%;
+  display: block;
 }
 
 .segment[data-tone='heavy'] {
@@ -54,17 +74,18 @@
 }
 
 .segment[data-tone='muted'] {
-  background: var(--g-color-base-generic-accent);
+  background: var(--g-color-base-misc-heavy);
 }
 
 .segment[data-tone='free'] {
-  background: transparent;
+  background: var(--g-color-base-generic-medium);
+  opacity: 0.55;
 }
 
 .legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 14px;
+  gap: 8px 18px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -72,9 +93,18 @@
 
 .legendItem {
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
   gap: 6px;
   min-width: 0;
+}
+
+.legendLabel {
+  white-space: nowrap;
+}
+
+.legendAmount {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .swatch {
@@ -97,18 +127,10 @@
 }
 
 .swatch[data-tone='muted'] {
-  background: var(--g-color-base-generic-accent);
+  background: var(--g-color-base-misc-heavy);
 }
 
 .swatch[data-tone='free'] {
-  box-sizing: border-box;
-  background: transparent;
-  border: 1px solid var(--g-color-line-generic-solid);
-}
-
-.debug {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding-top: 2px;
+  background: var(--g-color-base-generic-medium);
+  opacity: 0.7;
 }

@@ -165,17 +165,19 @@ export function loadBandLabel(band: VramLoadBand): {
   }
 }
 
+function formatGiBAmount(n: number): string {
+  const rounded = n >= 100 ? Math.round(n * 10) / 10 : Math.round(n * 100) / 100;
+  return new Intl.NumberFormat('ru-RU', {
+    maximumFractionDigits: rounded >= 100 ? 1 : 2,
+  }).format(rounded);
+}
+
 export function formatVramUsage(totalGiB: number, capacityGiB: number | null | undefined): string {
-  const used =
-    totalGiB >= 100 ? String(Math.round(totalGiB * 10) / 10) : String(Math.round(totalGiB * 100) / 100);
+  const used = formatGiBAmount(totalGiB);
   if (capacityGiB == null || !Number.isFinite(capacityGiB) || capacityGiB <= 0) {
     return `${used} GiB`;
   }
-  const cap =
-    capacityGiB >= 100
-      ? String(Math.round(capacityGiB * 10) / 10)
-      : String(Math.round(capacityGiB * 100) / 100);
-  return `${used} из ${cap} GiB`;
+  return `${used} из ${formatGiBAmount(capacityGiB)} GiB`;
 }
 
 export type BuildVramArgs = {

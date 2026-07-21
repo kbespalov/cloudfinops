@@ -155,6 +155,22 @@ export function periodShortLabel(period: PeriodMode): string {
   return 'час';
 }
 
+/** Full total label for the result card. */
+export function periodTotalLabel(period: PeriodMode): string {
+  if (period === 'month') return 'Итого в месяц';
+  if (period === 'year') return 'Итого в год';
+  return 'Итого в час';
+}
+
+/** Russian decimal / grouping for UI quantities (GiB, shares, etc.). */
+export function formatRuNumber(value: number, maxFractionDigits = 1): string {
+  if (!Number.isFinite(value)) return '—';
+  return new Intl.NumberFormat('ru-RU', {
+    maximumFractionDigits: maxFractionDigits,
+    minimumFractionDigits: Number.isInteger(value) ? 0 : undefined,
+  }).format(value);
+}
+
 export function formatQuoteAmount(amount: number, period: PeriodMode): string {
   const fractionDigits = period === 'unit' ? 2 : 0;
   return new Intl.NumberFormat('ru-RU', {
@@ -169,8 +185,9 @@ export function formatQuoteAmount(amount: number, period: PeriodMode): string {
 export function partTone(id: CostPartId): string {
   if (id === 'gpu' || id === 'bundle') return 'info';
   if (id === 'vcpu') return 'utility';
-  if (id === 'ram') return 'unknown';
-  if (id === 'disk') return 'success';
+  if (id === 'ram') return 'warning';
+  /** Disk uses positive (not success*) — success-* tokens are absent in Gravity themes. */
+  if (id === 'disk') return 'positive';
   return 'unknown';
 }
 
@@ -179,10 +196,9 @@ export function formatGiBCapacity(gib: number): string {
   if (!Number.isFinite(gib) || gib <= 0) return '—';
   if (gib >= 1024) {
     const tib = gib / 1024;
-    const label = Number.isInteger(tib) ? String(tib) : tib.toFixed(1).replace(/\.0$/, '');
-    return `${label} TiB`;
+    return `${formatRuNumber(tib, 1)} TiB`;
   }
-  return `${gib} GiB`;
+  return `${formatRuNumber(gib, 1)} GiB`;
 }
 
 /** @deprecated use formatGiBCapacity */

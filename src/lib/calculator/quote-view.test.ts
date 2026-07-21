@@ -43,15 +43,15 @@ describe('quote-view helpers', () => {
     assert.equal(partTone('gpu'), 'info');
     assert.equal(partTone('bundle'), 'info');
     assert.equal(partTone('vcpu'), 'utility');
-    assert.equal(partTone('ram'), 'unknown');
-    assert.equal(partTone('disk'), 'success');
+    assert.equal(partTone('ram'), 'warning');
+    assert.equal(partTone('disk'), 'positive');
   });
 
   it('formatRamGiB switches to TiB at 1024 GiB', () => {
     assert.equal(formatRamGiB(72), '72 GiB');
     assert.equal(formatRamGiB(1024), '1 TiB');
     assert.equal(formatRamGiB(2048), '2 TiB');
-    assert.equal(formatRamGiB(1536), '1.5 TiB');
+    assert.equal(formatRamGiB(1536), '1,5 TiB');
   });
 
   it('formatPlatformLabel prefers native and maps family ids', () => {

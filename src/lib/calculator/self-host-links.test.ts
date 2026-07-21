@@ -40,10 +40,18 @@ describe('self-host-links', () => {
       quant: 'fp8',
       gpuFamily: 'L40S',
       gpuCount: 1,
+      nodeCount: 2,
+      concurrentRequests: 4,
+      avgContextTokens: 8192,
+      maxContextTokens: 128000,
+      monthlyRub: 120000,
+      providerName: 'Cloud.ru',
     });
     assert.match(prompt, /T-Search/);
     assert.match(prompt, /1×L40S/);
+    assert.match(prompt, /2 нод/);
     assert.match(prompt, /FP8/);
+    assert.match(prompt, /Cloud\.ru/);
     assert.match(prompt, /self-host/i);
   });
 

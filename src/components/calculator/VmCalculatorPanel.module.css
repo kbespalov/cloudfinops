@@ -6,7 +6,7 @@
 .configInner {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
   padding: 0;
   min-width: 0;
 }
@@ -25,16 +25,25 @@
   width: 100%;
 }
 
-/*
- * width=max makes option text `display:block` for ellipsis; restore flex so
- * icon+label stay vertically centered while segments fill the form width.
- */
+/* Equal-width segments; center icon+label (Gravity adds side margin that
+ * shifts content when option-text is width:100%). */
+.familyGroup :global(.g-segmented-radio-group__option) {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .familyGroup :global(.g-segmented-radio-group__option-text) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
   height: 100%;
+  margin: 0;
+  padding: 0 8px;
   box-sizing: border-box;
 }
 
@@ -43,6 +52,7 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
+  min-width: 0;
 }
 
 .gpuSelectRow {
@@ -109,31 +119,101 @@
 
 .groupTitle {
   margin: 0;
-  font-size: 13px;
-  line-height: 18px;
-  font-weight: 500;
-  color: var(--g-color-text-secondary);
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 600;
+  color: var(--g-color-text-primary);
 }
 
 .fields {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
+}
+
+/* Soften family selected segment — match Self-hosted LLM. */
+.familyGroup :global(.g-segmented-radio-group__option.g-segmented-radio-group__option_checked)::after {
+  background-color: color-mix(in srgb, var(--g-color-base-brand) 14%, var(--g-color-base-background));
+  border-color: var(--g-color-line-brand);
+}
+
+.familyGroup
+  :global(.g-segmented-radio-group__option.g-segmented-radio-group__option_checked)
+  :global(.g-segmented-radio-group__option-text) {
+  color: var(--g-color-text-brand);
+}
+
+.ipRow {
+  display: grid;
+  grid-template-columns: 172px 120px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px 16px;
+  min-width: 0;
+  min-height: 48px;
+}
+
+.ipLabel {
+  min-width: 0;
+}
+
+.ipLabelText {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+  color: var(--g-color-text-complementary);
+  white-space: nowrap;
+}
+
+.ipInput {
+  width: 120px;
+  min-width: 0;
+}
+
+.ipQuick {
+  min-width: 0;
 }
 
 .diskTypeRow {
   display: grid;
-  grid-template-columns: minmax(120px, 140px) minmax(0, 280px);
+  grid-template-columns: 172px minmax(0, 280px);
   align-items: center;
   gap: 8px 16px;
   min-width: 0;
+  min-height: 48px;
 }
 
 .diskTypeLabel {
   min-width: 0;
 }
 
+.chatBridge {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
 @media (max-width: 720px) {
+  .ipRow {
+    grid-template-columns: minmax(0, 1fr) 120px;
+    grid-template-areas:
+      'label input'
+      'quick quick';
+    gap: 8px 12px;
+  }
+
+  .ipLabel {
+    grid-area: label;
+  }
+
+  .ipInput {
+    grid-area: input;
+    width: 100%;
+  }
+
+  .ipQuick {
+    grid-area: quick;
+  }
+
   .diskTypeRow {
     grid-template-columns: 1fr;
     gap: 6px;

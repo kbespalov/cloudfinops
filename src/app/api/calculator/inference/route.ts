@@ -21,9 +21,11 @@ export async function GET(request: Request) {
       : 5;
 
   const result = recommendInferenceInfra({model, quant, maxConfigs});
+  // Quant filter must not be served from a stale browser/CDN cache of another format.
   return NextResponse.json(result, {
     headers: {
-      'Cache-Control': 'public, max-age=300, stale-while-revalidate=3600',
+      'Cache-Control': 'private, max-age=60, must-revalidate',
+      Vary: 'Accept-Encoding',
     },
   });
 }

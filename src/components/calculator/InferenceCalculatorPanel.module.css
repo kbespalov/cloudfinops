@@ -1,3 +1,5 @@
+/* Spacing scale: 4 / 8 / 12 / 16 / 24 / 32 */
+
 .configCard {
   min-width: 0;
   padding: 0;
@@ -10,29 +12,63 @@
   display: flex;
   flex-direction: column;
   padding: 0;
-  gap: 24px;
+  gap: 20px;
 }
 
-.controls {
+.group {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   min-width: 0;
 }
 
-.workload {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  min-width: 0;
-  align-items: end;
+.groupTitle {
+  margin: 0;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+  color: var(--g-color-text-secondary);
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
+}
+
+.fieldLabelRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 18px;
+}
+
+.fieldLabel {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+  color: var(--g-color-text-complementary);
+}
+
+.workload {
+  display: grid;
+  grid-template-columns: minmax(0, 28%) minmax(0, 36%) minmax(0, 36%);
+  gap: 12px;
+  min-width: 0;
+  align-items: end;
+}
+
+/* Soften checked segment — Gravity paints fill on ::after; keep light tint + thin brand border. */
+.quantControl :global(.g-segmented-radio-group__option.g-segmented-radio-group__option_checked)::after {
+  background-color: color-mix(in srgb, var(--g-color-base-brand) 14%, var(--g-color-base-background));
+  border-color: var(--g-color-line-brand);
+}
+
+.quantControl
+  :global(.g-segmented-radio-group__option.g-segmented-radio-group__option_checked)
+  :global(.g-segmented-radio-group__option-text) {
+  color: var(--g-color-text-brand);
 }
 
 .chatBridge {
@@ -41,33 +77,7 @@
   align-items: center;
   gap: 8px;
   min-width: 0;
-}
-
-.configRow[data-replicas='true'] {
-  opacity: 1;
-}
-
-.fieldHead {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 6px 8px;
-  min-height: 18px;
-}
-
-.fieldIcon {
-  color: var(--g-color-text-hint);
-  flex-shrink: 0;
-  align-self: center;
-}
-
-.fieldMeta {
-  color: var(--g-color-text-secondary);
-}
-
-.modelOption {
-  min-width: 0;
-  width: 100%;
+  margin-top: -4px;
 }
 
 .configSection {
@@ -77,49 +87,127 @@
   min-width: 0;
 }
 
+.configSection[data-stale='true'] .configList {
+  opacity: 0.72;
+  transition: opacity 0.15s ease;
+}
+
+.sectionTitleRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+}
+
 .sectionTitle {
   margin: 0;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 600;
+}
+
+.autoHint {
+  margin-top: 2px;
+}
+
+.autoHintRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 2px;
+  min-width: 0;
+}
+
+.workloadNote {
+  margin: 0;
+  max-width: 52rem;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--g-color-line-generic);
+  border-radius: var(--g-border-radius-l);
+  background: var(--g-color-base-generic);
+}
+
+.emptyTitle {
+  margin: 0;
+}
+
+.emptyActions {
+  margin-top: 4px;
+}
+
+.vramWarning {
+  margin-top: 4px;
+}
+
+.configGpuCell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
 }
 
 .configList {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  border-top: 1px solid var(--g-color-line-generic);
+  border: 1px solid var(--g-color-line-generic);
+  border-radius: var(--g-border-radius-l);
+  overflow: hidden;
 }
 
 .configHead,
 .configRow {
   display: grid;
   grid-template-columns:
+    1.25rem
     minmax(0, 1.2fr)
-    3.75rem
-    minmax(7.5rem, 1.1fr)
-    minmax(5.75rem, 1fr)
-    7.5rem;
+    4.5rem
+    minmax(7rem, 1.1fr)
+    3.25rem
+    minmax(8.5rem, 9.5rem);
   align-items: center;
-  column-gap: 12px;
+  column-gap: 16px;
   width: 100%;
   min-width: 0;
 }
 
 .configHead {
-  padding: 0 10px 8px;
+  padding: 10px 12px;
+  background: var(--g-color-base-generic);
+  border-bottom: 1px solid var(--g-color-line-generic);
+}
+
+.configHeadSpacer {
+  /* radio column */
 }
 
 .configRow {
   appearance: none;
   margin: 0;
-  padding: 12px 10px;
+  padding: 0 12px;
+  min-height: 56px;
   border: none;
   border-bottom: 1px solid var(--g-color-line-generic);
   border-radius: 0;
+  border-left: 2px solid transparent;
   background: transparent;
   color: inherit;
   font: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background 0.12s ease;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.configRow:last-child {
+  border-bottom: none;
 }
 
 .configRow:hover {
@@ -127,7 +215,16 @@
 }
 
 .configRow[data-active='true'] {
-  background: var(--g-color-base-generic);
+  background: color-mix(in srgb, var(--g-color-base-brand) 5%, var(--g-color-base-background));
+  border-left-color: var(--g-color-line-brand);
+}
+
+.configRow[data-recommended='true']:not([data-active='true']) {
+  background: transparent;
+}
+
+.configRow[data-active='true']:hover {
+  background: color-mix(in srgb, var(--g-color-base-brand) 8%, var(--g-color-base-background));
 }
 
 .configRow[data-overload='true'] {
@@ -139,8 +236,38 @@
   outline-offset: -2px;
 }
 
+.radio {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid var(--g-color-line-generic-solid);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+  flex-shrink: 0;
+  background: var(--g-color-base-background);
+}
+
+.radio[data-checked='true'] {
+  border-color: var(--g-color-line-brand);
+}
+
+.radio[data-checked='true']::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--g-color-base-brand);
+}
+
 .configGpu {
   min-width: 0;
+  font-size: 15px;
+  line-height: 20px;
+  font-weight: 500;
+  text-align: left;
+  color: var(--g-color-text-primary);
 }
 
 .configQuant,
@@ -149,30 +276,87 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   min-width: 0;
+  font-size: 14px;
+  line-height: 18px;
+}
+
+.configQuant {
+  text-align: left;
+}
+
+.configVram {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  align-items: flex-start;
+  white-space: normal;
+}
+
+.configVramUsed {
+  font-variant-numeric: tabular-nums;
+}
+
+.configVramFree {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--g-color-text-hint);
+  font-variant-numeric: tabular-nums;
+}
+
+.configLoad {
+  justify-self: center;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .configPrice {
   justify-self: end;
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 4px;
+  min-width: 0;
+  padding-left: 8px;
   text-align: right;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  font-size: 15px;
+  line-height: 20px;
+  color: var(--g-color-text-primary);
 }
 
 .configPeriod {
   font-weight: 400;
+  font-size: 13px;
+  line-height: 20px;
   color: var(--g-color-text-secondary);
 }
 
+:global(.g-root_theme_dark) .configRow[data-active='true'],
+:global(.g-root_theme_dark-hc) .configRow[data-active='true'] {
+  background: color-mix(in srgb, var(--g-color-base-brand) 14%, var(--g-color-base-background));
+}
+
 @media (max-width: 860px) {
+  .workload {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .workload .field:first-child {
+    grid-column: 1 / -1;
+    max-width: 12rem;
+  }
+
   .configHead,
   .configRow {
     grid-template-columns:
+      1.25rem
       minmax(0, 1.1fr)
-      3.25rem
-      minmax(6.5rem, 1fr)
-      minmax(5rem, 0.9fr)
-      6.75rem;
-    column-gap: 8px;
+      3.75rem
+      minmax(6rem, 1fr)
+      2.75rem
+      minmax(7.5rem, 8.5rem);
+    column-gap: 12px;
   }
 }
 
@@ -182,23 +366,36 @@
     gap: 12px;
   }
 
+  .workload .field:first-child {
+    max-width: none;
+  }
+
   .configHead {
     display: none;
   }
 
   .configRow {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: 1.25rem minmax(0, 1fr) auto;
     grid-template-areas:
-      'gpu price'
-      'quant vram'
-      'load load';
+      'radio gpu price'
+      'radio quant vram'
+      'radio load load';
     row-gap: 4px;
     column-gap: 10px;
-    padding: 12px 4px;
+    padding: 12px;
+    min-height: 0;
+  }
+
+  .radio {
+    grid-area: radio;
+  }
+
+  .configGpuCell {
+    grid-area: gpu;
   }
 
   .configGpu {
-    grid-area: gpu;
+    grid-area: unset;
   }
 
   .configQuant {
@@ -208,10 +405,12 @@
   .configVram {
     grid-area: vram;
     justify-self: end;
+    text-align: right;
   }
 
   .configLoad {
     grid-area: load;
+    text-align: left;
   }
 
   .configPrice {

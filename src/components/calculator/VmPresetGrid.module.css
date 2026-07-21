@@ -6,18 +6,47 @@
   padding-top: 4px;
 }
 
+.sectionHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
 .sectionTitle {
   margin: 0;
-  font-size: 13px;
-  line-height: 18px;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 600;
+  color: var(--g-color-text-primary);
+}
+
+.customChip {
+  appearance: none;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 4px 10px;
+  border: 1px solid var(--g-color-line-brand);
+  border-radius: var(--g-border-radius-l);
+  background: color-mix(in srgb, var(--g-color-base-brand) 8%, var(--g-color-base-background));
+  color: var(--g-color-text-brand);
+  font: inherit;
+  font-size: 12px;
+  line-height: 16px;
   font-weight: 500;
-  color: var(--g-color-text-secondary);
+  cursor: pointer;
+}
+
+.customChip:focus-visible {
+  outline: 2px solid var(--g-color-line-focus);
+  outline-offset: 2px;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+  gap: 8px;
 }
 
 .card {
@@ -25,12 +54,12 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 4px;
+  gap: 2px;
   margin: 0;
-  padding: 14px 16px;
-  min-height: 96px;
+  padding: 12px 14px;
+  min-height: 88px;
   border: 1px solid var(--g-color-line-generic);
-  border-radius: var(--g-border-radius-m);
+  border-radius: var(--g-border-radius-l);
   background: var(--g-color-base-background);
   color: inherit;
   font: inherit;
@@ -43,12 +72,13 @@
 
 .card:hover {
   border-color: var(--g-color-line-generic-hover, var(--g-color-line-generic));
-  background: var(--g-color-base-generic-ultralight, var(--g-color-base-background));
+  background: var(--g-color-base-generic);
 }
 
 .card[data-active='true'] {
-  background: var(--g-color-base-selection);
+  background: color-mix(in srgb, var(--g-color-base-brand) 5%, var(--g-color-base-background));
   border-color: var(--g-color-line-brand);
+  box-shadow: inset 2px 0 0 var(--g-color-line-brand);
 }
 
 .card:focus-visible {
@@ -57,9 +87,10 @@
 }
 
 .price {
-  margin-top: 4px;
+  margin-top: auto;
+  padding-top: 6px;
   font-variant-numeric: tabular-nums;
-  color: var(--g-color-text-primary);
+  color: var(--g-color-text-secondary);
 }
 
 :global(.g-root_theme_dark) .card,
@@ -69,5 +100,5 @@
 
 :global(.g-root_theme_dark) .card[data-active='true'],
 :global(.g-root_theme_dark-hc) .card[data-active='true'] {
-  background: var(--g-color-base-selection);
+  background: color-mix(in srgb, var(--g-color-base-brand) 14%, var(--g-color-base-background));
 }

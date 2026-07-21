@@ -413,9 +413,11 @@ export function closedFieldMeta(item: ModelPickerItem): string {
   if (item.tasks.includes('coder')) bits.push('Coder');
   else if (item.tasks.includes('reasoning')) bits.push('Reasoning');
   else if (item.tasks.includes('vision')) bits.push('Vision');
-  if (item.parameterCountB != null) bits.push(item.sizeLabel);
-  if (item.activeParameterCountB != null) bits.push(`${item.activeParameterCountB}B active`);
-  bits.push(`контекст ${formatContextTokens(item.contextDefault)}`);
+  if (item.parameterCountB != null) bits.push(`${item.sizeLabel} параметров`);
+  if (item.activeParameterCountB != null) {
+    bits.push(`${item.activeParameterCountB}B активных`);
+  }
+  bits.push(`${formatContextTokens(item.contextDefault)} токенов`);
   return bits.join(' · ');
 }
 

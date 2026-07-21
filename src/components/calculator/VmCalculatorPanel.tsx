@@ -1,7 +1,17 @@
 'use client';
 
+import Link from 'next/link';
 import {useMemo, useState} from 'react';
-import {Flex, Icon, SegmentedRadioGroup, Select, Text} from '@gravity-ui/uikit';
+import {
+  Button,
+  Flex,
+  HelpMark,
+  Icon,
+  NumberInput,
+  SegmentedRadioGroup,
+  Select,
+  Text,
+} from '@gravity-ui/uikit';
 import {
   Cpu,
   Cpus,
@@ -11,6 +21,7 @@ import {
   PlanetEarth,
   ScalesBalanced,
   Server,
+  Sparkles,
   TagRuble,
   Thunderbolt,
 } from '@gravity-ui/icons';
@@ -22,11 +33,17 @@ import {
   type DiskMedia,
   type GpuPreset,
 } from '@/lib/calculator/presets';
-import {formatGiBCapacity, type PeriodMode} from '@/lib/calculator/quote-view';
+import {
+  formatGiBCapacity,
+  periodShortLabel,
+  type PeriodMode,
+} from '@/lib/calculator/quote-view';
+import {vmChatPrompt} from '@/lib/calculator/self-host-links';
 import {useAdhocQuote} from '@/lib/calculator/useAdhocQuote';
+import {chatUrlForQuery} from '@/components/home/homePrompts';
 import {CalculatorSidebar} from './CalculatorSidebar';
 import {GpuPresetGrid} from './GpuPresetGrid';
-import {IntegerSliderField, SliderField} from './SliderField';
+import {SliderField} from './SliderField';
 import {VmPresetGrid} from './VmPresetGrid';
 import panelStyles from './CalculatorPanel.module.css';
 import styles from './VmCalculatorPanel.module.css';
@@ -120,6 +137,7 @@ export function VmCalculatorPanel({
   const [mode, setMode] = useState<VmMode>(DEFAULT.family);
   const [family, setFamily] = useState<ComputeFamily>(DEFAULT.family);
   const [customRam, setCustomRam] = useState(false);
+  const [forceCustomPreset, setForceCustomPreset] = useState(false);
   const [vmCount, setVmCount] = useState(DEFAULT.vmCount);
   const [vcpu, setVcpu] = useState(DEFAULT.vcpu);
   const [ramGiB, setRamGiB] = useState(ramFor(DEFAULT.family, DEFAULT.vcpu));
@@ -208,11 +226,13 @@ export function VmCalculatorPanel({
   }
 
   function onVcpuChange(next: number) {
+    setForceCustomPreset(true);
     setVcpu(next);
     if (!customRam) setRamGiB(ramFor(family, next));
   }
 
   function onRamChange(next: number) {
+    setForceCustomPreset(true);
     setCustomRam(true);
     setRamGiB(next);
     const match = vcpuOptions.find((v) => ramFor(family, v) === next);
@@ -226,6 +246,7 @@ export function VmCalculatorPanel({
     setMode(preset.family);
     setFamily(preset.family);
     setCustomRam(false);
+    setForceCustomPreset(false);
     setVcpu(preset.vcpu);
     setRamGiB(preset.ramGiB);
     setDiskGiB(nearestIn(DISK_STEPS, preset.diskGiB));
@@ -249,12 +270,34 @@ export function VmCalculatorPanel({
     }
   }
 
-  const activePresetId =
+  const matchedPresetId =
     computePresetsByFamily(family).find((p) => p.vcpu === vcpu && p.ramGiB === ramGiB)?.id ??
     null;
+  const activePresetId = forceCustomPreset ? null : matchedPresetId;
+  const customSelected = forceCustomPreset || matchedPresetId == null;
 
   const gpuHostRam =
     activeGpu?.ramGiB != null ? formatGiBCapacity(activeGpu.ramGiB) : '—';
+
+  const diskLabel = diskMedia === 'ssd' ? 'Сетевой SSD' : 'Сетевой HDD';
+  const vmConfigSummary = isGpu
+    ? null
+    : {
+        primary: vmCount === 1 ? '1 ВМ' : `${vmCount} ВМ`,
+        secondary:
+          vmCount === 1
+            ? `${vcpu} vCPU · ${formatGiBCapacity(ramGiB)} RAM`
+            : `${vcpu} vCPU · ${formatGiBCapacity(ramGiB)} RAM на одну ВМ`,
+        tertiary:
+          vmCount === 1
+            ? `${diskLabel}, ${diskGiB} GiB`
+            : `${diskLabel}, ${diskGiB} GiB на одну ВМ`,
+        quaternary:
+          vmCount === 1
+            ? `${publicIpCount} публичный IPv4`
+            : `${publicIpCount} публичный IPv4 всего`,
+        totals: `Итого: ${vmCount * vcpu} vCPU · ${formatGiBCapacity(vmCount * ramGiB)} RAM · ${formatGiBCapacity(vmCount * diskGiB)} ${diskMedia === 'ssd' ? 'SSD' : 'HDD'}`,
+      };
 
   return (
     <>
@@ -352,44 +395,51 @@ export function VmCalculatorPanel({
             </>
           ) : (
             <>
-              <section className={styles.fieldGroup} aria-label="Вычисления">
-                <Text className={styles.groupTitle}>Вычисления</Text>
+              <section className={styles.fieldGroup} aria-label="Конфигурация ВМ">
+                <Text as="h3" className={styles.groupTitle}>
+                  Конфигурация ВМ
+                </Text>
                 <div className={styles.fields}>
                   <SliderField
                     icon={Server}
-                    label="Число VM"
+                    label="Количество ВМ"
                     value={vmCount}
                     options={VM_STEPS}
                     scaleMin={1}
                     scaleMax={64}
                     unit="шт"
+                    hint="Количество одинаковых виртуальных машин в расчёте."
                     onUpdate={onVmCountChange}
                   />
                   <SliderField
                     icon={Cpu}
-                    label="vCPU на VM"
+                    label="vCPU на одну ВМ"
                     value={vcpu}
                     options={vcpuOptions}
                     scaleMin={1}
                     scaleMax={128}
                     unit="vCPU"
+                    hint="Количество виртуальных процессоров для каждого экземпляра."
                     onUpdate={onVcpuChange}
                   />
                   <SliderField
                     icon={Layers3Diagonal}
-                    label="RAM на VM"
+                    label="RAM на одну ВМ"
                     value={ramGiB}
                     options={ramOptions}
                     scaleMin={1}
                     scaleMax={1024}
                     unit="GiB"
+                    hint="Объём оперативной памяти для каждого экземпляра."
                     onUpdate={onRamChange}
                   />
                 </div>
               </section>
 
               <section className={styles.fieldGroup} aria-label="Хранилище">
-                <Text className={styles.groupTitle}>Хранилище</Text>
+                <Text as="h3" className={styles.groupTitle}>
+                  Хранилище
+                </Text>
                 <div className={styles.fields}>
                   <div className={styles.diskTypeRow}>
                     <Flex alignItems="center" gap={2} className={styles.diskTypeLabel}>
@@ -405,42 +455,88 @@ export function VmCalculatorPanel({
                       <SegmentedRadioGroup.Option value="ssd">
                         <Flex alignItems="center" gap={1}>
                           <Icon data={Thunderbolt} size={14} />
-                          SSD
+                          Сетевой SSD
                         </Flex>
                       </SegmentedRadioGroup.Option>
                       <SegmentedRadioGroup.Option value="hdd">
                         <Flex alignItems="center" gap={1}>
                           <Icon data={HardDrive} size={14} />
-                          HDD
+                          Сетевой HDD
                         </Flex>
                       </SegmentedRadioGroup.Option>
                     </SegmentedRadioGroup>
                   </div>
                   <SliderField
                     icon={HardDrive}
-                    label="Объём"
+                    label="Объём диска"
                     value={diskGiB}
                     options={DISK_STEPS}
                     scaleMin={10}
                     scaleMax={10240}
                     unit="GiB"
+                    hint="Объём сетевого диска на одну виртуальную машину. В цене умножается на количество ВМ."
                     onUpdate={setDiskGiB}
                   />
                 </div>
               </section>
 
               <section className={styles.fieldGroup} aria-label="Сеть">
-                <Text className={styles.groupTitle}>Сеть</Text>
-                <div className={styles.fields}>
-                  <IntegerSliderField
-                    icon={PlanetEarth}
-                    label="Публичные IP"
-                    value={publicIpCount}
+                <Text as="h3" className={styles.groupTitle}>
+                  Сеть
+                </Text>
+                <div className={styles.ipRow}>
+                  <Flex alignItems="center" gap={2} className={styles.ipLabel}>
+                    <Icon data={PlanetEarth} size={16} className={styles.fieldIcon} />
+                    <Text as="span" className={styles.ipLabelText}>
+                      Публичные IPv4
+                    </Text>
+                    <HelpMark aria-label="Про публичные IPv4" iconSize="s">
+                      Общее количество публичных IPv4-адресов в конфигурации.
+                    </HelpMark>
+                  </Flex>
+                  <NumberInput
+                    size="m"
                     min={0}
                     max={vmCount}
-                    unit="шт"
-                    onUpdate={setPublicIpCount}
+                    step={1}
+                    allowDecimal={false}
+                    value={publicIpCount}
+                    onUpdate={(v) => {
+                      if (v == null || !Number.isFinite(v)) return;
+                      setPublicIpCount(Math.min(vmCount, Math.max(0, Math.round(v))));
+                    }}
+                    endContent={
+                      <Text variant="caption-1" color="secondary">
+                        шт
+                      </Text>
+                    }
+                    className={styles.ipInput}
+                    controlProps={{'aria-label': 'Публичные IPv4'}}
                   />
+                  <Flex gap={1} wrap className={styles.ipQuick}>
+                    <Button
+                      size="s"
+                      view={publicIpCount === 0 ? 'outlined-action' : 'outlined'}
+                      onClick={() => setPublicIpCount(0)}
+                    >
+                      0
+                    </Button>
+                    <Button
+                      size="s"
+                      view={publicIpCount === 1 ? 'outlined-action' : 'outlined'}
+                      onClick={() => setPublicIpCount(Math.min(1, vmCount))}
+                    >
+                      1
+                    </Button>
+                    <Button
+                      size="s"
+                      view={publicIpCount === vmCount && vmCount > 1 ? 'outlined-action' : 'outlined'}
+                      onClick={() => setPublicIpCount(vmCount)}
+                      disabled={vmCount < 1}
+                    >
+                      По одному на ВМ
+                    </Button>
+                  </Flex>
                 </div>
               </section>
 
@@ -451,7 +547,9 @@ export function VmCalculatorPanel({
                 diskMedia={diskMedia}
                 publicIpCount={publicIpCount}
                 activePresetId={activePresetId}
+                customSelected={customSelected}
                 onSelect={applyPreset}
+                onSelectCustom={() => setForceCustomPreset(true)}
               />
             </>
           )}
@@ -462,7 +560,56 @@ export function VmCalculatorPanel({
         period={period}
         result={result}
         loading={loading}
-        emptyHint="Нет котировок"
+        emptyHint="Для выбранных параметров предложения не найдены"
+        bestPriceHint="Самая низкая стоимость текущей выбранной конфигурации среди найденных провайдеров"
+        bestPriceBadge="Самый дешёвый провайдер"
+        configSummary={
+          isGpu && activeGpu
+            ? {
+                primary: `1× ${activeGpu.gpuModelMatch}`,
+                secondary: [
+                  activeGpu.vcpu != null ? `${activeGpu.vcpu} vCPU` : null,
+                  activeGpu.ramGiB != null ? formatGiBCapacity(activeGpu.ramGiB) + ' RAM' : null,
+                ]
+                  .filter(Boolean)
+                  .join(' · '),
+                tertiary:
+                  activeGpu.diskGiB != null
+                    ? `SSD ${activeGpu.diskGiB} GiB`
+                    : activeGpu.dedicated
+                      ? 'Выделенный узел'
+                      : undefined,
+              }
+            : vmConfigSummary
+        }
+        extras={
+          !isGpu ? (
+            <div className={styles.chatBridge}>
+              <Button
+                component={Link}
+                href={chatUrlForQuery(
+                  vmChatPrompt({
+                    vmCount,
+                    vcpu,
+                    ramGiB,
+                    diskGiB,
+                    diskMedia,
+                    publicIpCount,
+                    period: periodShortLabel(period),
+                    providerName: result?.best?.providerName,
+                    totalRub: result?.best?.total,
+                  }),
+                )}
+                view="flat-secondary"
+                size="m"
+                prefetch
+              >
+                <Icon data={Sparkles} size={16} />
+                Сравнить конфигурацию с AI
+              </Button>
+            </div>
+          ) : null
+        }
       />
     </>
   );

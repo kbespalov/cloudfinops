@@ -302,18 +302,18 @@ describe('calculator quote arbitration', () => {
     for (const q of result.quotes) {
       assert.equal(q.scope, 'compute');
       if (q.parts.some((p) => p.id === 'bundle')) {
-        assert.equal(q.parts[0]!.label, '8 vCPU + 16 GiB RAM');
+        assert.equal(q.parts[0]!.label, 'ВМ: 8 vCPU · 16 GiB RAM');
         assert.equal(q.parts.at(-1)!.id, 'disk');
-        assert.match(q.parts.at(-1)!.label, /^10 GiB (SSD|NVMe)$/);
+        assert.match(q.parts.at(-1)!.label, /^Диск: (SSD|NVMe), 10 GiB$/);
         continue;
       }
       assert.deepEqual(
         q.parts.map((p) => p.id),
         ['vcpu', 'ram', 'disk'],
       );
-      assert.equal(q.parts[0]!.label, '8 vCPU');
-      assert.equal(q.parts[1]!.label, '16 GiB RAM');
-      assert.match(q.parts[2]!.label, /^10 GiB (SSD|NVMe)$/);
+      assert.equal(q.parts[0]!.label, 'CPU: 8 vCPU');
+      assert.equal(q.parts[1]!.label, 'RAM: 16 GiB');
+      assert.match(q.parts[2]!.label, /^Диск: (SSD|NVMe), 10 GiB$/);
     }
   });
 
@@ -528,7 +528,7 @@ describe('calculator quote arbitration', () => {
     assert.ok(withIp.best);
     const ipPart = withIp.best!.parts.find((p) => p.id === 'ip');
     assert.ok(ipPart, 'expected ip cost part');
-    assert.match(ipPart!.label, /2 ×/);
+    assert.equal(ipPart!.label, 'Публичный IP: 2');
     assert.ok(ipPart!.amount > 0);
     assert.ok(withIp.best!.total > base.best!.total);
     // Idempotent: second call must not stack another IP line.

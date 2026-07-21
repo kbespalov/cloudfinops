@@ -48,17 +48,17 @@ export type GpuPreset = {
 export type CalculatorPreset = ComputePreset | GpuPreset;
 
 export const COMPUTE_FAMILY_TITLE: Record<ComputeFamily, string> = {
-  'low-cost': 'Low-cost',
-  general: 'General',
-  'high-cpu': 'High CPU',
-  'high-memory': 'High Memory',
+  'low-cost': 'Экономичные',
+  general: 'Универсальные',
+  'high-cpu': 'Больше CPU',
+  'high-memory': 'Больше памяти',
 };
 
 export const COMPUTE_FAMILY_HINT: Record<ComputeFamily, string> = {
-  'low-cost': 'Preemptible + shared vCPU — дешевле всего, но с прерываниями и без гарантий',
-  general: 'Balanced — 1 vCPU : 4 GiB RAM',
-  'high-cpu': 'CPU optimized — 1 vCPU : 2 GiB RAM (как у MWS Cloud)',
-  'high-memory': 'Memory optimized — 1 vCPU : 8 GiB RAM',
+  'low-cost': 'Прерываемые / shared vCPU — дешевле, но без гарантий производительности',
+  general: 'Универсальные ВМ — 1 vCPU : 4 GiB RAM',
+  'high-cpu': 'CPU-оптимизированные — 1 vCPU : 2 GiB RAM',
+  'high-memory': 'Memory-оптимизированные — 1 vCPU : 8 GiB RAM',
 };
 
 function computePreset(

@@ -15,28 +15,40 @@
 }
 
 .segment {
-  min-width: 0;
+  min-width: 2px;
   height: 100%;
+  display: block;
+  outline: none;
+  cursor: default;
 }
 
+.segment:focus-visible {
+  outline: 2px solid var(--g-color-line-focus);
+  outline-offset: 1px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Distinct cool tones — not brand orange. Fallbacks: some *-success tokens are empty. */
 .segment[data-tone='info'] {
-  background: var(--g-color-base-info-heavy);
+  background: var(--g-color-base-info-heavy, #348bdc);
 }
 
 .segment[data-tone='utility'] {
-  background: var(--g-color-base-info-medium);
+  background: var(--g-color-base-utility-heavy, #844dbb);
 }
 
+.segment[data-tone='positive'],
 .segment[data-tone='success'] {
-  background: var(--g-color-base-info-light);
+  background: var(--g-color-base-positive-heavy, #30aa6e);
 }
 
 .segment[data-tone='warning'] {
-  background: var(--g-color-base-generic-accent);
+  background: var(--g-color-base-warning-heavy, #ffbe5c);
 }
 
 .segment[data-tone='unknown'] {
-  background: var(--g-color-base-misc-medium);
+  background: var(--g-color-base-misc-heavy, #647a8d);
 }
 
 .legend {
@@ -52,24 +64,26 @@
   height: 8px;
   border-radius: 2px;
   flex-shrink: 0;
+  background: var(--g-color-base-misc-heavy, #647a8d);
 }
 
 .swatch[data-tone='info'] {
-  background: var(--g-color-base-info-heavy);
+  background: var(--g-color-base-info-heavy, #348bdc);
 }
 
 .swatch[data-tone='utility'] {
-  background: var(--g-color-base-info-medium);
+  background: var(--g-color-base-utility-heavy, #844dbb);
 }
 
+.swatch[data-tone='positive'],
 .swatch[data-tone='success'] {
-  background: var(--g-color-base-info-light);
+  background: var(--g-color-base-positive-heavy, #30aa6e);
 }
 
 .swatch[data-tone='warning'] {
-  background: var(--g-color-base-generic-accent);
+  background: var(--g-color-base-warning-heavy, #ffbe5c);
 }
 
 .swatch[data-tone='unknown'] {
-  background: var(--g-color-base-misc-medium);
+  background: var(--g-color-base-misc-heavy, #647a8d);
 }
