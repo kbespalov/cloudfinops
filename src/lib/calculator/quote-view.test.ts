@@ -39,12 +39,12 @@ describe('quote-view helpers', () => {
     assert.doesNotMatch(month.replace(/\s/g, ''), /,\d{2}₽/);
   });
 
-  it('partTone maps cost parts to visual tones', () => {
-    assert.equal(partTone('vcpu'), 'info');
-    assert.equal(partTone('ram'), 'utility');
+  it('partTone maps cost parts to cool data tones', () => {
+    assert.equal(partTone('gpu'), 'info');
+    assert.equal(partTone('bundle'), 'info');
+    assert.equal(partTone('vcpu'), 'utility');
+    assert.equal(partTone('ram'), 'unknown');
     assert.equal(partTone('disk'), 'success');
-    assert.equal(partTone('gpu'), 'warning');
-    assert.equal(partTone('bundle'), 'warning');
   });
 
   it('formatRamGiB switches to TiB at 1024 GiB', () => {

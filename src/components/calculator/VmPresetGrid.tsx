@@ -79,7 +79,7 @@ export function VmPresetGrid({
 
   return (
     <div className={styles.root}>
-      <Text variant="subheader-2">Пресеты</Text>
+      <Text className={styles.sectionTitle}>Пресеты конфигураций</Text>
       <div className={styles.grid} role="listbox" aria-label="Пресеты конфигурации">
         {presets.map((preset) => {
           const active = preset.id === activePresetId;
@@ -94,18 +94,12 @@ export function VmPresetGrid({
               data-active={active ? 'true' : 'false'}
               onClick={() => onSelect(preset)}
             >
-              <Text variant="body-2">
-                {preset.vcpu} vCPU
-              </Text>
-              <Text variant="body-2" color="complementary">
+              <Text variant="body-2">{preset.vcpu} vCPU</Text>
+              <Text variant="caption-2" color="secondary">
                 {preset.ramGiB} GiB RAM
               </Text>
               <Text variant="subheader-2" className={styles.price}>
-                {total != null
-                  ? formatQuoteAmount(total, period)
-                  : loading
-                    ? '…'
-                    : '—'}
+                {total != null ? formatQuoteAmount(total, period) : loading ? '…' : '—'}
               </Text>
             </button>
           );

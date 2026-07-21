@@ -3,74 +3,13 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border-radius: var(--g-border-radius-s);
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1;
+  line-height: 0;
   user-select: none;
-  color: var(--g-color-text-primary);
-  background: var(--g-color-base-generic);
+  border-radius: var(--g-border-radius-s);
+  overflow: hidden;
 }
 
-.mark[data-size='s'] {
-  font-size: 9px;
-}
-
-.mark[data-size='m'] {
-  font-size: 10px;
-}
-
-.mark[data-family='qwen'] {
-  color: #fff;
-  background: #615ced;
-}
-
-.mark[data-family='glm'] {
-  color: #fff;
-  background: #1a6cff;
-}
-
-.mark[data-family='kimi'] {
-  color: #fff;
-  background: #1783ff;
-}
-
-.mark[data-family='deepseek'] {
-  color: #fff;
-  background: #4d6bfe;
-}
-
-.mark[data-family='llama'] {
-  color: #fff;
-  background: #0668e1;
-}
-
-.mark[data-family='gemma'] {
-  color: #fff;
-  background: #1a73e8;
-}
-
-.mark[data-family='mixtral'] {
-  color: #fff;
-  background: #cf5b00;
-}
-
-.mark[data-family='mistral'] {
-  color: #fff;
-  background: #ff7000;
-}
-
-.mark[data-family='gpt-oss'] {
-  color: #fff;
-  background: #10a37f;
-}
-
-.mark[data-family='phi'] {
-  color: #fff;
-  background: #0078d4;
-}
-
-.mark[data-family='other'] {
-  color: var(--g-color-text-secondary);
-  background: var(--g-color-base-generic);
+.mark svg {
+  display: block;
+  flex-shrink: 0;
 }

@@ -5,6 +5,10 @@
 
 import {quotePreset, listGpuPresets} from '@/lib/calculator/quote';
 import type {GpuPreset} from '@/lib/calculator/presets';
+import {
+  buildVramBreakdown,
+  canonicalRecipeTotalGiB,
+} from '@/lib/calculator/vram-breakdown';
 import {searchPricesDetailed} from './search';
 import {
   findInferenceModel,
@@ -208,12 +212,35 @@ function quoteConfig(
     ? {provider: quotes[0].provider, totalMonth: quotes[0].totalMonth}
     : null;
 
+  const weight =
+    profile.weights.find((w) => w.dtype === rec.quant) ?? profile.weights[0];
+  const recipeEstimates = profile.recommended
+    .filter((r) => r.quant === rec.quant)
+    .map((r) => r.estimatedVramGiB);
+  const vramBreakdown = weight
+    ? buildVramBreakdown({
+        weightsGiB: weight.weightsVramGiB,
+        recipeTotalGiB: canonicalRecipeTotalGiB(weight.weightsVramGiB, recipeEstimates.length
+          ? recipeEstimates
+          : [rec.estimatedVramGiB]),
+        contextDefault: profile.contextDefault,
+        contextTokens: profile.contextDefault,
+        batchSize: 1,
+        concurrentUsers: 1,
+        quant: rec.quant,
+        gpuCount: rec.gpuCount,
+        gpuFamily: rec.gpuFamily,
+        gpuMemoryGb: host?.gpuMemoryGb ?? null,
+      })
+    : undefined;
+
   return {
     gpuFamily: rec.gpuFamily,
     gpuCount: rec.gpuCount,
     quant: rec.quant,
     interconnect: rec.interconnect,
     estimatedVramGiB: rec.estimatedVramGiB,
+    vramBreakdown,
     notes: rec.notes,
     why: buildConfigWhy(profile, rec, best?.provider ?? null, isPrimary),
     assumedHost: !host

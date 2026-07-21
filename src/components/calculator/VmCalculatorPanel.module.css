@@ -1,42 +1,55 @@
 .configCard {
   min-width: 0;
-  padding: 16px;
+  padding: 0;
 }
 
 .configInner {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
   padding: 0;
+  min-width: 0;
 }
 
 .familyBlock {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  align-self: stretch;
+  gap: 0;
   min-width: 0;
+  width: 100%;
+  max-width: none;
 }
 
-.familyHint {
-  min-height: 1.2em;
+.familyGroup {
+  width: 100%;
+}
+
+/*
+ * width=max makes option text `display:block` for ellipsis; restore flex so
+ * icon+label stay vertically centered while segments fill the form width.
+ */
+.familyGroup :global(.g-segmented-radio-group__option-text) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .familyOption {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-}
-
-.gpuOption {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--g-color-text-utility);
-  font-weight: 600;
 }
 
 .gpuSelectRow {
   display: grid;
-  grid-template-columns: minmax(120px, 148px) minmax(0, 1fr);
+  grid-template-columns: minmax(120px, 140px) minmax(0, 320px);
   align-items: center;
-  gap: 12px 16px;
+  gap: 8px 16px;
   min-width: 0;
 }
 
@@ -44,13 +57,20 @@
   min-width: 0;
 }
 
+.fieldIcon {
+  color: var(--g-color-text-secondary);
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
 .gpuHost {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  padding: 12px;
-  border-radius: var(--g-border-radius-m);
-  background: var(--g-color-base-generic);
+  gap: 8px 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--g-color-line-generic);
+  border-bottom: 1px solid var(--g-color-line-generic);
+  background: transparent;
 }
 
 .gpuHostStat {
@@ -61,9 +81,13 @@
 }
 
 @media (max-width: 720px) {
+  .familyBlock {
+    max-width: none;
+  }
+
   .gpuSelectRow {
     grid-template-columns: 1fr;
-    gap: 8px;
+    gap: 6px;
   }
 
   .gpuHost {
@@ -71,23 +95,37 @@
   }
 }
 
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.fieldGroup + .fieldGroup {
+  padding-top: 4px;
+  border-top: 1px solid var(--g-color-line-generic);
+}
+
+.groupTitle {
+  margin: 0;
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+  color: var(--g-color-text-secondary);
+}
+
 .fields {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-}
-
-.diskBlock {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
 .diskTypeRow {
   display: grid;
-  grid-template-columns: minmax(120px, 148px) auto;
+  grid-template-columns: minmax(120px, 140px) minmax(0, 280px);
   align-items: center;
-  gap: 12px 16px;
+  gap: 8px 16px;
   min-width: 0;
 }
 
@@ -95,14 +133,9 @@
   min-width: 0;
 }
 
-.diskTypeIcon {
-  color: var(--g-color-text-secondary);
-  flex-shrink: 0;
-}
-
 @media (max-width: 720px) {
   .diskTypeRow {
     grid-template-columns: 1fr;
-    gap: 8px;
+    gap: 6px;
   }
 }

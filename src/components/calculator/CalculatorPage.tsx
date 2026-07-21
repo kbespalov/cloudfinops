@@ -42,7 +42,7 @@ const MODE_HREF: Record<CalculatorMode, string> = {
 
 const MODE_LEAD: Record<CalculatorMode, string> = {
   vm: 'Сравнение цен ВМ и аренды GPU в облаках РФ',
-  inference: 'Подбор GPU под open-weight модель · self-host LLM',
+  inference: 'Подбор GPU под open-weight модель в облаках РФ',
 };
 
 export function CalculatorPage({
@@ -61,12 +61,14 @@ export function CalculatorPage({
       <main className={styles.page}>
         <header className={styles.hero}>
           <Flex justifyContent="space-between" alignItems="flex-start" gap={4} wrap>
-            <Flex direction="column" gap={1} className={styles.heroCopy}>
-              <Flex alignItems="center" gap={2}>
-                <Icon data={Calculator} size={22} />
-                <Text variant="header-1">Калькулятор облачных нагрузок</Text>
+            <Flex direction="column" className={styles.heroCopy}>
+              <Flex alignItems="center" className={styles.heroTitleRow}>
+                <Icon data={Calculator} size={20} />
+                <Text as="h1" className={styles.heroTitle}>
+                  Калькулятор облачных нагрузок
+                </Text>
               </Flex>
-              <Text variant="body-2" color="secondary" className={styles.heroLead}>
+              <Text color="secondary" className={styles.heroLead}>
                 {MODE_LEAD[mode]}
               </Text>
             </Flex>
@@ -109,28 +111,34 @@ export function CalculatorPage({
           )}
         </div>
 
-        <Flex justifyContent="center" gap={3} wrap>
-          <Button
-            component={Link}
-            href={mode === 'vm' ? '/calculator/self-host' : '/calculator/vm'}
-            view="flat-secondary"
-            size="m"
-            prefetch
-          >
-            {mode === 'vm' ? 'Калькулятор Self-host LLM' : 'Калькулятор ВМ и GPU'}
-            <Icon data={ChevronRight} size={16} />
-          </Button>
-          <Button
-            component={Link}
-            href={mode === 'vm' ? '/catalog?category=compute' : '/catalog?category=gpu'}
-            view="flat-secondary"
-            size="m"
-            prefetch
-          >
-            Полный каталог SKU
-            <Icon data={ChevronRight} size={16} />
-          </Button>
-        </Flex>
+        <footer className={styles.footer}>
+          <Flex justifyContent="center" gap={3} wrap>
+            <Button
+              component={Link}
+              href={mode === 'vm' ? '/calculator/self-host' : '/calculator/vm'}
+              view="flat-secondary"
+              size="m"
+              prefetch
+            >
+              {mode === 'vm' ? 'Калькулятор Self-host LLM' : 'Калькулятор ВМ и GPU'}
+              <Icon data={ChevronRight} size={16} />
+            </Button>
+            <Button
+              component={Link}
+              href={mode === 'vm' ? '/catalog?category=compute' : '/catalog?category=gpu'}
+              view="flat-secondary"
+              size="m"
+              prefetch
+            >
+              Полный каталог SKU
+              <Icon data={ChevronRight} size={16} />
+            </Button>
+          </Flex>
+          <Text variant="caption-2" color="hint" className={styles.disclaimer}>
+            * Meta признана экстремистской организацией, её деятельность на территории России
+            запрещена
+          </Text>
+        </footer>
       </main>
     </>
   );

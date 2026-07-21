@@ -1,13 +1,12 @@
 'use client';
 
 import {useEffect, useState, type ReactNode} from 'react';
-import {Button, Card, DefinitionList, Flex, Label, Text} from '@gravity-ui/uikit';
+import {Button, DefinitionList, Flex, Label, Text} from '@gravity-ui/uikit';
 import {CostBreakdownBar} from '@/components/calculator/CostBreakdownBar';
 import {ProviderMark} from '@/components/catalog/ProviderMark';
 import {
   formatQuoteAmount,
   periodShortLabel,
-  scopeLabel,
   type PeriodMode,
   type ViewPresetQuote,
   type ViewProviderQuote,
@@ -60,10 +59,10 @@ function ProviderList({
             onClick={() => onSelect(key)}
           >
             <span className={styles.sellerMark}>
-              <ProviderMark providerId={q.provider} size={14} />
+              <ProviderMark providerId={q.provider} size={12} />
             </span>
-            <Flex alignItems="center" gap={2} className={styles.providerMeta}>
-              <Text variant="body-2" ellipsis>
+            <Flex alignItems="center" gap={1} className={styles.providerMeta}>
+              <Text variant="caption-2" ellipsis>
                 {q.providerName}
               </Text>
               {absoluteIndex === 0 ? (
@@ -76,7 +75,7 @@ function ProviderList({
                 </Text>
               ) : null}
             </Flex>
-            <Text variant="subheader-2" className={styles.providerAmount}>
+            <Text variant="body-2" className={styles.providerAmount}>
               {formatQuoteAmount(q.total, period)}
             </Text>
           </button>
@@ -84,13 +83,13 @@ function ProviderList({
       })}
 
       {!expanded && hidden > 0 ? (
-        <Button view="flat" size="m" width="max" onClick={() => setExpanded(true)}>
+        <Button view="flat" size="s" width="max" onClick={() => setExpanded(true)}>
           Показать ещё {hidden}
         </Button>
       ) : null}
 
       {expanded && hidden > 0 ? (
-        <Button view="flat" size="m" width="max" onClick={() => setExpanded(false)}>
+        <Button view="flat" size="s" width="max" onClick={() => setExpanded(false)}>
           Свернуть
         </Button>
       ) : null}
@@ -102,14 +101,12 @@ export function CalculatorSidebar({
   period,
   result,
   loading,
-  eyebrow,
   emptyHint,
   extras,
 }: {
   period: PeriodMode;
   result: ViewPresetQuote | null;
   loading?: boolean;
-  eyebrow?: string;
   emptyHint?: string;
   extras?: ReactNode;
 }) {
@@ -126,8 +123,6 @@ export function CalculatorSidebar({
     result?.best ??
     null;
 
-  const isBest = Boolean(selected && result?.best && quoteKey(selected) === quoteKey(result.best));
-
   if (loading && !result) {
     return (
       <aside className={styles.root} aria-busy="true">
@@ -140,11 +135,8 @@ export function CalculatorSidebar({
   if (!result?.best || !selected) {
     return (
       <aside className={styles.root}>
-        <Card type="container" view="outlined" size="l" className={styles.summaryCard}>
+        <div className={styles.summaryCard}>
           <div className={styles.summaryHead} data-empty="true">
-            <Text variant="caption-2" color="secondary">
-              {eyebrow ?? 'Лучшее предложение'}
-            </Text>
             <Text variant="header-1">—</Text>
             {emptyHint ? (
               <Text variant="body-2" color="secondary">
@@ -152,7 +144,7 @@ export function CalculatorSidebar({
               </Text>
             ) : null}
           </div>
-        </Card>
+        </div>
         {extras}
       </aside>
     );
@@ -160,32 +152,15 @@ export function CalculatorSidebar({
 
   return (
     <aside className={styles.root}>
-      <Card type="container" view="outlined" size="l" className={styles.summaryCard}>
+      <div className={styles.summaryCard}>
         <div className={styles.summaryHead}>
-          <Flex justifyContent="space-between" alignItems="center" gap={2} wrap>
-            <Flex alignItems="center" gap={2} className={styles.detailProvider}>
-              <span className={styles.sellerMark}>
-                <ProviderMark providerId={selected.provider} size={16} />
-              </span>
-              <Text variant="body-2" color="secondary">
-                {eyebrow ?? 'Лучшее предложение'}
-              </Text>
-              <Text variant="subheader-2" ellipsis>
-                {selected.providerName}
-              </Text>
-            </Flex>
-            <Flex alignItems="center" gap={2}>
-              {isBest ? (
-                <Label size="xs" theme="success">
-                  лучший
-                </Label>
-              ) : null}
-              {selected.scope !== 'compute' ? (
-                <Label size="xs" theme={selected.scope === 'bundle' ? 'warning' : 'utility'}>
-                  {scopeLabel(selected.scope)}
-                </Label>
-              ) : null}
-            </Flex>
+          <Flex alignItems="center" gap={2} className={styles.detailProvider}>
+            <span className={styles.sellerMark}>
+              <ProviderMark providerId={selected.provider} size={14} />
+            </span>
+            <Text variant="subheader-2" ellipsis>
+              {selected.providerName}
+            </Text>
           </Flex>
         </div>
 
@@ -200,10 +175,9 @@ export function CalculatorSidebar({
           </DefinitionList>
 
           <div className={styles.breakdownTotal}>
-            <Flex alignItems="baseline" gap={2}>
-              <Text variant="header-1">Итого</Text>
+            <Flex alignItems="baseline" gap={1}>
               <Text variant="body-2" color="secondary">
-                / {periodShortLabel(period)}
+                Итого / {periodShortLabel(period)}
               </Text>
             </Flex>
             <Text variant="display-1" className={styles.bestPrice}>
@@ -211,10 +185,10 @@ export function CalculatorSidebar({
             </Text>
           </div>
         </div>
-      </Card>
+      </div>
 
-      <Card type="container" view="outlined" size="l" className={styles.providersCard}>
-        <Text variant="subheader-2" className={styles.providersTitle}>
+      <div className={styles.providersCard}>
+        <Text variant="caption-2" color="secondary" className={styles.providersTitle}>
           Провайдеры
         </Text>
         <ProviderList
@@ -224,11 +198,11 @@ export function CalculatorSidebar({
           period={period}
           onSelect={setSelectedKey}
         />
-      </Card>
+      </div>
 
       {result.alternateQuotes.length > 0 ? (
-        <Card type="container" view="outlined" size="l" className={styles.providersCard}>
-          <Text variant="subheader-2" className={styles.providersTitle}>
+        <div className={styles.providersCard}>
+          <Text variant="caption-2" color="secondary" className={styles.providersTitle}>
             Другой scope
           </Text>
           <ProviderList
@@ -238,7 +212,7 @@ export function CalculatorSidebar({
             period={period}
             onSelect={setSelectedKey}
           />
-        </Card>
+        </div>
       ) : null}
 
       {extras}

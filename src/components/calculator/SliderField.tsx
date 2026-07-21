@@ -102,7 +102,7 @@ export function SliderField({
     <div className={styles.root}>
       <Flex alignItems="center" gap={2} className={styles.label}>
         <Icon data={icon} size={16} className={styles.icon} />
-        <Text variant="body-2" ellipsis>
+        <Text variant="body-1" ellipsis>
           {label}
         </Text>
       </Flex>
@@ -124,6 +124,7 @@ export function SliderField({
 
       <NumberInput
         size="m"
+        hiddenControls
         min={minOpt}
         max={maxOpt}
         step={1}
@@ -165,7 +166,7 @@ export function IntegerSliderField({
     <div className={styles.root}>
       <Flex alignItems="center" gap={2} className={styles.label}>
         <Icon data={icon} size={16} className={styles.icon} />
-        <Text variant="body-2" ellipsis>
+        <Text variant="body-1" ellipsis>
           {label}
         </Text>
       </Flex>
@@ -187,6 +188,7 @@ export function IntegerSliderField({
 
       <NumberInput
         size="m"
+        hiddenControls
         min={min}
         max={safeMax}
         step={1}

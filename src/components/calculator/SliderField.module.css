@@ -1,9 +1,11 @@
 .root {
   display: grid;
-  grid-template-columns: minmax(120px, 148px) minmax(0, 1fr) 120px;
+  grid-template-columns: minmax(120px, 140px) minmax(200px, 460px) 140px;
   align-items: center;
-  gap: 12px 16px;
+  justify-content: start;
+  gap: 8px 20px;
   min-width: 0;
+  max-width: 780px;
 }
 
 .label {
@@ -13,6 +15,7 @@
 .icon {
   color: var(--g-color-text-secondary);
   flex-shrink: 0;
+  opacity: 0.85;
 }
 
 .slider {
@@ -21,22 +24,24 @@
 }
 
 .input {
-  width: 100%;
+  width: 140px;
   min-width: 0;
+  justify-self: start;
 }
 
 .unit {
-  padding-inline-end: 4px;
+  padding-inline-end: 2px;
   white-space: nowrap;
 }
 
 @media (max-width: 720px) {
   .root {
-    grid-template-columns: minmax(0, 1fr) 112px;
+    grid-template-columns: minmax(0, 1fr) 120px;
     grid-template-areas:
       'label input'
       'slider slider';
     gap: 8px 12px;
+    max-width: none;
   }
 
   .label {
@@ -49,5 +54,6 @@
 
   .input {
     grid-area: input;
+    width: 100%;
   }
 }

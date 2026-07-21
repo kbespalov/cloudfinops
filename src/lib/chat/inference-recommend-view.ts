@@ -4,6 +4,7 @@
  */
 
 import type {InferenceDtype} from '@/data/inference-models';
+import type {VramBreakdown} from '@/lib/calculator/vram-breakdown';
 
 export type InferenceConfigQuote = {
   provider: string;
@@ -18,6 +19,8 @@ export type InferenceConfigRow = {
   quant: InferenceDtype;
   interconnect?: string;
   estimatedVramGiB: number;
+  /** Weights / KV / activations / overhead split for the recipe. */
+  vramBreakdown?: VramBreakdown;
   notes?: string;
   /** Short RU rationale for this recipe (for the assistant to surface). */
   why: string;

@@ -72,7 +72,7 @@ export function GpuPresetGrid({presets, period, activePresetId, onSelect}: Props
   if (presets.length === 0) {
     return (
       <div className={styles.root}>
-        <Text variant="subheader-2">Пресеты GPU</Text>
+        <Text variant="subheader-1">Пресеты GPU</Text>
         <Text variant="body-2" color="secondary">
           Нет конфигураций для выбранной карты
         </Text>
@@ -82,7 +82,7 @@ export function GpuPresetGrid({presets, period, activePresetId, onSelect}: Props
 
   return (
     <div className={styles.root}>
-      <Text variant="subheader-2">Пресеты GPU</Text>
+      <Text variant="subheader-1">Пресеты GPU</Text>
       <div className={styles.grid} role="listbox" aria-label="Пресеты GPU">
         {presets.map((preset) => {
           const active = preset.id === activePresetId;
@@ -106,21 +106,21 @@ export function GpuPresetGrid({presets, period, activePresetId, onSelect}: Props
             >
               <Flex alignItems="center" gap={2} className={styles.cardHead}>
                 <span className={styles.countBadge}>{preset.gpuCount}×</span>
-                <Text variant="subheader-2" className={styles.model}>
+                <Text variant="body-2" className={styles.model}>
                   {modelLabel(preset)}
                 </Text>
               </Flex>
 
               <div className={styles.stats}>
-                <span className={styles.stat} data-tone="info">
+                <span className={styles.stat}>
                   <Icon data={Cpu} size={12} />
                   {preset.vcpu != null ? `${preset.vcpu} vCPU` : '—'}
                 </span>
-                <span className={styles.stat} data-tone="utility">
+                <span className={styles.stat}>
                   <Icon data={Layers3Diagonal} size={12} />
                   {ram}
                 </span>
-                <span className={styles.stat} data-tone="success">
+                <span className={styles.stat}>
                   <Icon data={HardDrive} size={12} />
                   {disk}
                 </span>

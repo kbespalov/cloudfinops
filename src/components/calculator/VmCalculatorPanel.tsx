@@ -1,7 +1,7 @@
 'use client';
 
 import {useMemo, useState} from 'react';
-import {Card, Flex, Icon, SegmentedRadioGroup, Select, Text} from '@gravity-ui/uikit';
+import {Flex, Icon, SegmentedRadioGroup, Select, Text} from '@gravity-ui/uikit';
 import {
   Cpu,
   Cpus,
@@ -28,6 +28,7 @@ import {CalculatorSidebar} from './CalculatorSidebar';
 import {GpuPresetGrid} from './GpuPresetGrid';
 import {IntegerSliderField, SliderField} from './SliderField';
 import {VmPresetGrid} from './VmPresetGrid';
+import panelStyles from './CalculatorPanel.module.css';
 import styles from './VmCalculatorPanel.module.css';
 
 const FAMILIES: ComputeFamily[] = ['general', 'high-cpu', 'high-memory', 'low-cost'];
@@ -46,13 +47,6 @@ const RAM_PER_VCPU: Record<ComputeFamily, number> = {
   'high-cpu': 2,
   'high-memory': 8,
   'low-cost': 2,
-};
-
-const FAMILY_HINT: Record<ComputeFamily, string> = {
-  general: '1 vCPU → 4 GiB RAM',
-  'high-cpu': '1 vCPU → 2 GiB RAM',
-  'high-memory': '1 vCPU → 8 GiB RAM',
-  'low-cost': '1 vCPU → 2 GiB RAM · shared / preemptible',
 };
 
 const VCPU_STEPS: Record<ComputeFamily, number[]> = {
@@ -264,12 +258,13 @@ export function VmCalculatorPanel({
 
   return (
     <>
-      <Card type="container" view="outlined" size="l" className={styles.configCard}>
-        <Flex direction="column" gap={4} className={styles.configInner}>
-          <div className={styles.familyBlock} data-mode={mode}>
+      <div className={`${panelStyles.formColumn} ${styles.configCard}`}>
+        <div className={styles.configInner}>
+          <div className={`${panelStyles.topSlot} ${styles.familyBlock}`} data-mode={mode}>
             <SegmentedRadioGroup
-              size="m"
+              size="l"
               width="max"
+              className={styles.familyGroup}
               value={mode}
               onUpdate={(v) => applyMode(v as VmMode)}
               aria-label="Семейство ВМ"
@@ -284,32 +279,21 @@ export function VmCalculatorPanel({
                   </SegmentedRadioGroup.Option>
                 )),
                 <SegmentedRadioGroup.Option key="gpu" value="gpu">
-                  <span className={styles.gpuOption}>
+                  <span className={styles.familyOption}>
                     <Icon data={Gpu} size={14} />
                     GPU
                   </span>
                 </SegmentedRadioGroup.Option>,
               ]}
             </SegmentedRadioGroup>
-            <Text
-              variant="caption-2"
-              color={isGpu ? 'utility' : 'secondary'}
-              className={styles.familyHint}
-            >
-              {isGpu
-                ? 'Flavor с GPU · host vCPU/RAM фиксированы карточкой'
-                : customRam
-                  ? 'Своя RAM · пропорция семейства отключена'
-                  : FAMILY_HINT[family]}
-            </Text>
           </div>
 
           {isGpu ? (
             <>
               <div className={styles.gpuSelectRow}>
                 <Flex alignItems="center" gap={2} className={styles.gpuSelectLabel}>
-                  <Icon data={Gpu} size={16} className={styles.diskTypeIcon} />
-                  <Text variant="body-2">GPU</Text>
+                  <Icon data={Gpu} size={16} className={styles.fieldIcon} />
+                  <Text variant="body-1">GPU</Text>
                 </Flex>
                 <Select
                   size="m"
@@ -368,86 +352,97 @@ export function VmCalculatorPanel({
             </>
           ) : (
             <>
-              <div className={styles.fields}>
-                <SliderField
-                  icon={Server}
-                  label="Число VM"
-                  value={vmCount}
-                  options={VM_STEPS}
-                  scaleMin={1}
-                  scaleMax={64}
-                  unit="шт"
-                  onUpdate={onVmCountChange}
-                />
-                <SliderField
-                  icon={Cpu}
-                  label="vCPU на VM"
-                  value={vcpu}
-                  options={vcpuOptions}
-                  scaleMin={1}
-                  scaleMax={128}
-                  unit="vCPU"
-                  onUpdate={onVcpuChange}
-                />
-                <SliderField
-                  icon={Layers3Diagonal}
-                  label="RAM на VM"
-                  value={ramGiB}
-                  options={ramOptions}
-                  scaleMin={1}
-                  scaleMax={1024}
-                  unit="GiB"
-                  onUpdate={onRamChange}
-                />
-              </div>
-
-              <div className={styles.diskBlock}>
-                <div className={styles.diskTypeRow}>
-                  <Flex alignItems="center" gap={2} className={styles.diskTypeLabel}>
-                    <Icon data={HardDrive} size={16} className={styles.diskTypeIcon} />
-                    <Text variant="body-2">Диск</Text>
-                  </Flex>
-                  <SegmentedRadioGroup
-                    size="m"
-                    value={diskMedia}
-                    onUpdate={(v) => setDiskMedia(v as DiskMedia)}
-                    aria-label="Тип диска"
-                  >
-                    <SegmentedRadioGroup.Option value="ssd">
-                      <Flex alignItems="center" gap={1}>
-                        <Icon data={Thunderbolt} size={14} />
-                        SSD
-                      </Flex>
-                    </SegmentedRadioGroup.Option>
-                    <SegmentedRadioGroup.Option value="hdd">
-                      <Flex alignItems="center" gap={1}>
-                        <Icon data={HardDrive} size={14} />
-                        HDD
-                      </Flex>
-                    </SegmentedRadioGroup.Option>
-                  </SegmentedRadioGroup>
+              <section className={styles.fieldGroup} aria-label="Вычисления">
+                <Text className={styles.groupTitle}>Вычисления</Text>
+                <div className={styles.fields}>
+                  <SliderField
+                    icon={Server}
+                    label="Число VM"
+                    value={vmCount}
+                    options={VM_STEPS}
+                    scaleMin={1}
+                    scaleMax={64}
+                    unit="шт"
+                    onUpdate={onVmCountChange}
+                  />
+                  <SliderField
+                    icon={Cpu}
+                    label="vCPU на VM"
+                    value={vcpu}
+                    options={vcpuOptions}
+                    scaleMin={1}
+                    scaleMax={128}
+                    unit="vCPU"
+                    onUpdate={onVcpuChange}
+                  />
+                  <SliderField
+                    icon={Layers3Diagonal}
+                    label="RAM на VM"
+                    value={ramGiB}
+                    options={ramOptions}
+                    scaleMin={1}
+                    scaleMax={1024}
+                    unit="GiB"
+                    onUpdate={onRamChange}
+                  />
                 </div>
-                <SliderField
-                  icon={HardDrive}
-                  label="Объём"
-                  value={diskGiB}
-                  options={DISK_STEPS}
-                  scaleMin={10}
-                  scaleMax={10240}
-                  unit="GiB"
-                  onUpdate={setDiskGiB}
-                />
-              </div>
+              </section>
 
-              <IntegerSliderField
-                icon={PlanetEarth}
-                label="Публичные IP"
-                value={publicIpCount}
-                min={0}
-                max={vmCount}
-                unit="шт"
-                onUpdate={setPublicIpCount}
-              />
+              <section className={styles.fieldGroup} aria-label="Хранилище">
+                <Text className={styles.groupTitle}>Хранилище</Text>
+                <div className={styles.fields}>
+                  <div className={styles.diskTypeRow}>
+                    <Flex alignItems="center" gap={2} className={styles.diskTypeLabel}>
+                      <Icon data={HardDrive} size={16} className={styles.fieldIcon} />
+                      <Text variant="body-1">Тип диска</Text>
+                    </Flex>
+                    <SegmentedRadioGroup
+                      size="m"
+                      value={diskMedia}
+                      onUpdate={(v) => setDiskMedia(v as DiskMedia)}
+                      aria-label="Тип диска"
+                    >
+                      <SegmentedRadioGroup.Option value="ssd">
+                        <Flex alignItems="center" gap={1}>
+                          <Icon data={Thunderbolt} size={14} />
+                          SSD
+                        </Flex>
+                      </SegmentedRadioGroup.Option>
+                      <SegmentedRadioGroup.Option value="hdd">
+                        <Flex alignItems="center" gap={1}>
+                          <Icon data={HardDrive} size={14} />
+                          HDD
+                        </Flex>
+                      </SegmentedRadioGroup.Option>
+                    </SegmentedRadioGroup>
+                  </div>
+                  <SliderField
+                    icon={HardDrive}
+                    label="Объём"
+                    value={diskGiB}
+                    options={DISK_STEPS}
+                    scaleMin={10}
+                    scaleMax={10240}
+                    unit="GiB"
+                    onUpdate={setDiskGiB}
+                  />
+                </div>
+              </section>
+
+              <section className={styles.fieldGroup} aria-label="Сеть">
+                <Text className={styles.groupTitle}>Сеть</Text>
+                <div className={styles.fields}>
+                  <IntegerSliderField
+                    icon={PlanetEarth}
+                    label="Публичные IP"
+                    value={publicIpCount}
+                    min={0}
+                    max={vmCount}
+                    unit="шт"
+                    onUpdate={setPublicIpCount}
+                  />
+                </div>
+              </section>
 
               <VmPresetGrid
                 family={family}
@@ -460,14 +455,13 @@ export function VmCalculatorPanel({
               />
             </>
           )}
-        </Flex>
-      </Card>
+        </div>
+      </div>
 
       <CalculatorSidebar
         period={period}
         result={result}
         loading={loading}
-        eyebrow={isGpu ? 'Лучшее предложение GPU' : 'Лучшее предложение'}
         emptyHint="Нет котировок"
       />
     </>

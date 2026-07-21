@@ -141,11 +141,12 @@ export function formatQuoteAmount(amount: number, period: PeriodMode): string {
   }).format(amount);
 }
 
+/** Cool steps for cost bars — brand orange stays for selection, not data. */
 export function partTone(id: CostPartId): string {
-  if (id === 'vcpu') return 'info';
-  if (id === 'ram') return 'utility';
+  if (id === 'gpu' || id === 'bundle') return 'info';
+  if (id === 'vcpu') return 'utility';
+  if (id === 'ram') return 'unknown';
   if (id === 'disk') return 'success';
-  if (id === 'gpu' || id === 'bundle') return 'warning';
   return 'unknown';
 }
 
