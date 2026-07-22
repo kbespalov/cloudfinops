@@ -10,7 +10,13 @@ import {
   type CalculatorPreset,
   type ComputePreset,
   type GpuPreset,
+  type VcpuShare,
 } from '@/lib/calculator/presets';
+import {
+  isFractionalShare,
+  shapeAllowedForShare,
+  vcpuSharePercent,
+} from '@/lib/calculator/vcpu-share';
 import {
   formatGiBCapacity,
   formatPlatformLabel,
@@ -102,6 +108,43 @@ export function isOnDemand(meter: CatalogMeter): boolean {
   return !/preempt/i.test(pm);
 }
 
+export function isPreemptible(meter: CatalogMeter): boolean {
+  return !isOnDemand(meter);
+}
+
+function purchaseModelOf(preset: ComputePreset): 'on-demand' | 'preemptible' {
+  return preset.purchaseModel === 'preemptible' ? 'preemptible' : 'on-demand';
+}
+
+function matchesComputePurchase(
+  meter: CatalogMeter,
+  preference: 'on-demand' | 'preemptible',
+): boolean {
+  return preference === 'preemptible' ? isPreemptible(meter) : isOnDemand(meter);
+}
+
+function vcpuShareOf(preset: ComputePreset): VcpuShare {
+  return preset.vcpuShare ?? '100%';
+}
+
+function meterSharePercent(meter: CatalogMeter): number | null {
+  const share = String(meter.dimensions.guaranteedVcpuShare ?? '');
+  const pct = share.match(/(\d+)\s*%/);
+  return pct ? Number(pct[1]) : null;
+}
+
+/** Filter compute meters by the UI-selected guaranteed vCPU share. */
+function matchesVcpuShare(meter: CatalogMeter, share: VcpuShare): boolean {
+  const want = vcpuSharePercent(share);
+  const pct = meterSharePercent(meter);
+  if (want === 100) {
+    // Dedicated 100% / empty share; exclude fractional and 1:N shared cores.
+    if (pct != null) return pct >= 100;
+    return !isSharedVcpu(meter);
+  }
+  return pct === want;
+}
+
 /**
  * Skip SKUs that are priced in the tariff but whose real availability is not
  * confirmed (e.g. T1 "b4" series) — quoting them would advertise a price the
@@ -190,6 +233,34 @@ function isHdd(meter: CatalogMeter): boolean {
   return /hdd/.test(hay) && !/ssd|nvme/.test(hay);
 }
 
+/** Non-replicated / single-copy SSD — cheaper, but not what "Сетевой SSD" means in the UI. */
+function isNonReplicatedDisk(meter: CatalogMeter): boolean {
+  const hay = diskHay(meter);
+  const red = String(meter.dimensions.redundancy ?? '').toLowerCase();
+  return /non-?replic|нереплиц/.test(hay) || red === 'non-replicated';
+}
+
+/**
+ * Default boot disk for the calculator's "Сетевой SSD": replicated network SSD
+ * (Yandex network-ssd, Selectel network-ssd, VK ceph-ssd, T1 basic…), not NVMe
+ * burst tiers and not non-replicated.
+ */
+function isStandardNetworkSsd(meter: CatalogMeter): boolean {
+  if (!isSsd(meter) || isNvme(meter) || isNonReplicatedDisk(meter)) return false;
+  const diskType = String(meter.dimensions.diskType ?? '').toLowerCase();
+  if (/nonreplic|io-m3|fast-ssd|ultra/.test(diskType)) return false;
+  if (
+    diskType === 'network-ssd' ||
+    diskType === 'ceph-ssd' ||
+    diskType === 'basic' ||
+    diskType === 'ssd'
+  ) {
+    return true;
+  }
+  // Other non-NVMe SSDs (e.g. Selectel universal-ssd-v2) are acceptable fallbacks.
+  return Boolean(diskType) || /ssd/.test(diskHay(meter));
+}
+
 type PricedMeter = {m: CatalogMeter; unit: number};
 
 function pricedList(
@@ -245,15 +316,23 @@ function pickDiskForRegion(
     // Strict: do not silently substitute SSD when the user asked for HDD.
     return sameRegion.find((disk) => isHdd(disk.m)) ?? null;
   }
+  const ssd = sameRegion.filter((disk) => isSsd(disk.m));
   if (opts.preferNvme) {
     return (
-      sameRegion.find((disk) => isNvme(disk.m)) ??
-      sameRegion.find((disk) => isSsd(disk.m)) ??
-      sameRegion[0] ??
+      ssd.find((disk) => isNvme(disk.m)) ??
+      ssd[0] ??
       null
     );
   }
-  return sameRegion.find((disk) => isSsd(disk.m)) ?? sameRegion[0] ?? null;
+  // "Сетевой SSD": prefer standard replicated network SSD over cheaper
+  // non-replicated / NVMe SKUs that pricedList would otherwise surface first.
+  return (
+    ssd.find((disk) => isStandardNetworkSsd(disk.m)) ??
+    ssd.find((disk) => !isNvme(disk.m) && !isNonReplicatedDisk(disk.m)) ??
+    ssd.find((disk) => !isNonReplicatedDisk(disk.m)) ??
+    ssd[0] ??
+    null
+  );
 }
 
 /**
@@ -267,10 +346,21 @@ function pickUnitComputeCombo(
   period: PeriodMode,
   lowCost: boolean,
 ): UnitComputeCombo | null {
-  const vcpuPred = lowCost
-    ? (m: CatalogMeter) => !isFractionalGuarantee(m)
-    : (m: CatalogMeter) => isOnDemand(m);
-  const componentPred = lowCost ? () => true : (m: CatalogMeter) => isOnDemand(m);
+  const preference = purchaseModelOf(preset);
+  const share = vcpuShareOf(preset);
+  const fractional = isFractionalShare(share);
+  const vcpuPred = (m: CatalogMeter) => {
+    if (!matchesComputePurchase(m, preference)) return false;
+    if (!matchesVcpuShare(m, share)) return false;
+    // When user asks for 100%, never quote fractional unit cores as "N vCPU".
+    // When user opts into 5%/20%/50%, require that exact share (already matched).
+    if (!fractional && isFractionalGuarantee(m)) return false;
+    return true;
+  };
+  // RAM must follow the same purchase model as vCPU; disks stay on-demand storage.
+  // Fractional SKUs bill RAM with the same purchase model (and usually platform).
+  const ramPred = (m: CatalogMeter) => matchesComputePurchase(m, preference);
+  const diskPred = lowCost ? () => true : (m: CatalogMeter) => isOnDemand(m);
 
   // Synthetic / derived unit rates (e.g. Cloud.ru lattice decomposition) are for
   // catalog comparison only — they are not orderable SKUs. Prefer real flavors.
@@ -281,8 +371,8 @@ function pickUnitComputeCombo(
     period,
     (m) => notSynthetic(m) && vcpuPred(m),
   );
-  // For on-demand tiers prefer guaranteed (dedicated) cores; fall back to any.
-  if (!lowCost) {
+  // For dedicated 100% tiers prefer guaranteed cores; fractional shares are already exact.
+  if (!fractional && !lowCost) {
     const dedicated = vcpus.filter((x) => isDedicatedVcpu(x.m));
     if (dedicated.length) vcpus = dedicated;
   }
@@ -292,9 +382,9 @@ function pickUnitComputeCombo(
     provider,
     'compute.ram',
     period,
-    (m) => notSynthetic(m) && componentPred(m),
+    (m) => notSynthetic(m) && ramPred(m),
   );
-  const disks = pricedList(provider, 'storage.block.capacity', period, componentPred);
+  const disks = pricedList(provider, 'storage.block.capacity', period, diskPred);
   const providerHasDisks = disks.length > 0;
 
   let best: UnitComputeCombo | null = null;
@@ -327,16 +417,20 @@ function pickFlavorComputeCombo(
   period: PeriodMode,
   lowCost: boolean,
 ): FlavorComputeCombo | null {
+  const preference = purchaseModelOf(preset);
+  const share = vcpuShareOf(preset);
+  const fractional = isFractionalShare(share);
   const flavors = pricedList(provider, 'compute.flavor', period, (m) => {
     if (m.categoryKey !== 'compute') return false;
     if (flavorVcpu(m) !== preset.vcpu || flavorRamGiB(m) !== preset.ramGiB) return false;
-    if (!lowCost) {
-      if (!isOnDemand(m)) return false;
-      // General / High CPU / High Memory: only dedicated 100% flavors.
+    if (!matchesComputePurchase(m, preference)) return false;
+    if (!matchesVcpuShare(m, share)) return false;
+    if (!fractional && !lowCost) {
+      // General / High CPU / High Memory at 100%: only dedicated flavors.
       if (isFractionalGuarantee(m) || isSharedVcpu(m)) return false;
       return true;
     }
-    // Low-cost: fractional flavors (10%/30%) are allowed — that is the cheap tier.
+    // Explicit fractional share or low-cost 100% path.
     return true;
   });
   const flavor = flavors[0];
@@ -364,6 +458,12 @@ function pickComputeCombo(
   period: PeriodMode,
   lowCost: boolean,
 ): ComputeCombo | null {
+  const share = vcpuShareOf(preset);
+  // Do not invent prices for shapes providers cannot order at this share
+  // (e.g. Yandex 20% is only 2/4 cores, max 16 GiB RAM).
+  if (isFractionalShare(share) && !shapeAllowedForShare(share, preset.vcpu, preset.ramGiB)) {
+    return null;
+  }
   const unit = pickUnitComputeCombo(provider, preset, period, lowCost);
   const flavor = pickFlavorComputeCombo(provider, preset, period, lowCost);
   if (unit && flavor) return flavor.total < unit.total ? flavor : unit;
@@ -372,25 +472,36 @@ function pickComputeCombo(
 
 /** Note describing what the chosen vCPU / flavor actually is, so the price is not oversold. */
 function computeNote(meter: CatalogMeter, lowCost: boolean, flavor: boolean): string {
+  const sharePct = meterSharePercent(meter);
+  const shareLabel = sharePct != null && sharePct < 100 ? `${sharePct}%` : null;
   if (flavor) {
+    if (shareLabel) {
+      return `Flavor с долей vCPU ${shareLabel} — бюджетный вариант. Диск SSD отдельно.`;
+    }
     if (isFractionalGuarantee(meter) || isSharedVcpu(meter)) {
       return 'Flavor с долей vCPU <100% — бюджетный вариант. Диск SSD отдельно.';
     }
+    if (isPreemptible(meter)) {
+      return 'Прерываемый flavor: дешевле, но ВМ могут остановить. Диск SSD отдельно.';
+    }
     return 'Flavor целиком (vCPU+RAM одним SKU). Диск SSD отдельно.';
   }
-  const preemptible =
-    /preempt/i.test(String(meter.dimensions.purchaseModel ?? '')) ||
-    /preempt/i.test(meter.name);
-  if (preemptible) {
-    return 'Preemptible: цена ниже, но инстанс может быть вытеснен провайдером. Диск — SSD.';
+  if (isPreemptible(meter) && shareLabel) {
+    return `Прерываемая ВМ, доля CPU ${shareLabel}: дешевле, но могут остановить (обычно до 24 ч). Диск — SSD.`;
+  }
+  if (isPreemptible(meter)) {
+    return 'Прерываемая ВМ: цена ниже, но инстанс может быть остановлен провайдером (обычно до 24 ч). Диск — SSD.';
+  }
+  if (shareLabel) {
+    return `Доля CPU ${shareLabel}: гарантированная производительность ниже 100%. Диск — SSD.`;
   }
   if (isSharedVcpu(meter)) {
     return 'Shared vCPU (переподписка ядра) — бюджетный вариант. Диск — SSD.';
   }
   if (lowCost) {
-    return 'On-demand, выделенные ядра — отдельного preemptible-тарифа у провайдера нет. Диск — SSD.';
+    return 'Обычная ВМ, выделенные ядра — отдельного прерываемого тарифа у провайдера нет. Диск — SSD.';
   }
-  return 'On-demand, выделенные (100%) ядра. Диск — оценка SSD.';
+  return 'Обычная ВМ, выделенные (100%) ядра. Диск — оценка SSD.';
 }
 
 function quoteCompute(preset: ComputePreset, period: PeriodMode): ProviderQuote[] {

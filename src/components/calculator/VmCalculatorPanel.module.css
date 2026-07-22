@@ -219,6 +219,30 @@
   min-height: 48px;
 }
 
+.shareRow {
+  display: grid;
+  grid-template-columns: 172px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px 16px;
+  min-width: 0;
+  min-height: 48px;
+}
+
+.shareGroup {
+  width: 100%;
+  max-width: 420px;
+}
+
+.shareGroup :global(.g-segmented-radio-group__option) {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.shareHint {
+  margin: -4px 0 0;
+  max-width: 40rem;
+}
+
 .diskTypeLabel {
   min-width: 0;
 }
@@ -256,5 +280,14 @@
   .diskTypeRow {
     grid-template-columns: 1fr;
     gap: 6px;
+  }
+
+  .shareRow {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .shareGroup {
+    max-width: none;
   }
 }

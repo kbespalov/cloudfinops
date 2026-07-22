@@ -91,7 +91,7 @@ describe('calculator quote arbitration', () => {
     }
   });
 
-  it('prefers SSD/NVMe disk media when available in the region', () => {
+  it('prefers SSD disk media when available in the region', () => {
     for (const preset of COMPUTE_PRESETS) {
       const result = quotePreset(preset, 'month');
       for (const q of result.quotes) {
@@ -103,6 +103,122 @@ describe('calculator quote arbitration', () => {
           assert.fail(`${preset.id}/${q.providerName}: picked HDD without SSD fallback check`);
         }
       }
+    }
+  });
+
+  it('defaults Yandex "Сетевой SSD" to network-ssd, not non-replicated', () => {
+    const preset = COMPUTE_PRESETS.find((p) => p.id === 'gen-4-16');
+    assert.ok(preset);
+    const result = quotePreset({...preset, diskMedia: 'ssd'}, 'month');
+    const yandex = result.quotes.find((q) => q.provider === 'yandex-cloud');
+    assert.ok(yandex, 'expected Yandex quote');
+    const disk = yandex.meters.find((m) => m.meter === 'storage.block.capacity');
+    assert.ok(disk, 'expected Yandex disk');
+    assert.equal(String(disk.dimensions.diskType ?? ''), 'network-ssd');
+    assert.ok(
+      !/non-?replic|нереплиц/i.test(disk.name),
+      `unexpected non-replicated disk: ${disk.name}`,
+    );
+  });
+
+  it('matches official Yandex Compute pricing anchors for fractional shares', () => {
+    // Docs: 2×20% Ice Lake + 2 GiB RAM = 1224 ₽ / 720h (compute only).
+    const share20 = quotePreset(
+      {
+        id: 'anchor-20',
+        kind: 'compute',
+        family: 'general',
+        title: '2/2',
+        subtitle: '',
+        vcpu: 2,
+        ramGiB: 2,
+        diskGiB: 10,
+        diskMedia: 'ssd',
+        vcpuShare: '20%',
+      },
+      'month',
+    );
+    const y20 = share20.quotes.find((q) => q.provider === 'yandex-cloud');
+    assert.ok(y20);
+    const compute20 = y20.parts
+      .filter((p) => p.id === 'vcpu' || p.id === 'ram')
+      .reduce((s, p) => s + p.amount, 0);
+    assert.ok(Math.abs(compute20 - 1224) < 0.5, `20% compute ${compute20} != 1224`);
+    assert.equal(String(y20.meters[0]?.dimensions.guaranteedVcpuShare ?? ''), '20%');
+
+    // Docs: Cascade Lake 5% on-demand = 0.1897 ₽/vCPU·h → 4 vCPU = 546.336 ₽/mo.
+    const share5 = quotePreset(
+      {
+        id: 'anchor-5',
+        kind: 'compute',
+        family: 'general',
+        title: '4/8',
+        subtitle: '',
+        vcpu: 4,
+        ramGiB: 8,
+        diskGiB: 20,
+        diskMedia: 'ssd',
+        vcpuShare: '5%',
+      },
+      'month',
+    );
+    const y5 = share5.quotes.find((q) => q.provider === 'yandex-cloud');
+    assert.ok(y5);
+    const cpu5 = y5.parts.find((p) => p.id === 'vcpu')?.amount ?? 0;
+    assert.ok(Math.abs(cpu5 - 0.1897 * 4 * 720) < 0.5, `5% cpu ${cpu5}`);
+    assert.equal(String(y5.meters[0]?.dimensions.guaranteedVcpuShare ?? ''), '5%');
+    const disk5 = y5.meters.find((m) => m.meter === 'storage.block.capacity');
+    assert.equal(String(disk5?.dimensions.diskType ?? ''), 'network-ssd');
+    const diskPart = y5.parts.find((p) => p.id === 'disk')?.amount ?? 0;
+    assert.ok(Math.abs(diskPart - 0.0199 * 20 * 720) < 0.5, `disk ${diskPart} != network-ssd`);
+
+    // Docs: Cascade Lake 5% preemptible = 0.1185 ₽/vCPU·h.
+    const share5p = quotePreset(
+      {
+        id: 'anchor-5p',
+        kind: 'compute',
+        family: 'general',
+        title: '4/8',
+        subtitle: '',
+        vcpu: 4,
+        ramGiB: 8,
+        diskGiB: 10,
+        diskMedia: 'ssd',
+        vcpuShare: '5%',
+        purchaseModel: 'preemptible',
+      },
+      'month',
+    );
+    const y5p = share5p.quotes.find((q) => q.provider === 'yandex-cloud');
+    assert.ok(y5p);
+    const cpu5p = y5p.parts.find((p) => p.id === 'vcpu')?.amount ?? 0;
+    assert.ok(Math.abs(cpu5p - 0.1185 * 4 * 720) < 0.5, `5% preempt cpu ${cpu5p}`);
+  });
+
+  it('keeps Yandex share CPU costs monotonic 5% < 20% < 50% < 100%', () => {
+    const shares = ['5%', '20%', '50%', '100%'] as const;
+    let prev = -1;
+    for (const share of shares) {
+      const result = quotePreset(
+        {
+          id: `mono-${share}`,
+          kind: 'compute',
+          family: 'general',
+          title: '4/8',
+          subtitle: '',
+          vcpu: 4,
+          ramGiB: 8,
+          diskGiB: 10,
+          diskMedia: 'ssd',
+          vcpuShare: share,
+        },
+        'month',
+      );
+      const yandex = result.quotes.find((q) => q.provider === 'yandex-cloud');
+      assert.ok(yandex, `missing Yandex for ${share}`);
+      const cpu = yandex.parts.find((p) => p.id === 'vcpu')?.amount ?? -1;
+      assert.ok(cpu > prev, `share ${share}: cpu ${cpu} should exceed ${prev}`);
+      prev = cpu;
     }
   });
 
@@ -142,6 +258,44 @@ describe('calculator quote arbitration', () => {
         if (pct != null) {
           assert.equal(pct, 100, `${preset.id}/${q.providerName}: expected 100% share, got ${pct}%`);
         }
+      }
+    }
+  });
+
+  it('preemptible purchase model quotes only preemptible compute and known providers', () => {
+    const base = COMPUTE_PRESETS.find((p) => p.id === 'gen-4-16');
+    assert.ok(base);
+    const result = quotePreset({...base, purchaseModel: 'preemptible'}, 'month');
+    assert.ok(result.best, 'expected at least one preemptible offer');
+    const providers = new Set(result.quotes.map((q) => q.provider));
+    assert.ok(providers.has('yandex-cloud'), 'expected Yandex Cloud preemptible quote');
+    assert.ok(providers.has('selectel'), 'expected Selectel preemptible quote');
+    for (const q of result.quotes) {
+      const core = q.meters[0]!;
+      assert.ok(
+        isPreemptibleMeter(core.name, core.dimensions.purchaseModel ?? core.purchaseModel),
+        `${q.providerName}: expected preemptible core, got ${core.name}`,
+      );
+      assert.match(q.note ?? '', /Прерываем/i);
+    }
+    // Providers without preemptible SKUs in the catalog must not appear.
+    assert.ok(!providers.has('vk-cloud'));
+    assert.ok(!providers.has('mws-cloud'));
+    assert.ok(!providers.has('t1-cloud'));
+    assert.ok(!providers.has('cloud-ru'));
+  });
+
+  it('default low-cost no longer mixes in preemptible when purchaseModel is on-demand', () => {
+    const low = COMPUTE_PRESETS.filter((p) => p.family === 'low-cost');
+    for (const preset of low) {
+      const result = quotePreset(preset, 'month');
+      for (const q of result.quotes) {
+        const core = q.meters[0]!;
+        if (core.meter === 'compute.flavor') continue;
+        assert.ok(
+          !isPreemptibleMeter(core.name, core.dimensions.purchaseModel ?? core.purchaseModel),
+          `${preset.id}/${q.providerName}: preemptible slipped into on-demand low-cost`,
+        );
       }
     }
   });
@@ -212,16 +366,35 @@ describe('calculator quote arbitration', () => {
     }
   });
 
-  it('low-cost is cheaper than dedicated CPU-optimized for the same 4/8 shape', () => {
+  it('low-cost fractional share is cheaper than dedicated CPU-optimized for the same 4/8 shape', () => {
     const low = COMPUTE_PRESETS.find((p) => p.id === 'low-4-8');
     const cpu = COMPUTE_PRESETS.find((p) => p.id === 'cpu-4-8');
     assert.ok(low && cpu);
-    const lowBest = quotePreset(low, 'month').best!;
+    const lowBest = quotePreset({...low, vcpuShare: '10%'}, 'month').best!;
     const cpuBest = quotePreset(cpu, 'month').best!;
     assert.ok(
       lowBest.total < cpuBest.total,
-      `expected low-cost ${lowBest.total} < high-cpu ${cpuBest.total}`,
+      `expected low-cost 10% ${lowBest.total} < high-cpu ${cpuBest.total}`,
     );
+  });
+
+  it('explicit vcpuShare filters unit cores and clamps Yandex fractional sizes', () => {
+    const base = COMPUTE_PRESETS.find((p) => p.id === 'gen-4-16');
+    assert.ok(base);
+    const share20 = quotePreset({...base, vcpuShare: '20%'}, 'month');
+    assert.ok(share20.best, 'expected Yandex 20% quote for 4/16');
+    for (const q of share20.quotes) {
+      const core = q.meters[0]!;
+      const share = String(core.dimensions.guaranteedVcpuShare ?? '');
+      assert.match(share, /^20%/);
+      assert.match(q.note ?? '', /20%/);
+    }
+    // Oversized fractional shape must not invent a quote.
+    const oversized = quotePreset(
+      {...base, vcpu: 8, ramGiB: 32, vcpuShare: '20%'},
+      'month',
+    );
+    assert.equal(oversized.quotes.length, 0, '8 vCPU @ 20% is not orderable');
   });
 
   it('larger compute presets cost at least as much as smaller ones per provider', () => {
@@ -284,13 +457,13 @@ describe('calculator quote arbitration', () => {
           core.dimensions.purchaseModel ?? core.purchaseModel,
         );
         if (preemptible) {
-          assert.match(q.note!, /Preemptible/i);
+          assert.match(q.note!, /Прерываем/i);
         } else if (/\b1\s*:\s*[2-9]\d*\b/i.test(core.name)) {
           assert.match(q.note!, /Shared/i);
         } else if (preset.family === 'low-cost') {
-          assert.match(q.note!, /On-demand|выделен/i);
+          assert.match(q.note!, /Обычн|выделен/i);
         } else {
-          assert.match(q.note!, /On-demand|выделен/i);
+          assert.match(q.note!, /Обычн|выделен/i);
         }
       }
     }

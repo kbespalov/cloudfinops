@@ -69,7 +69,8 @@ spec:
     meter: compute.vcpu
     status: available
     pricingMode: unit
-    region: Санкт-Петербург / ru-9a
+    # Align with disk SKUs (ru-6a); preemptible rates are pool-dependent.
+    region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-17'
     sourceRefs:
@@ -91,12 +92,13 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
+    notes: Ставки зависят от пула; в каталоге указана ставка для ru-9a / типичный preemptible.
   - sku: selectel.compute.preemptible-ram
     name: Intel Xeon Gold 6240R, preemptible RAM
     meter: compute.ram
     status: available
     pricingMode: unit
-    region: Санкт-Петербург / ru-9a
+    region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
     checkedAt: '2026-07-17'
     sourceRefs:
@@ -117,3 +119,4 @@ spec:
           period: hour
         vat: included
         byteBasis: binary
+    notes: Ставки зависят от пула; в каталоге указана ставка для ru-9a / типичный preemptible.

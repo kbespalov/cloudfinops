@@ -1,7 +1,7 @@
 'use client';
 
 import {useEffect, useRef, useState} from 'react';
-import type {ComputeFamily, DiskMedia} from '@/lib/calculator/presets';
+import type {ComputeFamily, DiskMedia, PurchaseModel, VcpuShare} from '@/lib/calculator/presets';
 import type {PeriodMode, ViewPresetQuote} from '@/lib/calculator/quote-view';
 
 export type AdhocComputeQuoteRequest = {
@@ -14,6 +14,8 @@ export type AdhocComputeQuoteRequest = {
   family?: ComputeFamily;
   vmCount?: number;
   publicIpCount?: number;
+  purchaseModel?: PurchaseModel;
+  vcpuShare?: VcpuShare;
 };
 
 export type AdhocGpuQuoteRequest = {

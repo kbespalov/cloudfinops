@@ -16,6 +16,8 @@ import {
   type ComputePreset,
   type DiskMedia,
   type GpuPreset,
+  type PurchaseModel,
+  type VcpuShare,
 } from '@/lib/calculator/presets';
 import {
   addPublicIpParts,
@@ -41,6 +43,8 @@ function adhocCompute(args: {
   diskGiB: number;
   family?: ComputeFamily;
   diskMedia?: DiskMedia;
+  purchaseModel?: PurchaseModel;
+  vcpuShare?: VcpuShare;
   vmCount?: number;
   publicIpCount?: number;
   period?: 'unit' | 'month' | 'year';
@@ -48,10 +52,12 @@ function adhocCompute(args: {
   const period = args.period ?? 'month';
   const family = args.family ?? 'general';
   const diskMedia = args.diskMedia ?? 'ssd';
+  const purchaseModel = args.purchaseModel ?? 'on-demand';
+  const vcpuShare = args.vcpuShare ?? '100%';
   const vmCount = args.vmCount ?? 1;
   const publicIpCount = Math.min(Math.max(0, args.publicIpCount ?? 0), vmCount);
   const preset: ComputePreset = {
-    id: `adhoc-${family}-${args.vcpu}-${args.ramGiB}-${args.diskGiB}-${diskMedia}`,
+    id: `adhoc-${family}-${args.vcpu}-${args.ramGiB}-${args.diskGiB}-${diskMedia}-${purchaseModel}-${vcpuShare}`,
     kind: 'compute',
     family,
     title: `${args.vcpu} / ${args.ramGiB}`,
@@ -60,6 +66,8 @@ function adhocCompute(args: {
     ramGiB: args.ramGiB,
     diskGiB: args.diskGiB,
     diskMedia,
+    purchaseModel,
+    vcpuShare,
   };
   const view = addPublicIpParts(
     scaleQuote(toViewQuote(quotePreset(preset, period)), vmCount),

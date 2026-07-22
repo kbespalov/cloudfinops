@@ -5,12 +5,16 @@ import type {
   ComputePreset,
   DiskMedia,
   GpuPreset,
+  PurchaseModel,
+  VcpuShare,
 } from '@/lib/calculator/presets';
 import type {PeriodMode, ViewPresetQuote} from '@/lib/calculator/quote-view';
+import {parseVcpuShare} from '@/lib/calculator/vcpu-share';
 
 const PERIODS = new Set<PeriodMode>(['unit', 'month', 'year']);
 const FAMILIES = new Set<ComputeFamily>(['low-cost', 'general', 'high-cpu', 'high-memory']);
 const DISK_MEDIA = new Set<DiskMedia>(['ssd', 'hdd']);
+const PURCHASE_MODELS = new Set<PurchaseModel>(['on-demand', 'preemptible']);
 
 type ComputeBody = {
   kind: 'compute';
@@ -23,6 +27,8 @@ type ComputeBody = {
   vmCount?: number;
   /** Public IPv4 count; capped by vmCount. */
   publicIpCount?: number;
+  purchaseModel?: PurchaseModel;
+  vcpuShare?: VcpuShare;
 };
 
 type GpuBody = {
@@ -99,9 +105,14 @@ export async function POST(request: Request) {
       body.family && FAMILIES.has(body.family) ? body.family : 'general';
     const diskMedia: DiskMedia =
       body.diskMedia && DISK_MEDIA.has(body.diskMedia) ? body.diskMedia : 'ssd';
+    const purchaseModel: PurchaseModel =
+      body.purchaseModel && PURCHASE_MODELS.has(body.purchaseModel)
+        ? body.purchaseModel
+        : 'on-demand';
+    const vcpuShare: VcpuShare = parseVcpuShare(body.vcpuShare) ?? '100%';
     const diskLabel = diskMedia === 'hdd' ? 'HDD' : 'SSD';
     const preset: ComputePreset = {
-      id: `adhoc-${family}-${vcpu}-${ramGiB}-${diskGiB}-${diskMedia}`,
+      id: `adhoc-${family}-${vcpu}-${ramGiB}-${diskGiB}-${diskMedia}-${purchaseModel}-${vcpuShare}`,
       kind: 'compute',
       family,
       title: `${vcpu} / ${ramGiB}`,
@@ -110,6 +121,8 @@ export async function POST(request: Request) {
       ramGiB,
       diskGiB,
       diskMedia,
+      purchaseModel,
+      vcpuShare,
     };
     const view = addPublicIpParts(
       scaleQuote(toViewQuote(quotePreset(preset, body.period)), vmCount),

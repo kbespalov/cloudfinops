@@ -1,8 +1,15 @@
 /** Ready-made VM / GPU scenarios for the calculator (not a free-form builder). */
 
+import type {VcpuShare} from '@/lib/calculator/vcpu-share';
+
 export type ComputeFamily = 'low-cost' | 'general' | 'high-cpu' | 'high-memory';
 
 export type DiskMedia = 'ssd' | 'hdd';
+
+/** Regular on-demand VM vs preemptible (interruptible) purchase model. */
+export type PurchaseModel = 'on-demand' | 'preemptible';
+
+export type {VcpuShare};
 
 export type ComputePreset = {
   id: string;
@@ -18,6 +25,10 @@ export type ComputePreset = {
   diskMedia?: DiskMedia;
   /** Prefer NVMe block storage when composing the disk line. */
   preferNvme?: boolean;
+  /** VM purchase model — default on-demand (обычная). */
+  purchaseModel?: PurchaseModel;
+  /** Guaranteed vCPU share — default 100%. */
+  vcpuShare?: VcpuShare;
 };
 
 export type GpuPreset = {
@@ -55,10 +66,15 @@ export const COMPUTE_FAMILY_TITLE: Record<ComputeFamily, string> = {
 };
 
 export const COMPUTE_FAMILY_HINT: Record<ComputeFamily, string> = {
-  'low-cost': 'Прерываемые / shared vCPU — дешевле, но без гарантий производительности',
+  'low-cost': 'Бюджетный класс — shared / долевые ядра; прерываемые включаются отдельно типом ВМ',
   general: 'Универсальные ВМ — 1 vCPU : 4 GiB RAM',
   'high-cpu': 'CPU-оптимизированные — 1 vCPU : 2 GiB RAM',
   'high-memory': 'Memory-оптимизированные — 1 vCPU : 8 GiB RAM',
+};
+
+export const PURCHASE_MODEL_TITLE: Record<PurchaseModel, string> = {
+  'on-demand': 'Обычная',
+  preemptible: 'Прерываемая',
 };
 
 function computePreset(

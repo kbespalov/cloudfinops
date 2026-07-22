@@ -7,7 +7,10 @@ import {
   type ComputeFamily,
   type ComputePreset,
   type DiskMedia,
+  type PurchaseModel,
+  type VcpuShare,
 } from '@/lib/calculator/presets';
+import {shapeAllowedForShare} from '@/lib/calculator/vcpu-share';
 import {
   formatQuoteAmount,
   periodShortLabel,
@@ -21,6 +24,8 @@ type Props = {
   period: PeriodMode;
   vmCount: number;
   diskMedia: DiskMedia;
+  purchaseModel: PurchaseModel;
+  vcpuShare: VcpuShare;
   publicIpCount: number;
   activePresetId: string | null;
   customSelected: boolean;
@@ -33,13 +38,21 @@ export function VmPresetGrid({
   period,
   vmCount,
   diskMedia,
+  purchaseModel,
+  vcpuShare,
   publicIpCount,
   activePresetId,
   customSelected,
   onSelect,
   onSelectCustom,
 }: Props) {
-  const presets = useMemo(() => computePresetsByFamily(family), [family]);
+  const presets = useMemo(
+    () =>
+      computePresetsByFamily(family).filter((p) =>
+        shapeAllowedForShare(vcpuShare, p.vcpu, p.ramGiB),
+      ),
+    [family, vcpuShare],
+  );
   const [totals, setTotals] = useState<Record<string, number | null>>({});
   const [loading, setLoading] = useState(false);
   const seq = useRef(0);
@@ -58,6 +71,8 @@ export function VmPresetGrid({
           ramGiB: preset.ramGiB,
           diskGiB: preset.diskGiB,
           diskMedia,
+          purchaseModel,
+          vcpuShare,
           family,
           vmCount,
           publicIpCount,
@@ -80,7 +95,7 @@ export function VmPresetGrid({
       setTotals(Object.fromEntries(entries));
       setLoading(false);
     });
-  }, [family, period, vmCount, diskMedia, publicIpCount, presets]);
+  }, [family, period, vmCount, diskMedia, purchaseModel, vcpuShare, publicIpCount, presets]);
 
   return (
     <div className={styles.root}>

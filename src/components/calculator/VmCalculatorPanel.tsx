@@ -13,6 +13,8 @@ import {
   Text,
 } from '@gravity-ui/uikit';
 import {
+  ChartPie,
+  CirclePause,
   Cpu,
   Cpus,
   Gpu,
@@ -21,6 +23,7 @@ import {
   PlanetEarth,
   ScalesBalanced,
   Server,
+  ShieldCheck,
   Sparkles,
   TagRuble,
   Thunderbolt,
@@ -32,6 +35,8 @@ import {
   type ComputePreset,
   type DiskMedia,
   type GpuPreset,
+  type PurchaseModel,
+  type VcpuShare,
 } from '@/lib/calculator/presets';
 import {
   formatGiBCapacity,
@@ -40,6 +45,15 @@ import {
 } from '@/lib/calculator/quote-view';
 import {vmChatPrompt} from '@/lib/calculator/self-host-links';
 import {useAdhocQuote} from '@/lib/calculator/useAdhocQuote';
+import {
+  clampShapeToShare,
+  defaultRamForShare,
+  isFractionalShare,
+  ramOptionsForShare,
+  VCPU_SHARE_OPTIONS,
+  vcpuShareHint,
+  vcpuStepsForShare,
+} from '@/lib/calculator/vcpu-share';
 import {chatUrlForQuery} from '@/components/home/homePrompts';
 import {CalculatorSidebar} from './CalculatorSidebar';
 import {GpuPresetGrid} from './GpuPresetGrid';
@@ -59,20 +73,6 @@ const FAMILY_ICON: Record<ComputeFamily, typeof Cpu> = {
 
 type VmMode = ComputeFamily | 'gpu';
 
-const RAM_PER_VCPU: Record<ComputeFamily, number> = {
-  general: 4,
-  'high-cpu': 2,
-  'high-memory': 8,
-  'low-cost': 2,
-};
-
-const VCPU_STEPS: Record<ComputeFamily, number[]> = {
-  'low-cost': [1, 2, 4, 8, 16, 32],
-  general: [2, 4, 8, 16, 32, 64, 96, 128],
-  'high-cpu': [2, 4, 8, 16, 32, 64, 96, 128],
-  'high-memory': [2, 4, 8, 16, 32, 64, 96, 128],
-};
-
 const VM_STEPS = [1, 2, 4, 8, 16, 32, 64];
 /** Up to 10 TiB — discrete ladder for the volume slider. */
 const DISK_STEPS = [10, 20, 50, 100, 200, 500, 1000, 2000, 4000, 8000, 10240];
@@ -83,6 +83,8 @@ const DEFAULT = {
   vcpu: 4,
   diskGiB: 10,
   diskMedia: 'ssd' as DiskMedia,
+  purchaseModel: 'on-demand' as PurchaseModel,
+  vcpuShare: '100%' as VcpuShare,
   publicIpCount: 1,
 };
 
@@ -123,10 +125,6 @@ function nearestIn(options: number[], value: number): number {
   return best;
 }
 
-function ramFor(family: ComputeFamily, vcpu: number): number {
-  return vcpu * RAM_PER_VCPU[family];
-}
-
 function pickDefaultGpu(presets: GpuPreset[]): GpuPreset | null {
   if (presets.length === 0) return null;
   return (
@@ -163,9 +161,13 @@ export function VmCalculatorPanel({
   const [forceCustomPreset, setForceCustomPreset] = useState(false);
   const [vmCount, setVmCount] = useState(DEFAULT.vmCount);
   const [vcpu, setVcpu] = useState(DEFAULT.vcpu);
-  const [ramGiB, setRamGiB] = useState(ramFor(DEFAULT.family, DEFAULT.vcpu));
+  const [ramGiB, setRamGiB] = useState(
+    defaultRamForShare(DEFAULT.vcpuShare, DEFAULT.family, DEFAULT.vcpu),
+  );
   const [diskGiB, setDiskGiB] = useState(DEFAULT.diskGiB);
   const [diskMedia, setDiskMedia] = useState<DiskMedia>(DEFAULT.diskMedia);
+  const [purchaseModel, setPurchaseModel] = useState<PurchaseModel>(DEFAULT.purchaseModel);
+  const [vcpuShare, setVcpuShare] = useState<VcpuShare>(DEFAULT.vcpuShare);
   const [publicIpMode, setPublicIpMode] = useState<PublicIpMode>('count');
   const [manualIpCount, setManualIpCount] = useState(DEFAULT.publicIpCount);
   const publicIpCount =
@@ -183,8 +185,8 @@ export function VmCalculatorPanel({
     return gpuPresets.filter((p) => p.gpuModelMatch === gpuFilter);
   }, [gpuPresets, gpuFilter]);
 
-  const vcpuOptions = VCPU_STEPS[family];
-  const ramOptions = vcpuOptions.map((v) => ramFor(family, v));
+  const vcpuOptions = vcpuStepsForShare(vcpuShare, family);
+  const ramOptions = ramOptionsForShare(vcpuShare, family, vcpu);
 
   const request = useMemo(() => {
     if (isGpu) {
@@ -209,6 +211,8 @@ export function VmCalculatorPanel({
       ramGiB,
       diskGiB,
       diskMedia,
+      purchaseModel,
+      vcpuShare,
       family,
       vmCount,
       publicIpCount,
@@ -221,6 +225,8 @@ export function VmCalculatorPanel({
     ramGiB,
     diskGiB,
     diskMedia,
+    purchaseModel,
+    vcpuShare,
     family,
     vmCount,
     publicIpCount,
@@ -238,12 +244,11 @@ export function VmCalculatorPanel({
   }
 
   function applyFamily(next: ComputeFamily) {
-    const steps = VCPU_STEPS[next];
-    const nextVcpu = nearestIn(steps, vcpu);
+    const clamped = clampShapeToShare(vcpuShare, next, vcpu, ramGiB);
     setFamily(next);
     setCustomRam(false);
-    setVcpu(nextVcpu);
-    setRamGiB(ramFor(next, nextVcpu));
+    setVcpu(clamped.vcpu);
+    setRamGiB(defaultRamForShare(vcpuShare, next, clamped.vcpu));
   }
 
   function onVmCountChange(next: number) {
@@ -253,30 +258,48 @@ export function VmCalculatorPanel({
     setManualIpCount((ips) => Math.min(ips, next));
   }
 
+  function onVcpuShareChange(next: VcpuShare) {
+    const clamped = clampShapeToShare(next, family, vcpu, ramGiB);
+    setVcpuShare(next);
+    setForceCustomPreset(true);
+    setCustomRam(false);
+    setVcpu(clamped.vcpu);
+    setRamGiB(defaultRamForShare(next, family, clamped.vcpu));
+  }
+
   function onVcpuChange(next: number) {
     setForceCustomPreset(true);
     setVcpu(next);
-    if (!customRam) setRamGiB(ramFor(family, next));
+    if (!customRam) setRamGiB(defaultRamForShare(vcpuShare, family, next));
+    else {
+      const options = ramOptionsForShare(vcpuShare, family, next);
+      setRamGiB(nearestIn(options, ramGiB));
+    }
   }
 
   function onRamChange(next: number) {
     setForceCustomPreset(true);
     setCustomRam(true);
     setRamGiB(next);
-    const match = vcpuOptions.find((v) => ramFor(family, v) === next);
-    if (match != null) {
-      setVcpu(match);
-      setCustomRam(false);
+    if (!isFractionalShare(vcpuShare)) {
+      const match = vcpuOptions.find(
+        (v) => defaultRamForShare(vcpuShare, family, v) === next,
+      );
+      if (match != null) {
+        setVcpu(match);
+        setCustomRam(false);
+      }
     }
   }
 
   function applyPreset(preset: ComputePreset) {
+    const clamped = clampShapeToShare(vcpuShare, preset.family, preset.vcpu, preset.ramGiB);
     setMode(preset.family);
     setFamily(preset.family);
     setCustomRam(false);
     setForceCustomPreset(false);
-    setVcpu(preset.vcpu);
-    setRamGiB(preset.ramGiB);
+    setVcpu(clamped.vcpu);
+    setRamGiB(clamped.ramGiB);
     setDiskGiB(nearestIn(DISK_STEPS, preset.diskGiB));
   }
 
@@ -308,14 +331,27 @@ export function VmCalculatorPanel({
     activeGpu?.ramGiB != null ? formatGiBCapacity(activeGpu.ramGiB) : '—';
 
   const diskShort = diskMedia === 'ssd' ? 'SSD' : 'HDD';
+  const purchaseShort = purchaseModel === 'preemptible' ? 'прерываемая' : 'обычная';
+  const vmEmptyHint = (() => {
+    if (
+      purchaseModel === 'preemptible' &&
+      (vcpuShare === '10%' || vcpuShare === '30%')
+    ) {
+      return 'Прерываемые тарифы с долей 10%/30% в каталоге нет (эконом Cloud.ru — только обычные ВМ). Выберите обычную ВМ или долю Yandex 5/20/50/100%.';
+    }
+    if (isFractionalShare(vcpuShare)) {
+      return `Нет предложений для доли ${vcpuShare} и выбранного типа ВМ. Для Yandex shared — до 4 vCPU (при 5% до 8 GiB RAM); смените долю или тип.`;
+    }
+    return 'Для выбранных параметров предложения не найдены';
+  })();
   const vmConfigSummary = isGpu
     ? null
     : {
-        primary: vmCount === 1 ? '1 ВМ' : `${vmCount} ВМ`,
+        primary: vmCount === 1 ? `1 ВМ · ${purchaseShort}` : `${vmCount} ВМ · ${purchaseShort}`,
         secondary:
           vmCount === 1
-            ? `${vcpu} vCPU · ${formatGiBCapacity(ramGiB)} RAM · ${diskShort} ${diskGiB} GiB`
-            : `${vcpu} vCPU · ${formatGiBCapacity(ramGiB)} RAM · ${diskShort} ${diskGiB} GiB на одну ВМ`,
+            ? `${vcpu} vCPU · доля ${vcpuShare} · ${formatGiBCapacity(ramGiB)} RAM · ${diskShort} ${diskGiB} GiB`
+            : `${vcpu} vCPU · доля ${vcpuShare} · ${formatGiBCapacity(ramGiB)} RAM · ${diskShort} ${diskGiB} GiB на одну ВМ`,
         totals: `Итого: ${vmCount * vcpu} vCPU · ${formatGiBCapacity(vmCount * ramGiB)} RAM · ${formatGiBCapacity(vmCount * diskGiB)} ${diskShort} · ${ipv4TotalsFragment(publicIpCount)}`,
       };
 
@@ -420,6 +456,68 @@ export function VmCalculatorPanel({
                   Конфигурация ВМ
                 </Text>
                 <div className={styles.fields}>
+                  <div className={styles.diskTypeRow}>
+                    <Flex alignItems="center" gap={2} className={styles.diskTypeLabel}>
+                      <Icon data={Server} size={16} className={styles.fieldIcon} />
+                      <Text variant="body-1">Тип ВМ</Text>
+                      <HelpMark aria-label="Про тип ВМ" iconSize="s">
+                        Обычная ВМ работает постоянно; на неё действует SLA провайдера.
+                        Прерываемая дешевле, но может быть остановлена в любой момент (обычно не
+                        дольше 24 часов), без SLA. В каталоге прерываемые тарифы есть у Yandex Cloud
+                        и Selectel — у остальных провайдеров при выборе «Прерываемая» цена не
+                        покажется.
+                      </HelpMark>
+                    </Flex>
+                    <SegmentedRadioGroup
+                      size="m"
+                      value={purchaseModel}
+                      onUpdate={(v) => setPurchaseModel(v as PurchaseModel)}
+                      aria-label="Тип виртуальной машины"
+                    >
+                      <SegmentedRadioGroup.Option value="on-demand">
+                        <Flex alignItems="center" gap={1}>
+                          <Icon data={ShieldCheck} size={14} />
+                          Обычная
+                        </Flex>
+                      </SegmentedRadioGroup.Option>
+                      <SegmentedRadioGroup.Option value="preemptible">
+                        <Flex alignItems="center" gap={1}>
+                          <Icon data={CirclePause} size={14} />
+                          Прерываемая
+                        </Flex>
+                      </SegmentedRadioGroup.Option>
+                    </SegmentedRadioGroup>
+                  </div>
+                  <div className={styles.shareRow}>
+                    <Flex alignItems="center" gap={2} className={styles.diskTypeLabel}>
+                      <Icon data={ChartPie} size={16} className={styles.fieldIcon} />
+                      <Text variant="body-1">Доля CPU</Text>
+                      <HelpMark aria-label="Про долю CPU" iconSize="s">
+                        Гарантированная доля производительности ядра. 100% — выделенное ядро. Меньше
+                        100% — дешевле (Yandex: 5/20/50%, до 4 vCPU и 16 GiB; Cloud.ru: 10/30% по
+                        флейворам). Azure B-series — похожая burstable-модель, в каталоге РФ не
+                        сравниваем. {vcpuShareHint(vcpuShare)}
+                      </HelpMark>
+                    </Flex>
+                    <SegmentedRadioGroup
+                      size="m"
+                      value={vcpuShare}
+                      onUpdate={(v) => onVcpuShareChange(v as VcpuShare)}
+                      aria-label="Доля CPU"
+                      className={styles.shareGroup}
+                    >
+                      {VCPU_SHARE_OPTIONS.map((share) => (
+                        <SegmentedRadioGroup.Option key={share} value={share}>
+                          {share}
+                        </SegmentedRadioGroup.Option>
+                      ))}
+                    </SegmentedRadioGroup>
+                  </div>
+                  {isFractionalShare(vcpuShare) ? (
+                    <Text variant="caption-2" color="secondary" className={styles.shareHint}>
+                      {vcpuShareHint(vcpuShare)}
+                    </Text>
+                  ) : null}
                   <SliderField
                     icon={Server}
                     label="Количество ВМ"
@@ -436,10 +534,14 @@ export function VmCalculatorPanel({
                     label="vCPU на одну ВМ"
                     value={vcpu}
                     options={vcpuOptions}
-                    scaleMin={1}
-                    scaleMax={128}
+                    scaleMin={vcpuOptions[0] ?? 1}
+                    scaleMax={vcpuOptions[vcpuOptions.length - 1] ?? 128}
                     unit="vCPU"
-                    hint="Количество виртуальных процессоров для каждого экземпляра."
+                    hint={
+                      isFractionalShare(vcpuShare)
+                        ? `Количество vCPU при доле ${vcpuShare}. Для долей Yandex Cloud доступны только 2 или 4 ядра.`
+                        : 'Количество виртуальных процессоров для каждого экземпляра.'
+                    }
                     onUpdate={onVcpuChange}
                   />
                   <SliderField
@@ -447,10 +549,14 @@ export function VmCalculatorPanel({
                     label="RAM на одну ВМ"
                     value={ramGiB}
                     options={ramOptions}
-                    scaleMin={1}
-                    scaleMax={1024}
+                    scaleMin={ramOptions[0] ?? 1}
+                    scaleMax={ramOptions[ramOptions.length - 1] ?? 1024}
                     unit="GiB"
-                    hint="Объём оперативной памяти для каждого экземпляра."
+                    hint={
+                      isFractionalShare(vcpuShare)
+                        ? `Объём RAM при доле ${vcpuShare}; лимит зависит от провайдера и числа ядер.`
+                        : 'Объём оперативной памяти для каждого экземпляра.'
+                    }
                     onUpdate={onRamChange}
                   />
                 </div>
@@ -568,6 +674,8 @@ export function VmCalculatorPanel({
                 period={period}
                 vmCount={vmCount}
                 diskMedia={diskMedia}
+                purchaseModel={purchaseModel}
+                vcpuShare={vcpuShare}
                 publicIpCount={publicIpCount}
                 activePresetId={activePresetId}
                 customSelected={customSelected}
@@ -583,7 +691,7 @@ export function VmCalculatorPanel({
         period={period}
         result={result}
         loading={loading}
-        emptyHint="Для выбранных параметров предложения не найдены"
+        emptyHint={isGpu ? 'Для выбранных параметров предложения не найдены' : vmEmptyHint}
         bestPriceHint="Самая низкая стоимость текущей выбранной конфигурации среди найденных провайдеров"
         bestPriceBadge="Самый дешёвый провайдер"
         configSummary={
@@ -617,6 +725,8 @@ export function VmCalculatorPanel({
                     ramGiB,
                     diskGiB,
                     diskMedia,
+                    purchaseModel,
+                    vcpuShare,
                     publicIpCount,
                     period: periodShortLabel(period),
                     providerName: result?.best?.providerName,

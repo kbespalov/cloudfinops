@@ -95,12 +95,16 @@ export function vmChatPrompt(args: {
   diskGiB: number;
   diskMedia: string;
   publicIpCount: number;
+  purchaseModel?: 'on-demand' | 'preemptible';
+  vcpuShare?: string;
   period: string;
   providerName?: string | null;
   totalRub?: number | null;
 }): string {
+  const vmType = args.purchaseModel === 'preemptible' ? 'прерываемая' : 'обычная';
+  const share = args.vcpuShare ?? '100%';
   const parts = [
-    `Сравни конфигурацию ВМ в облаках РФ: ${args.vmCount}×(${args.vcpu} vCPU / ${args.ramGiB} GiB RAM / ${args.diskGiB} GiB ${args.diskMedia.toUpperCase()}), публичных IP: ${args.publicIpCount}.`,
+    `Сравни конфигурацию ВМ в облаках РФ: ${args.vmCount}×(${args.vcpu} vCPU / ${args.ramGiB} GiB RAM / ${args.diskGiB} GiB ${args.diskMedia.toUpperCase()}), тип ВМ: ${vmType}, доля CPU: ${share}, публичных IP: ${args.publicIpCount}.`,
   ];
   parts.push(`Период: ${args.period}.`);
   if (args.providerName && args.totalRub != null) {
