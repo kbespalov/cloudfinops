@@ -487,6 +487,18 @@ export const newsItems: NewsItem[] = [
 
   // ——— Июль 2026 ———
   {
+    id: 'selectel-2026-07-dbaas-multiaz',
+    date: '2026-07-23',
+    provider: 'selectel',
+    providerName: 'Selectel',
+    title: 'Multi-AZ кластеры DBaaS в ru-6',
+    summary:
+      'В геораспределённом регионе ru-6 (три независимых AZ на 10–15 км, связность до 10 Гбит/с) доступны отказоустойчивые кластеры облачных БД: PostgreSQL, MySQL, Redis, TimescaleDB и ClickHouse. При репликах ноды гарантированно разносятся по дата-центрам — по модели AWS Multi-AZ. Вместе с уже анонсированными S3 и Managed Kubernetes в ru-6 это закрывает типичный DR-контур «хранилище + K8s + БД» без самостоятельной репликации между площадками; имеет смысл закладывать в TCO разницу single-AZ vs multi-AZ.',
+    tags: ['data', 'finops'],
+    sourceUrl: 'https://selectel.ru/blog/multiaz-dbaas/',
+    sourceLabel: 'Академия Selectel',
+  },
+  {
     id: 'market-2026-07-vera-rubin-deploy',
     date: '2026-07-22',
     provider: 'market',
