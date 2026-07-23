@@ -82,14 +82,19 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    // Absolute URLs + 120×120 PNG: Yandex Webmaster favicon requirements
+    // Yandex: file named favicon in site root + link in <head>.
+    // Prefer SVG / 120×120; keep a single controlled set (no src/app/favicon.* —
+    // Next.js file icons inject a conflicting first <link> and the robot may pick any).
+    // https://yandex.ru/support/webmaster/ru/search-results/favicon
     icon: [
       {url: `${SITE_URL}/favicon.svg`, type: 'image/svg+xml'},
       {url: `${SITE_URL}/favicon-120.png`, sizes: '120x120', type: 'image/png'},
+      {url: `${SITE_URL}/favicon.png`, sizes: '120x120', type: 'image/png'},
       {url: `${SITE_URL}/favicon-32.png`, sizes: '32x32', type: 'image/png'},
+      {url: `${SITE_URL}/favicon-16.png`, sizes: '16x16', type: 'image/png'},
       {url: `${SITE_URL}/favicon.ico`, sizes: 'any', type: 'image/x-icon'},
-      {url: `${SITE_URL}/icon-192.png`, sizes: '192x192', type: 'image/png'},
     ],
+    shortcut: [{url: `${SITE_URL}/favicon.ico`, type: 'image/x-icon'}],
     apple: [
       {url: `${SITE_URL}/apple-touch-icon.png`, sizes: '180x180', type: 'image/png'},
     ],

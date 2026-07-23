@@ -21,6 +21,12 @@
       "purpose": "any"
     },
     {
+      "src": "/favicon.png",
+      "type": "image/png",
+      "sizes": "120x120",
+      "purpose": "any"
+    },
+    {
       "src": "/icon-192.png",
       "type": "image/png",
       "sizes": "192x192",
