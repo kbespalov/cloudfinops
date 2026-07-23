@@ -132,7 +132,7 @@ spec:
         byteBasis: not-applicable
     notes: В прайсе Yandex Cloud для платформы Gen2 указан объём памяти (80 ГБ), но модель GPU не названа.
   - sku: yc.gpu.platform-v4
-    name: NVIDIA H200 (GPU Platform V4)
+    name: GPU Platform V4
     meter: compute.gpu
     status: available
     pricingMode: unit
@@ -143,7 +143,7 @@ spec:
     - yc.billing-api
     - yc.compute
     dimensions:
-      gpuModel: NVIDIA H200
+      gpuModel: unknown
       gpuCount: 1
       gpuMemoryGb: 141
       platformId: gpu-standard-v4
@@ -161,8 +161,10 @@ spec:
         vat: included
         byteBasis: not-applicable
     notes: >
-      В прайсе платформа указана как GPU Platform V4 без названия чипа; по 141 ГБ памяти
-      на GPU это NVIDIA H200. vCPU и RAM оплачиваются отдельно.
+      В документации Yandex Cloud платформа указана как GPU Platform V4 (gpu-standard-v4)
+      без названия чипа NVIDIA. 141 ГБ VRAM совпадает с H200, но в каталоге не размечаем
+      как H200 — иначе калькулятор подставляет Яндекс в сравнение H200-пресетов.
+      vCPU и RAM оплачиваются отдельно.
   - sku: yc.gpu.t4
     name: NVIDIA T4
     meter: compute.gpu
@@ -316,7 +318,7 @@ spec:
         byteBasis: not-applicable
     notes: Требуемые vCPU и RAM тарифицируются отдельно; ВМ может быть остановлена провайдером.
   - sku: yc.gpu.platform-v4.preemptible
-    name: NVIDIA H200 (GPU Platform V4), прерываемый
+    name: GPU Platform V4, прерываемый
     meter: compute.gpu
     status: available
     pricingMode: unit
@@ -325,7 +327,7 @@ spec:
     checkedAt: '2026-07-17'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
-      gpuModel: NVIDIA H200
+      gpuModel: unknown
       gpuCount: 1
       gpuMemoryGb: 141
       platformId: gpu-standard-v4
@@ -341,5 +343,5 @@ spec:
         vat: included
         byteBasis: not-applicable
     notes: >
-      В прайсе платформа указана как GPU Platform V4; по 141 ГБ памяти на GPU это NVIDIA H200.
-      Для прерываемого тарифа ставка совпадает с обычным (скидки нет). vCPU и RAM оплачиваются отдельно.
+      GPU Platform V4 без названия чипа NVIDIA (как on-demand). Не размечаем как H200.
+      Для прерываемого тарифа ставка совпадает с обычным (скидки нет). vCPU и RAM отдельно.
