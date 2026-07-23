@@ -88,6 +88,99 @@
   color: var(--g-color-text-primary);
 }
 
+.mobileBar {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .card {
+    padding: 16px;
+  }
+
+  .bestPrice {
+    font-size: 28px;
+  }
+
+  .summaryHead {
+    min-height: 0;
+  }
+
+  .providerRow {
+    min-height: 48px;
+    padding: 10px 8px;
+  }
+
+  .mobileBar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    min-height: 64px;
+    margin: 0;
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+    border: none;
+    border-top: 1px solid var(--g-color-line-generic);
+    border-radius: 0;
+    background: color-mix(in srgb, var(--g-color-base-float) 92%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    box-shadow: 0 -8px 24px color-mix(in srgb, var(--g-color-text-primary) 8%, transparent);
+    touch-action: manipulation;
+  }
+
+  .mobileBar[data-empty='true'] {
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .mobileBar:focus-visible {
+    outline: 2px solid var(--g-color-line-focus);
+    outline-offset: -2px;
+  }
+
+  .mobileBarMark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    border-radius: var(--g-border-radius-m);
+    background: var(--g-color-base-generic);
+  }
+
+  .mobileBarMeta {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .mobileBarProvider {
+    font-weight: 500;
+  }
+
+  .mobileBarPrice {
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+}
+
+:global(.g-root_theme_dark) .mobileBar,
+:global(.g-root_theme_dark-hc) .mobileBar {
+  background: color-mix(in srgb, var(--g-color-base-float) 94%, transparent);
+}
+
 .partList {
   display: flex;
   flex-direction: column;

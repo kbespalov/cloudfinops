@@ -72,10 +72,17 @@ const ALIAS_PLANS: {id: string; match: RegExp; tools: FastPathTool[]}[] = [
       /(?:запуск|запустить|развернуть|инфраструктур|свои[хм]|self[-\s]?host|сколько\s+gpu).{0,80}qwen3?\s*[-.]?\s*235|qwen3?\s*[-.]?\s*235.{0,80}(?:запуск|инфраструктур|gpu)/i,
     tools: [{name: 'recommend_inference_infra', args: {model: 'Qwen3 235B', maxConfigs: 3}}],
   },
+  // K3 before generic kimi — otherwise «развернуть kimi k3» steals into K2.6.
+  {
+    id: 'inference-kimi-k3',
+    match:
+      /(?:запуск|запустить|развернуть|инфраструктур|свои[хм]|self[-\s]?host|сколько\s+gpu|vram).{0,80}(?:kimi|кими|химик[аи]?)\s*k?\s*3|химика\s*три|(?:kimi|кими|химик[аи]?)\s*k?\s*3.{0,80}(?:запуск|запустить|развернуть|инфраструктур|свои[хм]|gpu|vram|self[-\s]?host)/i,
+    tools: [{name: 'recommend_inference_infra', args: {model: 'Kimi K3', maxConfigs: 3}}],
+  },
   {
     id: 'inference-kimi',
     match:
-      /(?:запуск|запустить|развернуть|инфраструктур|свои[хм]|self[-\s]?host|сколько\s+gpu).{0,80}kimi|kimi.{0,80}(?:запуск|инфраструктур|свои[хм]|gpu)/i,
+      /(?:запуск|запустить|развернуть|инфраструктур|свои[хм]|self[-\s]?host|сколько\s+gpu).{0,80}(?:kimi|кими)(?!\s*k?\s*3)|(?:kimi|кими)(?!\s*k?\s*3).{0,80}(?:запуск|инфраструктур|свои[хм]|gpu)/i,
     tools: [{name: 'recommend_inference_infra', args: {model: 'Kimi K2.6', maxConfigs: 3}}],
   },
   {

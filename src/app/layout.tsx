@@ -1,4 +1,4 @@
-import type {Metadata} from 'next';
+import type {Metadata, Viewport} from 'next';
 import {Suspense} from 'react';
 import {Inter} from 'next/font/google';
 import '@gravity-ui/uikit/styles/styles.css';
@@ -9,6 +9,14 @@ import {YandexMetrika} from '@/components/YandexMetrika';
 import {THEME_BOOT_SCRIPT} from '@/lib/theme-boot';
 
 const SITE_URL = 'https://cloudfinops.ru';
+
+/** Prefer keyboard resizing the layout (Chrome Android) over overlaying it. */
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  interactiveWidget: 'resizes-content',
+};
 
 /** Self-hosted Inter (no Google Fonts @import) — same family Gravity expects. */
 const inter = Inter({

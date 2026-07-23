@@ -103,3 +103,15 @@
     display: inline-flex;
   }
 }
+
+@media (max-width: 720px) {
+  .inner {
+    padding: 8px 12px;
+  }
+
+  .mark {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+}

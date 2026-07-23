@@ -19,6 +19,9 @@ describe('inference model KB', () => {
   it('resolves fat-model aliases (Kimi K3, Qwen 3.7/3.8)', () => {
     assert.equal(findInferenceModel('кимика 3')?.id, 'kimi-k3');
     assert.equal(findInferenceModel('kimi k3')?.id, 'kimi-k3');
+    assert.equal(findInferenceModel('химика три')?.id, 'kimi-k3');
+    assert.equal(findInferenceModel('химика 3')?.id, 'kimi-k3');
+    assert.equal(findInferenceModel('развернуть химика три self-host')?.id, 'kimi-k3');
     assert.equal(findInferenceModel('квен 3.7')?.id, 'qwen-3.7');
     assert.equal(findInferenceModel('qwen 3.8')?.id, 'qwen-3.8');
   });
@@ -342,6 +345,24 @@ describe('fast-path inference chips', () => {
     );
     assert.equal(coder?.tools[0]?.name, 'recommend_inference_infra');
     assert.equal((coder?.tools[0]?.args as {model?: string})?.model, 'Qwen3-Coder-Next');
+  });
+
+  it('does not route Kimi K3 phrasing into K2.6 fast-path', () => {
+    for (const q of [
+      'развернуть kimi k3',
+      'инфраструктура для kimi k3',
+      'Kimi K3 GPU',
+      'развернуть химика три',
+      'self-host химика 3',
+    ]) {
+      const plan = matchFastPath(q);
+      assert.equal(plan?.tools[0]?.name, 'recommend_inference_infra', q);
+      assert.equal((plan?.tools[0]?.args as {model?: string})?.model, 'Kimi K3', q);
+    }
+
+    const k26 = matchFastPath('развернуть kimi на своих GPU');
+    assert.equal(k26?.tools[0]?.name, 'recommend_inference_infra');
+    assert.equal((k26?.tools[0]?.args as {model?: string})?.model, 'Kimi K2.6');
   });
 
   it('routes budget chip to fit_budget', () => {

@@ -568,7 +568,19 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
   {
     id: 'kimi-k3',
     displayName: 'Kimi K3',
-    aliases: ['kimi k3', 'kimi-k3', 'kimi k3.0', 'кими к3', 'кимика 3', 'кими k3'],
+    aliases: [
+      'kimi k3',
+      'kimi-k3',
+      'kimi k3.0',
+      'кими к3',
+      'кимика 3',
+      'кими k3',
+      // Speech-to-text: «Kimi K3» → «химика три» / «химика 3»
+      'химика 3',
+      'химика три',
+      'химик а 3',
+      'химик а три',
+    ],
     arch: 'moe',
     parameterCountB: 2800,
     activeParameterCountB: 55,
@@ -1858,6 +1870,9 @@ function normalizeAlias(text: string): string {
     .replace(/gpt[\s\-]?vss/gi, 'gpt oss')
     .replace(/gptuss/gi, 'gpt oss')
     .replace(/gptvss/gi, 'gpt oss')
+    // Speech-to-text: «Kimi K3» → «химика три» / «химика 3» / «химик а3»
+    .replace(/химик[аи]?(?:\s*а)?\s*(?:три|3(?:\.0)?)/gi, 'kimi k3')
+    .replace(/кимика\s*(?:три|3(?:\.0)?)/gi, 'kimi k3')
     .replace(/×/g, 'x')
     .replace(/[._]+/g, ' ')
     .replace(/\s+/g, ' ')

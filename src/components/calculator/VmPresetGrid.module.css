@@ -49,6 +49,44 @@
   gap: 8px;
 }
 
+@media (max-width: 720px) {
+  .sectionHead {
+    align-items: center;
+    gap: 8px;
+  }
+
+  .sectionTitle {
+    font-size: 16px;
+    line-height: 22px;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .card {
+    min-height: 88px;
+    padding: 14px 12px;
+    gap: 4px;
+    touch-action: manipulation;
+  }
+
+  .price {
+    padding-top: 8px;
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  .customChip {
+    min-height: 32px;
+    padding: 6px 12px;
+    font-size: 13px;
+    line-height: 18px;
+    touch-action: manipulation;
+  }
+}
+
 .card {
   appearance: none;
   display: flex;

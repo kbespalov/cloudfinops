@@ -71,7 +71,25 @@ const FAMILY_ICON: Record<ComputeFamily, typeof Cpu> = {
   'low-cost': TagRuble,
 };
 
+/** Short labels for the mobile horizontal chip scroller (full titles stay on desktop). */
+const FAMILY_TITLE_MOBILE: Record<ComputeFamily, string> = {
+  general: 'Общие',
+  'high-cpu': 'CPU',
+  'high-memory': 'RAM',
+  'low-cost': 'Дешевле',
+};
+
 type VmMode = ComputeFamily | 'gpu';
+
+const FAMILY_MODE_OPTIONS: {id: VmMode; icon: typeof Cpu; label: string; mobileLabel: string}[] = [
+  ...FAMILIES.map((id) => ({
+    id: id as VmMode,
+    icon: FAMILY_ICON[id],
+    label: COMPUTE_FAMILY_TITLE[id],
+    mobileLabel: FAMILY_TITLE_MOBILE[id],
+  })),
+  {id: 'gpu', icon: Gpu, label: 'GPU', mobileLabel: 'GPU'},
+];
 
 const VM_STEPS = [1, 2, 4, 8, 16, 32, 64];
 /** Up to 10 TiB — discrete ladder for the volume slider. */
@@ -363,28 +381,44 @@ export function VmCalculatorPanel({
             <SegmentedRadioGroup
               size="l"
               width="max"
-              className={styles.familyGroup}
+              className={`${styles.familyGroup} ${styles.familyDesktop}`}
               value={mode}
               onUpdate={(v) => applyMode(v as VmMode)}
               aria-label="Семейство ВМ"
             >
-              {[
-                ...FAMILIES.map((id) => (
-                  <SegmentedRadioGroup.Option key={id} value={id}>
-                    <span className={styles.familyOption}>
-                      <Icon data={FAMILY_ICON[id]} size={14} />
-                      {COMPUTE_FAMILY_TITLE[id]}
-                    </span>
-                  </SegmentedRadioGroup.Option>
-                )),
-                <SegmentedRadioGroup.Option key="gpu" value="gpu">
+              {FAMILY_MODE_OPTIONS.map((opt) => (
+                <SegmentedRadioGroup.Option key={opt.id} value={opt.id}>
                   <span className={styles.familyOption}>
-                    <Icon data={Gpu} size={14} />
-                    GPU
+                    <Icon data={opt.icon} size={14} />
+                    {opt.label}
                   </span>
-                </SegmentedRadioGroup.Option>,
-              ]}
+                </SegmentedRadioGroup.Option>
+              ))}
             </SegmentedRadioGroup>
+
+            <div
+              className={styles.familyMobile}
+              role="radiogroup"
+              aria-label="Семейство ВМ"
+            >
+              {FAMILY_MODE_OPTIONS.map((opt) => {
+                const active = mode === opt.id;
+                return (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    className={styles.familyChip}
+                    data-active={active ? 'true' : 'false'}
+                    onClick={() => applyMode(opt.id)}
+                  >
+                    <Icon data={opt.icon} size={16} />
+                    <span>{opt.mobileLabel}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {isGpu ? (

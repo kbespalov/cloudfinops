@@ -1,11 +1,19 @@
 .viewport {
-  height: 100dvh;
-  max-height: 100dvh;
+  /* Track visualViewport (keyboard-safe) — see ChatPage sync effect. */
+  position: fixed;
+  top: var(--cf-vv-offset-top, 0px);
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: var(--cf-vv-height, 100dvh);
+  max-height: var(--cf-vv-height, 100dvh);
   display: flex;
   flex-direction: column;
   overflow: hidden;
   padding-bottom: env(safe-area-inset-bottom, 0px);
   box-sizing: border-box;
+  z-index: 1;
+  background: var(--g-color-base-background);
 }
 
 .page {
@@ -75,10 +83,30 @@
   height: 100%;
 }
 
+/* Composer: keep Send on the same row as the field; never let it drop below fold. */
+.chatShell :global(.g-aikit-chat-container__footer) {
+  flex-shrink: 0;
+  padding-bottom: max(var(--g-aikit-layout-base-padding-m, 12px), env(safe-area-inset-bottom, 0px));
+}
+
+.chatShell :global(.g-aikit-prompt-input__content) {
+  align-items: flex-end;
+  flex-wrap: nowrap;
+}
+
+.chatShell :global(.g-aikit-prompt-input-body) {
+  min-width: 0;
+}
+
+.chatShell :global(.g-aikit-submit-button),
+.chatShell :global(.g-aikit-prompt-input__content > .g-button) {
+  flex-shrink: 0;
+}
+
 @media (max-width: 720px) {
   .page {
-    padding: 8px 12px 12px;
-    gap: 8px;
+    padding: 6px 10px 8px;
+    gap: 6px;
   }
 
   .hero {
@@ -86,7 +114,49 @@
   }
 
   .chatShell {
-    border-radius: 12px;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .chatShell :global(.g-aikit-chat-container__header) {
+    padding: 8px 10px;
+  }
+
+  .chatShell :global(.g-aikit-chat-container__content) {
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 8px;
+  }
+
+  .chatShell :global(.g-aikit-chat-container__footer) {
+    padding: 8px 10px;
+    /* Stay glued above the (virtual) keyboard. */
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background: var(--g-aikit-chat-container-footer-background, var(--g-color-base-background));
+  }
+
+  .chatShell :global(.g-aikit-prompt-input_view_simple),
+  .chatShell :global(.g-aikit-prompt-input_view_full) {
+    padding: 8px 8px 8px 12px;
+  }
+
+  /* Anti-zoom is global; reinforce on aikit composer (TextArea size=l → 13px token). */
+  .chatShell :global(.g-aikit-prompt-input textarea),
+  .chatShell :global(.g-aikit-prompt-input .g-text-area__control),
+  .chatShell :global(.g-text-area__control) {
+    font-size: 16px !important;
+    line-height: 22px !important;
+    min-height: 24px;
+  }
+
+  .chatShell :global(.g-aikit-submit-button),
+  .chatShell :global(.g-aikit-prompt-input__content > .g-button) {
+    min-width: 44px;
+    min-height: 44px;
   }
 }
 

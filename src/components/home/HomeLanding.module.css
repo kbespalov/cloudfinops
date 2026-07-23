@@ -257,6 +257,14 @@
   color: var(--cf-ink-muted);
 }
 
+@media (max-width: 720px) {
+  /* Reinforce anti-zoom: Gravity size=l still paints 13px body-short. */
+  .searchInput :global(.g-text-input__control) {
+    font-size: 16px !important;
+    line-height: 22px !important;
+  }
+}
+
 .searchSubmit:global(.g-button) {
   border-radius: 16px;
 }

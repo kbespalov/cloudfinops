@@ -74,7 +74,13 @@ export function CalculatorPage({
       <AppHeader />
       <main className={styles.page}>
         <header className={styles.hero}>
-          <Flex justifyContent="space-between" alignItems="flex-start" gap={4} wrap>
+          <Flex
+            justifyContent="space-between"
+            alignItems="flex-start"
+            gap={4}
+            wrap
+            className={styles.heroTop}
+          >
             <Flex direction="column" className={styles.heroCopy}>
               <Flex alignItems="center" className={styles.heroTitleRow}>
                 <Icon data={Calculator} size={20} />

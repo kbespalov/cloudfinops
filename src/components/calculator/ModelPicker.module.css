@@ -60,6 +60,50 @@
   text-overflow: ellipsis;
 }
 
+@media (max-width: 720px) {
+  .trigger {
+    height: auto;
+    min-height: 48px;
+    padding: 10px 12px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+
+  .triggerMain {
+    max-width: calc(100% - 28px);
+    flex: 1 1 auto;
+  }
+
+  .triggerMeta {
+    flex: 1 1 100%;
+    order: 3;
+    text-align: left;
+    white-space: normal;
+  }
+
+  .triggerChevron {
+    margin-left: auto;
+  }
+
+  .dialog {
+    width: calc(100vw - 16px);
+    max-width: none;
+  }
+
+  .searchSticky {
+    padding: 12px 14px 10px;
+  }
+
+  .scroll {
+    padding: 12px 14px 16px;
+  }
+
+  .labGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .triggerChevron {
   flex-shrink: 0;
   color: var(--g-color-text-secondary);

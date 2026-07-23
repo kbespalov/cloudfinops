@@ -12,6 +12,19 @@
   gap: 6px;
 }
 
+@media (max-width: 720px) {
+  .grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .card {
+    padding: 14px;
+    min-height: 72px;
+    touch-action: manipulation;
+  }
+}
+
 .card {
   appearance: none;
   display: flex;

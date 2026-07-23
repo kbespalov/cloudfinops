@@ -14,6 +14,11 @@
   gap: 12px;
 }
 
+.heroTop {
+  width: 100%;
+  min-width: 0;
+}
+
 .heroCopy {
   min-width: 0;
   gap: 4px;
@@ -80,6 +85,70 @@
 
   .workspace > :last-child {
     position: static;
+  }
+}
+
+@media (max-width: 720px) {
+  .page {
+    /* Extra bottom room for sticky mobile price bar. */
+    padding: 12px 14px calc(88px + env(safe-area-inset-bottom, 0px));
+    gap: 12px;
+  }
+
+  .hero {
+    gap: 8px;
+  }
+
+  .heroTop {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .heroTitle {
+    font-size: 20px;
+    line-height: 26px;
+  }
+
+  .heroLead {
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  .periodWrap {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .periodWrap :global(.g-segmented-radio-group) {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .periodWrap :global(.g-segmented-radio-group__option) {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .tabs {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tabs :global(.g-tab-list) {
+    width: max-content;
+    min-width: 100%;
+  }
+
+  .workspace {
+    gap: 16px;
   }
 }
 

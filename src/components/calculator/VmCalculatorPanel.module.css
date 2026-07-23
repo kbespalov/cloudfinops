@@ -25,6 +25,51 @@
   width: 100%;
 }
 
+.familyMobile {
+  display: none;
+}
+
+.familyChip {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--g-color-line-generic);
+  border-radius: var(--g-border-radius-l);
+  background: var(--g-color-base-background);
+  color: var(--g-color-text-primary);
+  font: inherit;
+  font-size: 14px;
+  line-height: 18px;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
+}
+
+.familyChip:hover {
+  background: var(--g-color-base-generic);
+}
+
+.familyChip:focus-visible {
+  outline: 2px solid var(--g-color-line-focus);
+  outline-offset: 2px;
+}
+
+.familyChip[data-active='true'] {
+  background: color-mix(in srgb, var(--g-color-base-brand) 14%, var(--g-color-base-background));
+  border-color: var(--g-color-line-brand);
+  color: var(--g-color-text-brand);
+}
+
 /* Equal-width segments; center icon+label (Gravity adds side margin that
  * shifts content when option-text is width:100%). */
 .familyGroup :global(.g-segmented-radio-group__option) {
@@ -93,6 +138,37 @@
 @media (max-width: 720px) {
   .familyBlock {
     max-width: none;
+    min-height: 0;
+  }
+
+  .familyDesktop {
+    display: none;
+  }
+
+  .familyMobile {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    padding-bottom: 2px;
+    touch-action: pan-x;
+  }
+
+  .familyMobile::-webkit-scrollbar {
+    display: none;
+  }
+
+  .familyMobile > .familyChip {
+    flex: 0 0 auto;
+    min-width: max-content;
+    scroll-snap-align: start;
+    font-size: 15px;
+    line-height: 20px;
   }
 
   .gpuSelectRow {
@@ -102,6 +178,11 @@
 
   .gpuHost {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .groupTitle {
+    font-size: 16px;
+    line-height: 22px;
   }
 }
 
@@ -289,5 +370,31 @@
 
   .shareGroup {
     max-width: none;
+  }
+
+  /* 6 share tiers do not fit a phone width — scroll instead of crushing labels. */
+  .shareGroup:global(.g-segmented-radio-group) {
+    width: 100%;
+    max-width: none;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    mask-image: linear-gradient(90deg, #000 85%, transparent);
+  }
+
+  .shareGroup:global(.g-segmented-radio-group)::-webkit-scrollbar {
+    display: none;
+  }
+
+  .shareGroup :global(.g-segmented-radio-group__option) {
+    flex: 0 0 auto;
+    min-width: 56px;
+    scroll-snap-align: start;
+  }
+
+  .configInner {
+    gap: 16px;
   }
 }

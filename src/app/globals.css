@@ -2,6 +2,9 @@
 :root,
 .g-root {
   --g-font-family-sans: var(--font-inter), 'Helvetica Neue', Arial, Helvetica, sans-serif;
+  /* Chat / keyboard: visualViewport sync (ChatPage). Fallback = dynamic viewport. */
+  --cf-vv-height: 100dvh;
+  --cf-vv-offset-top: 0px;
 }
 
 html,
@@ -19,4 +22,25 @@ body {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/*
+ * iOS Safari zooms the page when a focused control has font-size < 16px.
+ * Gravity TextInput/TextArea default to 13px (body-short) — bump on touch / narrow.
+ */
+@media (hover: none), (max-width: 900px) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='button']):not([type='submit']):not([type='reset']),
+  textarea,
+  select,
+  .g-text-input__control,
+  .g-text-area__control,
+  .g-number-input input,
+  .g-select-control__button,
+  input.g-text-input__control,
+  textarea.g-text-area__control,
+  .g-aikit-prompt-input textarea,
+  .g-aikit-prompt-input .g-text-area__control {
+    font-size: 16px !important;
+    line-height: 22px !important;
+  }
 }

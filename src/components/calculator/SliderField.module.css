@@ -64,21 +64,30 @@
 
 @media (max-width: 720px) {
   .root {
-    grid-template-columns: minmax(0, 1fr) 140px;
+    grid-template-columns: minmax(0, 1fr) minmax(104px, 128px);
     grid-template-areas:
       'label input'
       'slider slider';
-    gap: 8px 12px;
+    gap: 10px 12px;
     max-width: none;
+    min-height: 0;
   }
 
   .label {
     grid-area: label;
   }
 
+  .labelText {
+    font-size: 14px;
+    line-height: 20px;
+  }
+
   .slider {
     grid-area: slider;
     max-width: none;
+    /* Larger thumb hit-area on touch. */
+    padding-block: 10px;
+    --g-slider-thumb-size: 20px;
   }
 
   .input {

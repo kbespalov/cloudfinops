@@ -1,11 +1,12 @@
 'use client';
 
-import {useEffect, useState, type ReactNode} from 'react';
+import {useCallback, useEffect, useId, useState, type ReactNode} from 'react';
 import {Button, Flex, HelpMark, Label, Text, Tooltip} from '@gravity-ui/uikit';
 import {CostBreakdownBar, CostPartSwatch} from '@/components/calculator/CostBreakdownBar';
 import {ProviderMark} from '@/components/catalog/ProviderMark';
 import {
   formatQuoteAmount,
+  periodShortLabel,
   periodTotalLabel,
   type PeriodMode,
   type ViewPresetQuote,
@@ -162,6 +163,7 @@ export function CalculatorSidebar({
   bestPriceBadge?: string;
 }) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  const detailsId = useId();
   const priceHint =
     bestPriceHint ??
     'Самая низкая стоимость текущей выбранной конфигурации среди найденных провайдеров';
@@ -170,6 +172,11 @@ export function CalculatorSidebar({
   useEffect(() => {
     setSelectedKey(result?.best ? quoteKey(result.best) : null);
   }, [result]);
+
+  const scrollToDetails = useCallback(() => {
+    const el = document.getElementById(detailsId);
+    el?.scrollIntoView({behavior: 'smooth', block: 'start'});
+  }, [detailsId]);
 
   const selected: ViewProviderQuote | null =
     [...(result?.quotes ?? []), ...(result?.alternateQuotes ?? [])].find(
@@ -180,7 +187,7 @@ export function CalculatorSidebar({
 
   if (loading && !result) {
     return (
-      <aside className={styles.root} aria-busy="true">
+      <aside className={styles.root} aria-busy="true" id={detailsId}>
         <div className={styles.card}>
           <div className={styles.skeleton} />
           <div className={styles.skeletonShort} />
@@ -191,7 +198,7 @@ export function CalculatorSidebar({
 
   if (!result?.best || !selected) {
     return (
-      <aside className={styles.root}>
+      <aside className={styles.root} id={detailsId}>
         <div className={styles.card}>
           <div className={styles.summaryHead} data-empty="true">
             <Text variant="header-1">—</Text>
@@ -203,15 +210,48 @@ export function CalculatorSidebar({
           </div>
           {extras}
         </div>
+        <div className={styles.mobileBar} data-empty="true" aria-hidden="true">
+          <Text variant="body-2" color="secondary">
+            {emptyHint ?? 'Нет котировок'}
+          </Text>
+        </div>
       </aside>
     );
   }
 
   const isBest = result.best != null && quoteKey(selected) === quoteKey(result.best);
   const lines = configSummary ?? (deploymentSummary ? formatGpuDeployment(deploymentSummary) : null);
+  const periodWord = periodShortLabel(period);
 
   return (
-    <aside className={styles.root} data-stale={loading ? 'true' : 'false'}>
+    <aside
+      className={styles.root}
+      data-stale={loading ? 'true' : 'false'}
+      id={detailsId}
+    >
+      <button
+        type="button"
+        className={styles.mobileBar}
+        onClick={scrollToDetails}
+        aria-label={`Подробности: ${selected.providerName}, ${formatQuoteAmount(selected.total, period)} за ${periodWord}`}
+      >
+        <span className={styles.mobileBarMark}>
+          <ProviderMark providerId={selected.provider} size={14} />
+        </span>
+        <span className={styles.mobileBarMeta}>
+          <Text variant="body-2" ellipsis className={styles.mobileBarProvider}>
+            {selected.providerName}
+          </Text>
+          <Text variant="caption-2" color="complementary">
+            / {periodWord}
+            {isBest ? ' · лучшая цена' : ''}
+          </Text>
+        </span>
+        <Text variant="subheader-2" className={styles.mobileBarPrice}>
+          {formatQuoteAmount(selected.total, period)}
+        </Text>
+      </button>
+
       <div className={styles.card}>
         <div className={styles.block}>
           <Flex alignItems="center" gap={2} className={styles.detailProvider}>

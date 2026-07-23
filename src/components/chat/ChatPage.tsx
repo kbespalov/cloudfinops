@@ -65,6 +65,70 @@ export function ChatPage() {
     };
   }, []);
 
+  // Pin chat shell to the *visual* viewport so the iOS keyboard does not cover Send.
+  // Only shift offsetTop when the viewport is actually keyboard-shrunk — avoid fighting
+  // accidental pinch-zoom (which also changes offsetTop and makes Send "disappear").
+  useEffect(() => {
+    const root = document.documentElement;
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    let raf = 0;
+    const sync = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const layoutH = window.innerHeight || vv.height;
+        const height = vv.height;
+        root.style.setProperty('--cf-vv-height', `${height}px`);
+        const keyboardLikely = height < layoutH * 0.85 && vv.offsetTop > 0;
+        root.style.setProperty(
+          '--cf-vv-offset-top',
+          keyboardLikely ? `${vv.offsetTop}px` : '0px',
+        );
+      });
+    };
+
+    sync();
+    vv.addEventListener('resize', sync);
+    vv.addEventListener('scroll', sync);
+    window.addEventListener('orientationchange', sync);
+    return () => {
+      cancelAnimationFrame(raf);
+      vv.removeEventListener('resize', sync);
+      vv.removeEventListener('scroll', sync);
+      window.removeEventListener('orientationchange', sync);
+      root.style.removeProperty('--cf-vv-height');
+      root.style.removeProperty('--cf-vv-offset-top');
+    };
+  }, []);
+
+  // Keep composer / Send in view when the soft keyboard opens on mobile.
+  useEffect(() => {
+    const onFocusIn = (event: FocusEvent) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      if (!target.closest('.g-aikit-prompt-input')) return;
+
+      const footer =
+        target.closest('.g-aikit-chat-container__footer') ??
+        document.querySelector('.g-aikit-chat-container__footer');
+      if (!(footer instanceof HTMLElement)) return;
+
+      // After keyboard animation; double-rAF + short timeout covers iOS.
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          footer.scrollIntoView({block: 'end', behavior: 'smooth'});
+        });
+      });
+      window.setTimeout(() => {
+        footer.scrollIntoView({block: 'end', behavior: 'smooth'});
+      }, 300);
+    };
+
+    document.addEventListener('focusin', onFocusIn);
+    return () => document.removeEventListener('focusin', onFocusIn);
+  }, []);
+
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 720px)');
     const update = () => setNarrow(mq.matches);
