@@ -55,9 +55,9 @@ import styles from './InferenceCalculatorPanel.module.css';
 
 type QuantOption = SelfHostQuantParam;
 
-const QUANT_OPTIONS: {value: QuantOption; label: string}[] = [
+const QUANT_OPTIONS: {value: QuantOption; label: string; title?: string}[] = [
   {value: 'auto', label: 'Auto'},
-  {value: 'int4', label: 'INT4 / NVFP4'},
+  {value: 'int4', label: 'INT4', title: 'INT4 / NVFP4'},
   {value: 'fp8', label: 'FP8'},
   {value: 'bf16', label: 'BF16'},
   {value: 'int8', label: 'INT8'},
@@ -400,7 +400,7 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
                   aria-label="Формат весов и квантование"
                 >
                   {QUANT_OPTIONS.map((o) => (
-                    <SegmentedRadioGroup.Option key={o.value} value={o.value}>
+                    <SegmentedRadioGroup.Option key={o.value} value={o.value} title={o.title ?? o.label}>
                       {o.label}
                     </SegmentedRadioGroup.Option>
                   ))}

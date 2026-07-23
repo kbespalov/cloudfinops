@@ -60,6 +60,11 @@
 }
 
 /* Soften checked segment — Gravity paints fill on ::after; keep light tint + thin brand border. */
+.quantControl {
+  width: 100%;
+  min-width: 0;
+}
+
 .quantControl :global(.g-segmented-radio-group__option.g-segmented-radio-group__option_checked)::after {
   background-color: color-mix(in srgb, var(--g-color-base-brand) 14%, var(--g-color-base-background));
   border-color: var(--g-color-line-brand);
@@ -368,6 +373,53 @@
 
   .workload .field:first-child {
     max-width: none;
+  }
+
+  /* 5 quant formats do not fit a phone — scroll instead of Gravity ellipsis (A… / F…). */
+  .quantControl :global(.g-segmented-radio-group) {
+    width: 100%;
+    max-width: none;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    mask-image: linear-gradient(90deg, #000 82%, transparent);
+  }
+
+  .quantControl :global(.g-segmented-radio-group)::-webkit-scrollbar {
+    display: none;
+  }
+
+  .quantControl :global(.g-segmented-radio-group__option) {
+    flex: 0 0 auto;
+    min-width: max-content;
+    scroll-snap-align: start;
+  }
+
+  .quantControl :global(.g-segmented-radio-group__option-text) {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: nowrap;
+  }
+
+  .sectionTitleRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-height: 0;
+  }
+
+  .sectionTitle {
+    font-size: 16px;
+    line-height: 22px;
+  }
+
+  .configSection {
+    gap: 10px;
+    /* Keep list clear of the sticky mobile price bar. */
+    padding-bottom: 8px;
+    scroll-margin-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
   }
 
   .configHead {

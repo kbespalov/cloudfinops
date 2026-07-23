@@ -25,6 +25,12 @@
   width: 100%;
 }
 
+.familyDesktop {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
 .familyMobile {
   display: none;
 }
@@ -142,7 +148,7 @@
   }
 
   .familyDesktop {
-    display: none;
+    display: none !important;
   }
 
   .familyMobile {

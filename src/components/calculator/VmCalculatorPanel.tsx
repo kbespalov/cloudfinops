@@ -378,23 +378,26 @@ export function VmCalculatorPanel({
       <div className={`${panelStyles.formColumn} ${styles.configCard}`}>
         <div className={styles.configInner}>
           <div className={`${panelStyles.topSlot} ${styles.familyBlock}`} data-mode={mode}>
-            <SegmentedRadioGroup
-              size="l"
-              width="max"
-              className={`${styles.familyGroup} ${styles.familyDesktop}`}
-              value={mode}
-              onUpdate={(v) => applyMode(v as VmMode)}
-              aria-label="Семейство ВМ"
-            >
-              {FAMILY_MODE_OPTIONS.map((opt) => (
-                <SegmentedRadioGroup.Option key={opt.id} value={opt.id}>
-                  <span className={styles.familyOption}>
-                    <Icon data={opt.icon} size={14} />
-                    {opt.label}
-                  </span>
-                </SegmentedRadioGroup.Option>
-              ))}
-            </SegmentedRadioGroup>
+            {/* Wrapper owns display:none — Gravity sets inline-flex on the group root. */}
+            <div className={styles.familyDesktop}>
+              <SegmentedRadioGroup
+                size="l"
+                width="max"
+                className={styles.familyGroup}
+                value={mode}
+                onUpdate={(v) => applyMode(v as VmMode)}
+                aria-label="Семейство ВМ"
+              >
+                {FAMILY_MODE_OPTIONS.map((opt) => (
+                  <SegmentedRadioGroup.Option key={opt.id} value={opt.id}>
+                    <span className={styles.familyOption}>
+                      <Icon data={opt.icon} size={14} />
+                      {opt.label}
+                    </span>
+                  </SegmentedRadioGroup.Option>
+                ))}
+              </SegmentedRadioGroup>
+            </div>
 
             <div
               className={styles.familyMobile}

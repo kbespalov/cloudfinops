@@ -93,8 +93,13 @@
 }
 
 @media (max-width: 720px) {
+  .root {
+    scroll-margin-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+  }
+
   .card {
     padding: 16px;
+    scroll-margin-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
   }
 
   .bestPrice {
@@ -134,11 +139,20 @@
     cursor: pointer;
     box-shadow: 0 -8px 24px color-mix(in srgb, var(--g-color-text-primary) 8%, transparent);
     touch-action: manipulation;
+    transition:
+      opacity 0.18s ease,
+      transform 0.18s ease;
   }
 
   .mobileBar[data-empty='true'] {
     cursor: default;
     pointer-events: none;
+  }
+
+  .mobileBar[data-hidden='true'] {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(100%);
   }
 
   .mobileBar:focus-visible {

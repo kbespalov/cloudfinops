@@ -1,6 +1,6 @@
 'use client';
 
-import {useCallback, useEffect, useId, useState, type ReactNode} from 'react';
+import {useCallback, useEffect, useId, useRef, useState, type ReactNode} from 'react';
 import {Button, Flex, HelpMark, Label, Text, Tooltip} from '@gravity-ui/uikit';
 import {CostBreakdownBar, CostPartSwatch} from '@/components/calculator/CostBreakdownBar';
 import {ProviderMark} from '@/components/catalog/ProviderMark';
@@ -16,6 +16,7 @@ import {formatNodeCount} from '@/lib/calculator/vram-breakdown';
 import styles from './CalculatorSidebar.module.css';
 
 const VISIBLE_PROVIDERS = 4;
+const MOBILE_MQ = '(max-width: 720px)';
 
 export type DeploymentSummary = {
   nodeCount: number;
@@ -163,7 +164,10 @@ export function CalculatorSidebar({
   bestPriceBadge?: string;
 }) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
+  /** Hide sticky bar while the details card is on screen — avoids doubled price. */
+  const [detailsInView, setDetailsInView] = useState(false);
   const detailsId = useId();
+  const cardRef = useRef<HTMLDivElement | null>(null);
   const priceHint =
     bestPriceHint ??
     'Самая низкая стоимость текущей выбранной конфигурации среди найденных провайдеров';
@@ -172,6 +176,35 @@ export function CalculatorSidebar({
   useEffect(() => {
     setSelectedKey(result?.best ? quoteKey(result.best) : null);
   }, [result]);
+
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card || typeof IntersectionObserver === 'undefined') return;
+
+    const mq = window.matchMedia(MOBILE_MQ);
+    let observer: IntersectionObserver | null = null;
+
+    const sync = () => {
+      observer?.disconnect();
+      observer = null;
+      if (!mq.matches) {
+        setDetailsInView(false);
+        return;
+      }
+      observer = new IntersectionObserver(
+        ([entry]) => setDetailsInView(Boolean(entry?.isIntersecting)),
+        {root: null, threshold: 0.35},
+      );
+      observer.observe(card);
+    };
+
+    sync();
+    mq.addEventListener('change', sync);
+    return () => {
+      mq.removeEventListener('change', sync);
+      observer?.disconnect();
+    };
+  }, [result, selectedKey]);
 
   const scrollToDetails = useCallback(() => {
     const el = document.getElementById(detailsId);
@@ -222,6 +255,7 @@ export function CalculatorSidebar({
   const isBest = result.best != null && quoteKey(selected) === quoteKey(result.best);
   const lines = configSummary ?? (deploymentSummary ? formatGpuDeployment(deploymentSummary) : null);
   const periodWord = periodShortLabel(period);
+  const showMobileBar = !detailsInView;
 
   return (
     <aside
@@ -232,7 +266,10 @@ export function CalculatorSidebar({
       <button
         type="button"
         className={styles.mobileBar}
+        data-hidden={showMobileBar ? 'false' : 'true'}
         onClick={scrollToDetails}
+        aria-hidden={showMobileBar ? undefined : true}
+        tabIndex={showMobileBar ? 0 : -1}
         aria-label={`Подробности: ${selected.providerName}, ${formatQuoteAmount(selected.total, period)} за ${periodWord}`}
       >
         <span className={styles.mobileBarMark}>
@@ -252,7 +289,7 @@ export function CalculatorSidebar({
         </Text>
       </button>
 
-      <div className={styles.card}>
+      <div className={styles.card} ref={cardRef}>
         <div className={styles.block}>
           <Flex alignItems="center" gap={2} className={styles.detailProvider}>
             <span className={styles.sellerMarkLg}>
