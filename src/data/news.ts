@@ -487,6 +487,18 @@ export const newsItems: NewsItem[] = [
 
   // ——— Июль 2026 ———
   {
+    id: 'market-2026-07-vera-rubin-deploy',
+    date: '2026-07-22',
+    provider: 'market',
+    providerName: 'Рынок РФ',
+    title: 'Vera Rubin NVL72 начинает деплой у облаков',
+    summary:
+      'NVIDIA сообщает, что производство Vera Rubin NVL72 выходит на полный ход: стойки уже работают у CoreWeave, Google Cloud, Microsoft Azure и Oracle Cloud. CoreWeave на живом железе показал ~10× больше tokens/s на мегаватт, чем Grace Blackwell NVL72 (бенчмарк DeepSeek-R1) — метрика, по которой сейчас считают экономику AI-фабрик. У Google Cloud запущен первый bare-metal инстанс A5X на Rubin + Virgo; параллельно в AI-фабрики идут коммутаторы Spectrum-6. Для рынка это сигнал: поколение после Blackwell уже не слайд, а ранний деплой — ждать сдвига $/token и $/MW.',
+    tags: ['ai', 'compute', 'finops'],
+    sourceUrl: 'https://blogs.nvidia.com/blog/vera-rubin/',
+    sourceLabel: 'NVIDIA Blog · Vera Rubin',
+  },
+  {
     id: 'gcp-2026-07-gemini-flash-36',
     date: '2026-07-21',
     provider: 'google-cloud',
