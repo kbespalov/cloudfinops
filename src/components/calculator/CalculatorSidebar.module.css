@@ -105,10 +105,19 @@
 
 @media (max-width: 720px) {
   .root {
+    position: relative;
+    z-index: 2;
+    isolation: isolate;
     scroll-margin-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
   }
 
   .card {
+    position: relative;
+    z-index: 1;
+    isolation: isolate;
+    /* Solid layer so preset S/M/L badges above cannot paint through on iOS. */
+    background: var(--g-color-base-float);
+    box-shadow: 0 0 0 1px var(--g-color-line-generic);
     padding: 16px;
     scroll-margin-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
   }

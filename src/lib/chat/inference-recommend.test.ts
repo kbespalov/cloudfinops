@@ -264,9 +264,10 @@ describe('recommendInferenceInfra', () => {
     assert.ok(h100?.host && !h100.host.unitOnly);
     assert.equal(h100?.host?.vcpu, 160);
     assert.equal(h100?.host?.ramGiB, 1488);
-    assert.ok(h200?.host && !h200.host.unitOnly, '4×H200 must assume a scaled host');
-    assert.equal(h200?.host?.vcpu, 176);
-    assert.equal(h200?.host?.ramGiB, 1024);
+    // Selectel GPU Line publishes 4× H200 @ 48 vCPU / 480 GiB (not a scaled VK 1×).
+    assert.ok(h200?.host && !h200.host.unitOnly, '4×H200 must assume a full host');
+    assert.equal(h200?.host?.vcpu, 48);
+    assert.equal(h200?.host?.ramGiB, 480);
     assert.ok((h200?.best?.totalMonth ?? 0) > 1_690_000, 'must include host above card-only floor');
     assert.ok(
       (h200?.best?.totalMonth ?? 0) < (h100?.best?.totalMonth ?? 0),

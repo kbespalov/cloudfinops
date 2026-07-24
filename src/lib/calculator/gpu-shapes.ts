@@ -1,10 +1,11 @@
 /**
  * GPU calculator rows = Cloud.ru flavors (primary) + unique shapes from VK / Selectel / others.
- * Built from the catalog so the table tracks public SKUs.
+ * Selectel GPU Line hosts are curated from the public calculator (unit meters in YAML only).
  */
 
 import {catalog, type CatalogMeter} from '@/lib/catalog';
 import type {GpuPreset} from '@/lib/calculator/presets';
+import {buildSelectelGpuFlavorPresets} from '@/lib/calculator/selectel-gpu-flavors';
 
 const SHAPE_SOURCE_PRIORITY: Record<string, number> = {
   'cloud-ru': 0,
@@ -176,8 +177,8 @@ function providerRank(id: string): number {
 let cachedFlavorPresets: GpuPreset[] | null = null;
 
 /**
- * Cloud.ru flavors first, then unique VK flavors, then Selectel B300 / unique unit models.
- * Skips vGPU. Dedupes by shapeKey. Cached for the process lifetime.
+ * Cloud.ru flavors first, then unique VK flavors, curated Selectel GPU Line hosts,
+ * then Selectel B300 / remaining unit models. Skips vGPU. Dedupes by shapeKey.
  */
 export function buildGpuFlavorPresets(): GpuPreset[] {
   if (cachedFlavorPresets) return cachedFlavorPresets;
@@ -201,7 +202,14 @@ export function buildGpuFlavorPresets(): GpuPreset[] {
     byKey.set(key, preset);
   }
 
-  // Pass 2: other providers — only unique keys; prefer lower rank source on collision (shouldn't)
+  // Pass 2: Selectel GPU Line hosts (curated) — before unit fallbacks so A2/L4/… aren't unit-only.
+  for (const preset of buildSelectelGpuFlavorPresets()) {
+    const key = preset.shapeKey;
+    if (!key || byKey.has(key)) continue;
+    byKey.set(key, preset);
+  }
+
+  // Pass 3: other catalog meters — unique keys only; skip unit rows when a flavor exists.
   const rest = meters
     .filter((m) => m.provider !== 'cloud-ru')
     .sort((a, b) => providerRank(a.provider) - providerRank(b.provider));
@@ -244,17 +252,56 @@ export function buildGpuFlavorPresets(): GpuPreset[] {
 
 /**
  * Pick a representative 1× (or N×) shape for the card shelf.
- * H100: prefer 80GB PCIe — Selectel/T1/Cloud.ru all quote it. Cloud.ru's 94GB NVL
- * flavors are sole-offer and make the shelf look like «H100 only at Cloud.ru».
+ * Prefer Selectel GPU Line hosts when present — matches their public calculator.
+ * H100: 80GB (not Cloud.ru-only 94GB NVL). A100 shelf: 80GB, not 40GB.
  */
 function pickFeaturedGpuShape(candidates: GpuPreset[], family: string): GpuPreset | undefined {
   if (candidates.length === 0) return undefined;
 
+  const selectel = candidates.filter((p) => p.shapeSource === 'selectel' && p.vcpu != null);
+
   if (family === 'H100') {
+    const h100 = selectel.filter((p) => p.gpuMemoryGb === 80);
     return (
+      // Selectel GPU Line: 12 vCPU / 128 GiB is the entry 1× H100 shape.
+      h100.find((p) => p.vcpu === 12 && p.ramGiB === 128) ??
+      h100[0] ??
       candidates.find((p) => p.gpuMemoryGb === 80 && p.gpuInterconnect === 'PCIe') ??
       candidates.find((p) => p.gpuMemoryGb === 80) ??
       candidates.find((p) => p.shapeSource === 'cloud-ru') ??
+      candidates.find((p) => p.vcpu != null) ??
+      candidates[0]
+    );
+  }
+
+  if (family === 'H200') {
+    return (
+      selectel.find((p) => p.vcpu === 24 && p.ramGiB === 180) ??
+      selectel.find((p) => p.vcpu === 12 && p.ramGiB === 120) ??
+      selectel[0] ??
+      candidates.find((p) => p.shapeSource === 'vk-cloud') ??
+      candidates.find((p) => p.vcpu != null) ??
+      candidates[0]
+    );
+  }
+
+  if (family === 'A100') {
+    const a80 = selectel.filter((p) => p.gpuMemoryGb === 80);
+    return (
+      a80.find((p) => p.vcpu === 12 && p.ramGiB === 128) ??
+      a80[0] ??
+      candidates.find((p) => p.gpuMemoryGb === 80 && p.shapeSource === 'cloud-ru') ??
+      candidates.find((p) => p.gpuMemoryGb === 80) ??
+      candidates.find((p) => p.vcpu != null) ??
+      candidates[0]
+    );
+  }
+
+  if (family === 'L4') {
+    return (
+      selectel.find((p) => p.vcpu === 16 && p.ramGiB === 64) ??
+      selectel[0] ??
+      candidates.find((p) => p.shapeSource === 'vk-cloud') ??
       candidates.find((p) => p.vcpu != null) ??
       candidates[0]
     );
@@ -280,9 +327,21 @@ export function buildGpuCardPresets(all: GpuPreset[] = buildGpuFlavorPresets()):
     if (pick) featured.push(pick);
   }
 
-  // Full node example
-  const h200x8 = all.find((p) => p.gpuModelMatch === 'H200' && p.gpuCount === 8);
+  // Full node: Selectel 8× H200 192/1000 when present; else VK 240/2048.
+  const h200x8 =
+    all.find(
+      (p) =>
+        p.gpuModelMatch === 'H200' &&
+        p.gpuCount === 8 &&
+        p.shapeSource === 'selectel' &&
+        p.vcpu === 192 &&
+        p.ramGiB === 1000,
+    ) ??
+    all.find((p) => p.gpuModelMatch === 'H200' && p.gpuCount === 8 && p.shapeSource === 'selectel') ??
+    all.find((p) => p.gpuModelMatch === 'H200' && p.gpuCount === 8);
   if (h200x8) featured.push(h200x8);
+
+  // Selectel has no public 8× H100 GPU Line row — keep Cloud.ru 8× PCIe.
   const h100x8 = pickFeaturedGpuShape(
     all.filter((p) => p.gpuModelMatch === 'H100' && p.gpuCount === 8),
     'H100',

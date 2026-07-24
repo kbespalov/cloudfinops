@@ -70,6 +70,17 @@ describe('calculator presets', () => {
     assert.ok(b300, 'Selectel B300 must be present');
     assert.ok(b300.dedicated);
     assert.ok(b300.highlight);
+    const selectelFlavors = all.filter((p) => p.shapeSource === 'selectel' && p.vcpu != null);
+    assert.ok(selectelFlavors.length >= 40, `expected Selectel GPU Line shapes, got ${selectelFlavors.length}`);
+    assert.ok(
+      selectelFlavors.some((p) => p.gpuModelMatch === 'H100' && p.vcpu === 12 && p.ramGiB === 128),
+      'Selectel H100 12/128',
+    );
+    assert.ok(
+      selectelFlavors.some((p) => p.gpuModelMatch === 'H200' && p.vcpu === 24 && p.ramGiB === 180),
+      'Selectel H200 24/180',
+    );
+
     const cards = buildGpuCardPresets(all);
     assert.ok(cards.length >= 4);
     assert.ok(cards.some((p) => p.gpuModelMatch === 'B300'));
@@ -77,12 +88,35 @@ describe('calculator presets', () => {
     assert.ok(l40s, 'L40S must be on the GPU card shelf');
     assert.equal(l40s.gpuCount, 1);
     assert.equal(l40s.gpuMemoryGb, 48);
-    // Shelf must show comparable H100 80GB (Selectel/T1/Cloud.ru), not Cloud.ru-only 94GB NVL.
-    const h100Cards = cards.filter((p) => p.gpuModelMatch === 'H100');
-    assert.ok(h100Cards.length >= 1);
-    for (const p of h100Cards) {
-      assert.equal(p.gpuMemoryGb, 80, `${p.title}: shelf H100 should be 80GB`);
-      assert.equal(p.gpuInterconnect, 'PCIe', `${p.title}: shelf H100 should be PCIe`);
-    }
+
+    const l4 = cards.find((p) => p.gpuModelMatch === 'L4');
+    assert.equal(l4?.shapeSource, 'selectel');
+    assert.equal(l4?.vcpu, 16);
+    assert.equal(l4?.ramGiB, 64);
+
+    const a100 = cards.find((p) => p.gpuModelMatch === 'A100');
+    assert.equal(a100?.shapeSource, 'selectel');
+    assert.equal(a100?.gpuMemoryGb, 80);
+    assert.equal(a100?.vcpu, 12);
+    assert.equal(a100?.ramGiB, 128);
+
+    // Shelf 1× H100 = Selectel GPU Line 12/128 (not Cloud.ru 20/110).
+    const h100x1 = cards.find((p) => p.gpuModelMatch === 'H100' && p.gpuCount === 1);
+    assert.ok(h100x1);
+    assert.equal(h100x1.gpuMemoryGb, 80);
+    assert.equal(h100x1.shapeSource, 'selectel');
+    assert.equal(h100x1.vcpu, 12);
+    assert.equal(h100x1.ramGiB, 128);
+
+    const h200x1 = cards.find((p) => p.gpuModelMatch === 'H200' && p.gpuCount === 1);
+    assert.equal(h200x1?.shapeSource, 'selectel');
+    assert.equal(h200x1?.vcpu, 24);
+    assert.equal(h200x1?.ramGiB, 180);
+
+    // 8× H100 stays Cloud.ru (Selectel has no 8× H100 GPU Line row).
+    const h100x8 = cards.find((p) => p.gpuModelMatch === 'H100' && p.gpuCount === 8);
+    assert.ok(h100x8);
+    assert.equal(h100x8.gpuMemoryGb, 80);
+    assert.equal(h100x8.gpuInterconnect, 'PCIe');
   });
 });

@@ -340,28 +340,65 @@
   }
 
   .controlsStack {
-    gap: 12px;
+    gap: 14px;
   }
 
+  /* Compact S/M/L chips — tall stacked cards fight the sticky price bar. */
   .presetGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
+    position: relative;
+    z-index: 0;
   }
 
   .presetCard {
     min-height: 0;
-    padding: 12px 14px;
+    padding: 10px 10px;
     gap: 2px;
+    position: relative;
+    z-index: 0;
   }
 
   .presetTitle {
-    margin-bottom: 2px;
+    margin-bottom: 0;
+  }
+
+  .presetName {
+    font-size: 14px;
+    line-height: 18px;
+  }
+
+  .presetBadge {
+    position: relative;
+    z-index: 0;
+  }
+
+  .presetAudience {
+    display: none;
+  }
+
+  .presetSubtitle {
+    font-size: 11px;
+    line-height: 14px;
   }
 
   .tierRow {
     grid-template-columns: 1fr;
     gap: 8px;
     min-height: 0;
+  }
+
+  .tierControl {
+    width: 100%;
+  }
+
+  .tierControl :global(.g-segmented-radio-group) {
+    width: 100%;
+  }
+
+  .tierControl :global(.g-segmented-radio-group__option) {
+    flex: 1 1 0;
+    min-width: 0;
   }
 
   .footprintGrid {
@@ -381,6 +418,14 @@
 
   .insight {
     padding: 10px 12px;
+  }
+
+  .splitLegend {
+    gap: 4px 12px;
+  }
+
+  .splitLegendText {
+    white-space: normal;
   }
 }
 

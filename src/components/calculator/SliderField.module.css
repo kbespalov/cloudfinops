@@ -1,23 +1,34 @@
+/* Outer shell is the size container — queries cannot restyle the queried box itself. */
+.shell {
+  container-type: inline-size;
+  container-name: slider-field;
+  width: 100%;
+  min-width: 0;
+  max-width: 720px;
+}
+
+.shell:has(.rootForm) {
+  max-width: none;
+}
+
 .root {
   display: grid;
   /* Cap the track column so the row doesn't stretch into empty space
    * when the calculator form is wider than the control needs. */
-  grid-template-columns: 172px minmax(140px, 360px) 168px;
+  grid-template-columns: minmax(140px, 172px) minmax(140px, 360px) 168px;
   grid-template-areas: 'label slider input';
   align-items: center;
   justify-content: start;
   gap: 8px 16px;
   min-width: 0;
   min-height: 44px;
-  max-width: 720px;
+  width: 100%;
 }
 
 /* Lakehouse left column: label | growing track | fixed numeric field. */
 .rootForm {
-  grid-template-columns: 192px minmax(0, 1fr) 152px;
+  grid-template-columns: minmax(120px, 192px) minmax(0, 1fr) 152px;
   justify-content: stretch;
-  max-width: none;
-  width: 100%;
   gap: 8px 16px;
 }
 
@@ -41,14 +52,22 @@
   color: var(--g-color-text-complementary);
 }
 
-/* Desktop: children of .head join the parent grid as if unwrapped. */
+/*
+ * Head owns the label column on wide layouts (no display:contents — Safari
+ * drops grid-area for grandchildren and overlaps label/value).
+ */
 .head {
-  display: contents;
+  grid-area: label;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  min-width: 0;
 }
 
 .label {
-  grid-area: label;
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .labelText {
@@ -65,7 +84,7 @@
   opacity: 0.85;
 }
 
-/* Mobile-only compact readout / stepper — desktop keeps NumberInput. */
+/* Compact readout / stepper — shown only in the stacked (narrow) layout. */
 .valueCluster {
   display: none;
 }
@@ -130,15 +149,16 @@
   white-space: nowrap;
 }
 
-@media (max-width: 720px) {
-  .root {
+/* Stacked control when the field itself is narrow (phone or tight Lakehouse column). */
+@container slider-field (max-width: 560px) {
+  .root,
+  .rootForm {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 2px;
-    max-width: none;
+    gap: 4px;
     min-height: 0;
-    padding-block: 2px;
+    padding-block: 4px;
   }
 
   .head {
@@ -158,8 +178,8 @@
   .labelText {
     font-size: 14px;
     line-height: 20px;
-    overflow: visible;
-    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
 
   /* Icon is noise when every row already has a short label. */
@@ -195,30 +215,34 @@
     width: 100%;
     max-width: none;
     /* Slim iOS-like track; keep a usable touch band via padding. */
-    padding-block: 6px;
+    padding-block: 8px;
   }
 
   .slider :global(.g-base-slider) {
-    padding-block: 8px;
-    height: 18px;
-    margin-inline: 9px;
+    padding-block: 10px;
+    height: 20px;
+    margin-inline: 10px;
   }
 
   .slider :global(.g-base-slider__rail),
   .slider :global(.g-base-slider__track) {
-    height: 3px;
+    height: 4px;
     border-radius: 999px;
   }
 
+  .slider :global(.g-base-slider__rail) {
+    background-color: var(--g-color-base-generic);
+  }
+
   .slider :global(.g-base-slider__track)::before {
-    height: 3px;
-    width: 9px;
+    height: 4px;
+    width: 10px;
   }
 
   /* Filled thumb — closer to iOS than ringed Gravity default. */
   .slider :global(.g-base-slider__handle) {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     border-width: 0;
     background-color: var(--g-color-base-brand);
     box-shadow:
@@ -227,6 +251,112 @@
   }
 
   /* Hide desktop NumberInput entirely (wrapper, not Gravity's inner class). */
+  .inputWrap {
+    display: none;
+  }
+}
+
+/*
+ * Viewport fallback for phones (and older engines without container queries).
+ * Narrow desktop columns still rely on @container above.
+ */
+@media (max-width: 720px) {
+  .shell {
+    max-width: none;
+  }
+
+  .root,
+  .rootForm {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+    min-height: 0;
+    padding-block: 4px;
+  }
+
+  .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
+    min-height: 28px;
+  }
+
+  .label {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .labelText {
+    font-size: 14px;
+    line-height: 20px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .icon {
+    display: none;
+  }
+
+  .valueCluster {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 0 0 auto;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .valueCluster[data-stepper='true'] {
+    gap: 0;
+  }
+
+  .valueText {
+    font-size: 14px;
+    line-height: 20px;
+    min-width: 2.5ch;
+    text-align: center;
+  }
+
+  .slider {
+    width: 100%;
+    max-width: none;
+    padding-block: 8px;
+  }
+
+  .slider :global(.g-base-slider) {
+    padding-block: 10px;
+    height: 20px;
+    margin-inline: 10px;
+  }
+
+  .slider :global(.g-base-slider__rail),
+  .slider :global(.g-base-slider__track) {
+    height: 4px;
+    border-radius: 999px;
+  }
+
+  .slider :global(.g-base-slider__rail) {
+    background-color: var(--g-color-base-generic);
+  }
+
+  .slider :global(.g-base-slider__track)::before {
+    height: 4px;
+    width: 10px;
+  }
+
+  .slider :global(.g-base-slider__handle) {
+    width: 22px;
+    height: 22px;
+    border-width: 0;
+    background-color: var(--g-color-base-brand);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--g-color-base-background) 70%, transparent),
+      0 1px 3px color-mix(in srgb, var(--g-color-text-primary) 22%, transparent);
+  }
+
   .inputWrap {
     display: none;
   }
