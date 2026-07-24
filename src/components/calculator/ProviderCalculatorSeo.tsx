@@ -25,7 +25,10 @@ export function ProviderCalculatorSeo({seo}: {seo: CalculatorProviderSeo}) {
       <details className={styles.method}>
         <summary>Как рассчитывается цена</summary>
         <ul>
-          <li>Источник: публичные тарифы провайдеров в каталоге Cloud FinOps.</li>
+          <li>
+            Источник: публичные тарифы провайдеров в каталоге Cloud FinOps. Это не официальный
+            прайс-лист вендора.
+          </li>
           <li>
             Валюта: рубли. Для каждого тарифа используется налоговый статус, указанный в каталоге и
             источнике цены.
@@ -57,11 +60,11 @@ export function ProviderCalculatorSeo({seo}: {seo: CalculatorProviderSeo}) {
         ))}
       </dl>
 
-      <h3 className={styles.subtitle}>Калькуляторы публичных цен других облаков</h3>
+      <h3 className={styles.subtitle}>Публичные цены других облаков</h3>
       <ul className={styles.links}>
         {others.map((p) => (
           <li key={p.slug}>
-            <Link href={`/calculator/${p.slug}`}>{p.h1}</Link>
+            <Link href={`/calculator/${p.slug}`}>Публичные цены {p.brandDisplay}</Link>
           </li>
         ))}
         <li>

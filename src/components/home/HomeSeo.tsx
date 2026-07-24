@@ -1,14 +1,8 @@
+import {CALCULATOR_PROVIDER_SEO} from '@/data/calculator-providers-seo';
 import {HOME_EXAMPLES} from './homePrompts';
 import styles from './HomeSeo.module.css';
 
-const PROVIDERS = [
-  'Yandex Cloud',
-  'VK Cloud',
-  'Selectel',
-  'Cloud.ru',
-  'MWS Cloud',
-  'T1 Cloud',
-];
+const PROVIDERS = CALCULATOR_PROVIDER_SEO.map((p) => p.brandDisplay);
 
 const TOOLS: {title: string; href: string; text: string}[] = [
   {
@@ -118,6 +112,15 @@ export function HomeSeo() {
         ))}
       </div>
 
+      <h3 className={styles.subtitle}>Публичные цены облачных провайдеров</h3>
+      <ul className={styles.list}>
+        {CALCULATOR_PROVIDER_SEO.map((p) => (
+          <li key={p.slug}>
+            <a href={`/calculator/${p.slug}`}>Публичные цены {p.brandDisplay}</a>
+          </li>
+        ))}
+      </ul>
+
       <h3 className={styles.subtitle}>Примеры расчёта стоимости</h3>
       <ul className={styles.list}>
         {HOME_EXAMPLES.map((example) => (
@@ -173,10 +176,15 @@ export function homeJsonLd() {
           'Сервис сравнения цен и расчёта стоимости публичных облаков России. Калькулятор ВМ и GPU, Lakehouse / Data Platform, каталог SKU и ИИ-ассистент FinOps для Yandex Cloud, VK Cloud, Selectel, Cloud.ru, MWS и T1.',
         featureList: [
           'Сравнение цен облаков России',
-          'Калькулятор цен ВМ и GPU',
+          'Публичные цены Yandex Cloud: расчёт и сравнение',
+          'Публичные цены VK Cloud: расчёт и сравнение',
+          'Публичные цены Selectel: расчёт и сравнение',
+          'Публичные цены Cloud.ru: расчёт и сравнение',
+          'Публичные цены MWS Cloud: расчёт и сравнение',
+          'Публичные цены T1 Cloud: расчёт и сравнение',
+          'Калькулятор стоимости аренды GPU H100 и H200',
+          'Пресеты General, High CPU, High Memory и Low-cost',
           'Калькулятор Lakehouse и Data Platform',
-          'Расчёт стоимости конфигурации',
-          'Расчёт GPU под инференс LLM',
           'Каталог SKU',
           'ИИ-ассистент FinOps',
         ],
