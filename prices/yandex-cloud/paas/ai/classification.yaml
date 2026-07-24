@@ -30,7 +30,7 @@ spec:
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
-    notes: cls://…/yandexgpt-lite/latest. 1 запрос до 1000 токенов = 0,1525 ₽.
+    notes: "Классификация через YandexGPT Lite: 0,1525 ₽ за запрос до 1 000 токенов."
     pricing:
       rate:
         amount: '0.1525'
@@ -56,7 +56,7 @@ spec:
       inferenceScope: local
       serviceProduct: ai-studio
       inferenceMode: synchronous
-    notes: cls://…/yandexgpt/latest. 1 запрос до 250 токенов = 0,1525 ₽.
+    notes: "Классификация через YandexGPT: 0,1525 ₽ за запрос до 250 токенов."
     pricing:
       rate:
         amount: '0.1525'

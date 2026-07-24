@@ -85,6 +85,7 @@ spec:
           period: usage
         vat: included
         byteBasis: binary
+    notes: Входящий трафик Object Storage не тарифицируется (0 ₽).
   - sku: vk.object-storage.hotbox.traffic.egress
     name: Исходящий трафик Object Storage — Hotbox
     meter: network.traffic.egress

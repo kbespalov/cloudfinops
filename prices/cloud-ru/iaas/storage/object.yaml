@@ -148,7 +148,7 @@ spec:
         unit: {quantity: request, period: usage}
         vat: included
         byteBasis: not-applicable
-    notes: PDF 0,1098 ₽ / 1 000 PUT (с НДС); LIST/POST по той же ставке.
+    notes: В прайсе — 0,1098 ₽ за 1 000 операций PUT (с НДС); LIST и POST по той же ставке. В каталоге цена приведена к 1 запросу.
   - sku: cloudru.object-storage.standard.requests.get
     name: Объектное хранилище · Standard · GET
     meter: storage.object.requests
@@ -170,7 +170,7 @@ spec:
         unit: {quantity: request, period: usage}
         vat: included
         byteBasis: not-applicable
-    notes: PDF 0,03294 ₽ / 1 000 GET (с НДС); HEAD по той же ставке.
+    notes: В прайсе — 0,03294 ₽ за 1 000 операций GET (с НДС); HEAD по той же ставке. В каталоге цена приведена к 1 запросу.
   - sku: cloudru.object-storage.cold.requests.put
     name: Объектное хранилище · Cold · PUT
     meter: storage.object.requests

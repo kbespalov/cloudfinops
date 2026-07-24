@@ -259,7 +259,7 @@ spec:
         unit: {quantity: GPU, period: hour}
         vat: included
         byteBasis: not-applicable
-    notes: Требуемые vCPU и RAM тарифицируются отдельно; ВМ может быть остановлена провайдером.
+    notes: "Прерываемые GPU: vCPU и RAM оплачиваются отдельно; провайдер может остановить ВМ — не для критичных задач."
   - sku: yc.gpu.v100-cascade-lake.preemptible
     name: NVIDIA V100, Intel Cascade Lake, прерываемый
     meter: compute.gpu
@@ -287,7 +287,7 @@ spec:
         unit: {quantity: GPU, period: hour}
         vat: included
         byteBasis: not-applicable
-    notes: Требуемые vCPU и RAM тарифицируются отдельно; ВМ может быть остановлена провайдером.
+    notes: "Прерываемые GPU: vCPU и RAM оплачиваются отдельно; провайдер может остановить ВМ — не для критичных задач."
   - sku: yc.gpu.t4.preemptible
     name: NVIDIA T4, прерываемый
     meter: compute.gpu
@@ -316,7 +316,7 @@ spec:
         unit: {quantity: GPU, period: hour}
         vat: included
         byteBasis: not-applicable
-    notes: Требуемые vCPU и RAM тарифицируются отдельно; ВМ может быть остановлена провайдером.
+    notes: "Прерываемые GPU: vCPU и RAM оплачиваются отдельно; провайдер может остановить ВМ — не для критичных задач."
   - sku: yc.gpu.platform-v4.preemptible
     name: GPU Platform V4, прерываемый
     meter: compute.gpu

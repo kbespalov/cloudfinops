@@ -195,7 +195,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100%.
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 100%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.8vcpu-16gb
     name: Виртуальная машина 8vCPU/16GB RAM
     meter: compute.flavor
@@ -297,7 +297,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 11 тарифа Evolution Compute).
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 100%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.2vcpu-8gb
     name: Виртуальная машина 2vCPU/8GB RAM
     meter: compute.flavor
@@ -333,7 +333,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 19 тарифа Evolution Compute).
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 100%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.2vcpu-16gb
     name: Виртуальная машина 2vCPU/16GB RAM
     meter: compute.flavor
@@ -369,7 +369,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 17 тарифа Evolution Compute).
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 100%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.4vcpu-32gb
     name: Виртуальная машина 4vCPU/32GB RAM
     meter: compute.flavor
@@ -405,7 +405,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 25 тарифа Evolution Compute).
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 100%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.4vcpu-64gb
     name: Виртуальная машина 4vCPU/64GB RAM
     meter: compute.flavor
@@ -441,7 +441,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 26 тарифа Evolution Compute).
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 100%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.8vcpu-64gb
     name: Виртуальная машина 8vCPU/64GB RAM
     meter: compute.flavor
@@ -477,7 +477,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 33 тарифа Evolution Compute).
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 100%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.8vcpu-128gb
     name: Виртуальная машина 8vCPU/128GB RAM
     meter: compute.flavor
@@ -513,7 +513,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 30 тарифа Evolution Compute).
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 100%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.12vcpu-24gb
     name: Виртуальная машина 12vCPU/24GB RAM
     meter: compute.flavor
@@ -549,7 +549,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 4 тарифа Evolution Compute).
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 100%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.12vcpu-48gb
     name: Виртуальная машина 12vCPU/48GB RAM
     meter: compute.flavor
@@ -585,7 +585,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 5 тарифа Evolution Compute).
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 100%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.12vcpu-96gb
     name: Виртуальная машина 12vCPU/96GB RAM
     meter: compute.flavor
@@ -621,7 +621,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 6 тарифа Evolution Compute).
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 100%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.16vcpu-32gb
     name: Виртуальная машина 16vCPU/32GB RAM
     meter: compute.flavor
@@ -657,7 +657,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 9 тарифа Evolution Compute).
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 100%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.16vcpu-64gb
     name: Виртуальная машина 16vCPU/64GB RAM
     meter: compute.flavor
@@ -693,7 +693,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 10 тарифа Evolution Compute).
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 100%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.16vcpu-128gb
     name: Виртуальная машина 16vCPU/128GB RAM
     meter: compute.flavor
@@ -729,7 +729,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 7 тарифа Evolution Compute).
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 100%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.16vcpu-256gb
     name: Виртуальная машина 16vCPU/256GB RAM
     meter: compute.flavor
@@ -765,7 +765,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 8 тарифа Evolution Compute).
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 100%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.24vcpu-32gb
     name: Виртуальная машина 24vCPU/32GB RAM
     meter: compute.flavor
@@ -801,7 +801,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 14 тарифа Evolution Compute).
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 100%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.24vcpu-48gb
     name: Виртуальная машина 24vCPU/48GB RAM
     meter: compute.flavor
@@ -837,7 +837,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 15 тарифа Evolution Compute).
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 100%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.24vcpu-96gb
     name: Виртуальная машина 24vCPU/96GB RAM
     meter: compute.flavor
@@ -873,7 +873,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 16 тарифа Evolution Compute).
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 100%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.24vcpu-192gb
     name: Виртуальная машина 24vCPU/192GB RAM
     meter: compute.flavor
@@ -909,7 +909,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 13 тарифа Evolution Compute).
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 100%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.32vcpu-64gb
     name: Виртуальная машина 32vCPU/64GB RAM
     meter: compute.flavor
@@ -945,7 +945,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 22 тарифа Evolution Compute).
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 100%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.32vcpu-128gb
     name: Виртуальная машина 32vCPU/128GB RAM
     meter: compute.flavor
@@ -981,7 +981,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 20 тарифа Evolution Compute).
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 100%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.32vcpu-256gb
     name: Виртуальная машина 32vCPU/256GB RAM
     meter: compute.flavor
@@ -1017,7 +1017,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 21 тарифа Evolution Compute).
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 100%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.40vcpu-320gb
     name: Виртуальная машина 40vCPU/320GB RAM
     meter: compute.flavor
@@ -1053,7 +1053,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 23 тарифа Evolution Compute).
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 100%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.64vcpu-128gb
     name: Виртуальная машина 64vCPU/128GB RAM
     meter: compute.flavor
@@ -1089,7 +1089,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 28 тарифа Evolution Compute).
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 100%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.64vcpu-256gb
     name: Виртуальная машина 64vCPU/256GB RAM
     meter: compute.flavor
@@ -1125,7 +1125,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 100% (строка 29 тарифа Evolution Compute).
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 100%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.share10.1vcpu-1gb
     name: Виртуальная машина 1vCPU/1GB RAM — 10% vCPU
     meter: compute.flavor
@@ -1161,7 +1161,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 10%.
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 10%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.share10.1vcpu-2gb
     name: Виртуальная машина 1vCPU/2GB RAM — 10% vCPU
     meter: compute.flavor
@@ -1197,7 +1197,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 10%.
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 10%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.share10.2vcpu-4gb
     name: Виртуальная машина 2vCPU/4GB RAM — 10% vCPU
     meter: compute.flavor
@@ -1233,7 +1233,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 10%.
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 10%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.share10.4vcpu-8gb
     name: Виртуальная машина 4vCPU/8GB RAM — 10% vCPU
     meter: compute.flavor
@@ -1269,7 +1269,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 10%.
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 10%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.share10.4vcpu-16gb
     name: Виртуальная машина 4vCPU/16GB RAM — 10% vCPU
     meter: compute.flavor
@@ -1305,7 +1305,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 10%.
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 10%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.share10.4vcpu-32gb
     name: Виртуальная машина 4vCPU/32GB RAM — 10% vCPU
     meter: compute.flavor
@@ -1341,7 +1341,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 10%.
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 10%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.share10.8vcpu-16gb
     name: Виртуальная машина 8vCPU/16GB RAM — 10% vCPU
     meter: compute.flavor
@@ -1377,7 +1377,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 10%.
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 10%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.share10.8vcpu-32gb
     name: Виртуальная машина 8vCPU/32GB RAM — 10% vCPU
     meter: compute.flavor
@@ -1413,7 +1413,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 10%.
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 10%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.share30.1vcpu-1gb
     name: Виртуальная машина 1vCPU/1GB RAM — 30% vCPU
     meter: compute.flavor
@@ -1449,7 +1449,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 30%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.share30.1vcpu-2gb
     name: Виртуальная машина 1vCPU/2GB RAM — 30% vCPU
     meter: compute.flavor
@@ -1485,7 +1485,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 30%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.share30.2vcpu-4gb
     name: Виртуальная машина 2vCPU/4GB RAM — 30% vCPU
     meter: compute.flavor
@@ -1521,7 +1521,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 30%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.share30.4vcpu-8gb
     name: Виртуальная машина 4vCPU/8GB RAM — 30% vCPU
     meter: compute.flavor
@@ -1557,7 +1557,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 30%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.share30.4vcpu-16gb
     name: Виртуальная машина 4vCPU/16GB RAM — 30% vCPU
     meter: compute.flavor
@@ -1593,7 +1593,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 30%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.share30.4vcpu-32gb
     name: Виртуальная машина 4vCPU/32GB RAM — 30% vCPU
     meter: compute.flavor
@@ -1629,7 +1629,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 30%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.share30.4vcpu-64gb
     name: Виртуальная машина 4vCPU/64GB RAM — 30% vCPU
     meter: compute.flavor
@@ -1665,7 +1665,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 30%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.share30.8vcpu-16gb
     name: Виртуальная машина 8vCPU/16GB RAM — 30% vCPU
     meter: compute.flavor
@@ -1701,7 +1701,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 30%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.share30.8vcpu-32gb
     name: Виртуальная машина 8vCPU/32GB RAM — 30% vCPU
     meter: compute.flavor
@@ -1737,7 +1737,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 30%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.share30.8vcpu-64gb
     name: Виртуальная машина 8vCPU/64GB RAM — 30% vCPU
     meter: compute.flavor
@@ -1773,7 +1773,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 30%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.share30.16vcpu-32gb
     name: Виртуальная машина 16vCPU/32GB RAM — 30% vCPU
     meter: compute.flavor
@@ -1809,7 +1809,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 30%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.share30.16vcpu-64gb
     name: Виртуальная машина 16vCPU/64GB RAM — 30% vCPU
     meter: compute.flavor
@@ -1845,7 +1845,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 30%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.share30.24vcpu-48gb
     name: Виртуальная машина 24vCPU/48GB RAM — 30% vCPU
     meter: compute.flavor
@@ -1881,7 +1881,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 30%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.share30.32vcpu-64gb
     name: Виртуальная машина 32vCPU/64GB RAM — 30% vCPU
     meter: compute.flavor
@@ -1917,7 +1917,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Официальная цена полной конфигурации VM с гарантированной долей vCPU 30%.
+    notes: Официальная цена готовой ВМ целиком (vCPU + RAM), гарантированная доля vCPU 30%. Ядра и память отдельно не продаются.
   - sku: cloudru.compute.cascade-lake.vcpu.synthetic
     name: Intel Cascade Lake, 100% vCPU *
     meter: compute.vcpu
@@ -1967,15 +1967,16 @@ spec:
         formula: 1.22 × 0.8 RUB/vCPU-hour excluding VAT (multi-flavor lattice)
         vat: included
     notes: >
-      Звёздочка (*) значит: это не отдельная строка из прайса Cloud.ru, а наша
-      оценка — чтобы можно было сравнить цену ядра с другими облаками.
-      Cloud.ru продаёт виртуальные машины целиком (ядра и память одним комплектом).
-      Мы разложили типичные конфигурации и получили ориентир за одно выделенное
-      ядро (100%). На серверах стоят Cascade Lake или Ice Lake — в тарифе цена
-      за них одна. Для заказа смотрите готовые ВМ; эта строка только для сравнения.
-      На большинстве обычных машин оценка совпадает с прайсом. Исключения —
-      маленькие ВМ с большой памятью (2 ядра и от 8 ГБ RAM) и все конфигурации
-      на 12 ядер: там Cloud.ru берёт заметно дороже.
+      Синтетическая позиция каталога Cloud FinOps (*): это не отдельная строка
+      из прайса Cloud.ru, а наша оценка — чтобы можно было сравнить цену ядра
+      с другими облаками. Cloud.ru продаёт виртуальные машины целиком (ядра и
+      память одним комплектом). Мы разложили типичные конфигурации и получили
+      ориентир за одно выделенное ядро (100%). На серверах стоят Cascade Lake
+      или Ice Lake — в тарифе цена за них одна. Для заказа смотрите готовые ВМ;
+      эта строка только для сравнения. На большинстве обычных машин оценка
+      совпадает с прайсом. Исключения — маленькие ВМ с большой памятью
+      (2 ядра и от 8 ГБ RAM) и все конфигурации на 12 ядер: там Cloud.ru берёт
+      заметно дороже.
   - sku: cloudru.compute.ice-lake.vcpu.synthetic
     name: Intel Ice Lake, 100% vCPU *
     meter: compute.vcpu
@@ -2025,12 +2026,13 @@ spec:
         formula: 1.22 × 0.8 RUB/vCPU-hour excluding VAT (same as Cascade Lake)
         vat: included
     notes: >
-      Звёздочка (*) значит: это не отдельная строка из прайса Cloud.ru, а наша
-      оценка для сравнения с другими облаками. Цена такая же, как у Cascade Lake:
-      в тарифе Cloud.ru поколения процессоров не разделены. Cloud.ru продаёт ВМ
-      целиком; для заказа смотрите готовые конфигурации. На большинстве обычных
-      машин оценка совпадает с прайсом. Исключения — 2 ядра с памятью от 8 ГБ
-      и все конфигурации на 12 ядер (там дороже).
+      Синтетическая позиция каталога Cloud FinOps (*): это не отдельная строка
+      из прайса Cloud.ru, а наша оценка для сравнения с другими облаками. Цена
+      такая же, как у Cascade Lake: в тарифе Cloud.ru поколения процессоров не
+      разделены. Cloud.ru продаёт ВМ целиком; для заказа смотрите готовые
+      конфигурации. На большинстве обычных машин оценка совпадает с прайсом.
+      Исключения — 2 ядра с памятью от 8 ГБ и все конфигурации на 12 ядер
+      (там дороже).
   - sku: cloudru.compute.cascade-lake.ram.synthetic
     name: Intel Cascade Lake, RAM *
     meter: compute.ram
@@ -2079,14 +2081,15 @@ spec:
         formula: 1.22 × 0.20875 RUB/GiB-RAM-hour excluding VAT (multi-flavor lattice)
         vat: included
     notes: >
-      Звёздочка (*) значит: это не отдельная строка из прайса Cloud.ru, а наша
-      оценка — чтобы можно было сравнить цену памяти с другими облаками.
-      Cloud.ru не продаёт память отдельно, только вместе с ядрами в готовой ВМ.
-      Мы разложили типичные конфигурации и получили ориентир за 1 ГБ RAM в час.
-      Цена одинакова для Cascade Lake и Ice Lake. Для заказа смотрите готовые ВМ.
-      На большинстве обычных машин оценка совпадает с прайсом. Исключения —
-      2 ядра с памятью от 8 ГБ и конфигурации на 12 ядер. У очень «памятных» ВМ
-      (много гигабайт на одно ядро) память чуть дешевле — разница небольшая.
+      Синтетическая позиция каталога Cloud FinOps (*): это не отдельная строка
+      из прайса Cloud.ru, а наша оценка — чтобы можно было сравнить цену памяти
+      с другими облаками. Cloud.ru не продаёт память отдельно, только вместе с
+      ядрами в готовой ВМ. Мы разложили типичные конфигурации и получили ориентир
+      за 1 ГБ RAM в час. Цена одинакова для Cascade Lake и Ice Lake. Для заказа
+      смотрите готовые ВМ. На большинстве обычных машин оценка совпадает с
+      прайсом. Исключения — 2 ядра с памятью от 8 ГБ и конфигурации на 12 ядер.
+      У очень «памятных» ВМ (много гигабайт на одно ядро) память чуть дешевле —
+      разница небольшая.
   - sku: cloudru.compute.ice-lake.ram.synthetic
     name: Intel Ice Lake, RAM *
     meter: compute.ram
@@ -2135,9 +2138,9 @@ spec:
         formula: 1.22 × 0.20875 RUB/GiB-RAM-hour excluding VAT (same as Cascade Lake)
         vat: included
     notes: >
-      Звёздочка (*) значит: это не отдельная строка из прайса Cloud.ru, а наша
-      оценка для сравнения с другими облаками. Цена такая же, как у Cascade Lake:
-      в тарифе поколения процессоров не разделены. Память отдельно не продаётся —
-      для заказа смотрите готовые ВМ. На большинстве обычных машин оценка
-      совпадает с прайсом. Исключения — 2 ядра с памятью от 8 ГБ и конфигурации
-      на 12 ядер.
+      Синтетическая позиция каталога Cloud FinOps (*): это не отдельная строка
+      из прайса Cloud.ru, а наша оценка для сравнения с другими облаками. Цена
+      такая же, как у Cascade Lake: в тарифе поколения процессоров не разделены.
+      Память отдельно не продаётся — для заказа смотрите готовые ВМ. На
+      большинстве обычных машин оценка совпадает с прайсом. Исключения —
+      2 ядра с памятью от 8 ГБ и конфигурации на 12 ядер.

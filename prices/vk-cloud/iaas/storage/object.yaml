@@ -46,8 +46,8 @@ spec:
         formula: published 30-day rate
         vat: included
     notes: >
-      Hotbox = STANDARD. API-запросы официально не тарифицируются
-      (см. SKU операций ниже со ставкой 0 ₽). Тарифицируются хранение и исходящий трафик.
+      Hotbox = класс STANDARD. API-запросы не тарифицируются (0 ₽).
+      Платите за хранение и исходящий трафик.
   - sku: vk.object-storage.icebox
     name: Объектное хранилище · Cold
     meter: storage.object.capacity
@@ -80,8 +80,8 @@ spec:
         formula: published 30-day rate
         vat: included
     notes: >
-      Icebox = COLD. API-запросы официально не тарифицируются
-      (см. SKU операций ниже со ставкой 0 ₽).
+      Icebox = класс COLD. API-запросы не тарифицируются (0 ₽).
+      Платите за хранение и исходящий трафик.
 
   # API requests — explicitly priced at 0 ₽ for catalog parity.
   # Source: https://cloud.vk.com/docs/ru/storage/s3/tariffication

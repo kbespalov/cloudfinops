@@ -28,7 +28,7 @@ spec:
       modelCapability: image-generation
       inferenceScope: local
       serviceProduct: ai-studio
-    notes: art://…/aliceai-image-art-3.0. Images API. 1 запрос = 2,23 ₽.
+    notes: "Генерация изображений Alice AI Art 3.0: 2,23 ₽ за 1 запрос."
     pricing:
       rate:
         amount: '2.23'
@@ -52,7 +52,7 @@ spec:
       modelCapability: image-generation
       inferenceScope: local
       serviceProduct: ai-studio
-    notes: art://…/yandex-art-2.0. Доступна до 18 августа 2026. 1 запрос = 2,23 ₽.
+    notes: "YandexART 2.0: 2,23 ₽ за 1 запрос. Доступна до 18.08.2026."
     pricing:
       rate:
         amount: '2.23'

@@ -33,7 +33,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '68'
@@ -59,7 +59,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
-    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '67.50'
@@ -85,7 +85,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '1098'
@@ -111,7 +111,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
-    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '1098'
@@ -137,7 +137,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '1098'
@@ -163,7 +163,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
-    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '1098'
@@ -189,7 +189,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '1098'
@@ -215,7 +215,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
-    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '1098'
@@ -242,7 +242,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '1098'
@@ -269,7 +269,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
-    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '1098'
@@ -296,7 +296,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '1220'
@@ -323,7 +323,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
-    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '1220'
@@ -350,7 +350,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '2074'
@@ -377,7 +377,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
-    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '2074'
@@ -404,7 +404,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '2318'
@@ -431,7 +431,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
-    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '2318'
@@ -457,7 +457,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '2318'
@@ -483,7 +483,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
-    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '2318'
@@ -510,7 +510,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '3660'
@@ -537,7 +537,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
-    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '3660'
@@ -564,7 +564,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '3660'
@@ -591,7 +591,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
-    notes: Базовая ставка GPT Model Hub (без акции). Локальный inference.
+    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '3660'
@@ -616,7 +616,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Базовая ставка GPT Model Hub (без акции). Embeddings, отпускная единица 1000 токенов.
+    notes: Embeddings в GPT Model Hub, базовая ставка без акции. В прайсе шаг — 1 000 токенов; в каталоге приведено к сравнению с другими моделями.
     pricing:
       rate:
         amount: '122'
@@ -641,7 +641,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Базовая ставка GPT Model Hub (без акции). Embeddings, отпускная единица 1000 токенов.
+    notes: Embeddings в GPT Model Hub, базовая ставка без акции. В прайсе шаг — 1 000 токенов; в каталоге приведено к сравнению с другими моделями.
     pricing:
       rate:
         amount: '366'

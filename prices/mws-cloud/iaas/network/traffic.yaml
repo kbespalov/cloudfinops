@@ -25,6 +25,8 @@ spec:
         unit: {quantity: GiB, period: usage}
         vat: included
         byteBasis: binary
+    notes: Входящий интернет-трафик не тарифицируется (0 ₽).
+
   - sku: mws.traffic.internet.egress
     name: Исходящий интернет-трафик VPC
     meter: network.traffic.egress

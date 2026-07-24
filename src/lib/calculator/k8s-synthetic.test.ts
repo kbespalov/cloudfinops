@@ -81,7 +81,12 @@ describe('k8s synthetic HA integrity', () => {
       assert.ok(notes.length > 40, `${m.sku}: notes too short`);
       assert.match(
         notes,
-        /\*?\s*Оценка для сравнения|\* Оценка/i,
+        /синтетич/i,
+        `${m.sku}: notes must explicitly say this is a synthetic catalog position`,
+      );
+      assert.match(
+        notes,
+        /оценка для сравнения|не отдельная строка/i,
         `${m.sku}: notes must explain this is an estimate for comparison`,
       );
       assert.doesNotMatch(
@@ -95,4 +100,22 @@ describe('k8s synthetic HA integrity', () => {
       );
     }
   });
+
+  it('every synthetic catalog meter discloses «синтетическ…» in notes', () => {
+    const synthetics = catalog.meters.filter(
+      (m) => m.synthetic || m.sku.includes('.synthetic'),
+    );
+    assert.ok(synthetics.length >= 9, `expected ≥9 synthetics, got ${synthetics.length}`);
+    for (const m of synthetics) {
+      const notes = (m.notes || '').trim();
+      assert.ok(notes.length > 40, `${m.sku}: notes too short`);
+      assert.match(
+        notes,
+        /синтетич/i,
+        `${m.sku}: synthetic SKU notes must contain «синтетическ…»`,
+      );
+      assert.ok(m.name.includes('*'), `${m.sku}: name must carry * marker`);
+    }
+  });
 });
+

@@ -30,7 +30,7 @@ spec:
           period: usage
         vat: included
         byteBasis: binary
-    notes: Документация указывает, что трафик временно не тарифицируется.
+    notes: Входящий интернет-трафик ВМ временно не тарифицируется (0 ₽ по документации). Условия могут измениться.
   - sku: cloudru.traffic.internet.egress
     name: Исходящий интернет-трафик Virtual Machines
     meter: network.traffic.egress
@@ -56,8 +56,8 @@ spec:
         vat: included
         byteBasis: binary
     notes: >
-      В прайс-PDF есть ненулевая строка, но в актуальной документации указано, что исходящий
-      трафик временно не тарифицируется — в каталоге ставка 0 ₽.
+      В публичном прайсе есть ненулевая ставка, но по актуальной документации исходящий
+      интернет-трафик ВМ временно не тарифицируется — в каталоге 0 ₽. Условия могут измениться.
   - sku: cloudru.object-storage.traffic.ingress
     name: Входящий интернет-трафик Object Storage
     meter: network.traffic.ingress
@@ -82,6 +82,7 @@ spec:
           period: usage
         vat: included
         byteBasis: binary
+    notes: Входящий интернет-трафик Object Storage не тарифицируется (0 ₽).
   - sku: cloudru.object-storage.traffic.egress
     name: Исходящий интернет-трафик Object Storage
     meter: network.traffic.egress
@@ -130,4 +131,4 @@ spec:
           byteBasis: binary
     notes: >
       В каталоге — ставка сверх бесплатного объёма. Первые 10 ТБ исходящего
-      трафика Object Storage в месяц не тарифицируются; дальше — 1,1712 ₽/GiB.
+      трафика Object Storage в месяц не тарифицируются; дальше — 1,1712 ₽/ГиБ.

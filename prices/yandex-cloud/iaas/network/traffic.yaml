@@ -27,6 +27,7 @@ spec:
         unit: {quantity: GiB, period: usage}
         vat: included
         byteBasis: binary
+    notes: Входящий интернет-трафик Compute/VPC не тарифицируется (0 ₽).
   - sku: yc.traffic.internet.egress
     name: Исходящий интернет-трафик Compute/VPC
     meter: network.traffic.egress
@@ -68,7 +69,7 @@ spec:
           byteBasis: binary
     notes: >
       В каталоге — ставка сверх бесплатного объёма. Первые 100 ГБ исходящего
-      трафика Compute/VPC в месяц не тарифицируются; дальше — 1,42 ₽/GiB.
+      трафика Compute/VPC в месяц не тарифицируются; дальше — 1,42 ₽/ГиБ.
   - sku: yc.object-storage.traffic.ingress
     name: Входящий интернет-трафик Object Storage
     meter: network.traffic.ingress
@@ -89,6 +90,7 @@ spec:
         unit: {quantity: GiB, period: usage}
         vat: included
         byteBasis: binary
+    notes: Входящий трафик Object Storage и трафик внутри Yandex Cloud — 0 ₽.
   - sku: yc.object-storage.traffic.egress
     name: Исходящий интернет-трафик Object Storage
     meter: network.traffic.egress

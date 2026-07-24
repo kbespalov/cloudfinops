@@ -24,7 +24,7 @@ spec:
     dimensions:
       serviceProduct: ml-inference
       meterKind: requests
-    notes: Тариф 7.EVO.11.1 п.1 — запросы к ML Inference (не токены Foundation Models).
+    notes: Плата за вызовы ML Inference (число запросов), не за токены Foundation Models. Цена с НДС.
     pricing:
       rate:
         amount: '15.616'
@@ -49,7 +49,9 @@ spec:
       meterUnit: GB-GPU
       vcpuPerGb: 0.13
       ramGbPerGb: 1.5
-    notes: 1 GB GPU + 0.13 vCPU + 1,5 GB RAM. Полный A100 80GB ≈ ×80 к этой ставке.
+    notes: >
+      Доля GPU — цена за 1 ГБ памяти GPU вместе с пропорциональной долей vCPU/RAM.
+      Полный A100 80 ГБ ≈ в 80 раз дороже этой ставки.
     pricing:
       rate:
         amount: '4.4225'
@@ -171,7 +173,7 @@ spec:
       vcpu: 16
       ramGiB: 256
       ramGb: 256
-    notes: Готовый узел ML Inference (не IaaS VM flavor).
+    notes: Готовый узел ML Inference (управляемый сервис), не обычная GPU-ВМ из Compute.
     pricing:
       rate:
         amount: '353.8'
