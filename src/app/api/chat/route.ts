@@ -25,6 +25,10 @@ import {
   matchInferenceIntent,
 } from '@/lib/chat/inference-intent';
 import {
+  LAKEHOUSE_SYSTEM_ADDENDUM,
+  matchLakehouseIntent,
+} from '@/lib/chat/lakehouse-intent';
+import {
   CHAT_STATUS_COMPOSING,
   CHAT_STATUS_THINKING,
   encodeChatStreamEvent,
@@ -36,7 +40,11 @@ import {
   sanitizeUserFacingAnswer,
 } from '@/lib/chat/tool-call-recovery';
 import {runToolLoop} from '@/lib/chat/tool-loop';
-import {CHAT_TOOLS, CHAT_TOOLS_WITH_INFERENCE} from '@/lib/chat/tools';
+import {
+  CHAT_TOOLS,
+  CHAT_TOOLS_WITH_INFERENCE,
+  CHAT_TOOLS_WITH_LAKEHOUSE,
+} from '@/lib/chat/tools';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -116,10 +124,18 @@ export async function POST(req: Request) {
   const history = sanitized.messages;
   const userText = lastUserText(history);
   const inferenceIntent = matchInferenceIntent(userText);
+  const lakehouseIntent = matchLakehouseIntent(userText);
+  // Inference wins if both match (rare); otherwise lakehouse persona + tool.
   const systemContent = inferenceIntent.matched
     ? `${SYSTEM_PROMPT}\n\n${INFERENCE_SYSTEM_ADDENDUM}`
-    : SYSTEM_PROMPT;
-  const planningTools = inferenceIntent.matched ? CHAT_TOOLS_WITH_INFERENCE : CHAT_TOOLS;
+    : lakehouseIntent.matched
+      ? `${SYSTEM_PROMPT}\n\n${LAKEHOUSE_SYSTEM_ADDENDUM}`
+      : SYSTEM_PROMPT;
+  const planningTools = inferenceIntent.matched
+    ? CHAT_TOOLS_WITH_INFERENCE
+    : lakehouseIntent.matched
+      ? CHAT_TOOLS_WITH_LAKEHOUSE
+      : CHAT_TOOLS;
   const messages: ChatMessage[] = [{role: 'system', content: systemContent}, ...history];
   const inputTokens = estimateMessagesTokens(messages);
   const reservedTokens = reserveTokensForRequest(inputTokens);

@@ -1,7 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import {useMemo, useState} from 'react';
 import {
+  Button,
   Flex,
   HelpMark,
   Icon,
@@ -18,9 +20,12 @@ import {
   Layers3Diagonal,
   Pulse,
   Server,
+  Sparkles,
 } from '@gravity-ui/icons';
 import {CalculatorSidebar} from '@/components/calculator/CalculatorSidebar';
 import {SliderField} from '@/components/calculator/SliderField';
+import {chatUrlForQuery} from '@/components/home/homePrompts';
+import {lakehouseChatPrompt} from '@/lib/calculator/lakehouse-links';
 import {
   LAKEHOUSE_PRESETS,
   lakehousePresetById,
@@ -30,6 +35,7 @@ import {
 import {
   formatGiBCapacity,
   formatRuNumber,
+  periodShortLabel,
   type CostPartId,
   type PeriodMode,
   type ViewProviderQuote,
@@ -347,6 +353,32 @@ export function LakehouseCalculatorPanel({period}: {period: PeriodMode}) {
         configSummary={configSummary}
         bestPriceHint="Самый дешёвый DIY lakehouse среди провайдеров с Object Storage и Managed Kubernetes в каталоге"
         bestPriceBadge="Лучшая цена"
+        extras={
+          <div className={styles.chatBridge}>
+            <Button
+              component={Link}
+              href={chatUrlForQuery(
+                lakehouseChatPrompt({
+                  presetId,
+                  lakeTiB,
+                  hotPercent,
+                  k8sTier,
+                  etlHoursPerDay,
+                  queryHoursPerDay,
+                  period: periodShortLabel(period),
+                  providerName: result?.best?.providerName,
+                  totalRub: result?.best?.total,
+                }),
+              )}
+              view="flat-secondary"
+              size="m"
+              prefetch
+            >
+              <Icon data={Sparkles} size={16} />
+              Спросить ассистента
+            </Button>
+          </div>
+        }
       />
     </>
   );

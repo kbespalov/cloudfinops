@@ -16,6 +16,11 @@ import {compareUnitPrice, type DiskMediaFilter, type UnitComponent} from './anal
 import {fitBudget, type FitBudgetProfile} from './fit-budget';
 import {recommendInferenceInfra} from './inference-recommend';
 import type {ComputePreset, GpuPreset, CalculatorPreset} from '@/lib/calculator/presets';
+import {
+  resolveLakehouseInput,
+  type LakehouseSize,
+} from '@/lib/calculator/lakehouse-presets';
+import {quoteLakehouse} from '@/lib/calculator/lakehouse-quote';
 import type {InferenceDtype} from '@/data/inference-models';
 
 export type ChatToolCall = {
@@ -214,6 +219,58 @@ export const CHAT_TOOLS = [
 
 /** Baseline + gated inference recommender (attach only on matching intents). */
 export const CHAT_TOOLS_WITH_INFERENCE = [...CHAT_TOOLS, RECOMMEND_INFERENCE_INFRA_TOOL];
+
+/** Gated tool — attach only when lakehouse / data-platform intent matches. */
+export const GET_LAKEHOUSE_QUOTE_TOOL = {
+  type: 'function' as const,
+  function: {
+    name: 'get_lakehouse_quote',
+    description:
+      'Оценить месячную (или час/год) стоимость DIY open lakehouse в РФ-облаках: Object Storage + Managed Kubernetes master + worker ВМ (platform 24/7, ETL/Spark и Query/Trino с duty-cycle). Используй для lakehouse / платформы данных / Iceberg+Trino+Airflow на K8s. НЕ для обычных ВМ (get_quote) и НЕ для цены managed Spark/Trino PaaS, которых нет в каталоге.',
+    parameters: {
+      type: 'object',
+      properties: {
+        presetId: {
+          type: 'string',
+          enum: ['small', 'medium', 'large'],
+          description:
+            'Типовой размер: small ~10 TiB пилот, medium ~75 TiB команда, large ~500 TiB enterprise. По умолчанию medium.',
+        },
+        lakeTiB: {
+          type: 'number',
+          description: 'Объём озера в tebibytes (1 TiB = 1024 GiB). Перекрывает пресет.',
+        },
+        hotPercent: {
+          type: 'integer',
+          description:
+            'Доля активных (hot/standard) данных 0–100; остальное — cold, если есть у провайдера.',
+        },
+        k8sTier: {
+          type: 'string',
+          enum: ['basic', 'ha'],
+          description: 'Тир control plane Managed Kubernetes.',
+        },
+        etlHoursPerDay: {
+          type: 'number',
+          description: 'Часы работы ETL/Spark пула в сутки (0–24).',
+        },
+        queryHoursPerDay: {
+          type: 'number',
+          description: 'Часы работы SQL/Trino пула в сутки (0–24).',
+        },
+        period: {
+          type: 'string',
+          enum: ['unit', 'month', 'year'],
+          description: 'Период: unit (час), month, year. По умолчанию month.',
+        },
+      },
+      required: [],
+    },
+  },
+};
+
+/** Baseline + gated lakehouse quote (attach only on matching intents). */
+export const CHAT_TOOLS_WITH_LAKEHOUSE = [...CHAT_TOOLS, GET_LAKEHOUSE_QUOTE_TOOL];
 
 const FIT_PROFILES: FitBudgetProfile[] = ['general', 'high-cpu', 'gpu-l4', 'gpu-h100'];
 
@@ -508,6 +565,85 @@ function runCompareUnitPrice(args: Record<string, unknown>): unknown {
   return compareUnitPrice(component, diskMedia ? {diskMedia} : undefined);
 }
 
+function runLakehouseQuote(args: Record<string, unknown>): unknown {
+  const presetRaw = typeof args.presetId === 'string' ? args.presetId.trim().toLowerCase() : '';
+  const presetId: LakehouseSize =
+    presetRaw === 'small' || presetRaw === 'medium' || presetRaw === 'large'
+      ? presetRaw
+      : 'medium';
+  const period: PeriodMode =
+    args.period === 'unit' || args.period === 'year' ? args.period : 'month';
+  const input = resolveLakehouseInput(presetId, {
+    lakeTiB:
+      typeof args.lakeTiB === 'number' && Number.isFinite(args.lakeTiB) ? args.lakeTiB : undefined,
+    hotPercent:
+      typeof args.hotPercent === 'number' && Number.isFinite(args.hotPercent)
+        ? args.hotPercent
+        : undefined,
+    k8sTier: args.k8sTier === 'basic' || args.k8sTier === 'ha' ? args.k8sTier : undefined,
+    etlHoursPerDay:
+      typeof args.etlHoursPerDay === 'number' && Number.isFinite(args.etlHoursPerDay)
+        ? args.etlHoursPerDay
+        : undefined,
+    queryHoursPerDay:
+      typeof args.queryHoursPerDay === 'number' && Number.isFinite(args.queryHoursPerDay)
+        ? args.queryHoursPerDay
+        : undefined,
+  });
+  const result = quoteLakehouse(input, period);
+  const quotes = result.quotes.map((q) => ({
+    provider: q.providerName,
+    total: round(q.total),
+    parts: q.parts.map((p) => ({id: p.id, label: p.label, amount: round(p.amount)})),
+    note: q.note,
+  }));
+
+  let fixedApprox = 0;
+  let variableApprox = 0;
+  if (result.best) {
+    for (const p of result.best.parts) {
+      if (p.id === 'storage' || p.id === 'k8s' || p.id === 'platform') {
+        fixedApprox += p.amount;
+      } else {
+        variableApprox += p.amount;
+      }
+    }
+  }
+
+  return {
+    model: 'open-lakehouse-diy',
+    stackLabel:
+      'DIY open lakehouse: Object Storage + Managed Kubernetes master + worker ВМ (platform/Airflow+catalog 24/7, ETL/Spark, Query/Trino)',
+    modelNote:
+      'Это НЕ ClickHouse-кластер и НЕ managed warehouse. Цифры — estimate DIY open lakehouse (S3 + K8s + ВМ). Managed Spark/Trino/ClickHouse PaaS и egress/запросы S3 в сумму не входят — помечай «потенциально не включено». В заголовке ответа пиши «DIY open lakehouse» / «open lakehouse на K8s», не «ClickHouse».',
+    request: {presetId, ...input, period},
+    currency: 'RUB',
+    vatIncluded: true,
+    periodNote:
+      period === 'month' ? 'месяц = 720 ч' : period === 'year' ? 'год = 8640 ч' : 'цена за час',
+    providerCount: quotes.length,
+    best: result.best
+      ? {provider: result.best.providerName, total: round(result.best.total)}
+      : null,
+    costShape: result.best
+      ? {
+          fixedApprox: round(fixedApprox),
+          variableApprox: round(variableApprox),
+          fixedParts: 'storage + k8s master + platform (24/7)',
+          variableParts: 'ETL/Spark + Query/Trino (по часам/день)',
+        }
+      : null,
+    quotes,
+    answerHint: {
+      calculatorUrl: '/calculator/lakehouse',
+      tip: 'В конце ответа дай ссылку на калькулятор. Сравнивай провайдеров только внутри этой DIY-модели; serverless/managed — качественно, без выдуманных тарифов.',
+    },
+    ...(quotes.length === 0
+      ? {warning: 'Ни один провайдер не покрывает Object Storage + Managed K8s в каталоге для этой конфигурации.'}
+      : {}),
+  };
+}
+
 function parseToolArgs(
   rawArgs: string,
 ): {ok: true; args: Record<string, unknown>} | {ok: false; message: string} {
@@ -580,6 +716,7 @@ export function runToolSync(name: string, rawArgs: string): string {
     if (name === 'compare_unit_price') return JSON.stringify(runCompareUnitPrice(args));
     if (name === 'fit_budget') return JSON.stringify(runFitBudget(args));
     if (name === 'recommend_inference_infra') return JSON.stringify(runRecommendInference(args));
+    if (name === 'get_lakehouse_quote') return JSON.stringify(runLakehouseQuote(args));
     return JSON.stringify({error: `Неизвестный инструмент: ${name}`});
   } catch (err) {
     return toolError(err);
@@ -597,6 +734,7 @@ export async function runTool(name: string, rawArgs: string): Promise<string> {
     if (name === 'compare_unit_price') return JSON.stringify(runCompareUnitPrice(args));
     if (name === 'fit_budget') return JSON.stringify(runFitBudget(args));
     if (name === 'recommend_inference_infra') return JSON.stringify(runRecommendInference(args));
+    if (name === 'get_lakehouse_quote') return JSON.stringify(runLakehouseQuote(args));
     return JSON.stringify({error: `Неизвестный инструмент: ${name}`});
   } catch (err) {
     return toolError(err);

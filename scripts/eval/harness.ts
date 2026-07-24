@@ -27,10 +27,18 @@ import {
   INFERENCE_SYSTEM_ADDENDUM,
   matchInferenceIntent,
 } from '../../src/lib/chat/inference-intent';
+import {
+  LAKEHOUSE_SYSTEM_ADDENDUM,
+  matchLakehouseIntent,
+} from '../../src/lib/chat/lakehouse-intent';
 import {CHAT_LIMITS} from '../../src/lib/chat/limits';
 import {sanitizeUserFacingAnswer} from '../../src/lib/chat/tool-call-recovery';
 import {runToolLoop} from '../../src/lib/chat/tool-loop';
-import {CHAT_TOOLS, CHAT_TOOLS_WITH_INFERENCE} from '../../src/lib/chat/tools';
+import {
+  CHAT_TOOLS,
+  CHAT_TOOLS_WITH_INFERENCE,
+  CHAT_TOOLS_WITH_LAKEHOUSE,
+} from '../../src/lib/chat/tools';
 
 const MAX_TOOL_ROUNDS = CHAT_LIMITS.maxToolRounds;
 
@@ -67,11 +75,19 @@ export async function runChat(
 
   const t0 = Date.now();
   const model = getChatModel();
+  // Keep in sync with src/app/api/chat/route.ts intent gating.
   const inferenceIntent = matchInferenceIntent(question);
+  const lakehouseIntent = matchLakehouseIntent(question);
   const effectiveSystem = inferenceIntent.matched
     ? `${systemPrompt}\n\n${INFERENCE_SYSTEM_ADDENDUM}`
-    : systemPrompt;
-  const planningTools = inferenceIntent.matched ? CHAT_TOOLS_WITH_INFERENCE : CHAT_TOOLS;
+    : lakehouseIntent.matched
+      ? `${systemPrompt}\n\n${LAKEHOUSE_SYSTEM_ADDENDUM}`
+      : systemPrompt;
+  const planningTools = inferenceIntent.matched
+    ? CHAT_TOOLS_WITH_INFERENCE
+    : lakehouseIntent.matched
+      ? CHAT_TOOLS_WITH_LAKEHOUSE
+      : CHAT_TOOLS;
   const messages: ChatMessage[] = [
     {role: 'system', content: effectiveSystem},
     {role: 'user', content: question},

@@ -13,6 +13,7 @@ export const CHAT_TOOL_NAMES = [
   'compare_unit_price',
   'fit_budget',
   'recommend_inference_infra',
+  'get_lakehouse_quote',
 ] as const;
 export type ChatToolName = (typeof CHAT_TOOL_NAMES)[number];
 
@@ -24,6 +25,7 @@ const TOOL_NAME_USER_LABEL: Record<ChatToolName, string> = {
   compare_unit_price: 'кросс-провайдерной аналитики',
   fit_budget: 'подбора под бюджет',
   recommend_inference_infra: 'подбора GPU под инференс',
+  get_lakehouse_quote: 'калькулятора lakehouse',
 };
 
 /**
