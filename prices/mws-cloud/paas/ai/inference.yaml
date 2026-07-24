@@ -21,8 +21,8 @@ spec:
     status: available
     pricingMode: unit
     region: ru-central1
-    effectiveFrom: null
-    checkedAt: '2026-07-19'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-07-25'
     sourceRefs: [mws.gpt-model-hub, mws.all-prices]
     dimensions:
       modelFamily: gpt-oss-120b
@@ -33,10 +33,10 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
+    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
-        amount: '68'
+        amount: '13.42'
         currency: RUB
         unit: {quantity: 1M-token, period: usage}
         vat: included
@@ -47,8 +47,8 @@ spec:
     status: available
     pricingMode: unit
     region: ru-central1
-    effectiveFrom: null
-    checkedAt: '2026-07-19'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-07-25'
     sourceRefs: [mws.gpt-model-hub, mws.all-prices]
     dimensions:
       modelFamily: gpt-oss-120b
@@ -59,62 +59,10 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
-    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
+    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
-        amount: '67.50'
-        currency: RUB
-        unit: {quantity: 1M-token, period: usage}
-        vat: included
-        byteBasis: not-applicable
-  - sku: mws.ai.gemma-3-27b-it.input
-    name: gemma-3-27b-it · input
-    meter: ai.inference.tokens.input
-    status: available
-    pricingMode: unit
-    region: ru-central1
-    effectiveFrom: null
-    checkedAt: '2026-07-19'
-    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
-    dimensions:
-      modelFamily: gemma-3-27b-it
-      modelId: gemma-3-27b-it
-      openWeights: true
-      modelCapability: text-generation
-      parameterCountB: 27  # total params, billions
-      inferenceScope: local
-      serviceProduct: gpt-model-hub
-      tokenDirection: input
-    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
-    pricing:
-      rate:
-        amount: '1098'
-        currency: RUB
-        unit: {quantity: 1M-token, period: usage}
-        vat: included
-        byteBasis: not-applicable
-  - sku: mws.ai.gemma-3-27b-it.output
-    name: gemma-3-27b-it · output
-    meter: ai.inference.tokens.output
-    status: available
-    pricingMode: unit
-    region: ru-central1
-    effectiveFrom: null
-    checkedAt: '2026-07-19'
-    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
-    dimensions:
-      modelFamily: gemma-3-27b-it
-      modelId: gemma-3-27b-it
-      openWeights: true
-      modelCapability: text-generation
-      parameterCountB: 27  # total params, billions
-      inferenceScope: local
-      serviceProduct: gpt-model-hub
-      tokenDirection: output
-    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
-    pricing:
-      rate:
-        amount: '1098'
+        amount: '54.90'
         currency: RUB
         unit: {quantity: 1M-token, period: usage}
         vat: included
@@ -125,8 +73,8 @@ spec:
     status: available
     pricingMode: unit
     region: ru-central1
-    effectiveFrom: null
-    checkedAt: '2026-07-19'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-07-25'
     sourceRefs: [mws.gpt-model-hub, mws.all-prices]
     dimensions:
       modelFamily: gemma-4-31b-it
@@ -137,10 +85,10 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
+    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
-        amount: '1098'
+        amount: '56.12'
         currency: RUB
         unit: {quantity: 1M-token, period: usage}
         vat: included
@@ -151,8 +99,8 @@ spec:
     status: available
     pricingMode: unit
     region: ru-central1
-    effectiveFrom: null
-    checkedAt: '2026-07-19'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-07-25'
     sourceRefs: [mws.gpt-model-hub, mws.all-prices]
     dimensions:
       modelFamily: gemma-4-31b-it
@@ -163,62 +111,10 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
-    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
+    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
-        amount: '1098'
-        currency: RUB
-        unit: {quantity: 1M-token, period: usage}
-        vat: included
-        byteBasis: not-applicable
-  - sku: mws.ai.qwen3-32b.input
-    name: qwen3-32b · input
-    meter: ai.inference.tokens.input
-    status: available
-    pricingMode: unit
-    region: ru-central1
-    effectiveFrom: null
-    checkedAt: '2026-07-19'
-    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
-    dimensions:
-      modelFamily: qwen3-32b
-      modelId: qwen3-32b
-      openWeights: true
-      modelCapability: text-generation
-      parameterCountB: 32  # total params, billions
-      inferenceScope: local
-      serviceProduct: gpt-model-hub
-      tokenDirection: input
-    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
-    pricing:
-      rate:
-        amount: '1098'
-        currency: RUB
-        unit: {quantity: 1M-token, period: usage}
-        vat: included
-        byteBasis: not-applicable
-  - sku: mws.ai.qwen3-32b.output
-    name: qwen3-32b · output
-    meter: ai.inference.tokens.output
-    status: available
-    pricingMode: unit
-    region: ru-central1
-    effectiveFrom: null
-    checkedAt: '2026-07-19'
-    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
-    dimensions:
-      modelFamily: qwen3-32b
-      modelId: qwen3-32b
-      openWeights: true
-      modelCapability: text-generation
-      parameterCountB: 32  # total params, billions
-      inferenceScope: local
-      serviceProduct: gpt-model-hub
-      tokenDirection: output
-    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
-    pricing:
-      rate:
-        amount: '1098'
+        amount: '224.48'
         currency: RUB
         unit: {quantity: 1M-token, period: usage}
         vat: included
@@ -229,8 +125,8 @@ spec:
     status: available
     pricingMode: unit
     region: ru-central1
-    effectiveFrom: null
-    checkedAt: '2026-07-19'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-07-25'
     sourceRefs: [mws.gpt-model-hub, mws.all-prices]
     dimensions:
       modelFamily: qwen3.6-35b-a3b
@@ -242,10 +138,10 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
+    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
-        amount: '1098'
+        amount: '70.76'
         currency: RUB
         unit: {quantity: 1M-token, period: usage}
         vat: included
@@ -256,8 +152,8 @@ spec:
     status: available
     pricingMode: unit
     region: ru-central1
-    effectiveFrom: null
-    checkedAt: '2026-07-19'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-07-25'
     sourceRefs: [mws.gpt-model-hub, mws.all-prices]
     dimensions:
       modelFamily: qwen3.6-35b-a3b
@@ -269,10 +165,10 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
-    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
+    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
-        amount: '1098'
+        amount: '283.04'
         currency: RUB
         unit: {quantity: 1M-token, period: usage}
         vat: included
@@ -283,8 +179,8 @@ spec:
     status: available
     pricingMode: unit
     region: ru-central1
-    effectiveFrom: null
-    checkedAt: '2026-07-19'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-07-25'
     sourceRefs: [mws.gpt-model-hub, mws.all-prices]
     dimensions:
       modelFamily: qwen3-235b-instruct
@@ -296,10 +192,10 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
+    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
-        amount: '1220'
+        amount: '79.30'
         currency: RUB
         unit: {quantity: 1M-token, period: usage}
         vat: included
@@ -310,8 +206,8 @@ spec:
     status: available
     pricingMode: unit
     region: ru-central1
-    effectiveFrom: null
-    checkedAt: '2026-07-19'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-07-25'
     sourceRefs: [mws.gpt-model-hub, mws.all-prices]
     dimensions:
       modelFamily: qwen3-235b-instruct
@@ -323,10 +219,10 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
-    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
+    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
-        amount: '1220'
+        amount: '320.86'
         currency: RUB
         unit: {quantity: 1M-token, period: usage}
         vat: included
@@ -337,8 +233,8 @@ spec:
     status: available
     pricingMode: unit
     region: ru-central1
-    effectiveFrom: null
-    checkedAt: '2026-07-19'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-07-25'
     sourceRefs: [mws.gpt-model-hub, mws.all-prices]
     dimensions:
       modelFamily: qwen3-coder-480b-a35b
@@ -350,10 +246,10 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
+    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
-        amount: '2074'
+        amount: '104.92'
         currency: RUB
         unit: {quantity: 1M-token, period: usage}
         vat: included
@@ -364,8 +260,8 @@ spec:
     status: available
     pricingMode: unit
     region: ru-central1
-    effectiveFrom: null
-    checkedAt: '2026-07-19'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-07-25'
     sourceRefs: [mws.gpt-model-hub, mws.all-prices]
     dimensions:
       modelFamily: qwen3-coder-480b-a35b
@@ -377,10 +273,10 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
-    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
+    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
-        amount: '2074'
+        amount: '419.68'
         currency: RUB
         unit: {quantity: 1M-token, period: usage}
         vat: included
@@ -391,8 +287,8 @@ spec:
     status: available
     pricingMode: unit
     region: ru-central1
-    effectiveFrom: null
-    checkedAt: '2026-07-19'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-07-25'
     sourceRefs: [mws.gpt-model-hub, mws.all-prices]
     dimensions:
       modelFamily: glm-5.2
@@ -404,10 +300,10 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
+    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
-        amount: '2318'
+        amount: '178.12'
         currency: RUB
         unit: {quantity: 1M-token, period: usage}
         vat: included
@@ -418,8 +314,8 @@ spec:
     status: available
     pricingMode: unit
     region: ru-central1
-    effectiveFrom: null
-    checkedAt: '2026-07-19'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-07-25'
     sourceRefs: [mws.gpt-model-hub, mws.all-prices]
     dimensions:
       modelFamily: glm-5.2
@@ -431,62 +327,10 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
-    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
+    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
-        amount: '2318'
-        currency: RUB
-        unit: {quantity: 1M-token, period: usage}
-        vat: included
-        byteBasis: not-applicable
-  - sku: mws.ai.glm-4.6-357b.input
-    name: glm-4.6-357b · input
-    meter: ai.inference.tokens.input
-    status: available
-    pricingMode: unit
-    region: ru-central1
-    effectiveFrom: null
-    checkedAt: '2026-07-19'
-    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
-    dimensions:
-      modelFamily: glm-4.6-357b
-      modelId: glm-4.6-357b
-      openWeights: true
-      modelCapability: text-generation
-      parameterCountB: 357  # total params, billions
-      inferenceScope: local
-      serviceProduct: gpt-model-hub
-      tokenDirection: input
-    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
-    pricing:
-      rate:
-        amount: '2318'
-        currency: RUB
-        unit: {quantity: 1M-token, period: usage}
-        vat: included
-        byteBasis: not-applicable
-  - sku: mws.ai.glm-4.6-357b.output
-    name: glm-4.6-357b · output
-    meter: ai.inference.tokens.output
-    status: available
-    pricingMode: unit
-    region: ru-central1
-    effectiveFrom: null
-    checkedAt: '2026-07-19'
-    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
-    dimensions:
-      modelFamily: glm-4.6-357b
-      modelId: glm-4.6-357b
-      openWeights: true
-      modelCapability: text-generation
-      parameterCountB: 357  # total params, billions
-      inferenceScope: local
-      serviceProduct: gpt-model-hub
-      tokenDirection: output
-    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
-    pricing:
-      rate:
-        amount: '2318'
+        amount: '746.64'
         currency: RUB
         unit: {quantity: 1M-token, period: usage}
         vat: included
@@ -497,8 +341,8 @@ spec:
     status: available
     pricingMode: unit
     region: ru-central1
-    effectiveFrom: null
-    checkedAt: '2026-07-19'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-07-25'
     sourceRefs: [mws.gpt-model-hub, mws.all-prices]
     dimensions:
       modelFamily: kimi-k2.6
@@ -510,10 +354,10 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
+    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
-        amount: '3660'
+        amount: '157.38'
         currency: RUB
         unit: {quantity: 1M-token, period: usage}
         vat: included
@@ -524,8 +368,8 @@ spec:
     status: available
     pricingMode: unit
     region: ru-central1
-    effectiveFrom: null
-    checkedAt: '2026-07-19'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-07-25'
     sourceRefs: [mws.gpt-model-hub, mws.all-prices]
     dimensions:
       modelFamily: kimi-k2.6
@@ -537,64 +381,10 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
-    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
+    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
-        amount: '3660'
-        currency: RUB
-        unit: {quantity: 1M-token, period: usage}
-        vat: included
-        byteBasis: not-applicable
-  - sku: mws.ai.kimi-k2-instruct.input
-    name: kimi-k2-instruct · input
-    meter: ai.inference.tokens.input
-    status: available
-    pricingMode: unit
-    region: ru-central1
-    effectiveFrom: null
-    checkedAt: '2026-07-19'
-    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
-    dimensions:
-      modelFamily: kimi-k2-instruct
-      modelId: kimi-k2-instruct
-      openWeights: true
-      modelCapability: text-generation
-      parameterCountB: 1000  # total params, billions
-      activeParameterCountB: 32  # MoE active params, billions
-      inferenceScope: local
-      serviceProduct: gpt-model-hub
-      tokenDirection: input
-    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
-    pricing:
-      rate:
-        amount: '3660'
-        currency: RUB
-        unit: {quantity: 1M-token, period: usage}
-        vat: included
-        byteBasis: not-applicable
-  - sku: mws.ai.kimi-k2-instruct.output
-    name: kimi-k2-instruct · output
-    meter: ai.inference.tokens.output
-    status: available
-    pricingMode: unit
-    region: ru-central1
-    effectiveFrom: null
-    checkedAt: '2026-07-19'
-    sourceRefs: [mws.gpt-model-hub, mws.all-prices]
-    dimensions:
-      modelFamily: kimi-k2-instruct
-      modelId: kimi-k2-instruct
-      openWeights: true
-      modelCapability: text-generation
-      parameterCountB: 1000  # total params, billions
-      activeParameterCountB: 32  # MoE active params, billions
-      inferenceScope: local
-      serviceProduct: gpt-model-hub
-      tokenDirection: output
-    notes: Базовая ставка GPT Model Hub без акции. Локальный inference в контуре MWS (не внешний API).
-    pricing:
-      rate:
-        amount: '3660'
+        amount: '652.70'
         currency: RUB
         unit: {quantity: 1M-token, period: usage}
         vat: included
@@ -605,8 +395,8 @@ spec:
     status: available
     pricingMode: unit
     region: ru-central1
-    effectiveFrom: null
-    checkedAt: '2026-07-19'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-07-25'
     sourceRefs: [mws.gpt-model-hub]
     dimensions:
       modelFamily: bge-m3
@@ -616,10 +406,10 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Embeddings в GPT Model Hub, базовая ставка без акции. В прайсе шаг — 1 000 токенов; в каталоге приведено к сравнению с другими моделями.
+    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Embeddings; в прайсе шаг — 1 000 токенов, в каталоге приведено к 1M для сравнения.
     pricing:
       rate:
-        amount: '122'
+        amount: '6.10'
         currency: RUB
         unit: {quantity: 1M-token, period: usage}
         vat: included
@@ -630,8 +420,8 @@ spec:
     status: available
     pricingMode: unit
     region: ru-central1
-    effectiveFrom: null
-    checkedAt: '2026-07-19'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-07-25'
     sourceRefs: [mws.gpt-model-hub]
     dimensions:
       modelFamily: bge-multilingual-gemma2
@@ -641,10 +431,10 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Embeddings в GPT Model Hub, базовая ставка без акции. В прайсе шаг — 1 000 токенов; в каталоге приведено к сравнению с другими моделями.
+    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Embeddings; в прайсе шаг — 1 000 токенов, в каталоге приведено к 1M для сравнения.
     pricing:
       rate:
-        amount: '366'
+        amount: '18.30'
         currency: RUB
         unit: {quantity: 1M-token, period: usage}
         vat: included

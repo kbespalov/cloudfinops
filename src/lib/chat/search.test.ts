@@ -166,7 +166,7 @@ describe('AI model matching', () => {
     const by = Object.fromEntries(r.providers.map((p) => [p.provider, p.cheapest.hour]));
     assert.equal(by['yandex-cloud'], 200);
     assert.equal(by['cloud-ru'], 219.6);
-    assert.equal(by['mws-cloud'], 1098);
+    assert.equal(by['mws-cloud'], 70.76);
   });
 
   it('infers aiModel from query so Coder-Next is not cheapest Cloud.ru for Qwen 3.6', () => {
