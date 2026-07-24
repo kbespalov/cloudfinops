@@ -381,20 +381,21 @@ export function VmCalculatorPanel({
     }
     return 'Для выбранных параметров предложения не найдены';
   })();
-  const vmConfigSummary = isGpu
-    ? null
-    : (() => {
-        const bits: string[] = [];
-        if (purchaseModel === 'preemptible') bits.push('Spot');
-        bits.push(`${vcpu} vCPU`);
-        if (vcpuShare !== '100%') bits.push(vcpuShare);
-        bits.push(formatGiBCapacity(ramGiB));
-        bits.push(`${diskShort} ${diskGiB} GiB`);
-        const ip = ipv4Compact(publicIpCount);
-        if (ip) bits.push(ip);
-        const body = bits.join(' · ');
-        return {line: vmCount > 1 ? `${vmCount}× ${body}` : body};
-      })();
+  /** Only when count > 1 — single-VM specs already appear in «Структура цены». */
+  const vmConfigSummary =
+    isGpu || vmCount <= 1
+      ? null
+      : (() => {
+          const bits: string[] = [];
+          if (purchaseModel === 'preemptible') bits.push('Spot');
+          bits.push(`${vcpu} vCPU`);
+          if (vcpuShare !== '100%') bits.push(vcpuShare);
+          bits.push(formatGiBCapacity(ramGiB));
+          bits.push(`${diskShort} ${diskGiB} GiB`);
+          const ip = ipv4Compact(publicIpCount);
+          if (ip) bits.push(ip);
+          return {line: `${vmCount}× ${bits.join(' · ')}`};
+        })();
 
   return (
     <>

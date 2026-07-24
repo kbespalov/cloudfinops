@@ -87,3 +87,35 @@
 .swatch[data-tone='unknown'] {
   background: var(--g-color-base-misc-heavy, #647a8d);
 }
+
+/* Icon mark for price-structure rows — same tones as the bar swatches. */
+.partIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: var(--g-color-base-misc-heavy, #647a8d);
+}
+
+.partIcon[data-tone='info'] {
+  color: var(--g-color-base-info-heavy, #348bdc);
+}
+
+.partIcon[data-tone='utility'] {
+  color: var(--g-color-base-utility-heavy, #844dbb);
+}
+
+.partIcon[data-tone='positive'],
+.partIcon[data-tone='success'] {
+  color: var(--g-color-base-positive-heavy, #30aa6e);
+}
+
+.partIcon[data-tone='warning'] {
+  color: var(--g-color-base-warning-heavy, #ffbe5c);
+}
+
+.partIcon[data-tone='unknown'] {
+  color: var(--g-color-base-misc-heavy, #647a8d);
+}

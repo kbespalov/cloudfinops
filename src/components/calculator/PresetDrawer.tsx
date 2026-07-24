@@ -12,14 +12,13 @@ import {
 import {
   formatGiBCapacity,
   formatQuoteAmount,
-  partTone,
   periodShortLabel,
   scopeLabel,
   type PeriodMode,
   type ViewPresetQuote,
   type ViewProviderQuote,
 } from '@/lib/calculator/quote-view';
-import {CostBreakdownBar} from '@/components/calculator/CostBreakdownBar';
+import {CostBreakdownBar, CostPartSwatch} from '@/components/calculator/CostBreakdownBar';
 import {ProviderMark} from '@/components/catalog/ProviderMark';
 import {CALCULATOR_EMPTY_ILLUSTRATION} from '@/components/ui/emptyIllustration';
 import styles from './PresetDrawer.module.css';
@@ -336,7 +335,7 @@ export function PresetDrawer({
                         gap={3}
                         className={styles.breakdownRow}
                       >
-                        <span className={styles.dot} data-tone={partTone(part.id)} />
+                        <CostPartSwatch id={part.id} />
                         <Flex direction="column" gap={0} className={styles.breakdownMeta}>
                           <Text variant="body-2" ellipsis>
                             {part.label}

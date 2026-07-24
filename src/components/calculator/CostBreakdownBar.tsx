@@ -1,6 +1,7 @@
 'use client';
 
-import {Flex, Text, Tooltip} from '@gravity-ui/uikit';
+import {Cpu, Gpu, HardDrive, Layers3Diagonal, PlanetEarth, Server} from '@gravity-ui/icons';
+import {Flex, Icon, Text, Tooltip} from '@gravity-ui/uikit';
 import {
   formatQuoteAmount,
   partTone,
@@ -18,6 +19,25 @@ function partCategory(id: CostPartId | string, label?: string): string {
   if (id === 'disk') return 'Диск';
   if (id === 'ip') return 'Публичный IP';
   return 'Прочее';
+}
+
+function partIcon(id: CostPartId | string) {
+  switch (id) {
+    case 'gpu':
+      return Gpu;
+    case 'bundle':
+      return Server;
+    case 'vcpu':
+      return Cpu;
+    case 'ram':
+      return Layers3Diagonal;
+    case 'disk':
+      return HardDrive;
+    case 'ip':
+      return PlanetEarth;
+    default:
+      return Server;
+  }
 }
 
 function formatShare(amount: number, total: number): string {
@@ -86,5 +106,9 @@ export function CostBreakdownBar({
 }
 
 export function CostPartSwatch({id}: {id: CostPartId | string}) {
-  return <span className={styles.swatch} data-tone={partTone(id as CostPartId)} aria-hidden />;
+  return (
+    <span className={styles.partIcon} data-tone={partTone(id as CostPartId)} aria-hidden>
+      <Icon data={partIcon(id)} size={14} />
+    </span>
+  );
 }
