@@ -218,7 +218,7 @@ function buildConfigWhy(
       : 'Стартовый минимум из базы'
     : 'Альтернатива (дороже/запас по VRAM или другой quant)';
   const priceBit = bestProvider
-    ? `среди паритетных узлов в каталоге сейчас дешевле у ${bestProvider}`
+    ? `среди паритетных узлов в каталоге Cloud FinOps минимум у ${bestProvider}`
     : 'в каталоге нет полной паритетной цены на этот shape';
   const noteBit = rec.notes ? ` ${rec.notes}` : '';
   return `${role}: ${sizeBit} → ${cards}; ${priceBit}.${noteBit}`.trim();

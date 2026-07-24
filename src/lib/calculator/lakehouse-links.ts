@@ -18,7 +18,9 @@ export function lakehouseChatPrompt(args: {
     `Период: ${args.period}.`,
   ];
   if (args.providerName && args.totalRub != null) {
-    parts.push(`В калькуляторе сейчас лучший: ${args.providerName} ≈ ${Math.round(args.totalRub)} ₽.`);
+    parts.push(
+      `Минимум в каталоге Cloud FinOps: ${args.providerName} ≈ ${Math.round(args.totalRub)} ₽.`,
+    );
   }
   parts.push(
     'Вызови get_lakehouse_quote с этими параметрами. Объясни допущения, постоянные и переменные расходы, 2–4 драйвера цены и 1–2 альтернативы (serverless SQL или managed warehouse), если DIY избыточен для сценария.',

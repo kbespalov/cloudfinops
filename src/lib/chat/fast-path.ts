@@ -9,6 +9,7 @@ import {
   formatInferenceVramCell,
   selfHostCalculatorCtaMarkdown,
 } from '@/lib/calculator/self-host-links';
+import {cheapestInCatalogLine} from '@/lib/catalog/compare-disclaimer';
 import {chatCompletion, type ChatMessage} from './gigachat';
 import {sanitizeUserFacingAnswer} from './tool-call-recovery';
 import {runTool} from './tools';
@@ -46,8 +47,9 @@ export const FAST_PATH_FINAL_SYSTEM = `Ты — AI-ассистент Cloud FinO
 
 Правила:
 - Цены и провайдеров бери ТОЛЬКО из tool results (providersMatched / quotes / volumeEstimates / stats). Не выдумывай.
-- Markdown-таблица, сортировка по возрастанию цены / итога. Колонка «к best offer»: у победителя «best», у остальных «+N%».
-- НДС включён, месяц = 720 ч, валюта ₽. Явно назови самый дешёвый вариант.
+- Markdown-таблица, сортировка по возрастанию цены / итога. Колонка «к минимуму»: у победителя «min», у остальных «+N%».
+- НДС включён, месяц = 720 ч, валюта ₽. Минимальную цену называй как «минимальная цена в каталоге Cloud FinOps на {catalogAsOf}» (поле catalogAsOf / asOf в tool result), среди публичных тарифов в выборке, без промо.
+- Если у победителя synthetic=true или derived — явно пометь «оценка Cloud FinOps, не строка прайса».
 - Для S3 volumeEstimates — итог за месяц; операции/egress не включай, если не просили.
 - Для compare_unit_price(ssd) при запросе объёма умножь ₽/GiB·мес на объём (55 ТБ → 56320 GiB) и покажи итог. Учитывай diskMedia: NVMe ≠ SSD; в таблице указывай name/sku диска.
 - Для S3 volumeEstimates класс бери из applied.storageClass / volumeEstimates[].storageClass — не называй Ice «Standard».
@@ -606,7 +608,8 @@ function formatRub(n: number): string {
 
 function pctVsBest(price: number, best: number): string {
   if (!(best > 0) || !(price >= 0)) return '—';
-  if (price <= best * 1.0001) return 'best';
+  // Keep token aligned with column «к минимуму» / system prompt («min», not «best»).
+  if (price <= best * 1.0001) return 'min';
   const pct = Math.round(((price - best) / best) * 100);
   return `+${pct}%`;
 }
@@ -786,7 +789,7 @@ export function formatFastPathAnswer(
       '',
       '### Цены узлов',
       '',
-      'НДС вкл., месяц = 720 ч. Цена — лучший паритетный узел в каталоге.',
+      'НДС вкл., месяц = 720 ч. Цена — минимальная среди паритетных узлов в каталоге Cloud FinOps.',
       '',
       `| Конфиг | Использование VRAM | Запас памяти | Провайдер | ₽/мес |`,
       `|---|---|---|---|---:|`,
@@ -807,7 +810,12 @@ export function formatFastPathAnswer(
   }
 
   if (primary.name === 'get_quote' && Array.isArray(data.quotes)) {
-    type Q = {provider: string; total: number | null; scopeNote?: string};
+    type Q = {
+      provider: string;
+      total: number | null;
+      scope?: string;
+      scopeNote?: string;
+    };
     const quotes = (data.quotes as Q[])
       .filter((q) => q.provider && typeof q.total === 'number')
       .slice()
@@ -831,7 +839,15 @@ export function formatFastPathAnswer(
           `| ${q.provider} | ${formatRub(q.total as number)} | ${pctVsBest(q.total as number, best)} |`,
       )
       .join('\n');
-    return `**${title}**\n\n| Провайдер | Итого / мес | к best offer |\n|---|---:|---|\n${rows}\n\nСамый дешёвый: **${quotes[0].provider}** — ${formatRub(best)}/мес.`;
+    // gpu-synthetic = sum of published unit rates (GPU + host), not a single vendor SKU row.
+    const composedWinner =
+      quotes[0].scope === 'gpu-synthetic' ||
+      Boolean(quotes[0].scopeNote?.includes('собранный хост'));
+    return `**${title}**\n\n| Провайдер | Итого / мес | к минимуму |\n|---|---:|---|\n${rows}\n\n${cheapestInCatalogLine({
+      provider: quotes[0].provider,
+      priceText: `${formatRub(best)}/мес`,
+      composed: composedWinner,
+    })}`;
   }
 
   if (primary.name === 'compare_unit_price') {
@@ -881,7 +897,11 @@ export function formatFastPathAnswer(
           .join('\n');
         const bestTotal = Math.round(bestRate * volumeGiB * 100) / 100;
         const bestName = withMonth[0].name ? ` (${withMonth[0].name})` : '';
-        return `**${tb.toLocaleString('ru-RU')} ТБ ${mediaLabel} (блочный диск) в месяц** (НДС вкл.; 1 ТБ = 1024 GiB → ${volumeGiB.toLocaleString('ru-RU')} GiB)\n\n| Провайдер | Диск | ₽/GiB·мес | Итого / мес | к best offer |\n|---|---|---:|---:|---|\n${rows}\n\nСамый дешёвый: **${withMonth[0].providerName}**${bestName} — ${formatRub(bestTotal)}/мес.`;
+        return `**${tb.toLocaleString('ru-RU')} ТБ ${mediaLabel} (блочный диск) в месяц** (НДС вкл.; 1 ТБ = 1024 GiB → ${volumeGiB.toLocaleString('ru-RU')} GiB)\n\n| Провайдер | Диск | ₽/GiB·мес | Итого / мес | к минимуму |\n|---|---|---:|---:|---|\n${rows}\n\n${cheapestInCatalogLine({
+          provider: withMonth[0].providerName,
+          priceText: `${formatRub(bestTotal)}/мес`,
+          detail: bestName,
+        })}`;
       }
       const rows = withMonth
         .map(
@@ -889,7 +909,10 @@ export function formatFastPathAnswer(
             `| ${p.providerName} | ${diskCell(p)} | ${formatRub(p.priceMonth as number)} | ${pctVsBest(p.priceMonth as number, bestRate)} |`,
         )
         .join('\n');
-      return `**Цена 1 GiB блочного ${mediaLabel} в месяц** (НДС вкл.)\n\n| Провайдер | Диск | ₽/GiB·мес | к best offer |\n|---|---|---:|---|\n${rows}\n\nСамый дешёвый: **${withMonth[0].providerName}** — ${formatRub(bestRate)}/GiB·мес.`;
+      return `**Цена 1 GiB блочного ${mediaLabel} в месяц** (НДС вкл.)\n\n| Провайдер | Диск | ₽/GiB·мес | к минимуму |\n|---|---|---:|---|\n${rows}\n\n${cheapestInCatalogLine({
+        provider: withMonth[0].providerName,
+        priceText: `${formatRub(bestRate)}/GiB·мес`,
+      })}`;
     }
 
     if (component === 'ram' || component === 'vcpu') {
@@ -909,7 +932,10 @@ export function formatFastPathAnswer(
       const rows = ranked
         .map((p) => `| ${p.name} | ${formatRub(p.month)} | ${pctVsBest(p.month, best)} |`)
         .join('\n');
-      return `**Минимальная цена ${label} в месяц** (НДС вкл., 720 ч)\n\n| Провайдер | ₽/мес | к best offer |\n|---|---:|---|\n${rows}\n\nСамый дешёвый: **${ranked[0].name}** — ${formatRub(best)}/мес.`;
+      return `**Минимальная цена ${label} в месяц** (НДС вкл., 720 ч)\n\n| Провайдер | ₽/мес | к минимуму |\n|---|---:|---|\n${rows}\n\n${cheapestInCatalogLine({
+        provider: ranked[0].name,
+        priceText: `${formatRub(best)}/мес`,
+      })}`;
     }
   }
 
@@ -937,7 +963,7 @@ export function formatFastPathAnswer(
       budget != null
         ? `Варианты ВМ при бюджете ≈ ${budget.toLocaleString('ru-RU')} ₽/мес`
         : 'Варианты размещения в рамках бюджета';
-    return `**${title}** (НДС вкл., месяц = 720 ч; без IP/S3/K8s/GPU)\n\n| Провайдер | Конфиг × N | Итого ₽/мес | Утилизация | к best offer |\n|---|---|---:|---:|---|\n${rows}\n\nЛучшая утилизация бюджета в выборке: **${highlights[0].provider}** — ${highlights[0].shape} × ${highlights[0].count}.`;
+    return `**${title}** (НДС вкл., месяц = 720 ч; без IP/S3/K8s/GPU)\n\n| Провайдер | Конфиг × N | Итого ₽/мес | Утилизация | к минимуму |\n|---|---|---:|---:|---|\n${rows}\n\nЛучшая утилизация бюджета в каталоге Cloud FinOps: **${highlights[0].provider}** — ${highlights[0].shape} × ${highlights[0].count}.`;
   }
 
   if (primary.name === 'search_prices') {
@@ -984,7 +1010,10 @@ export function formatFastPathAnswer(
             `| ${v.providerName} | ${formatRub(v.rateGiBMonth)} | ${formatRub(v.totalMonth)} | ${pctVsBest(v.totalMonth, best)} |`,
         )
         .join('\n');
-      return `**Объектное хранилище ${classLabel}${vol ? ` · ${Number(vol).toLocaleString('ru-RU')} GiB` : ''}** (НДС вкл., месяц)\n\n| Провайдер | ₽/GiB·мес | Итого / мес | к best offer |\n|---|---:|---:|---|\n${rows}\n\nСамый дешёвый: **${sorted[0].providerName}** — ${formatRub(best)}/мес. Операции и egress тарифицируются отдельно.`;
+      return `**Объектное хранилище ${classLabel}${vol ? ` · ${Number(vol).toLocaleString('ru-RU')} GiB` : ''}** (НДС вкл., месяц)\n\n| Провайдер | ₽/GiB·мес | Итого / мес | к минимуму |\n|---|---:|---:|---|\n${rows}\n\n${cheapestInCatalogLine({
+        provider: sorted[0].providerName,
+        priceText: `${formatRub(best)}/мес`,
+      })} Операции и egress тарифицируются отдельно.`;
     }
 
     type SearchRow = {
@@ -1024,7 +1053,10 @@ export function formatFastPathAnswer(
               `| ${r.provider} | ${r.name} | ${formatRub(r.month as number)} | ${pctVsBest(r.month as number, best)} |`,
           )
           .join('\n');
-        return `**Публичный IP в месяц** (НДС вкл.)\n\n| Провайдер | Позиция | ₽/мес | к best offer |\n|---|---|---:|---|\n${rows}\n\nСамый дешёвый: **${ranked[0].provider}** — ${formatRub(best)}/мес.`;
+        return `**Публичный IP в месяц** (НДС вкл.)\n\n| Провайдер | Позиция | ₽/мес | к минимуму |\n|---|---|---:|---|\n${rows}\n\n${cheapestInCatalogLine({
+          provider: ranked[0].provider,
+          priceText: `${formatRub(best)}/мес`,
+        })}`;
       }
     }
 
@@ -1062,7 +1094,10 @@ export function formatFastPathAnswer(
                 `| ${r.provider} | ${formatRub(r.rate)} | ${formatRub(r.total)} | ${pctVsBest(r.total, best)} |`,
             )
             .join('\n');
-          return `**Исходящий трафик (egress) · ${volumeGiB.toLocaleString('ru-RU')} GiB** (НДС вкл.)\n\n| Провайдер | ₽/GiB | Итого / мес | к best offer |\n|---|---:|---:|---|\n${rows}\n\nСамый дешёвый: **${ranked[0].provider}** — ${formatRub(best)}/мес.`;
+          return `**Исходящий трафик (egress) · ${volumeGiB.toLocaleString('ru-RU')} GiB** (НДС вкл.)\n\n| Провайдер | ₽/GiB | Итого / мес | к минимуму |\n|---|---:|---:|---|\n${rows}\n\n${cheapestInCatalogLine({
+            provider: ranked[0].provider,
+            priceText: `${formatRub(best)}/мес`,
+          })}`;
         }
         const rows = ranked
           .map(
@@ -1070,7 +1105,10 @@ export function formatFastPathAnswer(
               `| ${r.provider} | ${r.name} | ${formatRub(r.total)} | ${pctVsBest(r.total, best)} |`,
           )
           .join('\n');
-        return `**Исходящий трафик (egress)** (НДС вкл.)\n\n| Провайдер | Позиция | ₽/GiB·мес | к best offer |\n|---|---|---:|---|\n${rows}\n\nСамый дешёвый: **${ranked[0].provider}** — ${formatRub(best)}.`;
+        return `**Исходящий трафик (egress)** (НДС вкл.)\n\n| Провайдер | Позиция | ₽/GiB·мес | к минимуму |\n|---|---|---:|---|\n${rows}\n\n${cheapestInCatalogLine({
+          provider: ranked[0].provider,
+          priceText: formatRub(best),
+        })}`;
       }
     }
 
@@ -1096,7 +1134,11 @@ export function formatFastPathAnswer(
               `| ${r.name} | ${r.config ?? '—'} | ${formatRub(r.month as number)} | ${pctVsBest(r.month as number, best)} |`,
           )
           .join('\n');
-        return `**GPU в каталоге Selectel** (НДС вкл., месяц = 720 ч)\n\n| GPU | Конфигурация | ₽/мес | к best offer |\n|---|---|---:|---|\n${rows}\n\nСамый дешёвый в выборке: **${ranked[0].name}** — ${formatRub(best)}/мес.`;
+        return `**GPU в каталоге Selectel** (НДС вкл., месяц = 720 ч)\n\n| GPU | Конфигурация | ₽/мес | к минимуму |\n|---|---|---:|---|\n${rows}\n\n${cheapestInCatalogLine({
+          provider: 'Selectel',
+          priceText: `${formatRub(best)}/мес`,
+          detail: ` (${ranked[0].name})`,
+        })}`;
       }
     }
 
@@ -1108,6 +1150,7 @@ export function formatFastPathAnswer(
         month: number | null;
         hour: number | null;
         unit?: string;
+        synthetic?: boolean;
       };
     };
     const matched = data.providersMatched as Matched[] | undefined;
@@ -1120,6 +1163,7 @@ export function formatFastPathAnswer(
           month: m.cheapest?.month,
           hour: m.cheapest?.hour,
           unit: m.cheapest?.unit ?? '',
+          synthetic: Boolean(m.cheapest?.synthetic),
         }))
         .filter((m) => typeof m.month === 'number' || typeof m.hour === 'number');
 
@@ -1133,7 +1177,12 @@ export function formatFastPathAnswer(
         planId === 'ai' ||
         planId.includes('ai-api');
       if (looksAi) {
-        type AiRow = {provider: string; name: string; month: number | null};
+        type AiRow = {
+          provider: string;
+          name: string;
+          month: number | null;
+          synthetic?: boolean;
+        };
         const fromRows = Array.isArray(data.rows)
           ? (data.rows as AiRow[]).filter(
               (r) => r.provider && r.name && typeof r.month === 'number',
@@ -1144,10 +1193,16 @@ export function formatFastPathAnswer(
               provider: r.provider,
               name: r.name,
               month: r.month as number,
+              synthetic: Boolean(r.synthetic),
             }))
           : withPrice
               .filter((m) => typeof m.month === 'number')
-              .map((m) => ({provider: m.provider, name: m.name, month: m.month as number}))
+              .map((m) => ({
+                provider: m.provider,
+                name: m.name,
+                month: m.month as number,
+                synthetic: m.synthetic,
+              }))
         ).sort((a, b) => a.month - b.month);
         if (!rowsData.length) return null;
         const best = rowsData[0].month;
@@ -1157,7 +1212,11 @@ export function formatFastPathAnswer(
               `| ${r.provider} | ${r.name} | ${formatRub(r.month)} | ${pctVsBest(r.month, best)} |`,
           )
           .join('\n');
-        return `**Цены AI / токены (₽ за 1M токенов, НДС вкл.)**\n\n| Провайдер | Позиция | ₽ / 1M | к best offer |\n|---|---|---:|---|\n${rows}\n\nСамый дешёвый в выборке: **${rowsData[0].provider}** — ${formatRub(best)}.`;
+        return `**Цены AI / токены (₽ за 1M токенов, НДС вкл.)**\n\n| Провайдер | Позиция | ₽ / 1M | к минимуму |\n|---|---|---:|---|\n${rows}\n\n${cheapestInCatalogLine({
+          provider: rowsData[0].provider,
+          priceText: formatRub(best),
+          derived: rowsData[0].synthetic,
+        })}`;
       }
 
       const rowsData = withPrice
@@ -1166,13 +1225,14 @@ export function formatFastPathAnswer(
           name: m.name,
           config: m.config,
           month: typeof m.month === 'number' ? m.month : (m.hour as number) * 720,
+          synthetic: m.synthetic,
         }))
         .sort((a, b) => a.month - b.month);
       const best = rowsData[0].month;
       const rows = rowsData
         .map(
           (r) =>
-            `| ${r.provider} | ${r.name} | ${r.config} | ${formatRub(r.month)} | ${pctVsBest(r.month, best)} |`,
+            `| ${r.provider} | ${r.name}${r.synthetic ? ' *' : ''} | ${r.config} | ${formatRub(r.month)} | ${pctVsBest(r.month, best)} |`,
         )
         .join('\n');
       const heading = planId.includes('h100')
@@ -1202,6 +1262,7 @@ export function formatFastPathAnswer(
             name: m.name,
             hour: m.hour as number,
             month: typeof m.month === 'number' ? m.month : (m.hour as number) * 720,
+            synthetic: m.synthetic,
           }))
           .sort((a, b) => a.hour - b.hour);
         if (!hourRows.length) return null;
@@ -1212,9 +1273,17 @@ export function formatFastPathAnswer(
               `| ${r.provider} | ${r.name} | ${formatRub(r.hour)} | ${formatRub(r.month)} | ${pctVsBest(r.hour, bestH)} |`,
           )
           .join('\n');
-        return `**${heading}** (НДС вкл., месяц = 720 ч)\n\n| Провайдер | Позиция | ₽/час | ₽/мес | к best offer |\n|---|---|---:|---:|---|\n${rowsH}\n\nСамый дешёвый: **${hourRows[0].provider}** — ${formatRub(bestH)}/час.`;
+        return `**${heading}** (НДС вкл., месяц = 720 ч)\n\n| Провайдер | Позиция | ₽/час | ₽/мес | к минимуму |\n|---|---|---:|---:|---|\n${rowsH}\n\n${cheapestInCatalogLine({
+          provider: hourRows[0].provider,
+          priceText: `${formatRub(bestH)}/час`,
+          derived: Boolean(hourRows[0].synthetic),
+        })}`;
       }
-      return `**${heading}** (НДС вкл., месяц = 720 ч)\n\n| Провайдер | Позиция | Конфигурация | ₽/мес | к best offer |\n|---|---|---|---:|---|\n${rows}\n\nСамый дешёвый: **${rowsData[0].provider}** — ${formatRub(best)}/мес.`;
+      return `**${heading}** (НДС вкл., месяц = 720 ч)\n\n| Провайдер | Позиция | Конфигурация | ₽/мес | к минимуму |\n|---|---|---|---:|---|\n${rows}\n\n${cheapestInCatalogLine({
+        provider: rowsData[0].provider,
+        priceText: `${formatRub(best)}/мес`,
+        derived: Boolean(rowsData[0].synthetic),
+      })}`;
     }
   }
 

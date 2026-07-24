@@ -146,7 +146,8 @@ describe('matchFastPath', () => {
     ]);
     assert.ok(md);
     assert.match(md, /Cloud\.ru/);
-    assert.match(md, /best/);
+    assert.match(md, /\bmin\b/);
+    assert.match(md, /каталоге Cloud FinOps/);
     assert.match(md, /\+20%/);
   });
 
@@ -342,7 +343,7 @@ describe('matchFastPath', () => {
     assert.match(md, /50[\s\u00a0]?000/);
     assert.match(md, /Selectel/);
     assert.match(md, /Утилизация/);
-    assert.match(md, /best/);
+    assert.match(md, /\bmin\b/);
   });
 
   it('short-circuits agent fit_budget / get_quote without alias match', () => {

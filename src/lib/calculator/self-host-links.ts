@@ -81,7 +81,9 @@ export function selfHostChatPrompt(args: {
     parts.push(`Макс. контекст: ${args.maxContextTokens} токенов.`);
   }
   if (args.providerName && args.monthlyRub != null) {
-    parts.push(`Лучшая цена: ${args.providerName}, ~${Math.round(args.monthlyRub)} ₽/мес.`);
+    parts.push(
+      `Минимальная цена в каталоге Cloud FinOps: ${args.providerName}, ~${Math.round(args.monthlyRub)} ₽/мес.`,
+    );
   }
   parts.push('Сравни альтернативы и запас VRAM, укажи риски OOM и допущения расчёта.');
   return parts.join(' ');
@@ -108,7 +110,9 @@ export function vmChatPrompt(args: {
   ];
   parts.push(`Период: ${args.period}.`);
   if (args.providerName && args.totalRub != null) {
-    parts.push(`Сейчас лучший: ${args.providerName} ≈ ${Math.round(args.totalRub)} ₽.`);
+    parts.push(
+      `Минимум в каталоге Cloud FinOps: ${args.providerName} ≈ ${Math.round(args.totalRub)} ₽.`,
+    );
   }
   parts.push('Поясни разницу с альтернативами и из чего складывается цена.');
   return parts.join(' ');

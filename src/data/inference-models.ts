@@ -1058,7 +1058,7 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
     parameterCountB: 109,
     activeParameterCountB: 17,
     parameterCountNote:
-      '17B active × 16 experts (109B total). Все эксперты в VRAM; Meta: INT4 on-the-fly на 1×H100. Контекст до 10M.',
+      '17B active × 16 experts (109B total). Все эксперты в VRAM; INT4 on-the-fly на 1×H100 (рецепт из model card). Контекст до 10M.',
     weights: [
       {dtype: 'int4', weightsVramGiB: 62},
       {dtype: 'fp8', weightsVramGiB: 110},
@@ -1100,7 +1100,7 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
     hostedCatalogKeys: ['Llama 4', 'llama-4-scout', 'llama4', 'llama'],
     sources: [
       'https://github.com/meta-llama/llama-models/blob/main/models/llama4/MODEL_CARD.md',
-      'Meta Llama 4 Scout (17B×16E, 109B total, 10M context)',
+      'Llama 4 Scout (17B×16E, 109B total, 10M context)',
     ],
     checkedAt: '2026-07-20',
     caveats: [
@@ -1121,7 +1121,7 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
     parameterCountB: 400,
     activeParameterCountB: 17,
     parameterCountNote:
-      '17B active × 128 experts (400B total). Meta: FP8 на одном HGX H100 host (8×); INT4 ~200+ GiB.',
+      '17B active × 128 experts (400B total). FP8 на одном HGX H100 host (8×; рецепт из model card); INT4 ~200+ GiB.',
     weights: [
       {dtype: 'int4', weightsVramGiB: 220},
       {dtype: 'fp8', weightsVramGiB: 420},
@@ -1151,7 +1151,7 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
         quant: 'fp8',
         interconnect: 'NVLink',
         estimatedVramGiB: 640,
-        notes: 'Meta FP8 recipe: цельный 8×H100 host.',
+        notes: 'FP8 recipe из model card: цельный 8×H100 host.',
       },
       {
         gpuFamily: 'H200',
@@ -1164,7 +1164,7 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
     hostedCatalogKeys: ['Llama 4', 'llama-4-maverick', 'llama4', 'llama'],
     sources: [
       'https://github.com/meta-llama/llama-models/blob/main/models/llama4/MODEL_CARD.md',
-      'Meta Llama 4 Maverick (17B×128E, 400B total)',
+      'Llama 4 Maverick (17B×128E, 400B total)',
     ],
     checkedAt: '2026-07-20',
     caveats: [
@@ -1222,7 +1222,7 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
       },
     ],
     hostedCatalogKeys: ['Llama', 'llama-3.3', 'llama'],
-    sources: ['Meta Llama 3.3 model card'],
+    sources: ['Llama 3.3 model card'],
     checkedAt: '2026-07-20',
     caveats: ['Llama 3.1 70B и 3.3 70B по VRAM близки — один профиль.'],
     confidence: 'high',

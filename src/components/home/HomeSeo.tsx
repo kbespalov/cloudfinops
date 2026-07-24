@@ -14,12 +14,12 @@ const TOOLS: {title: string; href: string; text: string}[] = [
   {
     title: 'Сравнение цен облаков России',
     href: '/chat',
-    text: 'Задайте конфигурацию своими словами — ИИ-ассистент FinOps сравнит публичные тарифы шести облаков РФ и покажет самый дешёвый вариант в рублях с НДС.',
+    text: 'Задайте конфигурацию своими словами — ИИ-ассистент FinOps сравнит публичные тарифы шести облаков РФ и покажет минимальную цену в каталоге в рублях с НДС.',
   },
   {
     title: 'Калькулятор цен ВМ и GPU',
     href: '/calculator/vm',
-    text: 'Готовые пресеты ВМ и GPU (L4, A100, H100, H200, B300): расчёт стоимости по публичным SKU, Best offer без промо-тарифов и без ручного конструктора.',
+    text: 'Готовые пресеты ВМ и GPU (L4, A100, H100, H200, B300): расчёт стоимости по публичным SKU, минимальная цена в каталоге без промо-тарифов и без ручного конструктора.',
   },
   {
     title: 'Каталог SKU',
@@ -34,7 +34,7 @@ const TOOLS: {title: string; href: string; text: string}[] = [
   {
     title: 'Калькулятор Lakehouse / Data Platform',
     href: '/calculator/lakehouse',
-    text: 'Оценка DIY open lakehouse: Object Storage + Managed Kubernetes + worker ВМ под Iceberg, Spark, Trino и Airflow. Пресеты Small/Medium/Large и Best offer по облакам РФ.',
+    text: 'Оценка DIY open lakehouse: Object Storage + Managed Kubernetes + worker ВМ под Iceberg, Spark, Trino и Airflow. Пресеты Small/Medium/Large и минимальная цена в каталоге по облакам РФ.',
   },
   {
     title: 'Расчёт GPU в чате FinOps',
@@ -52,17 +52,17 @@ const FAQ: {question: string; answer: string}[] = [
   {
     question: 'Как сравнить цены облаков России?',
     answer:
-      'Опишите конфигурацию на главной или в чате (например «8 vCPU / 32 GiB / 100 ГБ SSD») — ассистент приведёт варианты к паритету и сравнит стоимость. Либо откройте /calculator/vm: пресет compute или GPU и Best offer по провайдерам.',
+      'Опишите конфигурацию на главной или в чате (например «8 vCPU / 32 GiB / 100 ГБ SSD») — ассистент приведёт варианты к паритету и сравнит стоимость. Либо откройте /calculator/vm: пресет compute или GPU и минимальную цену в каталоге по провайдерам.',
   },
   {
     question: 'Чем калькулятор цен отличается от каталога?',
     answer:
-      'Каталог показывает отдельные строки прайса. Калькулятор ВМ (/calculator/vm) собирает полную конфигурацию у каждого провайдера и выбирает Best offer. Для self-host LLM — /calculator/self-host. Для Lakehouse / Data Platform (Iceberg, Spark, Trino на S3 + Kubernetes) — /calculator/lakehouse.',
+      'Каталог показывает отдельные строки прайса. Калькулятор ВМ (/calculator/vm) собирает полную конфигурацию у каждого провайдера и показывает минимальную цену в каталоге. Для self-host LLM — /calculator/self-host. Для Lakehouse / Data Platform (Iceberg, Spark, Trino на S3 + Kubernetes) — /calculator/lakehouse.',
   },
   {
     question: 'Есть ли калькулятор Lakehouse или платформы данных?',
     answer:
-      'Да. Откройте /calculator/lakehouse: пресеты Small/Medium/Large, Object Storage, Managed Kubernetes, duty-cycle ETL/Spark и Query/Trino. Сравнение публичных тарифов облаков России и Best offer без выдуманных PaaS-цен.',
+      'Да. Откройте /calculator/lakehouse: пресеты Small/Medium/Large, Object Storage, Managed Kubernetes, duty-cycle ETL/Spark и Query/Trino. Сравнение публичных тарифов облаков России и минимальная цена в каталоге — без выдуманных PaaS-цен.',
   },
   {
     question: 'Как считается стоимость облака?',

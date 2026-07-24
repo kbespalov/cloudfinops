@@ -17,7 +17,8 @@ const BRAND_COLOR: Partial<Record<ModelFamily, string>> = {
   deepseek: '#4D6BFE',
   glm: '#1A6CFF',
   kimi: '#1783FF',
-  llama: '#0668E1',
+  /** Neutral indigo — not Meta brand blue. */
+  llama: '#4B5563',
   gemma: '#1A73E8',
   mixtral: '#FF7000',
   mistral: '#FF7000',
@@ -181,14 +182,15 @@ function LetterFallback({
   );
 }
 
-function iconForFamily(family: ModelFamily): 'qwen' | 'deepseek' | 'meta' | 'google' | 'mistral' | 'openai' | null {
+function iconForFamily(family: ModelFamily): 'qwen' | 'deepseek' | 'google' | 'mistral' | 'openai' | null {
   switch (family) {
     case 'qwen':
       return 'qwen';
     case 'deepseek':
       return 'deepseek';
+    // Llama: letter fallback only — never render the Meta corporate glyph (ст. 20.3 КоАП).
     case 'llama':
-      return 'meta';
+      return null;
     case 'gemma':
       return 'google';
     case 'mistral':

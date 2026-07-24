@@ -55,23 +55,6 @@ spec:
     - compute.ram
     - compute.vcpu
     - storage.block.capacity
-  - id: t1.portal-rates
-    title: Тарифы услуг в портале
-    url: https://t1-cloud.ru/docs/article/portal-t1-oblako/billing/tarifi-uslug
-    type: authenticated-portal
-    access: login
-    priority: 3
-    covers:
-    - compute.gpu
-    - compute.ram
-    - compute.vcpu
-    - containers.kubernetes.control-plane
-    - network.ipv4.attached
-    - network.ipv4.reserved
-    - storage.block.capacity
-    - storage.image.capacity
-    - storage.snapshot.capacity
-    - storage.object.capacity
   - id: t1.s3
     title: Объектное хранилище S3
     url: https://t1-cloud.ru/service/s3

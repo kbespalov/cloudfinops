@@ -55,7 +55,8 @@ const LAB_TITLE: Record<ModelFamily, string> = {
   glm: 'GLM',
   kimi: 'Kimi',
   deepseek: 'DeepSeek',
-  llama: 'Meta',
+  /** Product family name only — do not surface the Meta corporate mark in RU UI. */
+  llama: 'Llama',
   gemma: 'Google',
   mixtral: 'Mistral',
   mistral: 'Mistral',
@@ -71,7 +72,7 @@ const LAB_LETTERS: Record<ModelFamily, string> = {
   glm: 'GL',
   kimi: 'Ki',
   deepseek: 'DS',
-  llama: 'Me',
+  llama: 'Ll',
   gemma: 'Go',
   mixtral: 'Mi',
   mistral: 'Mi',

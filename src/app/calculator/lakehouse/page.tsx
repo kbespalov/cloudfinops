@@ -121,7 +121,7 @@ export const metadata: Metadata = {
     siteName: 'Cloud FinOps',
     title: 'Калькулятор Lakehouse и Data Platform · Iceberg + Spark + Trino',
     description:
-      'Оцените DIY open lakehouse в облаках РФ: Object Storage, Managed Kubernetes, Iceberg, Spark, Trino и Airflow. Best offer по публичным тарифам.',
+      'Оцените DIY open lakehouse в облаках РФ: Object Storage, Managed Kubernetes, Iceberg, Spark, Trino и Airflow. Минимальная цена в каталоге по публичным тарифам.',
   },
   twitter: {
     card: 'summary_large_image',

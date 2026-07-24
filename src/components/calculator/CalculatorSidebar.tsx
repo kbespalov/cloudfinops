@@ -13,16 +13,16 @@ import {
   type ViewProviderQuote,
 } from '@/lib/calculator/quote-view';
 import {formatNodeCount} from '@/lib/calculator/vram-breakdown';
+import {catalogCompareScopeHint} from '@/lib/catalog/compare-disclaimer';
 import styles from './CalculatorSidebar.module.css';
 
 const VISIBLE_PROVIDERS = 4;
 const MOBILE_MQ = '(max-width: 720px)';
 
 const DEFAULT_BEST_BADGE = 'Минимальная цена в каталоге';
-const DEFAULT_BEST_HINT =
-  'Для выбранной конфигурации среди предложений, доступных в каталоге. Расчёт выполнен по публичным тарифам без учёта индивидуальных скидок и промоакций.';
+const DEFAULT_BEST_HINT = catalogCompareScopeHint();
 const ALT_DELTA_HINT =
-  'Разница относительно минимальной расчётной цены для выбранной конфигурации.';
+  'Разница относительно минимальной расчётной цены для выбранной конфигурации в каталоге Cloud FinOps.';
 
 export type DeploymentSummary = {
   nodeCount: number;

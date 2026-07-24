@@ -13,6 +13,7 @@ import {
 } from './search';
 import {quotePreset, listGpuPresets} from '@/lib/calculator/quote';
 import {compareUnitPrice, type DiskMediaFilter, type UnitComponent} from './analytics';
+import {catalogAsOfIso} from '@/lib/catalog/compare-disclaimer';
 import {fitBudget, type FitBudgetProfile} from './fit-budget';
 import {recommendInferenceInfra} from './inference-recommend';
 import type {ComputePreset, GpuPreset, CalculatorPreset} from '@/lib/calculator/presets';
@@ -364,9 +365,10 @@ async function runSearch(args: Record<string, unknown>): Promise<unknown> {
     totalMatches,
     currency: 'RUB',
     vatIncluded: true,
+    catalogAsOf: catalogAsOfIso(),
     applied,
     note:
-      'НДС вкл., месяц=720ч. Цены только из providersMatched. S3: capacity одного storageClass. K8s master: basic/HA; synthetic VK/Yandex=2vCPU/4GiB.',
+      'НДС вкл., месяц=720ч. Цены только из providersMatched. Минимум формулируй как «в каталоге Cloud FinOps на catalogAsOf» среди публичных тарифов в выборке. S3: capacity одного storageClass. K8s master: basic/HA; synthetic=true → оценка Cloud FinOps, не строка прайса.',
     // Точный список провайдеров, у которых реально есть совпадение, с их СОБСТВЕННОЙ минимальной ценой.
     providersMatched: providers.map((p) => ({
       provider: p.providerName,
@@ -531,13 +533,18 @@ function runQuote(args: Record<string, unknown>): unknown {
     ...(parityHost ? {assumedHost: parityHost, comparison: 'configuration-parity'} : {}),
     currency: 'RUB',
     vatIncluded: true,
+    catalogAsOf: catalogAsOfIso(),
     periodNote: period === 'month' ? 'месяц = 720 ч' : period === 'year' ? 'год = 8640 ч' : 'цена за час',
     providerCount,
     note:
-      'Каждая строка quotes — реальная цена конкретного провайдера. Показывай только этих провайдеров, не добавляй отсутствующих и не копируй цену между провайдерами. Учитывай scope.' +
+      'Каждая строка quotes — цена конкретного провайдера из каталога. Минимум формулируй как «в каталоге Cloud FinOps на catalogAsOf» среди публичных тарифов в выборке. scope=gpu-synthetic → составная цена из публичных unit-ставок (помечай как оценку сборки). Не добавляй отсутствующих провайдеров и не копируй цену между ними.' +
       gpuNote,
     best: result.best
-      ? {provider: result.best.providerName, total: round(result.best.total)}
+      ? {
+          provider: result.best.providerName,
+          total: round(result.best.total),
+          scope: result.best.scope,
+        }
       : null,
     quotes,
     ...(quotes.length === 0
