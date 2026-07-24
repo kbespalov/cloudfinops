@@ -73,6 +73,14 @@ spec:
     documentVersion: '260619'
     covers:
     - containers.kubernetes.control-plane
+  - id: cloudru.k8s-docs
+    title: Создать кластер Managed Kubernetes (1 / 3 / 5 мастер-узлов)
+    url: https://cloud.ru/docs/kubernetes-evolution/ug/topics/guides__cluster__create
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - containers.kubernetes.control-plane
   - id: cloudru.k8s-gpu-pdf
     title: Тарифы Evolution Managed Kubernetes GPU
     url: https://cdn.cloud.ru/docs/legal/tariffs/evolution/current-version/managed-kubernetes-gpu.pdf

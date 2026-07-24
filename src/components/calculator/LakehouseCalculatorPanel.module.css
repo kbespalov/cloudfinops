@@ -1,0 +1,208 @@
+.configCard {
+  min-width: 0;
+  padding: 0;
+}
+
+.configInner {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0;
+  min-width: 0;
+}
+
+.presetGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.presetCard {
+  appearance: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  min-height: 108px;
+  padding: 14px 14px 12px;
+  border: 1px solid var(--g-color-line-generic);
+  border-radius: var(--g-border-radius-l);
+  background: var(--g-color-base-background);
+  color: var(--g-color-text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.presetCard:hover {
+  background: var(--g-color-base-generic);
+}
+
+.presetCard:focus-visible {
+  outline: 2px solid var(--g-color-line-focus);
+  outline-offset: 2px;
+}
+
+.presetCard[data-active='true'] {
+  background: color-mix(in srgb, var(--g-color-base-brand) 12%, var(--g-color-base-background));
+  border-color: var(--g-color-line-brand);
+}
+
+.presetTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.groupTitle {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.stackHint {
+  margin: 0;
+}
+
+.splitBar {
+  display: flex;
+  width: 100%;
+  height: 12px;
+  border-radius: var(--g-border-radius-m);
+  overflow: hidden;
+  background: var(--g-color-base-generic);
+  gap: 1px;
+}
+
+.splitHot {
+  height: 100%;
+  background: var(--g-color-base-positive-heavy, #30aa6e);
+}
+
+.splitCold {
+  height: 100%;
+  background: var(--g-color-base-misc-heavy, #647a8d);
+}
+
+.splitLegend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+.splitLegendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.splitSwatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.splitSwatch[data-kind='hot'] {
+  background: var(--g-color-base-positive-heavy, #30aa6e);
+}
+
+.splitSwatch[data-kind='cold'] {
+  background: var(--g-color-base-misc-heavy, #647a8d);
+}
+
+.footprintGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.footprintChip {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--g-color-line-generic);
+  border-radius: var(--g-border-radius-m);
+  background: var(--g-color-base-generic);
+  min-width: 0;
+}
+
+.footprintHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--g-color-text-secondary);
+}
+
+.footprintValue {
+  font-size: 18px;
+  line-height: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.insight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--g-color-line-generic);
+  border-left: 3px solid var(--g-color-line-brand);
+  border-radius: var(--g-border-radius-m);
+  background: var(--g-color-base-generic);
+}
+
+.tierRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+@media (max-width: 720px) {
+  .presetGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .presetCard {
+    min-height: 44px;
+    padding: 12px;
+  }
+
+  .footprintGrid {
+    /* Keep 3 metrics in one row — avoids orphan third chip. */
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .footprintChip {
+    padding: 8px 8px;
+  }
+
+  .footprintValue {
+    font-size: 16px;
+    line-height: 20px;
+  }
+
+  .insight {
+    padding: 10px 12px;
+  }
+
+  .configInner {
+    gap: 16px;
+  }
+}

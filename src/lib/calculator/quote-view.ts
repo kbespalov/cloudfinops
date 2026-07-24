@@ -2,7 +2,18 @@
 
 export type PeriodMode = 'unit' | 'month' | 'year';
 
-export type CostPartId = 'vcpu' | 'ram' | 'disk' | 'gpu' | 'bundle' | 'ip';
+export type CostPartId =
+  | 'vcpu'
+  | 'ram'
+  | 'disk'
+  | 'gpu'
+  | 'bundle'
+  | 'ip'
+  | 'storage'
+  | 'k8s'
+  | 'platform'
+  | 'etl'
+  | 'query';
 
 export type QuoteScope = 'compute' | 'gpu-only' | 'bundle' | 'gpu-synthetic';
 
@@ -183,11 +194,12 @@ export function formatQuoteAmount(amount: number, period: PeriodMode): string {
 
 /** Cool steps for cost bars — brand accent stays for selection, not data. */
 export function partTone(id: CostPartId): string {
-  if (id === 'gpu' || id === 'bundle') return 'info';
-  if (id === 'vcpu') return 'utility';
-  if (id === 'ram') return 'warning';
-  /** Disk uses positive (not success*) — success-* tokens are absent in Gravity themes. */
-  if (id === 'disk') return 'positive';
+  if (id === 'gpu' || id === 'bundle' || id === 'platform') return 'info';
+  if (id === 'vcpu' || id === 'etl') return 'utility';
+  if (id === 'ram' || id === 'query') return 'warning';
+  /** Disk / object storage use positive (not success*) — success-* tokens absent in Gravity themes. */
+  if (id === 'disk' || id === 'storage') return 'positive';
+  if (id === 'k8s') return 'info';
   return 'unknown';
 }
 

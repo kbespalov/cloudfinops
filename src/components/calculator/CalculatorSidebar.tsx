@@ -356,6 +356,11 @@ export function CalculatorSidebar({
               );
             })}
           </ul>
+          {selected.note ? (
+            <Text variant="caption-2" color="secondary" className={styles.quoteNote}>
+              {selected.note}
+            </Text>
+          ) : null}
         </div>
 
         <div className={styles.divider} />

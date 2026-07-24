@@ -46,5 +46,62 @@ spec:
         formula: native hourly master rate
         vat: included
     notes: >
-      Опубликованный тариф зонального мастера 2 vCPU / 4 ГиБ.
-      Worker-ноды оплачиваются отдельно.
+      Готовый тариф Cloud.ru на один мастер-узел Kubernetes: 2 vCPU и 4 ГиБ
+      памяти в одной зоне доступности. Рабочие (worker) ноды в эту цену не входят.
+  # Synthetic HA for apples-to-apples compare with Yandex/VK/Selectel/MWS HA.
+  # Native tariff lists only «Зональный Мастер» configs; HA is N masters × that rate.
+  # Docs: https://cloud.ru/docs/kubernetes-evolution/ug/topics/guides__cluster__create
+  # (1 / 3 / 5 master nodes). We use 3× to match peer HA comparables.
+  - sku: cloudru.kubernetes.master-ha-2-4.synthetic
+    name: Отказоустойчивый мастер 3×(2 vCPU / 4 ГиБ) *
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-24'
+    sourceRefs:
+    - cloudru.k8s-pdf
+    - cloudru.k8s-docs
+    priceProvenance: derived
+    dimensions:
+      vcpu: 2
+      ramGb: 4
+      ramGiB: 4
+      availability: regional
+      faultTolerant: true
+      topology: regional
+      masterCount: 3
+      comparabilityClass: synthetic-bundle
+      comparableTier: ha
+      synthetic: true
+      syntheticFrom:
+      - cloudru.kubernetes.master-zonal-2-4
+      vatRatePercent: 22
+      verificationStatus: derived-verified
+      verificationMethod: 3x-native-zonal-master-bundle
+      verifiedAt: '2026-07-24'
+    pricing:
+      rate:
+        amount: '25.803'
+        currency: RUB
+        unit:
+          quantity: master
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '25.803'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: 3 × 8.601 (zonal master 2 vCPU / 4 GiB, VAT included)
+        vat: included
+    notes: >
+      * Оценка для сравнения, не отдельная строка прайса. У Cloud.ru
+      отказоустойчивый Kubernetes — это несколько обычных мастер-узлов
+      (обычно три, можно пять): в публичном тарифе продаётся цена за один
+      зональный мастер, а не готовый пакет «HA». Чтобы сравнить с HA других
+      облаков, считаем три мастера по 2 vCPU / 4 ГиБ: 3 × 8,601 ₽/ч =
+      25,803 ₽/ч (с НДС). Рабочие ноды в эту сумму не входят.

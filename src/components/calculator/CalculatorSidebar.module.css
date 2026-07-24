@@ -267,6 +267,11 @@
   color: var(--g-color-text-primary);
 }
 
+.quoteNote {
+  margin: 8px 0 0;
+  line-height: 16px;
+}
+
 .providerList {
   display: flex;
   flex-direction: column;

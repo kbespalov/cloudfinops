@@ -33,22 +33,33 @@ const InferenceCalculatorPanel = dynamic(
     ),
   {ssr: true},
 );
+const LakehouseCalculatorPanel = dynamic(
+  () =>
+    import('@/components/calculator/LakehouseCalculatorPanel').then(
+      (m) => m.LakehouseCalculatorPanel,
+    ),
+  {ssr: true},
+);
 
-export type CalculatorMode = 'vm' | 'inference';
+export type CalculatorMode = 'vm' | 'inference' | 'lakehouse';
 
 const MODE_HREF: Record<CalculatorMode, string> = {
   vm: '/calculator/vm',
   inference: '/calculator/self-host',
+  lakehouse: '/calculator/lakehouse',
 };
 
 const MODE_TITLE: Record<CalculatorMode, string> = {
   vm: 'Калькулятор цены облака',
   inference: 'Калькулятор облачных нагрузок',
+  lakehouse: 'Калькулятор Lakehouse',
 };
 
 const MODE_LEAD: Record<CalculatorMode, string> = {
   vm: 'Сравните стоимость ВМ и GPU в облаках России по публичным тарифам',
   inference: 'Подбор GPU-конфигурации для open-weight моделей в облаках РФ',
+  lakehouse:
+    'DIY data platform: Object Storage + Managed Kubernetes + worker ВМ под Iceberg / Airflow / Spark / Trino',
 };
 
 export function CalculatorPage({
@@ -70,7 +81,7 @@ export function CalculatorPage({
   const subtitle = lead ?? MODE_LEAD[mode];
   /** Hide default leads visually; keep in DOM for SEO. Provider `lead` stays visible. */
   const leadClassName =
-    !lead && (mode === 'vm' || mode === 'inference')
+    !lead && (mode === 'vm' || mode === 'inference' || mode === 'lakehouse')
       ? `${styles.heroLead} ${styles.heroLeadSeo}`
       : styles.heroLead;
 
@@ -130,6 +141,7 @@ export function CalculatorPage({
             <TabList size="l" className={styles.tabs}>
               <Tab value="vm">Виртуальные машины</Tab>
               <Tab value="inference">Хостинг LLM</Tab>
+              <Tab value="lakehouse">Lakehouse и платформа данных</Tab>
             </TabList>
           </TabProvider>
         </header>
@@ -137,8 +149,10 @@ export function CalculatorPage({
         <div className={styles.workspace} data-tab={mode}>
           {mode === 'vm' ? (
             <VmCalculatorPanel period={period} gpuPresets={gpuPresets} />
-          ) : (
+          ) : mode === 'inference' ? (
             <InferenceCalculatorPanel period={period} />
+          ) : (
+            <LakehouseCalculatorPanel period={period} />
           )}
         </div>
 
@@ -146,17 +160,25 @@ export function CalculatorPage({
           <Flex justifyContent="center" gap={3} wrap>
             <Button
               component={Link}
-              href={mode === 'vm' ? '/calculator/self-host' : '/calculator/vm'}
+              href={
+                mode === 'lakehouse'
+                  ? '/calculator/vm'
+                  : mode === 'vm'
+                    ? '/calculator/lakehouse'
+                    : '/calculator/vm'
+              }
               view="flat-secondary"
               size="m"
               prefetch
             >
-              {mode === 'vm' ? 'Калькулятор Хостинг LLM' : 'Калькулятор ВМ и GPU'}
+              {mode === 'lakehouse' ? 'Калькулятор ВМ и GPU' : 'Калькулятор Lakehouse'}
               <Icon data={ChevronRight} size={16} />
             </Button>
             <Button
               component={Link}
-              href={mode === 'vm' ? '/catalog?category=compute' : '/catalog?category=gpu'}
+              href={
+                mode === 'inference' ? '/catalog?category=gpu' : '/catalog?category=storage'
+              }
               view="flat-secondary"
               size="m"
               prefetch

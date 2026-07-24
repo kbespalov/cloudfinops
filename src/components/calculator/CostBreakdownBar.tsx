@@ -1,6 +1,15 @@
 'use client';
 
-import {Cpu, Gpu, HardDrive, Layers3Diagonal, PlanetEarth, Server} from '@gravity-ui/icons';
+import {
+  Cpu,
+  Database,
+  Gpu,
+  HardDrive,
+  Layers3Diagonal,
+  PlanetEarth,
+  Server,
+  Thunderbolt,
+} from '@gravity-ui/icons';
 import {Flex, Icon, Text, Tooltip} from '@gravity-ui/uikit';
 import {
   formatQuoteAmount,
@@ -18,6 +27,11 @@ function partCategory(id: CostPartId | string, label?: string): string {
   if (id === 'ram') return 'RAM';
   if (id === 'disk') return 'Диск';
   if (id === 'ip') return 'Публичный IP';
+  if (id === 'storage') return 'Object Storage';
+  if (id === 'k8s') return 'Kubernetes';
+  if (id === 'platform') return 'Platform';
+  if (id === 'etl') return 'ETL';
+  if (id === 'query') return 'Query';
   return 'Прочее';
 }
 
@@ -26,13 +40,20 @@ function partIcon(id: CostPartId | string) {
     case 'gpu':
       return Gpu;
     case 'bundle':
+    case 'platform':
       return Server;
     case 'vcpu':
+    case 'etl':
       return Cpu;
     case 'ram':
+    case 'query':
       return Layers3Diagonal;
     case 'disk':
       return HardDrive;
+    case 'storage':
+      return Database;
+    case 'k8s':
+      return Thunderbolt;
     case 'ip':
       return PlanetEarth;
     default:
