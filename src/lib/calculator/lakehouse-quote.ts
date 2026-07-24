@@ -93,30 +93,10 @@ export function pickK8sMasterMeter(
   };
 }
 
-function k8sMasterLabel(tier: 'basic' | 'ha', synthetic: boolean): string {
-  const base =
-    tier === 'ha' ? 'Managed Kubernetes · HA master' : 'Managed Kubernetes · basic master';
-  return synthetic ? `${base} *` : base;
-}
-
-function k8sSyntheticNote(meter: CatalogMeter, tier: 'basic' | 'ha'): string {
-  const masters = Number(meter.dimensions.masterCount);
-  const vcpu = Number(meter.dimensions.vcpu);
-  const ram = Number(meter.dimensions.ramGiB ?? meter.dimensions.ramGb);
-  const shape =
-    Number.isFinite(vcpu) && Number.isFinite(ram)
-      ? tier === 'ha' && Number.isFinite(masters) && masters > 1
-        ? `${masters}×(${vcpu} vCPU / ${ram} GiB)`
-        : `${vcpu} vCPU / ${ram} GiB`
-      : tier === 'ha'
-        ? 'несколько мастер-узлов'
-        : 'типовой мастер';
-  // Short UI disclosure; full explanation lives in catalog SKU notes («Пояснение»).
-  if (tier === 'ha') {
-    return `* Оценка: в прайсе нет готовой строки «HA-мастер» — считаем как ${shape}. Подробности — в карточке SKU.`;
-  }
-  return `* Оценка: мастер собран из ставок vCPU/RAM как ${shape}, чтобы сравнивать облака. Подробности — в карточке SKU.`;
-}
+function k8sMasterLabel(tier: 'basic' | 'ha'): string {
+  return tier === 'ha'
+    ? 'Managed Kubernetes · высокодоступный'
+    : 'Managed Kubernetes · однозоновый';}
 
 function poolLabel(kind: 'platform' | 'etl' | 'query', pool: LakehouseNodePool): string {
   const hours = clampHours(pool.hoursPerDay);
@@ -214,10 +194,9 @@ export function quoteLakehouse(
     if (k8sAmount == null) continue;
     parts.push({
       id: 'k8s',
-      label: k8sMasterLabel(k8s.effectiveTier, k8s.synthetic),
+      label: k8sMasterLabel(k8s.effectiveTier),
       amount: k8sAmount,
     });
-    if (k8s.synthetic) notes.push(k8sSyntheticNote(k8s.meter, k8s.effectiveTier));
 
     const platformTotal = quoteNodePoolTotal(provider.id, input.platform, period);
     const etlTotal = quoteNodePoolTotal(provider.id, input.etl, period);

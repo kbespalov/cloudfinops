@@ -72,20 +72,18 @@ describe('quoteLakehouse', () => {
     assert.ok(haProviders.has('cloud-ru'));
     assert.ok(!haProviders.has('t1-cloud'));
     assert.ok(basicProviders.has('cloud-ru'));
-    // Every HA quote must carry an HA master line, never basic.
+    // Every HA quote must carry a high-availability master line, never zonal.
     for (const q of ha.quotes) {
       const k8s = q.parts.find((p) => p.id === 'k8s');
-      assert.ok(k8s && /HA master/.test(k8s.label), q.provider);
+      assert.ok(k8s && /высокодоступный/.test(k8s.label), q.provider);
+      assert.ok(!/\*/.test(k8s.label), q.provider);
     }
-    // Cloud.ru HA is synthetic — must be disclosed in label and note.
+    // Synthetic HA math stays in catalog; quote UI does not surface provenance notes.
     const cloudRu = ha.quotes.find((q) => q.provider === 'cloud-ru');
     assert.ok(cloudRu);
-    assert.match(cloudRu.parts.find((p) => p.id === 'k8s')!.label, /\*/);
-    assert.match(cloudRu.note || '', /\*\s*Оценка|считаем как|карточке SKU/i);
-    // Native HA (Selectel/MWS) must not carry a synthetic disclosure.
+    assert.equal(cloudRu.note, null);
     const selectel = ha.quotes.find((q) => q.provider === 'selectel');
     assert.ok(selectel);
-    assert.equal(selectel.parts.find((p) => p.id === 'k8s')!.label.includes('*'), false);
     assert.equal(selectel.note, null);
   });
 

@@ -62,7 +62,6 @@ export const LAKEHOUSE_SYSTEM_ADDENDUM = `
 - Сравнивай провайдеров только на сопоставимых моделях; иначе явно скажи, почему сравнение неполное.
 - Цены DIY open lakehouse (S3 + Managed K8s master + worker ВМ: platform/Airflow+catalog, ETL/Spark, Query/Trino с duty-cycle) бери ТОЛЬКО из get_lakehouse_quote. Не выдумывай тарифы managed Spark/Trino/ClickHouse, если их нет в каталоге — помечай как «не в каталоге / sales».
 - Не называй результат get_lakehouse_quote «ClickHouse», «ClickHouse-кластером» или managed warehouse. В заголовке используй формулировку из stackLabel/modelNote tool («DIY open lakehouse» / «open lakehouse на K8s»). ClickHouse/OLAP — только как альтернатива в п.8, без выдуманной цены.
-- Synthetic HA master (метка *) — оценка: в прайсе нет готовой строки HA, собрали из зональных мастеров; объясни пользователю простыми словами.
 - В конце ответа добавь ссылку на калькулятор из answerHint (если tool её вернул).
 
 Формат ответа:

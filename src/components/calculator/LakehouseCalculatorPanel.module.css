@@ -248,13 +248,6 @@
   min-width: 0;
 }
 
-.tierHint {
-  font-size: 12px;
-  line-height: 16px;
-  color: var(--g-color-text-complementary);
-  max-width: 36rem;
-}
-
 /* ——— Footprint + insight ——— */
 
 .footprintGrid {

@@ -129,9 +129,6 @@ export function LakehouseCalculatorPanel({period}: {period: PeriodMode}) {
   const totalGiB = lakeTiB * 1024;
   const hotGiB = Math.round((totalGiB * hotPercent) / 100);
   const coldGiB = totalGiB - hotGiB;
-  const configSummary = {
-    line: `${lakeTiB} TiB · hot ${hotPercent}% · K8s ${k8sTier === 'ha' ? 'HA' : 'basic'} · ETL ${etlHoursPerDay}ч · SQL ${queryHoursPerDay}ч`,
-  };
 
   const peak = sumPools([base.platform, base.etl, base.query]);
   const insight = dominantInsight(result?.best ?? null);
@@ -282,14 +279,13 @@ export function LakehouseCalculatorPanel({period}: {period: PeriodMode}) {
                     onUpdate={(v) => setK8sTier(v as 'basic' | 'ha')}
                     aria-label="Тип master Kubernetes"
                   >
-                    <SegmentedRadioGroup.Option value="basic">Basic</SegmentedRadioGroup.Option>
-                    <SegmentedRadioGroup.Option value="ha">HA</SegmentedRadioGroup.Option>
+                    <SegmentedRadioGroup.Option value="basic">
+                      Однозоновый
+                    </SegmentedRadioGroup.Option>
+                    <SegmentedRadioGroup.Option value="ha">
+                      Высокодоступный
+                    </SegmentedRadioGroup.Option>
                   </SegmentedRadioGroup>
-                  {k8sTier === 'ha' ? (
-                    <span className={styles.tierHint}>
-                      Без HA-мастера в прайсе провайдер не участвует в сравнении.
-                    </span>
-                  ) : null}
                 </div>
               </div>
               <SliderField
@@ -374,7 +370,6 @@ export function LakehouseCalculatorPanel({period}: {period: PeriodMode}) {
         result={result}
         loading={loading}
         emptyHint="Для выбранной конфигурации lakehouse предложения не собрались"
-        configSummary={configSummary}
         bestPriceHint="Самый дешёвый DIY lakehouse среди провайдеров с Object Storage и Managed Kubernetes в каталоге"
         bestPriceBadge="Лучшая цена"
         extras={
