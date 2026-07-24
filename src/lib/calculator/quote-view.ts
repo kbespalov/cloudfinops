@@ -181,7 +181,7 @@ export function formatQuoteAmount(amount: number, period: PeriodMode): string {
   }).format(amount);
 }
 
-/** Cool steps for cost bars — brand orange stays for selection, not data. */
+/** Cool steps for cost bars — brand accent stays for selection, not data. */
 export function partTone(id: CostPartId): string {
   if (id === 'gpu' || id === 'bundle') return 'info';
   if (id === 'vcpu') return 'utility';

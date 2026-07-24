@@ -28,13 +28,6 @@
   min-width: 0;
 }
 
-/* Purple CTA — stand out from yellow brand actions elsewhere. */
-.compareButton:global(.g-button_view_action) {
-  --g-color-base-brand: var(--g-color-base-utility-heavy);
-  --g-color-base-brand-hover: var(--g-color-base-utility-heavy-hover);
-  --g-color-text-brand-contrast: var(--g-color-text-light-primary);
-}
-
 .header {
   padding: 16px 20px 20px;
   display: flex;

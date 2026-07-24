@@ -2,6 +2,8 @@ import type {Metadata, Viewport} from 'next';
 import {Suspense} from 'react';
 import {Inter} from 'next/font/google';
 import '@gravity-ui/uikit/styles/styles.css';
+/** Nebius-like violet brand — after styles.css so private/semantic brand tokens win. */
+import '@/styles/brand-theme.css';
 import '@gravity-ui/aikit/styles';
 import './globals.css';
 import {AppProviders} from '@/components/AppProviders';

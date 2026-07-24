@@ -116,7 +116,6 @@
 .card[data-active='true'] {
   background: color-mix(in srgb, var(--g-color-base-brand) 5%, var(--g-color-base-background));
   border-color: var(--g-color-line-brand);
-  box-shadow: inset 2px 0 0 var(--g-color-line-brand);
 }
 
 .card:focus-visible {

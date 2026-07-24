@@ -48,30 +48,41 @@
   min-height: 72px;
 }
 
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
 .detailProvider {
   min-width: 0;
 }
 
-.deployment {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.providerName {
+  flex: 1 1 auto;
   min-width: 0;
 }
 
-.deploymentPrimary {
-  font-weight: 500;
+.bestBadge {
+  flex-shrink: 0;
 }
 
-.deploymentUnit {
+.configLine {
+  margin: 0;
   line-height: 20px;
 }
 
-.totalsLine {
-  margin-top: 4px; /* with gap 4px → ~8px under unit config */
-  padding-top: 0;
-  border-top: none;
-  line-height: 18px;
+.heroPrice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 8px;
+  min-width: 0;
+}
+
+.heroPeriod {
+  font-variant-numeric: tabular-nums;
 }
 
 .root[data-stale='true'] .card {
@@ -103,7 +114,15 @@
   }
 
   .bestPrice {
-    font-size: 28px;
+    font-size: 30px;
+  }
+
+  .summary {
+    gap: 8px;
+  }
+
+  .divider {
+    margin: 12px 0;
   }
 
   .summaryHead {
@@ -174,7 +193,7 @@
   .mobileBarMeta {
     display: flex;
     flex-direction: column;
-    gap: 1px;
+    gap: 0;
     min-width: 0;
     flex: 1 1 auto;
   }
@@ -183,10 +202,32 @@
     font-weight: 500;
   }
 
+  .mobileBarBest {
+    font-weight: 400;
+  }
+
   .mobileBarPrice {
-    flex-shrink: 0;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+
+  .mobileBarPeriod {
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .mobileBarCta {
+    flex-shrink: 0;
+    align-self: center;
+    padding: 7px 10px;
+    border-radius: var(--g-border-radius-m);
+    background: color-mix(in srgb, var(--g-color-base-brand) 12%, var(--g-color-base-background));
+    color: var(--g-color-text-brand);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+    white-space: nowrap;
   }
 }
 
@@ -224,15 +265,6 @@
   font-variant-numeric: tabular-nums;
   text-align: right;
   color: var(--g-color-text-primary);
-}
-
-.breakdownTotal {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 4px;
-  padding-top: 12px;
-  border-top: 1px solid var(--g-color-line-generic);
 }
 
 .providerList {

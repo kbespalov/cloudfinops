@@ -269,6 +269,13 @@
   border-radius: 16px;
 }
 
+/* Keep the hero CTA on classic Gravity yellow — rest of the app uses violet brand. */
+.searchSubmit:global(.g-button_view_action) {
+  --g-color-base-brand: var(--g-color-private-yellow-550-solid);
+  --g-color-base-brand-hover: var(--g-color-private-yellow-600-solid);
+  --g-color-text-brand-contrast: var(--g-color-text-dark-primary);
+}
+
 .searchIcon {
   display: inline-flex;
   color: var(--cf-ink-muted);

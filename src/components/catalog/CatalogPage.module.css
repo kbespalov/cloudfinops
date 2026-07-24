@@ -91,7 +91,7 @@
 .providerMark {
   display: block;
   flex: 0 0 auto;
-  /* Match facet label color; muted so marks don't compete with orange accent */
+  /* Match facet label color; muted so marks don't compete with brand accent */
   color: var(--g-color-text-secondary);
   opacity: 0.9;
 }

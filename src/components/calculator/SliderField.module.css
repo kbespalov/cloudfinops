@@ -3,6 +3,7 @@
   /* Cap the track column so the row doesn't stretch into empty space
    * when the calculator form is wider than the control needs. */
   grid-template-columns: 172px minmax(140px, 360px) 160px;
+  grid-template-areas: 'label slider input';
   align-items: center;
   justify-content: start;
   gap: 8px 16px;
@@ -12,6 +13,7 @@
 }
 
 .label {
+  grid-area: label;
   min-width: 0;
 }
 
@@ -28,7 +30,31 @@
   opacity: 0.85;
 }
 
+/* Mobile-only compact readout / stepper — desktop keeps NumberInput. */
+.valueCluster {
+  display: none;
+}
+
+.valueText {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--g-color-text-primary);
+  white-space: nowrap;
+}
+
+.valueUnit {
+  font-weight: 500;
+  color: var(--g-color-text-secondary);
+}
+
+.stepBtn {
+  flex-shrink: 0;
+}
+
 .slider {
+  grid-area: slider;
   width: 100%;
   min-width: 0;
   max-width: 360px;
@@ -38,7 +64,8 @@
   --g-slider-color-thumb: color-mix(in srgb, var(--g-color-base-brand) 88%, #fff);
 }
 
-.slider :global(.g-slider__thumb:focus-visible) {
+.slider :global(.g-slider__thumb:focus-visible),
+.slider :global(.g-base-slider__handle:focus-visible) {
   outline: 2px solid var(--g-color-line-focus);
   outline-offset: 2px;
 }
@@ -52,6 +79,7 @@
 }
 
 .input {
+  grid-area: input;
   width: 160px;
   min-width: 0;
   justify-self: end;
@@ -64,17 +92,18 @@
 
 @media (max-width: 720px) {
   .root {
-    grid-template-columns: minmax(0, 1fr) minmax(104px, 128px);
+    grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
-      'label input'
+      'label value'
       'slider slider';
-    gap: 10px 12px;
+    gap: 4px 8px;
     max-width: none;
     min-height: 0;
+    padding-block: 2px;
   }
 
   .label {
-    grid-area: label;
+    min-height: 28px;
   }
 
   .labelText {
@@ -82,17 +111,73 @@
     line-height: 20px;
   }
 
+  /* Icon is noise when every row already has a short label. */
+  .icon {
+    display: none;
+  }
+
+  .valueCluster {
+    grid-area: value;
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 2px;
+    min-width: 0;
+    justify-self: end;
+  }
+
+  .valueCluster[data-stepper='true'] {
+    gap: 0;
+  }
+
+  .valueText {
+    font-size: 14px;
+    line-height: 20px;
+    min-width: 2.5ch;
+    text-align: center;
+  }
+
+  .valueCluster[data-stepper='true'] .valueText {
+    min-width: 4.5ch;
+  }
+
   .slider {
     grid-area: slider;
     max-width: none;
-    /* Larger thumb hit-area on touch. */
-    padding-block: 10px;
-    --g-slider-thumb-size: 20px;
+    /* Slim iOS-like track; keep a usable touch band via padding. */
+    padding-block: 6px;
   }
 
+  .slider :global(.g-base-slider) {
+    padding-block: 8px;
+    height: 18px;
+    margin-inline: 9px;
+  }
+
+  .slider :global(.g-base-slider__rail),
+  .slider :global(.g-base-slider__track) {
+    height: 2px;
+    border-radius: 999px;
+  }
+
+  .slider :global(.g-base-slider__track)::before {
+    height: 2px;
+    width: 9px;
+  }
+
+  /* Filled thumb — closer to iOS than ringed Gravity default. */
+  .slider :global(.g-base-slider__handle) {
+    width: 18px;
+    height: 18px;
+    border-width: 0;
+    background-color: var(--g-color-base-brand);
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--g-color-base-background) 70%, transparent),
+      0 1px 3px color-mix(in srgb, var(--g-color-text-primary) 22%, transparent);
+  }
+
+  /* Desktop NumberInput is too tall for phone density. */
   .input {
-    grid-area: input;
-    width: 100%;
-    justify-self: stretch;
+    display: none;
   }
 }

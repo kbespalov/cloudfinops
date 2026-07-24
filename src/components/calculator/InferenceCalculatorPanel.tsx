@@ -805,7 +805,7 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
               : 'Конфигурация найдена, но актуальные цены провайдеров недоступны'
         }
         bestPriceHint="Самая низкая стоимость текущей выбранной конфигурации среди найденных провайдеров"
-        bestPriceBadge="Самый дешёвый провайдер"
+        bestPriceBadge="Самый дешёвый"
         deploymentSummary={
           selected && selectedPlan?.kind !== 'impossible'
             ? {

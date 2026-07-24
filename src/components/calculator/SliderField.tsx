@@ -1,8 +1,8 @@
 'use client';
 
 import {useState} from 'react';
-import {Cpu} from '@gravity-ui/icons';
-import {Flex, HelpMark, Icon, NumberInput, Slider, Text} from '@gravity-ui/uikit';
+import {Cpu, Minus, Plus} from '@gravity-ui/icons';
+import {Button, Flex, HelpMark, Icon, NumberInput, Slider, Text} from '@gravity-ui/uikit';
 import styles from './SliderField.module.css';
 
 type IconData = typeof Cpu;
@@ -17,6 +17,8 @@ type SliderFieldProps = {
   scaleMax?: number;
   unit?: string;
   hint?: string;
+  /** Mobile: show − / + around the value instead of a plain readout. */
+  compactStepper?: boolean;
   onUpdate: (next: number) => void;
   'aria-label'?: string;
 };
@@ -63,6 +65,65 @@ function Unit({unit}: {unit?: string}) {
   );
 }
 
+function CompactValue({
+  value,
+  unit,
+  stepper,
+  canDec,
+  canInc,
+  onDec,
+  onInc,
+  ariaLabel,
+}: {
+  value: number;
+  unit?: string;
+  stepper?: boolean;
+  canDec: boolean;
+  canInc: boolean;
+  onDec: () => void;
+  onInc: () => void;
+  ariaLabel: string;
+}) {
+  const readout = (
+    <Text as="span" className={styles.valueText} aria-live="polite">
+      {value}
+      {unit ? <span className={styles.valueUnit}> {unit}</span> : null}
+    </Text>
+  );
+
+  if (!stepper) {
+    return <div className={styles.valueCluster}>{readout}</div>;
+  }
+
+  return (
+    <div className={styles.valueCluster} data-stepper="true">
+      <Button
+        view="flat-secondary"
+        size="s"
+        pin="circle-circle"
+        onClick={onDec}
+        disabled={!canDec}
+        aria-label={`Уменьшить: ${ariaLabel}`}
+        className={styles.stepBtn}
+      >
+        <Icon data={Minus} size={14} />
+      </Button>
+      {readout}
+      <Button
+        view="flat-secondary"
+        size="s"
+        pin="circle-circle"
+        onClick={onInc}
+        disabled={!canInc}
+        aria-label={`Увеличить: ${ariaLabel}`}
+        className={styles.stepBtn}
+      >
+        <Icon data={Plus} size={14} />
+      </Button>
+    </div>
+  );
+}
+
 export function SliderField({
   icon,
   label,
@@ -72,6 +133,7 @@ export function SliderField({
   scaleMax,
   unit,
   hint,
+  compactStepper,
   onUpdate,
   'aria-label': ariaLabel,
 }: SliderFieldProps) {
@@ -84,6 +146,8 @@ export function SliderField({
   const posMax = toPos(absMax);
   const pos = Math.min(posMax, Math.max(posMin, toPos(clamped)));
   const [rangeError, setRangeError] = useState<string | null>(null);
+  const idx = nearestIndex(options, value);
+  const fieldAria = ariaLabel ?? label;
 
   function handleSlider(nextPos: number) {
     setRangeError(null);
@@ -113,7 +177,7 @@ export function SliderField({
   }
 
   return (
-    <div className={styles.root}>
+    <div className={styles.root} data-stepper={compactStepper ? 'true' : undefined}>
       <Flex alignItems="center" gap={2} className={styles.label}>
         <Icon data={icon} size={16} className={styles.icon} />
         <Text as="span" ellipsis className={styles.labelText}>
@@ -126,9 +190,20 @@ export function SliderField({
         ) : null}
       </Flex>
 
+      <CompactValue
+        value={value}
+        unit={unit}
+        stepper={compactStepper}
+        canDec={idx > 0}
+        canInc={idx < options.length - 1}
+        onDec={() => onUpdate(bump(options, value, -1))}
+        onInc={() => onUpdate(bump(options, value, 1))}
+        ariaLabel={fieldAria}
+      />
+
       <Slider
         key={`${absMin}-${absMax}`}
-        size="m"
+        size="s"
         min={posMin}
         max={posMax}
         step={0.01}
@@ -137,7 +212,7 @@ export function SliderField({
         tooltipDisplay="off"
         onUpdate={handleSlider}
         onUpdateComplete={handleSlider}
-        aria-label={ariaLabel ?? label}
+        aria-label={fieldAria}
         className={styles.slider}
       />
 
@@ -154,7 +229,7 @@ export function SliderField({
         validationState={rangeError ? 'invalid' : undefined}
         errorMessage={rangeError ?? undefined}
         errorPlacement="outside"
-        controlProps={{'aria-label': ariaLabel ?? label}}
+        controlProps={{'aria-label': fieldAria}}
       />
     </div>
   );
@@ -169,6 +244,7 @@ export function IntegerSliderField({
   max,
   unit,
   hint,
+  compactStepper,
   onUpdate,
   'aria-label': ariaLabel,
 }: {
@@ -179,14 +255,16 @@ export function IntegerSliderField({
   max: number;
   unit?: string;
   hint?: string;
+  compactStepper?: boolean;
   onUpdate: (next: number) => void;
   'aria-label'?: string;
 }) {
   const safeMax = Math.max(min, max);
   const clamped = Math.min(safeMax, Math.max(min, value));
+  const fieldAria = ariaLabel ?? label;
 
   return (
-    <div className={styles.root}>
+    <div className={styles.root} data-stepper={compactStepper ? 'true' : undefined}>
       <Flex alignItems="center" gap={2} className={styles.label}>
         <Icon data={icon} size={16} className={styles.icon} />
         <Text as="span" ellipsis className={styles.labelText}>
@@ -199,9 +277,20 @@ export function IntegerSliderField({
         ) : null}
       </Flex>
 
+      <CompactValue
+        value={clamped}
+        unit={unit}
+        stepper={compactStepper}
+        canDec={clamped > min}
+        canInc={clamped < safeMax}
+        onDec={() => onUpdate(clamped - 1)}
+        onInc={() => onUpdate(clamped + 1)}
+        ariaLabel={fieldAria}
+      />
+
       <Slider
         key={`${min}-${safeMax}`}
-        size="m"
+        size="s"
         min={min}
         max={safeMax}
         step={1}
@@ -209,7 +298,7 @@ export function IntegerSliderField({
         value={clamped}
         tooltipDisplay="off"
         onUpdate={(next) => onUpdate(Math.round(next))}
-        aria-label={ariaLabel ?? label}
+        aria-label={fieldAria}
         className={styles.slider}
         disabled={safeMax <= min}
       />
@@ -227,7 +316,7 @@ export function IntegerSliderField({
         }}
         endContent={<Unit unit={unit} />}
         className={styles.input}
-        controlProps={{'aria-label': ariaLabel ?? label}}
+        controlProps={{'aria-label': fieldAria}}
       />
     </div>
   );

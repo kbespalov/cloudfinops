@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import {useMemo, useState} from 'react';
+import {useEffect, useMemo, useState} from 'react';
 import {
   Button,
+  Disclosure,
   Flex,
   HelpMark,
   Icon,
@@ -61,6 +62,8 @@ import {SliderField} from './SliderField';
 import {VmPresetGrid} from './VmPresetGrid';
 import panelStyles from './CalculatorPanel.module.css';
 import styles from './VmCalculatorPanel.module.css';
+
+const MOBILE_MQ = '(max-width: 720px)';
 
 const FAMILIES: ComputeFamily[] = ['general', 'high-cpu', 'high-memory', 'low-cost'];
 
@@ -123,10 +126,10 @@ function ipv4PerVmHint(count: number): string {
   return `${verb} ${count} ${addr} для ${count} ВМ`;
 }
 
-function ipv4TotalsFragment(count: number): string {
-  if (count <= 0) return 'Без публичных IPv4';
-  if (count === 1) return '1 публичный IPv4';
-  return `${count} публичных IPv4`;
+function ipv4Compact(count: number): string | null {
+  if (count <= 0) return null;
+  if (count === 1) return 'IPv4';
+  return `${count} IPv4`;
 }
 
 function nearestIn(options: number[], value: number): number {
@@ -188,8 +191,19 @@ export function VmCalculatorPanel({
   const [vcpuShare, setVcpuShare] = useState<VcpuShare>(DEFAULT.vcpuShare);
   const [publicIpMode, setPublicIpMode] = useState<PublicIpMode>('count');
   const [manualIpCount, setManualIpCount] = useState(DEFAULT.publicIpCount);
+  /** Phone: collapsed by default; desktop opens after matchMedia sync. */
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const publicIpCount =
     publicIpMode === 'per-vm' ? vmCount : Math.min(manualIpCount, vmCount);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
+    const mq = window.matchMedia(MOBILE_MQ);
+    const sync = () => setAdvancedOpen(!mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
 
   const defaultGpu = useMemo(() => pickDefaultGpu(gpuPresets), [gpuPresets]);
   const [gpuFilter, setGpuFilter] = useState<string>('all');
@@ -349,7 +363,12 @@ export function VmCalculatorPanel({
     activeGpu?.ramGiB != null ? formatGiBCapacity(activeGpu.ramGiB) : '—';
 
   const diskShort = diskMedia === 'ssd' ? 'SSD' : 'HDD';
-  const purchaseShort = purchaseModel === 'preemptible' ? 'прерываемая' : 'обычная';
+  const advancedSummary = (() => {
+    const bits: string[] = [];
+    if (purchaseModel === 'preemptible') bits.push('Spot');
+    if (vcpuShare !== '100%') bits.push(vcpuShare);
+    return bits.length > 0 ? `Дополнительно · ${bits.join(' · ')}` : 'Дополнительно';
+  })();
   const vmEmptyHint = (() => {
     if (
       purchaseModel === 'preemptible' &&
@@ -364,14 +383,18 @@ export function VmCalculatorPanel({
   })();
   const vmConfigSummary = isGpu
     ? null
-    : {
-        primary: vmCount === 1 ? `1 ВМ · ${purchaseShort}` : `${vmCount} ВМ · ${purchaseShort}`,
-        secondary:
-          vmCount === 1
-            ? `${vcpu} vCPU · доля ${vcpuShare} · ${formatGiBCapacity(ramGiB)} RAM · ${diskShort} ${diskGiB} GiB`
-            : `${vcpu} vCPU · доля ${vcpuShare} · ${formatGiBCapacity(ramGiB)} RAM · ${diskShort} ${diskGiB} GiB на одну ВМ`,
-        totals: `Итого: ${vmCount * vcpu} vCPU · ${formatGiBCapacity(vmCount * ramGiB)} RAM · ${formatGiBCapacity(vmCount * diskGiB)} ${diskShort} · ${ipv4TotalsFragment(publicIpCount)}`,
-      };
+    : (() => {
+        const bits: string[] = [];
+        if (purchaseModel === 'preemptible') bits.push('Spot');
+        bits.push(`${vcpu} vCPU`);
+        if (vcpuShare !== '100%') bits.push(vcpuShare);
+        bits.push(formatGiBCapacity(ramGiB));
+        bits.push(`${diskShort} ${diskGiB} GiB`);
+        const ip = ipv4Compact(publicIpCount);
+        if (ip) bits.push(ip);
+        const body = bits.join(' · ');
+        return {line: vmCount > 1 ? `${vmCount}× ${body}` : body};
+      })();
 
   return (
     <>
@@ -488,87 +511,26 @@ export function VmCalculatorPanel({
             </>
           ) : (
             <>
-              <section className={styles.fieldGroup} aria-label="Конфигурация ВМ">
+              <section className={styles.fieldGroup} aria-label="Параметры">
                 <Text as="h3" className={styles.groupTitle}>
-                  Конфигурация ВМ
+                  Параметры
                 </Text>
                 <div className={styles.fields}>
-                  <div className={styles.diskTypeRow}>
-                    <Flex alignItems="center" gap={2} className={styles.diskTypeLabel}>
-                      <Icon data={Server} size={16} className={styles.fieldIcon} />
-                      <Text variant="body-1">Тип ВМ</Text>
-                      <HelpMark aria-label="Про тип ВМ" iconSize="s">
-                        Обычная ВМ работает постоянно; на неё действует SLA провайдера.
-                        Прерываемая дешевле, но может быть остановлена в любой момент (обычно не
-                        дольше 24 часов), без SLA. В каталоге прерываемые тарифы есть у Yandex Cloud
-                        и Selectel — у остальных провайдеров при выборе «Прерываемая» цена не
-                        покажется.
-                      </HelpMark>
-                    </Flex>
-                    <SegmentedRadioGroup
-                      size="m"
-                      value={purchaseModel}
-                      onUpdate={(v) => setPurchaseModel(v as PurchaseModel)}
-                      aria-label="Тип виртуальной машины"
-                    >
-                      <SegmentedRadioGroup.Option value="on-demand">
-                        <Flex alignItems="center" gap={1}>
-                          <Icon data={ShieldCheck} size={14} />
-                          Обычная
-                        </Flex>
-                      </SegmentedRadioGroup.Option>
-                      <SegmentedRadioGroup.Option value="preemptible">
-                        <Flex alignItems="center" gap={1}>
-                          <Icon data={CirclePause} size={14} />
-                          Прерываемая
-                        </Flex>
-                      </SegmentedRadioGroup.Option>
-                    </SegmentedRadioGroup>
-                  </div>
-                  <div className={styles.shareRow}>
-                    <Flex alignItems="center" gap={2} className={styles.diskTypeLabel}>
-                      <Icon data={ChartPie} size={16} className={styles.fieldIcon} />
-                      <Text variant="body-1">Доля CPU</Text>
-                      <HelpMark aria-label="Про долю CPU" iconSize="s">
-                        Гарантированная доля производительности ядра. 100% — выделенное ядро. Меньше
-                        100% — дешевле (Yandex: 5/20/50%, до 4 vCPU и 16 GiB; Cloud.ru: 10/30% по
-                        флейворам). Azure B-series — похожая burstable-модель, в каталоге РФ не
-                        сравниваем. {vcpuShareHint(vcpuShare)}
-                      </HelpMark>
-                    </Flex>
-                    <SegmentedRadioGroup
-                      size="m"
-                      value={vcpuShare}
-                      onUpdate={(v) => onVcpuShareChange(v as VcpuShare)}
-                      aria-label="Доля CPU"
-                      className={styles.shareGroup}
-                    >
-                      {VCPU_SHARE_OPTIONS.map((share) => (
-                        <SegmentedRadioGroup.Option key={share} value={share}>
-                          {share}
-                        </SegmentedRadioGroup.Option>
-                      ))}
-                    </SegmentedRadioGroup>
-                  </div>
-                  {isFractionalShare(vcpuShare) ? (
-                    <Text variant="caption-2" color="secondary" className={styles.shareHint}>
-                      {vcpuShareHint(vcpuShare)}
-                    </Text>
-                  ) : null}
                   <SliderField
                     icon={Server}
-                    label="Количество ВМ"
+                    label="Количество"
                     value={vmCount}
                     options={VM_STEPS}
                     scaleMin={1}
                     scaleMax={64}
                     unit="шт"
+                    compactStepper
                     hint="Количество одинаковых виртуальных машин в расчёте."
                     onUpdate={onVmCountChange}
                   />
                   <SliderField
                     icon={Cpu}
-                    label="vCPU на одну ВМ"
+                    label="vCPU"
                     value={vcpu}
                     options={vcpuOptions}
                     scaleMin={vcpuOptions[0] ?? 1}
@@ -583,7 +545,7 @@ export function VmCalculatorPanel({
                   />
                   <SliderField
                     icon={Layers3Diagonal}
-                    label="RAM на одну ВМ"
+                    label="RAM"
                     value={ramGiB}
                     options={ramOptions}
                     scaleMin={ramOptions[0] ?? 1}
@@ -596,42 +558,39 @@ export function VmCalculatorPanel({
                     }
                     onUpdate={onRamChange}
                   />
-                </div>
-              </section>
-
-              <section className={styles.fieldGroup} aria-label="Хранилище">
-                <Text as="h3" className={styles.groupTitle}>
-                  Хранилище
-                </Text>
-                <div className={styles.fields}>
-                  <div className={styles.diskTypeRow}>
+                  <div className={`${styles.diskTypeRow} ${styles.compactToggleRow}`}>
                     <Flex alignItems="center" gap={2} className={styles.diskTypeLabel}>
                       <Icon data={HardDrive} size={16} className={styles.fieldIcon} />
-                      <Text variant="body-1">Тип диска</Text>
+                      <Text variant="body-1" className={styles.compactFieldLabel}>
+                        Диск
+                      </Text>
                     </Flex>
                     <SegmentedRadioGroup
                       size="m"
                       value={diskMedia}
                       onUpdate={(v) => setDiskMedia(v as DiskMedia)}
                       aria-label="Тип диска"
+                      className={styles.compactToggle}
                     >
                       <SegmentedRadioGroup.Option value="ssd">
                         <Flex alignItems="center" gap={1}>
-                          <Icon data={Thunderbolt} size={14} />
-                          Сетевой SSD
+                          <Icon data={Thunderbolt} size={14} className={styles.toggleIcon} />
+                          <span className={styles.toggleLabelFull}>Сетевой SSD</span>
+                          <span className={styles.toggleLabelShort}>SSD</span>
                         </Flex>
                       </SegmentedRadioGroup.Option>
                       <SegmentedRadioGroup.Option value="hdd">
                         <Flex alignItems="center" gap={1}>
-                          <Icon data={HardDrive} size={14} />
-                          Сетевой HDD
+                          <Icon data={HardDrive} size={14} className={styles.toggleIcon} />
+                          <span className={styles.toggleLabelFull}>Сетевой HDD</span>
+                          <span className={styles.toggleLabelShort}>HDD</span>
                         </Flex>
                       </SegmentedRadioGroup.Option>
                     </SegmentedRadioGroup>
                   </div>
                   <SliderField
                     icon={HardDrive}
-                    label="Объём диска"
+                    label="Объём"
                     value={diskGiB}
                     options={DISK_STEPS}
                     scaleMin={10}
@@ -640,6 +599,93 @@ export function VmCalculatorPanel({
                     hint="Объём сетевого диска на одну виртуальную машину. В цене умножается на количество ВМ."
                     onUpdate={setDiskGiB}
                   />
+
+                  <Disclosure
+                    className={styles.advancedDisclosure}
+                    size="m"
+                    arrowPosition="left"
+                    summary={advancedSummary}
+                    expanded={advancedOpen}
+                    onUpdate={setAdvancedOpen}
+                    keepMounted
+                  >
+                    <div className={styles.advancedBody}>
+                      <div className={`${styles.diskTypeRow} ${styles.compactToggleRow}`}>
+                        <Flex alignItems="center" gap={2} className={styles.diskTypeLabel}>
+                          <Icon data={Server} size={16} className={styles.fieldIcon} />
+                          <Text variant="body-1" className={styles.compactFieldLabel}>
+                            Тип
+                          </Text>
+                          <HelpMark aria-label="Про тип ВМ" iconSize="s">
+                            Обычная ВМ работает постоянно; на неё действует SLA провайдера.
+                            Прерываемая дешевле, но может быть остановлена в любой момент (обычно не
+                            дольше 24 часов), без SLA. В каталоге прерываемые тарифы есть у Yandex
+                            Cloud и Selectel — у остальных провайдеров при выборе «Прерываемая» цена
+                            не покажется.
+                          </HelpMark>
+                        </Flex>
+                        <SegmentedRadioGroup
+                          size="m"
+                          value={purchaseModel}
+                          onUpdate={(v) => setPurchaseModel(v as PurchaseModel)}
+                          aria-label="Тип виртуальной машины"
+                          className={styles.compactToggle}
+                        >
+                          <SegmentedRadioGroup.Option value="on-demand">
+                            <Flex alignItems="center" gap={1}>
+                              <Icon data={ShieldCheck} size={14} className={styles.toggleIcon} />
+                              <span className={styles.toggleLabelFull}>Обычная</span>
+                              <span className={styles.toggleLabelShort}>Обычная</span>
+                            </Flex>
+                          </SegmentedRadioGroup.Option>
+                          <SegmentedRadioGroup.Option value="preemptible">
+                            <Flex alignItems="center" gap={1}>
+                              <Icon data={CirclePause} size={14} className={styles.toggleIcon} />
+                              <span className={styles.toggleLabelFull}>Прерываемая</span>
+                              <span className={styles.toggleLabelShort}>Spot</span>
+                            </Flex>
+                          </SegmentedRadioGroup.Option>
+                        </SegmentedRadioGroup>
+                      </div>
+                      <div className={styles.shareRow}>
+                        <Flex alignItems="center" gap={2} className={styles.diskTypeLabel}>
+                          <Icon data={ChartPie} size={16} className={styles.fieldIcon} />
+                          <Text variant="body-1" className={styles.compactFieldLabel}>
+                            Доля CPU
+                          </Text>
+                          <HelpMark aria-label="Про долю CPU" iconSize="s">
+                            Гарантированная доля производительности ядра. 100% — выделенное ядро.
+                            Меньше 100% — дешевле (Yandex: 5/20/50%, до 4 vCPU и 16 GiB; Cloud.ru:
+                            10/30% по флейворам). Azure B-series — похожая burstable-модель, в
+                            каталоге РФ не сравниваем. {vcpuShareHint(vcpuShare)}
+                          </HelpMark>
+                        </Flex>
+                        <div className={styles.shareChips} role="radiogroup" aria-label="Доля CPU">
+                          {VCPU_SHARE_OPTIONS.map((share) => {
+                            const active = vcpuShare === share;
+                            return (
+                              <button
+                                key={share}
+                                type="button"
+                                role="radio"
+                                aria-checked={active}
+                                className={styles.shareChip}
+                                data-active={active ? 'true' : 'false'}
+                                onClick={() => onVcpuShareChange(share)}
+                              >
+                                {share}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                      {isFractionalShare(vcpuShare) ? (
+                        <Text variant="caption-2" color="secondary" className={styles.shareHint}>
+                          {vcpuShareHint(vcpuShare)}
+                        </Text>
+                      ) : null}
+                    </div>
+                  </Disclosure>
                 </div>
               </section>
 
@@ -730,23 +776,22 @@ export function VmCalculatorPanel({
         loading={loading}
         emptyHint={isGpu ? 'Для выбранных параметров предложения не найдены' : vmEmptyHint}
         bestPriceHint="Самая низкая стоимость текущей выбранной конфигурации среди найденных провайдеров"
-        bestPriceBadge="Самый дешёвый провайдер"
+        bestPriceBadge="Самый дешёвый"
         configSummary={
           isGpu && activeGpu
             ? {
-                primary: `1× ${activeGpu.gpuModelMatch}`,
-                secondary: [
+                line: [
+                  `${activeGpu.gpuCount}× ${activeGpu.gpuModelMatch}`,
                   activeGpu.vcpu != null ? `${activeGpu.vcpu} vCPU` : null,
-                  activeGpu.ramGiB != null ? formatGiBCapacity(activeGpu.ramGiB) + ' RAM' : null,
-                ]
-                  .filter(Boolean)
-                  .join(' · '),
-                tertiary:
+                  activeGpu.ramGiB != null ? formatGiBCapacity(activeGpu.ramGiB) : null,
                   activeGpu.diskGiB != null
                     ? `SSD ${activeGpu.diskGiB} GiB`
                     : activeGpu.dedicated
-                      ? 'Выделенный узел'
-                      : undefined,
+                      ? 'dedicated'
+                      : null,
+                ]
+                  .filter(Boolean)
+                  .join(' · '),
               }
             : vmConfigSummary
         }

@@ -29,7 +29,7 @@
   z-index: 1;
 }
 
-/* Distinct cool tones — not brand orange. Fallbacks: some *-success tokens are empty. */
+/* Distinct cool tones — not brand violet. Fallbacks: some *-success tokens are empty. */
 .segment[data-tone='info'] {
   background: var(--g-color-base-info-heavy, #348bdc);
 }

@@ -154,7 +154,7 @@
   .familyMobile {
     display: flex;
     flex-wrap: nowrap;
-    gap: 8px;
+    gap: 6px;
     width: 100%;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
@@ -172,9 +172,17 @@
   .familyMobile > .familyChip {
     flex: 0 0 auto;
     min-width: max-content;
+    min-height: 36px;
+    padding: 6px 10px;
+    gap: 5px;
     scroll-snap-align: start;
-    font-size: 15px;
-    line-height: 20px;
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  .familyMobile > .familyChip :global(.g-icon) {
+    width: 14px;
+    height: 14px;
   }
 
   .gpuSelectRow {
@@ -187,8 +195,12 @@
   }
 
   .groupTitle {
-    font-size: 16px;
-    line-height: 22px;
+    font-size: 13px;
+    line-height: 18px;
+    font-weight: 500;
+    color: var(--g-color-text-secondary);
+    letter-spacing: 0.01em;
+    text-transform: none;
   }
 }
 
@@ -206,8 +218,8 @@
 
 .groupTitle {
   margin: 0;
-  font-size: 18px;
-  line-height: 24px;
+  font-size: 16px;
+  line-height: 22px;
   font-weight: 600;
   color: var(--g-color-text-primary);
 }
@@ -216,6 +228,83 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.advancedDisclosure {
+  margin-top: 4px;
+  min-width: 0;
+}
+
+.advancedBody {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0 4px;
+  min-width: 0;
+}
+
+.compactFieldLabel {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+  color: var(--g-color-text-complementary);
+}
+
+.toggleLabelShort {
+  display: none;
+}
+
+.toggleLabelFull {
+  display: inline;
+}
+
+.shareChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+  max-width: 420px;
+}
+
+.shareChip {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  min-height: 32px;
+  min-width: 44px;
+  padding: 4px 10px;
+  border: 1px solid var(--g-color-line-generic);
+  border-radius: var(--g-border-radius-m);
+  background: var(--g-color-base-background);
+  color: var(--g-color-text-primary);
+  font: inherit;
+  font-size: 13px;
+  line-height: 16px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease,
+    color 0.12s ease;
+}
+
+.shareChip:hover {
+  background: var(--g-color-base-generic);
+}
+
+.shareChip:focus-visible {
+  outline: 2px solid var(--g-color-line-focus);
+  outline-offset: 2px;
+}
+
+.shareChip[data-active='true'] {
+  background: color-mix(in srgb, var(--g-color-base-brand) 14%, var(--g-color-base-background));
+  border-color: var(--g-color-line-brand);
+  color: var(--g-color-text-brand);
 }
 
 /* Soften family selected segment — match Self-hosted LLM. */
@@ -364,43 +453,92 @@
     width: 100%;
   }
 
-  .diskTypeRow {
-    grid-template-columns: 1fr;
-    gap: 6px;
+  .diskTypeRow,
+  .compactToggleRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    min-height: 0;
   }
 
   .shareRow {
     grid-template-columns: 1fr;
-    gap: 6px;
+    gap: 8px;
+    min-height: 0;
   }
 
-  .shareGroup {
+  .fieldIcon {
+    display: none;
+  }
+
+  .compactFieldLabel {
+    font-size: 14px;
+    line-height: 20px;
+  }
+
+  .toggleLabelFull {
+    display: none;
+  }
+
+  .toggleLabelShort {
+    display: inline;
+  }
+
+  .toggleIcon {
+    display: none;
+  }
+
+  .compactToggle {
+    width: auto;
     max-width: none;
+    justify-self: end;
   }
 
-  /* 6 share tiers do not fit a phone width — scroll instead of crushing labels. */
-  .shareGroup:global(.g-segmented-radio-group) {
-    width: 100%;
+  .shareChips {
+    flex-wrap: nowrap;
     max-width: none;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none;
     overscroll-behavior-x: contain;
     scroll-snap-type: x proximity;
-    mask-image: linear-gradient(90deg, #000 85%, transparent);
+    padding-bottom: 2px;
+    mask-image: linear-gradient(90deg, #000 88%, transparent);
   }
 
-  .shareGroup:global(.g-segmented-radio-group)::-webkit-scrollbar {
+  .shareChips::-webkit-scrollbar {
     display: none;
   }
 
-  .shareGroup :global(.g-segmented-radio-group__option) {
+  .shareChip {
     flex: 0 0 auto;
-    min-width: 56px;
+    min-height: 30px;
+    min-width: 40px;
+    padding: 4px 8px;
+    font-size: 12px;
     scroll-snap-align: start;
   }
 
+  .advancedDisclosure {
+    margin-top: 2px;
+    padding-top: 4px;
+    border-top: 1px solid var(--g-color-line-generic);
+  }
+
+  .advancedBody {
+    gap: 10px;
+    padding-top: 10px;
+  }
+
+  .fields {
+    gap: 8px;
+  }
+
+  .fieldGroup {
+    gap: 8px;
+  }
+
   .configInner {
-    gap: 16px;
+    gap: 14px;
   }
 }

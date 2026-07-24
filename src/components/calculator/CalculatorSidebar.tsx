@@ -7,7 +7,6 @@ import {ProviderMark} from '@/components/catalog/ProviderMark';
 import {
   formatQuoteAmount,
   periodShortLabel,
-  periodTotalLabel,
   type PeriodMode,
   type ViewPresetQuote,
   type ViewProviderQuote,
@@ -25,15 +24,9 @@ export type DeploymentSummary = {
   totalGpus: number;
 };
 
-/** Free-form config lines shown under the provider (VM or GPU). */
+/** Single compact config line under the provider (VM or GPU). */
 export type ConfigSummary = {
-  primary: string;
-  secondary?: string;
-  tertiary?: string;
-  quaternary?: string;
-  quinary?: string;
-  /** Aggregate resources across the whole fleet. */
-  totals?: string;
+  line: string;
 };
 
 function quoteKey(q: ViewProviderQuote): string {
@@ -42,15 +35,10 @@ function quoteKey(q: ViewProviderQuote): string {
 
 function formatGpuDeployment(summary: DeploymentSummary): ConfigSummary {
   const {nodeCount, gpuCount, gpuFamily, totalGpus} = summary;
-  const nodes = formatNodeCount(nodeCount);
-  const primary =
-    nodeCount === 1
-      ? `${nodes}, ${gpuCount} GPU ${gpuFamily}`
-      : `${nodes}, по ${gpuCount} GPU ${gpuFamily}`;
-  return {
-    primary,
-    secondary: `${totalGpus} GPU всего`,
-  };
+  if (nodeCount === 1) {
+    return {line: `${gpuCount} GPU ${gpuFamily}`};
+  }
+  return {line: `${formatNodeCount(nodeCount)} · ${totalGpus} GPU ${gpuFamily}`};
 }
 
 function ProviderList({
@@ -171,7 +159,7 @@ export function CalculatorSidebar({
   const priceHint =
     bestPriceHint ??
     'Самая низкая стоимость текущей выбранной конфигурации среди найденных провайдеров';
-  const priceBadge = bestPriceBadge ?? 'Самый дешёвый провайдер';
+  const priceBadge = bestPriceBadge ?? 'Самый дешёвый';
 
   useEffect(() => {
     setSelectedKey(result?.best ? quoteKey(result.best) : null);
@@ -270,7 +258,7 @@ export function CalculatorSidebar({
         onClick={scrollToDetails}
         aria-hidden={showMobileBar ? undefined : true}
         tabIndex={showMobileBar ? 0 : -1}
-        aria-label={`Подробности: ${selected.providerName}, ${formatQuoteAmount(selected.total, period)} за ${periodWord}`}
+        aria-label={`Смотреть сравнение: ${selected.providerName}, ${formatQuoteAmount(selected.total, period)} за ${periodWord}`}
       >
         <span className={styles.mobileBarMark}>
           <ProviderMark providerId={selected.provider} size={14} />
@@ -278,29 +266,36 @@ export function CalculatorSidebar({
         <span className={styles.mobileBarMeta}>
           <Text variant="body-2" ellipsis className={styles.mobileBarProvider}>
             {selected.providerName}
+            {isBest ? (
+              <Text as="span" variant="caption-2" color="complementary" className={styles.mobileBarBest}>
+                {' '}
+                · лучшая
+              </Text>
+            ) : null}
           </Text>
-          <Text variant="caption-2" color="complementary">
-            / {periodWord}
-            {isBest ? ' · лучшая цена' : ''}
+          <Text variant="subheader-2" className={styles.mobileBarPrice}>
+            {formatQuoteAmount(selected.total, period)}
+            <Text as="span" variant="caption-2" color="complementary" className={styles.mobileBarPeriod}>
+              {' '}
+              / {periodWord}
+            </Text>
           </Text>
         </span>
-        <Text variant="subheader-2" className={styles.mobileBarPrice}>
-          {formatQuoteAmount(selected.total, period)}
-        </Text>
+        <span className={styles.mobileBarCta}>Сравнение</span>
       </button>
 
       <div className={styles.card} ref={cardRef}>
-        <div className={styles.block}>
+        <div className={styles.summary}>
           <Flex alignItems="center" gap={2} className={styles.detailProvider}>
             <span className={styles.sellerMarkLg}>
               <ProviderMark providerId={selected.provider} size={16} />
             </span>
-            <Text variant="subheader-2" ellipsis>
+            <Text variant="subheader-2" ellipsis className={styles.providerName}>
               {selected.providerName}
             </Text>
             {isBest ? (
               <Tooltip content={priceHint} openDelay={200}>
-                <span>
+                <span className={styles.bestBadge}>
                   <Label size="xs" theme="success">
                     {priceBadge}
                   </Label>
@@ -309,38 +304,20 @@ export function CalculatorSidebar({
             ) : null}
           </Flex>
 
-          {lines ? (
-            <div className={styles.deployment}>
-              <Text variant="body-2" className={styles.deploymentPrimary}>
-                {lines.primary}
-              </Text>
-              {lines.secondary ? (
-                <Text variant="body-2" color="complementary" className={styles.deploymentUnit}>
-                  {lines.secondary}
-                </Text>
-              ) : null}
-              {lines.tertiary ? (
-                <Text variant="caption-2" color="complementary">
-                  {lines.tertiary}
-                </Text>
-              ) : null}
-              {lines.quaternary ? (
-                <Text variant="caption-2" color="complementary">
-                  {lines.quaternary}
-                </Text>
-              ) : null}
-              {lines.quinary ? (
-                <Text variant="caption-2" color="complementary">
-                  {lines.quinary}
-                </Text>
-              ) : null}
-              {lines.totals ? (
-                <Text variant="caption-2" color="complementary" className={styles.totalsLine}>
-                  {lines.totals}
-                </Text>
-              ) : null}
-            </div>
+          {lines?.line ? (
+            <Text variant="body-2" color="complementary" className={styles.configLine}>
+              {lines.line}
+            </Text>
           ) : null}
+
+          <div className={styles.heroPrice}>
+            <Text as="span" className={styles.bestPrice}>
+              {formatQuoteAmount(selected.total, period)}
+            </Text>
+            <Text as="span" variant="body-2" color="complementary" className={styles.heroPeriod}>
+              / {periodWord}
+            </Text>
+          </div>
         </div>
 
         <div className={styles.divider} />
@@ -379,15 +356,6 @@ export function CalculatorSidebar({
               );
             })}
           </ul>
-
-          <div className={styles.breakdownTotal}>
-            <Text variant="body-2" color="complementary">
-              {periodTotalLabel(period)}
-            </Text>
-            <Text variant="display-1" className={styles.bestPrice}>
-              {formatQuoteAmount(selected.total, period)}
-            </Text>
-          </div>
         </div>
 
         <div className={styles.divider} />
