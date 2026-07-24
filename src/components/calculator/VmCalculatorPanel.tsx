@@ -776,8 +776,8 @@ export function VmCalculatorPanel({
         result={result}
         loading={loading}
         emptyHint={isGpu ? 'Для выбранных параметров предложения не найдены' : vmEmptyHint}
-        bestPriceHint="Самая низкая стоимость текущей выбранной конфигурации среди найденных провайдеров"
-        bestPriceBadge="Самый дешёвый"
+        bestPriceHint="Минимальная расчётная цена среди предложений в каталоге для текущей конфигурации"
+        bestPriceBadge="Минимальная расчётная цена"
         configSummary={
           isGpu && activeGpu
             ? {

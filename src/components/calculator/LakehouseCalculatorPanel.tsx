@@ -370,8 +370,8 @@ export function LakehouseCalculatorPanel({period}: {period: PeriodMode}) {
         result={result}
         loading={loading}
         emptyHint="Для выбранной конфигурации lakehouse предложения не собрались"
-        bestPriceHint="Самый дешёвый DIY lakehouse среди провайдеров с Object Storage и Managed Kubernetes в каталоге"
-        bestPriceBadge="Лучшая цена"
+        bestPriceHint="Минимальная расчётная цена DIY lakehouse среди предложений в каталоге с Object Storage и Managed Kubernetes"
+        bestPriceBadge="Минимальная расчётная цена"
         extras={
           <div className={styles.chatBridge}>
             <Button

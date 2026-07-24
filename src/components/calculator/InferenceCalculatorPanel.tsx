@@ -810,8 +810,8 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
               ? 'Подходящие конфигурации не найдены'
               : 'Конфигурация найдена, но актуальные цены провайдеров недоступны'
         }
-        bestPriceHint="Самая низкая стоимость текущей выбранной конфигурации среди найденных провайдеров"
-        bestPriceBadge="Самый дешёвый"
+        bestPriceHint="Минимальная расчётная цена среди предложений в каталоге для текущей конфигурации"
+        bestPriceBadge="Минимальная расчётная цена"
         deploymentSummary={
           selected && selectedPlan?.kind !== 'impossible'
             ? {

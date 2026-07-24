@@ -158,8 +158,8 @@ export function CalculatorSidebar({
   const cardRef = useRef<HTMLDivElement | null>(null);
   const priceHint =
     bestPriceHint ??
-    'Самая низкая стоимость текущей выбранной конфигурации среди найденных провайдеров';
-  const priceBadge = bestPriceBadge ?? 'Самый дешёвый';
+    'Минимальная расчётная цена среди предложений в каталоге для текущей конфигурации';
+  const priceBadge = bestPriceBadge ?? 'Минимальная расчётная цена';
 
   useEffect(() => {
     setSelectedKey(result?.best ? quoteKey(result.best) : null);
@@ -372,7 +372,7 @@ export function CalculatorSidebar({
             </Text>
             <HelpMark aria-label="Про альтернативы" iconSize="s">
               Стоимость аналогичной конфигурации у других провайдеров. Процент — разница
-              относительно самого дешёвого варианта.
+              относительно минимальной расчётной цены среди предложений в каталоге.
             </HelpMark>
           </div>
           <ProviderList
