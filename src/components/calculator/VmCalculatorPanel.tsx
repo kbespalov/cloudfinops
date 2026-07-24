@@ -412,7 +412,7 @@ export function VmCalculatorPanel({
                 aria-label="Семейство ВМ"
               >
                 {FAMILY_MODE_OPTIONS.map((opt) => (
-                  <SegmentedRadioGroup.Option key={opt.id} value={opt.id}>
+                  <SegmentedRadioGroup.Option key={opt.id} value={opt.id} title={opt.label}>
                     <span className={styles.familyOption}>
                       <Icon data={opt.icon} size={14} />
                       {opt.label}

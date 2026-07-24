@@ -23,6 +23,14 @@
 
 .familyGroup {
   width: 100%;
+  max-width: 100%;
+  /* Prefer fitting labels; scroll only if the form column is unusually narrow. */
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.familyGroup::-webkit-scrollbar {
+  display: none;
 }
 
 .familyDesktop {
@@ -76,34 +84,40 @@
   color: var(--g-color-text-brand);
 }
 
-/* Equal-width segments; center icon+label (Gravity adds side margin that
- * shifts content when option-text is width:100%). */
+/* Content-sized segments (not equal-width): long RU labels must not ellipsis.
+ * Gravity width=max forces overflow:hidden + text-overflow:ellipsis — override. */
 .familyGroup :global(.g-segmented-radio-group__option) {
-  flex: 1 1 0;
-  min-width: 0;
+  flex: 1 0 auto;
+  min-width: max-content;
+  overflow: visible;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .familyGroup :global(.g-segmented-radio-group__option-text) {
-  display: inline-flex;
+  display: inline-flex !important;
   align-items: center;
   justify-content: center;
   width: auto;
-  max-width: 100%;
+  max-width: none;
   height: 100%;
   margin: 0;
-  padding: 0 8px;
+  padding: 0 6px;
   box-sizing: border-box;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
 }
 
 .familyOption {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  min-width: 0;
+  gap: 5px;
+  font-size: 13px;
+  line-height: 16px;
+  letter-spacing: -0.01em;
 }
 
 .gpuSelectRow {

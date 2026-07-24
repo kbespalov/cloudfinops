@@ -48,6 +48,28 @@
   color: var(--g-color-text-complementary);
 }
 
+/* Keep lead in DOM for SEO / crawlers; hide from visual UI. */
+.heroLeadSeo {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+  pointer-events: none;
+  min-height: 0;
+}
+
+/* Soften inference lead so it doesn't compete with the H1. */
+.heroLeadMuted {
+  min-height: 0;
+  color: var(--g-color-text-hint);
+  opacity: 0.72;
+}
+
 .tabs {
   width: max-content;
   max-width: 100%;

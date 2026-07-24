@@ -68,6 +68,13 @@ export function CalculatorPage({
   const [period, setPeriod] = useState<PeriodMode>('month');
   const heading = title ?? MODE_TITLE[mode];
   const subtitle = lead ?? MODE_LEAD[mode];
+  /** Hide only the default VM lead; keep provider `lead` overrides visible. */
+  const leadClassName =
+    mode === 'vm' && !lead
+      ? `${styles.heroLead} ${styles.heroLeadSeo}`
+      : mode === 'inference'
+        ? `${styles.heroLead} ${styles.heroLeadMuted}`
+        : styles.heroLead;
 
   return (
     <>
@@ -88,7 +95,10 @@ export function CalculatorPage({
                   {heading}
                 </Text>
               </Flex>
-              <Text color="complementary" className={styles.heroLead}>
+              <Text
+                color={mode === 'inference' || (mode === 'vm' && !lead) ? 'hint' : 'complementary'}
+                className={leadClassName}
+              >
                 {subtitle}
               </Text>
             </Flex>
@@ -124,7 +134,7 @@ export function CalculatorPage({
           >
             <TabList size="l" className={styles.tabs}>
               <Tab value="vm">Виртуальные машины</Tab>
-              <Tab value="inference">Self-hosted LLM</Tab>
+              <Tab value="inference">Хостинг LLM</Tab>
             </TabList>
           </TabProvider>
         </header>
@@ -146,7 +156,7 @@ export function CalculatorPage({
               size="m"
               prefetch
             >
-              {mode === 'vm' ? 'Калькулятор Self-hosted LLM' : 'Калькулятор ВМ и GPU'}
+              {mode === 'vm' ? 'Калькулятор Хостинг LLM' : 'Калькулятор ВМ и GPU'}
               <Icon data={ChevronRight} size={16} />
             </Button>
             <Button
