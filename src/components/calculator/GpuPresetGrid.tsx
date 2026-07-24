@@ -1,7 +1,7 @@
 'use client';
 
 import {useEffect, useMemo, useRef, useState} from 'react';
-import {Flex, Icon, Text} from '@gravity-ui/uikit';
+import {Flex, Icon, PlaceholderContainer, Text} from '@gravity-ui/uikit';
 import {Cpu, HardDrive, Layers3Diagonal} from '@gravity-ui/icons';
 import type {GpuPreset} from '@/lib/calculator/presets';
 import {
@@ -11,6 +11,7 @@ import {
   type PeriodMode,
   type ViewPresetQuote,
 } from '@/lib/calculator/quote-view';
+import {GPU_PRESET_EMPTY_ILLUSTRATION} from '@/components/ui/emptyIllustration';
 import styles from './GpuPresetGrid.module.css';
 
 type Props = {
@@ -73,9 +74,15 @@ export function GpuPresetGrid({presets, period, activePresetId, onSelect}: Props
     return (
       <div className={styles.root}>
         <Text variant="subheader-1">Пресеты GPU</Text>
-        <Text variant="body-2" color="secondary">
-          Нет конфигураций для выбранной карты
-        </Text>
+        <PlaceholderContainer
+          title="Нет пресетов"
+          description="Для выбранной карты нет готовых конфигураций."
+          size="s"
+          align="center"
+          image={
+            <GPU_PRESET_EMPTY_ILLUSTRATION width="100%" height="100%" aria-hidden />
+          }
+        />
       </div>
     );
   }

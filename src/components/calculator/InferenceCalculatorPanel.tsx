@@ -11,12 +11,14 @@ import {
   Icon,
   Label,
   NumberInput,
+  PlaceholderContainer,
   SegmentedRadioGroup,
   Select,
   Text,
   Tooltip,
 } from '@gravity-ui/uikit';
 import {Sparkles} from '@gravity-ui/icons';
+import {CALCULATOR_EMPTY_ILLUSTRATION} from '@/components/ui/emptyIllustration';
 import {INFERENCE_MODELS} from '@/data/inference-models';
 import {
   defaultPricedConfigIndex,
@@ -548,42 +550,47 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
             ) : null}
 
             {(emptyConfigs || noFittingConfigs) && !apiOnly ? (
-              <div className={styles.emptyState}>
-                <Text as="h4" variant="subheader-2" className={styles.emptyTitle}>
-                  Подходящие конфигурации не найдены
-                </Text>
-                <Text variant="body-2" color="secondary">
-                  Выбранная модель или нагрузка не помещается в доступные GPU-конфигурации.
-                </Text>
-                <Flex gap={2} wrap className={styles.emptyActions}>
-                  <Button size="s" view="outlined" onClick={() => setQuant('auto')}>
-                    Выбрать Auto
-                  </Button>
-                  <Button
-                    size="s"
-                    view="outlined"
-                    onClick={() => {
-                      const next = Math.max(4_096, Math.round(maxContextTokens / 2));
-                      setMaxContextTokens(next);
-                      setAvgContextTokens((avg) => Math.min(avg, next));
-                    }}
-                  >
-                    Уменьшить контекст
-                  </Button>
-                  <Button
-                    size="s"
-                    view="flat"
-                    onClick={() => {
-                      setConcurrentRequests(1);
-                      const def = defaultAvgContext(profile?.contextDefault ?? 128_000);
-                      setMaxContextTokens(profile?.contextDefault ?? 128_000);
-                      setAvgContextTokens(def);
-                    }}
-                  >
-                    Сбросить нагрузку
-                  </Button>
-                </Flex>
-              </div>
+              <PlaceholderContainer
+                className={styles.emptyState}
+                title="Подходящие конфигурации не найдены"
+                description="Выбранная модель или нагрузка не помещается в доступные GPU-конфигурации."
+                size="s"
+                align="left"
+                direction="row"
+                image={
+                  <CALCULATOR_EMPTY_ILLUSTRATION width="100%" height="100%" aria-hidden />
+                }
+                actions={
+                  <Flex gap={2} wrap className={styles.emptyActions}>
+                    <Button size="s" view="outlined" onClick={() => setQuant('auto')}>
+                      Выбрать Auto
+                    </Button>
+                    <Button
+                      size="s"
+                      view="outlined"
+                      onClick={() => {
+                        const next = Math.max(4_096, Math.round(maxContextTokens / 2));
+                        setMaxContextTokens(next);
+                        setAvgContextTokens((avg) => Math.min(avg, next));
+                      }}
+                    >
+                      Уменьшить контекст
+                    </Button>
+                    <Button
+                      size="s"
+                      view="flat"
+                      onClick={() => {
+                        setConcurrentRequests(1);
+                        const def = defaultAvgContext(profile?.contextDefault ?? 128_000);
+                        setMaxContextTokens(profile?.contextDefault ?? 128_000);
+                        setAvgContextTokens(def);
+                      }}
+                    >
+                      Сбросить нагрузку
+                    </Button>
+                  </Flex>
+                }
+              />
             ) : null}
 
             {!apiOnly && configs.length && !noFittingConfigs ? (

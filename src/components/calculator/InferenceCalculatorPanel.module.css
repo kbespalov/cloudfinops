@@ -130,21 +130,13 @@
 }
 
 .emptyState {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 16px;
   border: 1px solid var(--g-color-line-generic);
   border-radius: var(--g-border-radius-l);
   background: var(--g-color-base-generic);
 }
 
-.emptyTitle {
-  margin: 0;
-}
-
 .emptyActions {
-  margin-top: 4px;
+  margin-top: 0;
 }
 
 .vramWarning {

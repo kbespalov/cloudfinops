@@ -1,7 +1,7 @@
 'use client';
 
 import {useEffect, useState} from 'react';
-import {Button, Drawer, Flex, Icon, Label, Text} from '@gravity-ui/uikit';
+import {Button, Drawer, Flex, Icon, Label, PlaceholderContainer, Text} from '@gravity-ui/uikit';
 import {Cpu, Gpu, HardDrive, Layers3Diagonal, Xmark} from '@gravity-ui/icons';
 import {
   COMPUTE_FAMILY_TITLE,
@@ -21,6 +21,7 @@ import {
 } from '@/lib/calculator/quote-view';
 import {CostBreakdownBar} from '@/components/calculator/CostBreakdownBar';
 import {ProviderMark} from '@/components/catalog/ProviderMark';
+import {CALCULATOR_EMPTY_ILLUSTRATION} from '@/components/ui/emptyIllustration';
 import styles from './PresetDrawer.module.css';
 
 function presetHeadline(preset: CalculatorPreset): string {
@@ -296,9 +297,15 @@ export function PresetDrawer({
                 </Flex>
               </div>
             ) : (
-              <Text variant="body-2" color="secondary">
-                Нет публичных котировок для этого пресета
-              </Text>
+              <PlaceholderContainer
+                title="Нет котировок"
+                description="Публичные предложения для этого пресета не найдены."
+                size="s"
+                align="left"
+                image={
+                  <CALCULATOR_EMPTY_ILLUSTRATION width="100%" height="100%" aria-hidden />
+                }
+              />
             )}
 
             {selected ? (

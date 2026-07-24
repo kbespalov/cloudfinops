@@ -5,6 +5,8 @@ import '@gravity-ui/uikit/styles/styles.css';
 /** Nebius-like violet brand — after styles.css so private/semantic brand tokens win. */
 import '@/styles/brand-theme.css';
 import '@gravity-ui/aikit/styles';
+/** Theme tokens for @gravity-ui/illustrations (PlaceholderContainer empty states). */
+import '@/styles/illustrations.css';
 import './globals.css';
 import {AppProviders} from '@/components/AppProviders';
 import {YandexMetrika} from '@/components/YandexMetrika';

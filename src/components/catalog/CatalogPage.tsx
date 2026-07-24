@@ -105,6 +105,7 @@ import {
 import {SkuDrawer} from '@/components/catalog/SkuDrawer';
 import {ProviderMark} from '@/components/catalog/ProviderMark';
 import {AppHeader} from '@/components/AppHeader';
+import {catalogEmptyIllustration} from '@/components/ui/emptyIllustration';
 import styles from './CatalogPage.module.css';
 
 const PROVIDER_FACET_ORDER = [
@@ -1031,6 +1032,12 @@ export function CatalogPage() {
     providers.length > 0 ||
     sort !== 'price-asc';
 
+  const EmptyIllustration = catalogEmptyIllustration(
+    category,
+    facet,
+    deferredSearch.trim().length > 0,
+  );
+
   return (
     <>
       <AppHeader />
@@ -1540,15 +1547,19 @@ export function CatalogPage() {
                 description="Сбросьте фильтры или измените запрос."
                 size="m"
                 align="center"
-                image={<Icon data={Magnifier} size={28} />}
-                actions={[
-                  {
-                    text: 'Сбросить фильтры',
-                    view: 'action',
-                    size: 'm',
-                    onClick: resetFilters,
-                  },
-                ]}
+                image={<EmptyIllustration width="100%" height="100%" aria-hidden />}
+                actions={
+                  hasFilters
+                    ? [
+                        {
+                          text: 'Сбросить фильтры',
+                          view: 'action',
+                          size: 'm',
+                          onClick: resetFilters,
+                        },
+                      ]
+                    : undefined
+                }
               />
             ) : (
               <>

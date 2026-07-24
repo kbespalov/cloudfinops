@@ -3,8 +3,9 @@
 import {useEffect, useMemo, useState, type ReactNode} from 'react';
 import NextLink from 'next/link';
 import {Button, Flex, Icon, Label, Link, PlaceholderContainer, Text} from '@gravity-ui/uikit';
-import {ArrowUpRightFromSquare, BookOpen, ChevronRight, Magnifier} from '@gravity-ui/icons';
+import {ArrowUpRightFromSquare, BookOpen, ChevronRight} from '@gravity-ui/icons';
 import {AppHeader} from '@/components/AppHeader';
+import {NEWS_EMPTY_ILLUSTRATION} from '@/components/ui/emptyIllustration';
 import {
   NEWS_PROVIDER_TITLE,
   NEWS_TAG_TITLE,
@@ -159,15 +160,21 @@ export function NewsPage() {
                 description="Нет новостей по выбранным фильтрам. Сбросьте фильтры или загляните позже."
                 size="m"
                 align="center"
-                image={<Icon data={Magnifier} size={28} />}
-                actions={[
-                  {
-                    text: 'Сбросить фильтры',
-                    view: 'action',
-                    size: 'm',
-                    onClick: reset,
-                  },
-                ]}
+                image={
+                  <NEWS_EMPTY_ILLUSTRATION width="100%" height="100%" aria-hidden />
+                }
+                actions={
+                  hasFilters
+                    ? [
+                        {
+                          text: 'Сбросить фильтры',
+                          view: 'action',
+                          size: 'm',
+                          onClick: reset,
+                        },
+                      ]
+                    : undefined
+                }
               />
             ) : (
               <>
