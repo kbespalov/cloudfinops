@@ -2,7 +2,7 @@
   display: grid;
   /* Cap the track column so the row doesn't stretch into empty space
    * when the calculator form is wider than the control needs. */
-  grid-template-columns: 172px minmax(140px, 360px) 160px;
+  grid-template-columns: 172px minmax(140px, 360px) 168px;
   grid-template-areas: 'label slider input';
   align-items: center;
   justify-content: start;
@@ -86,7 +86,7 @@
 
 .inputWrap {
   grid-area: input;
-  width: 160px;
+  width: 168px;
   min-width: 0;
   justify-self: end;
 }
@@ -177,19 +177,19 @@
 
   .slider :global(.g-base-slider__rail),
   .slider :global(.g-base-slider__track) {
-    height: 2px;
+    height: 3px;
     border-radius: 999px;
   }
 
   .slider :global(.g-base-slider__track)::before {
-    height: 2px;
+    height: 3px;
     width: 9px;
   }
 
   /* Filled thumb — closer to iOS than ringed Gravity default. */
   .slider :global(.g-base-slider__handle) {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     border-width: 0;
     background-color: var(--g-color-base-brand);
     box-shadow:

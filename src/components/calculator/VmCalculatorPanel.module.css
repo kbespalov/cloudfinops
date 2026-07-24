@@ -286,9 +286,9 @@
   align-items: center;
   justify-content: center;
   margin: 0;
-  min-height: 32px;
-  min-width: 44px;
-  padding: 4px 10px;
+  min-height: 36px;
+  min-width: 48px;
+  padding: 6px 12px;
   border: 1px solid var(--g-color-line-generic);
   border-radius: var(--g-border-radius-m);
   background: var(--g-color-base-background);

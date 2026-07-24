@@ -63,13 +63,6 @@
   min-height: 0;
 }
 
-/* Soften inference lead so it doesn't compete with the H1. */
-.heroLeadMuted {
-  min-height: 0;
-  color: var(--g-color-text-hint);
-  opacity: 0.72;
-}
-
 .tabs {
   width: max-content;
   max-width: 100%;

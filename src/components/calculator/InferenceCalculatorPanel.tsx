@@ -475,12 +475,11 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
               <div className={styles.field}>
                 <div className={styles.fieldLabelRow}>
                   <Text as="span" className={styles.fieldLabel}>
-                    Средняя длина последовательности
+                    Токенов на запрос
                   </Text>
-                  <HelpMark aria-label="Про среднюю длину последовательности" iconSize="s">
-                    Среднее суммарное число входных и генерируемых токенов на запрос. Влияет на
-                    оценку KV cache. Отдельное поле длины ответа не используется — output входит в
-                    эту сумму.
+                  <HelpMark aria-label="Про число токенов на запрос" iconSize="s">
+                    Сколько токенов в среднем занимает один запрос: промпт плюс ответ. Нужно для
+                    оценки KV cache в VRAM.
                   </HelpMark>
                 </div>
                 <Select
@@ -499,11 +498,11 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
               <div className={styles.field}>
                 <div className={styles.fieldLabelRow}>
                   <Text as="span" className={styles.fieldLabel}>
-                    Максимальная длина контекста
+                    Макс. контекст
                   </Text>
-                  <HelpMark aria-label="Про максимальную длину контекста" iconSize="s">
-                    Максимальное число токенов, которое модель должна поддерживать для одного
-                    запроса. Используется при расчёте KV cache и резерва памяти.
+                  <HelpMark aria-label="Про максимальный контекст" iconSize="s">
+                    Максимум токенов, который модель должна уметь держать в одном запросе. Влияет
+                    на резерв VRAM под KV cache.
                   </HelpMark>
                 </div>
                 <Select

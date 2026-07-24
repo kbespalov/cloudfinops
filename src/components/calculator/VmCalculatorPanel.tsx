@@ -455,7 +455,7 @@ export function VmCalculatorPanel({
                   <Text variant="body-1">GPU</Text>
                 </Flex>
                 <Select
-                  size="m"
+                  size="l"
                   width="max"
                   value={[gpuFilter]}
                   options={gpuModelOptions(gpuPresets)}
@@ -566,7 +566,7 @@ export function VmCalculatorPanel({
                       </Text>
                     </Flex>
                     <SegmentedRadioGroup
-                      size="m"
+                      size="l"
                       value={diskMedia}
                       onUpdate={(v) => setDiskMedia(v as DiskMedia)}
                       aria-label="Тип диска"
@@ -625,7 +625,7 @@ export function VmCalculatorPanel({
                           </HelpMark>
                         </Flex>
                         <SegmentedRadioGroup
-                          size="m"
+                          size="l"
                           value={purchaseModel}
                           onUpdate={(v) => setPurchaseModel(v as PurchaseModel)}
                           aria-label="Тип виртуальной машины"

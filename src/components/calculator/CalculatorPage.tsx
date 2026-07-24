@@ -68,13 +68,11 @@ export function CalculatorPage({
   const [period, setPeriod] = useState<PeriodMode>('month');
   const heading = title ?? MODE_TITLE[mode];
   const subtitle = lead ?? MODE_LEAD[mode];
-  /** Hide only the default VM lead; keep provider `lead` overrides visible. */
+  /** Hide default leads visually; keep in DOM for SEO. Provider `lead` stays visible. */
   const leadClassName =
-    mode === 'vm' && !lead
+    !lead && (mode === 'vm' || mode === 'inference')
       ? `${styles.heroLead} ${styles.heroLeadSeo}`
-      : mode === 'inference'
-        ? `${styles.heroLead} ${styles.heroLeadMuted}`
-        : styles.heroLead;
+      : styles.heroLead;
 
   return (
     <>
@@ -95,10 +93,7 @@ export function CalculatorPage({
                   {heading}
                 </Text>
               </Flex>
-              <Text
-                color={mode === 'inference' || (mode === 'vm' && !lead) ? 'hint' : 'complementary'}
-                className={leadClassName}
-              >
+              <Text color="complementary" className={leadClassName}>
                 {subtitle}
               </Text>
             </Flex>

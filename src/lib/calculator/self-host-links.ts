@@ -75,7 +75,7 @@ export function selfHostChatPrompt(args: {
     parts.push(`Параллельные запросы: ${args.concurrentRequests}.`);
   }
   if (args.avgContextTokens) {
-    parts.push(`Средняя длина последовательности: ${args.avgContextTokens} токенов.`);
+    parts.push(`Токенов на запрос: ${args.avgContextTokens}.`);
   }
   if (args.maxContextTokens) {
     parts.push(`Макс. контекст: ${args.maxContextTokens} токенов.`);

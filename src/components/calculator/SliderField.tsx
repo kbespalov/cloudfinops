@@ -205,7 +205,7 @@ export function SliderField({
 
       <Slider
         key={`${absMin}-${absMax}`}
-        size="s"
+        size="m"
         min={posMin}
         max={posMax}
         step={0.01}
@@ -221,7 +221,7 @@ export function SliderField({
       {/* Wrapper owns display:none — Gravity may put className on an inner node. */}
       <div className={styles.inputWrap}>
         <NumberInput
-          size="m"
+          size="l"
           min={absMin}
           max={absMax}
           step={1}
@@ -297,7 +297,7 @@ export function IntegerSliderField({
 
       <Slider
         key={`${min}-${safeMax}`}
-        size="s"
+        size="m"
         min={min}
         max={safeMax}
         step={1}
@@ -312,7 +312,7 @@ export function IntegerSliderField({
 
       <div className={styles.inputWrap}>
         <NumberInput
-          size="m"
+          size="l"
           min={min}
           max={safeMax}
           step={1}
