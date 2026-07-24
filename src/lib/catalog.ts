@@ -229,6 +229,9 @@ export function meterPriceLabel(meter: CatalogMeter, period: PeriodMode): string
   const periodRu = periodLabel(period);
   if (isAddressMeter(meter)) return `за IP · ${periodRu}`;
   if (isGatewayMeter(meter)) return `за шлюз · ${periodRu}`;
+  const gpuBasis = gpuPriceBasisLabel(meter);
+  if (gpuBasis === 'целиком') return `конфигурация целиком (GPU+хост) · ${periodRu}`;
+  if (gpuBasis === 'только GPU') return `только GPU · ${periodRu}`;
   const q = meter.unitQuantity;
   if (q && !['flavor', 'master', 'address', 'gateway', 'vCPU', 'GiB-RAM', 'GB-RAM'].includes(q)) {
     return `за ${q} · ${periodRu}`;
@@ -436,23 +439,256 @@ export function extractGpuCount(meter: CatalogMeter): number | null {
   return typeof n === 'number' && Number.isFinite(n) && n > 0 ? n : null;
 }
 
-/** GPU column / short label: "NVIDIA H200 · ×8" when card count is known. */
-export function formatGpuLabel(meter: CatalogMeter): string | null {
-  const model = extractGpuModel(meter);
-  if (!model) return null;
-  const dims = meter.dimensions;
-  if (dims.virtualGpu === true) {
-    const profile = typeof dims.vgpuProfile === 'string' ? dims.vgpuProfile : null;
-    return profile ? `${model} · ${profile}` : model;
+/** How the listed GPU price is billed — card-only vs full VM flavor. */
+export function gpuPriceBasisLabel(meter: CatalogMeter): 'только GPU' | 'целиком' | null {
+  if (meter.categoryKey !== 'gpu') return null;
+  if (
+    meter.pricingMode === 'bundle' ||
+    meter.unitQuantity === 'flavor' ||
+    meter.meter === 'compute.flavor'
+  ) {
+    return 'целиком';
   }
+  if (meter.meter === 'compute.gpu') return 'только GPU';
+  return null;
+}
+
+type GpuDisplayIdentity = {
+  /** Leading brand/vendor, e.g. NVIDIA / Metax / Yandex. */
+  vendor: string;
+  /** Short card/family label without memory or interconnect. */
+  card: string;
+  memoryGb: number | null;
+  interconnect: string | null;
+  vgpuProfile: string | null;
+  /** Public tariff does not name the silicon (Yandex Gen2 / Platform V4 / T4i). */
+  unknownChip: boolean;
+};
+
+function gpuHayForIdentity(meter: CatalogMeter): string {
+  return `${extractGpuModel(meter) ?? ''} ${meter.name} ${meter.sku}`;
+}
+
+/** Per-GPU VRAM for display (GB). Prefer model token, then explicit dims. */
+export function extractGpuMemoryGb(meter: CatalogMeter): number | null {
+  const hay = gpuHayForIdentity(meter);
+  const named = hay.match(/(\d+)\s*G(?:B|iB|Б)/i);
+  if (named) return Number(named[1]);
+
+  const count = extractGpuCount(meter) ?? 1;
+  const explicit = Number(meter.dimensions.gpuMemoryGb ?? NaN);
+  if (Number.isFinite(explicit) && explicit > 0) {
+    // Selectel/Yandex unit rows store per-card memory; multi-GPU flavors may store total in vramGb.
+    return explicit;
+  }
+  const vram = Number(meter.dimensions.vramGb ?? NaN);
+  if (!Number.isFinite(vram) || vram <= 0) return null;
+  if (count > 1 && vram % count === 0) return vram / count;
+  return vram;
+}
+
+function extractGpuInterconnect(meter: CatalogMeter): string | null {
+  const raw = meter.dimensions.gpuInterconnect ?? meter.dimensions.nvlink;
+  if (raw === true || raw === 'true') return 'NVLink';
+  if (typeof raw === 'string' && raw.trim()) {
+    if (/nvlink/i.test(raw)) return 'NVLink';
+    if (/pcie|pci\b/i.test(raw)) return 'PCIe';
+    if (/sxm5/i.test(raw)) return 'SXM5';
+    if (/sxm/i.test(raw)) return 'SXM';
+    return raw.trim();
+  }
+  const hay = gpuHayForIdentity(meter);
+  if (/NVLink/i.test(hay)) return 'NVLink';
+  if (/SXM5/i.test(hay)) return 'SXM5';
+  if (/\bSXM\b/i.test(hay)) return 'SXM';
+  if (/PCI(?:e)?/i.test(hay)) return 'PCIe';
+  return null;
+}
+
+function extractGpuCardFamily(hay: string): string | null {
+  if (/B300/i.test(hay)) return 'B300';
+  if (/H200/i.test(hay)) return 'H200';
+  if (/H100/i.test(hay)) return 'H100';
+  if (/L40S/i.test(hay)) return 'L40S';
+  if (/\bL40\b/i.test(hay)) return 'L40';
+  if (/\bL4\b/i.test(hay) && !/L40/i.test(hay)) return 'L4';
+  if (/A100/i.test(hay)) return 'A100';
+  if (/\bA30\b/i.test(hay)) return 'A30';
+  if (/A5000/i.test(hay)) return 'A5000';
+  if (/A2000/i.test(hay)) return 'A2000';
+  if (/V100S/i.test(hay)) return 'V100S';
+  if (/V100/i.test(hay)) return 'V100';
+  if (/RTX\s*6000\s*Pro/i.test(hay)) return 'RTX 6000 Pro';
+  if (/RTX\s*6000\s*Ada/i.test(hay) || /RTX\s*6000/i.test(hay)) return 'RTX 6000 Ada';
+  if (/RTX\s*4090/i.test(hay)) return 'RTX 4090';
+  if (/RTX\s*2080/i.test(hay)) return 'RTX 2080 Ti';
+  if (!/T4i/i.test(hay) && (/Tesla\s*T4/i.test(hay) || /\bT4\b/i.test(hay))) return 'T4';
+  if (/GTX\s*1080/i.test(hay)) return 'GTX 1080';
+  if (/Metax\s*C550|C550/i.test(hay)) return 'C550';
+  if (/Metax\s*C500|C500/i.test(hay)) return 'C500';
+  return null;
+}
+
+/** Structured GPU identity for consistent catalog naming. */
+export function gpuDisplayIdentity(meter: CatalogMeter): GpuDisplayIdentity | null {
+  if (meter.categoryKey !== 'gpu' && meter.meter !== 'compute.gpu') return null;
+
+  const hay = gpuHayForIdentity(meter);
+  const dims = meter.dimensions;
+  const memoryGb = extractGpuMemoryGb(meter);
+  const interconnect = extractGpuInterconnect(meter);
+  const vgpuProfile =
+    dims.virtualGpu === true && typeof dims.vgpuProfile === 'string'
+      ? dims.vgpuProfile
+      : /vGPU/i.test(hay)
+        ? typeof dims.vgpuProfile === 'string'
+          ? dims.vgpuProfile
+          : null
+        : null;
+
+  // Yandex unnamed platforms — never invent an NVIDIA chip name.
+  const platformId = String(dims.platformId ?? '');
+  if (
+    /gpu-standard-v4/i.test(platformId) ||
+    /Platform V4/i.test(meter.name) ||
+    /platform-v4/i.test(meter.sku)
+  ) {
+    return {
+      vendor: 'Yandex',
+      card: 'Platform V4',
+      memoryGb,
+      interconnect: null,
+      vgpuProfile: null,
+      unknownChip: true,
+    };
+  }
+  if (
+    /gpu-standard-v3i/i.test(platformId) ||
+    /^Gen2\b/i.test(meter.name) ||
+    /\.gen2$/i.test(meter.sku)
+  ) {
+    return {
+      vendor: 'Yandex',
+      card: 'Gen2',
+      memoryGb,
+      interconnect: null,
+      vgpuProfile: null,
+      unknownChip: true,
+    };
+  }
+  if (/t4i/i.test(platformId) || /\.t4i$/i.test(meter.sku) || /^T4i\b/i.test(meter.name)) {
+    return {
+      vendor: 'Yandex',
+      card: 'T4i',
+      memoryGb,
+      interconnect: null,
+      vgpuProfile: null,
+      unknownChip: true,
+    };
+  }
+
+  if (/Metax|C500|C550/i.test(hay)) {
+    const card = /C550/i.test(hay) ? 'C550' : 'C500';
+    return {
+      vendor: 'Metax',
+      card,
+      memoryGb,
+      interconnect,
+      vgpuProfile: null,
+      unknownChip: false,
+    };
+  }
+
+  const family = extractGpuCardFamily(hay);
+  if (family) {
+    const card =
+      dims.virtualGpu === true || /vGPU/i.test(hay) ? `${family} vGPU` : family;
+    return {
+      vendor: 'NVIDIA',
+      card,
+      memoryGb,
+      interconnect,
+      vgpuProfile,
+      unknownChip: false,
+    };
+  }
+
+  const model = extractGpuModel(meter);
+  if (model) {
+    return {
+      vendor: /^NVIDIA\b/i.test(model) ? 'NVIDIA' : 'GPU',
+      card: model.replace(/^NVIDIA\s+/i, '').replace(/\s+\d+\s*G(?:B|iB|Б).*$/i, '').trim() || model,
+      memoryGb,
+      interconnect,
+      vgpuProfile,
+      unknownChip: false,
+    };
+  }
+
+  return null;
+}
+
+function isGpuPreemptible(meter: CatalogMeter): boolean {
+  const pm = meter.purchaseModel ?? meter.dimensions.purchaseModel;
+  return pm === 'preemptible' || /прерываем/i.test(meter.name);
+}
+
+/**
+ * Canonical GPU tariff title (SKU / «Тариф» column):
+ * `NVIDIA H100 80 ГБ · PCIe · ×1` — card identity only (no billing basis, no host BOM).
+ */
+export function formatGpuTariffName(meter: CatalogMeter): string | null {
+  const id = gpuDisplayIdentity(meter);
+  if (!id) return null;
+
+  const parts: string[] = [];
+  const head = [id.vendor, id.card].filter(Boolean).join(' ');
+  parts.push(id.memoryGb != null ? `${head} ${id.memoryGb} ГБ` : head);
+  if (id.interconnect) parts.push(id.interconnect);
+  if (id.vgpuProfile) parts.push(id.vgpuProfile);
+  else if (id.unknownChip) parts.push('чип не указан');
+
   const count = extractGpuCount(meter);
-  return count != null ? `${model} · ×${count}` : model;
+  if (count != null) parts.push(`×${count}`);
+  if (isGpuPreemptible(meter)) parts.push('прерываемая');
+
+  return parts.join(' · ');
+}
+
+/**
+ * GPU «Состав» column — what the price covers, without repeating the card name.
+ * Examples: `только GPU`, `целиком · 20 vCPU · 110 GiB`, `только GPU · оценка *`.
+ */
+export function formatGpuLabel(meter: CatalogMeter): string | null {
+  if (meter.categoryKey !== 'gpu' && meter.meter !== 'compute.gpu') return null;
+
+  const parts: string[] = [];
+  const basis = gpuPriceBasisLabel(meter);
+  if (basis) parts.push(basis);
+
+  if (basis === 'целиком') {
+    const vcpu = typeof meter.dimensions.vcpu === 'number' ? meter.dimensions.vcpu : null;
+    const ram =
+      typeof meter.dimensions.ramGiB === 'number'
+        ? meter.dimensions.ramGiB
+        : typeof meter.dimensions.ramGb === 'number'
+          ? meter.dimensions.ramGb
+          : null;
+    if (vcpu != null) parts.push(`${vcpu} vCPU`);
+    if (ram != null) parts.push(`${ram} GiB`);
+  }
+
+  if (meter.synthetic || meter.sku.includes('.synthetic')) {
+    parts.push('оценка *');
+  }
+
+  return parts.length ? parts.join(' · ') : null;
 }
 
 /** Flavor codes like GPU-44-256-H200-1 / vGPU-2-8-L4-1Q — count buried in SKU string. */
 function looksLikeGpuFlavorCode(name: string): boolean {
   const n = name.trim();
-  return /^GPU\d*[-_]/i.test(n) || /^vGPU[-_]/i.test(n);
+  return /^GPU\d*[A-Z]?[-_]/i.test(n) || /^vGPU[-_]/i.test(n);
 }
 
 export function extractStorageClass(meter: CatalogMeter): string | null {
@@ -565,11 +801,13 @@ export function displayMeterName(meter: CatalogMeter): string {
     if (model) return model;
   }
 
-  // VK-style flavor codes hide ×1/×8 in the SKU — surface the card count in the title.
-  if (
-    (meter.categoryKey === 'gpu' || meter.meter === 'compute.flavor') &&
-    looksLikeGpuFlavorCode(meter.name) 
-  ) {
+  // Normalize every GPU row: NVIDIA/card/VRAM first, then interconnect / count / basis.
+  if (meter.categoryKey === 'gpu' || meter.meter === 'compute.gpu') {
+    const gpuTitle = formatGpuTariffName(meter);
+    if (gpuTitle) return gpuTitle;
+  }
+  // Legacy VK flavor codes outside categoryKey=gpu (defensive).
+  if (meter.meter === 'compute.flavor' && looksLikeGpuFlavorCode(meter.name)) {
     const gpuLabel = formatGpuLabel(meter);
     if (gpuLabel) return gpuLabel;
   }

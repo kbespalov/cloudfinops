@@ -1286,3 +1286,250 @@ spec:
         vat: included
         byteBasis: not-applicable
     notes: Цена конфигурации целиком (vCPU, RAM и GPU).
+
+  # ---------------------------------------------------------------------------
+  # Synthetic per-GPU unit estimates (catalog comparison only).
+  # flavor_hour − vCPU×0.976 − RAM×0.254675 (Cloud.ru compute lattice *).
+  # ---------------------------------------------------------------------------
+  - sku: cloudru.gpu.h100-80-pcie.unit.synthetic
+    name: NVIDIA H100 80GB PCI *
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: derived
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-24'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 80GB PCI
+      gpuCount: 1
+      gpuMemoryGb: 80
+      vramGb: 80
+      gpuInterconnect: PCIe
+      nvlink: false
+      purchaseModel: on-demand
+      synthetic: true
+      syntheticFrom:
+      - cloudru.gpu.h100-80-pcie-1
+      - cloudru.gpu.h100-80-pcie-2
+      - cloudru.gpu.h100-80-pcie-3
+      - cloudru.gpu.h100-80-pcie-4
+      - cloudru.gpu.h100-80-pcie-5
+      - cloudru.gpu.h100-80-pcie-6
+      - cloudru.gpu.h100-80-pcie-7
+      - cloudru.gpu.h100-80-pcie-8
+      hostDeduction:
+        vcpuPerGpu: 20
+        ramGiBPerGpu: 110
+        vcpuUnitSku: cloudru.compute.cascade-lake.vcpu.synthetic
+        ramUnitSku: cloudru.compute.cascade-lake.ram.synthetic
+    pricing:
+      rate:
+        amount: '501.466'
+        currency: RUB
+        unit:
+          quantity: GPU
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '501.466'
+        unit:
+          currency: RUB
+          quantity: GPU
+          period: hour
+        formula: 549 − 20×0.976 − 110×0.254675 (PCIe flavor lattice, VAT incl.)
+        vat: included
+    notes: >
+      Синтетическая позиция каталога Cloud FinOps (*): оценка только GPU после
+      вычета хоста (20 vCPU / 110 GiB на карту) по unit-ставкам Cloud FinOps.
+      Cloud.ru продаёт H100 только готовыми flavor’ами (vCPU+RAM+GPU). Для заказа
+      смотрите конфигурации целиком; эта строка — чтобы сравнить карту с
+      card-only тарифами других облаков.
+
+  - sku: cloudru.gpu.h100-80-nvlink.unit.synthetic
+    name: NVIDIA H100 80GB NVLink *
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: derived
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-24'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA H100 80GB
+      gpuCount: 1
+      gpuMemoryGb: 80
+      vramGb: 80
+      gpuInterconnect: NVLink
+      nvlink: true
+      purchaseModel: on-demand
+      synthetic: true
+      syntheticFrom:
+      - cloudru.gpu.h100-80-nvlink-1
+      - cloudru.gpu.h100-80-nvlink-2
+      - cloudru.gpu.h100-80-nvlink-3
+      - cloudru.gpu.h100-80-nvlink-4
+      - cloudru.gpu.h100-80-nvlink-5
+      - cloudru.gpu.h100-80-nvlink-6
+      - cloudru.gpu.h100-80-nvlink-7
+      - cloudru.gpu.h100-80-nvlink-8
+      hostDeduction:
+        vcpuPerGpu: 20
+        ramGiBPerGpu: 186
+        vcpuUnitSku: cloudru.compute.cascade-lake.vcpu.synthetic
+        ramUnitSku: cloudru.compute.cascade-lake.ram.synthetic
+    pricing:
+      rate:
+        amount: '787.11'
+        currency: RUB
+        unit:
+          quantity: GPU
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '787.11'
+        unit:
+          currency: RUB
+          quantity: GPU
+          period: hour
+        formula: 854 − 20×0.976 − 186×0.254675 (NVLink flavor lattice, VAT incl.)
+        vat: included
+    notes: >
+      Синтетическая позиция каталога Cloud FinOps (*): оценка только GPU после
+      вычета хоста (20 vCPU / 186 GiB на карту) по unit-ставкам Cloud FinOps.
+      NVLink у Cloud.ru — отдельная линейка flavor’ов (не «×2 от PCIe»). Для заказа
+      смотрите конфигурации целиком; эта строка — для сравнения карты с card-only
+      тарифами других облаков.
+
+  - sku: cloudru.gpu.a100-80-pcie.unit.synthetic
+    name: NVIDIA A100 80GB PCI *
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: derived
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-24'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA A100 80GB PCI
+      gpuCount: 1
+      gpuMemoryGb: 80
+      vramGb: 80
+      gpuInterconnect: PCIe
+      nvlink: false
+      purchaseModel: on-demand
+      synthetic: true
+      syntheticFrom:
+      - cloudru.gpu.a100-80-pcie-1
+      - cloudru.gpu.a100-80-pcie-2
+      - cloudru.gpu.a100-80-pcie-3
+      - cloudru.gpu.a100-80-pcie-4
+      - cloudru.gpu.a100-80-pcie-5
+      - cloudru.gpu.a100-80-pcie-6
+      - cloudru.gpu.a100-80-pcie-7
+      - cloudru.gpu.a100-80-pcie-8
+      hostDeduction:
+        vcpuPerGpu: 20
+        ramGiBPerGpu: 125
+        vcpuUnitSku: cloudru.compute.cascade-lake.vcpu.synthetic
+        ramUnitSku: cloudru.compute.cascade-lake.ram.synthetic
+    pricing:
+      rate:
+        amount: '265.846'
+        currency: RUB
+        unit:
+          quantity: GPU
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '265.846'
+        unit:
+          currency: RUB
+          quantity: GPU
+          period: hour
+        formula: 317.20 − 20×0.976 − 125×0.254675 (PCIe flavor lattice, VAT incl.)
+        vat: included
+    notes: >
+      Синтетическая позиция каталога Cloud FinOps (*): оценка только GPU после
+      вычета хоста (20 vCPU / 125 GiB на карту) по unit-ставкам Cloud FinOps.
+      Cloud.ru продаёт A100 только готовыми flavor’ами (vCPU+RAM+GPU). Цена flavor’ов
+      линейна по числу GPU; у ×8 RAM в прайсе 900 GiB (не 1000) — оценка карты
+      считается от шаблона ×1. Для заказа смотрите конфигурации целиком.
+
+  - sku: cloudru.gpu.a100-40-pcie.unit.synthetic
+    name: NVIDIA A100 40GB PCI *
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    location:
+      scope: region
+      regionCode: moscow
+      label: Москва
+    priceProvenance: derived
+    effectiveFrom: '2026-06-29'
+    checkedAt: '2026-07-24'
+    sourceRefs:
+    - cloudru.compute-gpu-pdf
+    dimensions:
+      gpuModel: NVIDIA A100 40GB PCI
+      gpuCount: 1
+      gpuMemoryGb: 40
+      vramGb: 40
+      gpuInterconnect: PCIe
+      nvlink: false
+      purchaseModel: on-demand
+      synthetic: true
+      syntheticFrom:
+      - cloudru.gpu.a100-40-pcie-1
+      - cloudru.gpu.a100-40-pcie-2
+      - cloudru.gpu.a100-40-pcie-4
+      hostDeduction:
+        vcpuPerGpu: 24
+        ramGiBPerGpu: 220
+        vcpuUnitSku: cloudru.compute.cascade-lake.vcpu.synthetic
+        ramUnitSku: cloudru.compute.cascade-lake.ram.synthetic
+    pricing:
+      rate:
+        amount: '176.748'
+        currency: RUB
+        unit:
+          quantity: GPU
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '176.748'
+        unit:
+          currency: RUB
+          quantity: GPU
+          period: hour
+        formula: 256.20 − 24×0.976 − 220×0.254675 (PCIe flavor lattice, VAT incl.)
+        vat: included
+    notes: >
+      Синтетическая позиция каталога Cloud FinOps (*): оценка только GPU после
+      вычета хоста (24 vCPU / 220 GiB на карту) по unit-ставкам Cloud FinOps.
+      Cloud.ru продаёт A100 только готовыми flavor’ами (vCPU+RAM+GPU). Для заказа
+      смотрите конфигурации целиком; эта строка — чтобы сравнить карту с
+      card-only тарифами других облаков.

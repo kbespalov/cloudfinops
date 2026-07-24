@@ -809,6 +809,8 @@ function quoteGpu(
     const candidates = (index.gpuByProvider.get(provider.id) ?? []).filter((m) => {
       if (m.status !== 'available') return false;
       if (!isConfirmedAvailable(m)) return false;
+      // Catalog-only derived GPU unit estimates must not enter calculator quotes.
+      if (m.synthetic) return false;
       if (!isOnDemand(m) && !preset.dedicated) return false;
       return gpuModelMatches(m, preset.gpuModelMatch);
     });

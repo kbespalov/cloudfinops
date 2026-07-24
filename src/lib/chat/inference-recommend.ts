@@ -87,19 +87,14 @@ function presetMatchesGpuFamily(presetMatch: string, family: string): boolean {
   return presetMatch.trim().toLowerCase() === family.trim().toLowerCase();
 }
 
-function defaultGpuHost(
+function rankGpuHostPresets(
+  candidates: ReturnType<typeof listGpuPresets>,
   gpuFamily: string,
-  gpuCount: number,
   interconnect?: string,
-): AssumedGpuHost | null {
-  const candidates = listGpuPresets().filter(
-    (p) => p.gpuCount === gpuCount && presetMatchesGpuFamily(p.gpuModelMatch, gpuFamily),
-  );
-  if (!candidates.length) return null;
-
+): ReturnType<typeof listGpuPresets> {
   const wantLink = (interconnect || '').toLowerCase();
   const family = gpuFamily.toUpperCase();
-  const ranked = candidates.slice().sort((a, b) => {
+  return candidates.slice().sort((a, b) => {
     const aLink = `${a.gpuInterconnect || ''} ${a.title}`.toLowerCase();
     const bLink = `${b.gpuInterconnect || ''} ${b.title}`.toLowerCase();
     const aMatch = wantLink && aLink.includes(wantLink) ? 0 : 1;
@@ -120,8 +115,43 @@ function defaultGpuHost(
     if (aRu !== bRu) return aRu - bRu;
     return (a.vcpu ?? 0) - (b.vcpu ?? 0);
   });
+}
+
+function defaultGpuHost(
+  gpuFamily: string,
+  gpuCount: number,
+  interconnect?: string,
+): AssumedGpuHost | null {
+  const familyPresets = listGpuPresets().filter((p) =>
+    presetMatchesGpuFamily(p.gpuModelMatch, gpuFamily),
+  );
+  const exact = familyPresets.filter((p) => p.gpuCount === gpuCount);
+  // No exact N× flavor (e.g. H200×4): scale a 1× host, else nearest other count.
+  // Without this, quote falls to gpu-only and undercuts full-node configs.
+  let scaleBase: (typeof familyPresets)[number] | null = null;
+  if (!exact.length) {
+    const scalable = familyPresets.filter(
+      (p) => p.vcpu != null && p.ramGiB != null && !p.dedicated,
+    );
+    scaleBase =
+      rankGpuHostPresets(scalable, gpuFamily, interconnect)
+        .slice()
+        .sort((a, b) => {
+          if (a.gpuCount === 1 && b.gpuCount !== 1) return -1;
+          if (b.gpuCount === 1 && a.gpuCount !== 1) return 1;
+          return Math.abs(a.gpuCount - gpuCount) - Math.abs(b.gpuCount - gpuCount);
+        })[0] ?? null;
+  }
+
+  const candidates = exact.length > 0 ? exact : scaleBase ? [scaleBase] : [];
+  if (!candidates.length) return null;
+
+  const ranked = rankGpuHostPresets(candidates, gpuFamily, interconnect);
   const chosen = ranked[0]!;
-  if (chosen.dedicated) {
+  const scale =
+    exact.length === 0 && chosen.gpuCount > 0 ? gpuCount / chosen.gpuCount : 1;
+
+  if (chosen.dedicated && scale === 1) {
     return {
       vcpu: 0,
       ramGiB: 0,
@@ -147,10 +177,13 @@ function defaultGpuHost(
     };
   }
   return {
-    vcpu: chosen.vcpu,
-    ramGiB: chosen.ramGiB,
+    vcpu: Math.round(chosen.vcpu * scale),
+    ramGiB: Math.round(chosen.ramGiB * scale),
     diskGiB: chosen.diskGiB ?? 100,
-    source: chosen.shapeSource ?? 'catalog',
+    source:
+      scale === 1
+        ? (chosen.shapeSource ?? 'catalog')
+        : `${chosen.shapeSource ?? 'catalog'} ×${gpuCount}/${chosen.gpuCount}`,
     interconnect: chosen.gpuInterconnect || interconnect,
     dedicated: false,
     unitOnly: false,

@@ -252,6 +252,29 @@ describe('recommendInferenceInfra', () => {
     assert.ok(result.configs?.length);
   });
 
+  it('quotes Qwen3-Coder-480B 4×H200 as full node, not GPU-only', () => {
+    const result = recommendInferenceInfra({
+      model: 'Qwen3 Coder 480B',
+      quant: 'fp8',
+      maxConfigs: 5,
+    });
+    assert.equal(result.ok, true);
+    const h100 = result.configs?.find((c) => c.gpuFamily === 'H100' && c.gpuCount === 8);
+    const h200 = result.configs?.find((c) => c.gpuFamily === 'H200' && c.gpuCount === 4);
+    assert.ok(h100?.host && !h100.host.unitOnly);
+    assert.equal(h100?.host?.vcpu, 160);
+    assert.equal(h100?.host?.ramGiB, 1488);
+    assert.ok(h200?.host && !h200.host.unitOnly, '4×H200 must assume a scaled host');
+    assert.equal(h200?.host?.vcpu, 176);
+    assert.equal(h200?.host?.ramGiB, 1024);
+    assert.ok((h200?.best?.totalMonth ?? 0) > 1_690_000, 'must include host above card-only floor');
+    assert.ok(
+      (h200?.best?.totalMonth ?? 0) < (h100?.best?.totalMonth ?? 0),
+      '4×H200 full node should still undercut 8×H100',
+    );
+    assert.ok(h200?.quotes.every((q) => q.scope !== 'gpu-only'));
+  });
+
   it('sizes Qwen3-Coder-Next on 1–2×GPU ladder, not 8×H100 from 480B', () => {
     const result = recommendInferenceInfra({model: 'Qwen3-Coder-Next', maxConfigs: 5});
     assert.equal(result.ok, true);

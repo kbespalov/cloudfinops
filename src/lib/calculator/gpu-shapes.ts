@@ -273,7 +273,7 @@ export function buildGpuCardPresets(all: GpuPreset[] = buildGpuFlavorPresets()):
   const b300 = all.find((p) => p.gpuModelMatch === 'B300');
   if (b300) featured.push(b300);
 
-  const want = ['L4', 'A100', 'H100', 'H200', 'V100'] as const;
+  const want = ['L4', 'L40S', 'A100', 'H100', 'H200', 'V100'] as const;
   for (const family of want) {
     const candidates = all.filter((p) => p.gpuModelMatch === family && p.gpuCount === 1);
     const pick = pickFeaturedGpuShape(candidates, family);

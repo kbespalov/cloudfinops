@@ -73,6 +73,10 @@ describe('calculator presets', () => {
     const cards = buildGpuCardPresets(all);
     assert.ok(cards.length >= 4);
     assert.ok(cards.some((p) => p.gpuModelMatch === 'B300'));
+    const l40s = cards.find((p) => p.gpuModelMatch === 'L40S');
+    assert.ok(l40s, 'L40S must be on the GPU card shelf');
+    assert.equal(l40s.gpuCount, 1);
+    assert.equal(l40s.gpuMemoryGb, 48);
     // Shelf must show comparable H100 80GB (Selectel/T1/Cloud.ru), not Cloud.ru-only 94GB NVL.
     const h100Cards = cards.filter((p) => p.gpuModelMatch === 'H100');
     assert.ok(h100Cards.length >= 1);

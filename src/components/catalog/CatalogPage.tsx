@@ -855,8 +855,12 @@ export function CatalogPage() {
         className: styles.nameCol,
         template: (m) => {
           const title = displayMeterName(m);
+          const tip =
+            (m.synthetic || m.sku.includes('.synthetic')) && m.notes?.trim()
+              ? m.notes.trim()
+              : title;
           return (
-            <Text variant="body-1" ellipsis title={title}>
+            <Text variant="body-1" ellipsis title={tip}>
               {title}
             </Text>
           );
@@ -877,7 +881,7 @@ export function CatalogPage() {
         id: 'specs',
         name:
           category === 'gpu'
-            ? 'GPU'
+            ? 'Состав'
             : category === 'compute'
               ? facet === 'image' || facet === 'snapshot'
                 ? 'Единица'
@@ -897,8 +901,15 @@ export function CatalogPage() {
           let label = paramsLabel(m);
           let title = label;
           if (category === 'gpu') {
-            label = formatGpuLabel(m) || label;
-            title = label;
+            label = formatGpuLabel(m) || '—';
+            title =
+              (m.synthetic || m.sku.includes('.synthetic')) && m.notes?.trim()
+                ? m.notes.trim()
+                : label === 'только GPU'
+                  ? 'В цене только GPU; vCPU, RAM и диск тарифицируются отдельно'
+                  : label.startsWith('целиком')
+                    ? 'Цена готовой конфигурации: GPU вместе с указанным хостом'
+                    : label;
           } else if (category === 'ai') {
             label = billingUnitLabel(m);
             const model = extractAiModelFamily(m);
@@ -1597,7 +1608,9 @@ export function CatalogPage() {
           <Text variant="caption-2" color="secondary">
             {category === 'ai' || filtered.some(isAiTokenMeter)
               ? 'Цены AI — за 1M токенов (локальный inference)'
-              : `Цены ${periodLabel(period)}; ёмкость — за GiB`}
+              : category === 'gpu'
+                ? 'Цены GPU: «только GPU» — карта отдельно от хоста; «целиком» — flavor GPU+vCPU+RAM; * — оценка Cloud FinOps, не строка прайса'
+                : `Цены ${periodLabel(period)}; ёмкость — за GiB`}
             {category === 'storage' || filtered.some(isRequestMeter)
               ? '; запросы — за 10 000 операций'
               : ''}
