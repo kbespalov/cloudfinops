@@ -89,33 +89,35 @@ describe('calculator presets', () => {
     assert.equal(l40s.gpuCount, 1);
     assert.equal(l40s.gpuMemoryGb, 48);
 
+    // Shelf prefers multi-provider hosts that keep Cloud.ru when it publishes the flavor.
     const l4 = cards.find((p) => p.gpuModelMatch === 'L4');
-    assert.equal(l4?.shapeSource, 'selectel');
+    assert.equal(l4?.shapeSource, 'vk-cloud');
     assert.equal(l4?.vcpu, 16);
-    assert.equal(l4?.ramGiB, 64);
+    assert.equal(l4?.ramGiB, 72);
 
     const a100 = cards.find((p) => p.gpuModelMatch === 'A100');
-    assert.equal(a100?.shapeSource, 'selectel');
+    assert.equal(a100?.shapeSource, 'cloud-ru');
     assert.equal(a100?.gpuMemoryGb, 80);
-    assert.equal(a100?.vcpu, 12);
-    assert.equal(a100?.ramGiB, 128);
+    assert.equal(a100?.vcpu, 20);
+    assert.equal(a100?.ramGiB, 125);
 
-    // Shelf 1× H100 = Selectel GPU Line 12/128 (not Cloud.ru 20/110).
     const h100x1 = cards.find((p) => p.gpuModelMatch === 'H100' && p.gpuCount === 1);
     assert.ok(h100x1);
     assert.equal(h100x1.gpuMemoryGb, 80);
-    assert.equal(h100x1.shapeSource, 'selectel');
-    assert.equal(h100x1.vcpu, 12);
-    assert.equal(h100x1.ramGiB, 128);
+    assert.equal(h100x1.shapeSource, 'cloud-ru');
+    assert.equal(h100x1.gpuInterconnect, 'PCIe');
+    assert.equal(h100x1.vcpu, 20);
+    assert.equal(h100x1.ramGiB, 110);
 
+    // H200: no Cloud.ru — VK host for Selectel/T1/VK.
     const h200x1 = cards.find((p) => p.gpuModelMatch === 'H200' && p.gpuCount === 1);
-    assert.equal(h200x1?.shapeSource, 'selectel');
-    assert.equal(h200x1?.vcpu, 24);
-    assert.equal(h200x1?.ramGiB, 180);
+    assert.equal(h200x1?.shapeSource, 'vk-cloud');
+    assert.equal(h200x1?.vcpu, 44);
+    assert.equal(h200x1?.ramGiB, 256);
 
-    // 8× H100 stays Cloud.ru (Selectel has no 8× H100 GPU Line row).
     const h100x8 = cards.find((p) => p.gpuModelMatch === 'H100' && p.gpuCount === 8);
     assert.ok(h100x8);
+    assert.equal(h100x8.shapeSource, 'cloud-ru');
     assert.equal(h100x8.gpuMemoryGb, 80);
     assert.equal(h100x8.gpuInterconnect, 'PCIe');
   });

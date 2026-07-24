@@ -34,7 +34,7 @@
   width: 32px;
   height: 32px;
   border-radius: var(--g-border-radius-m);
-  /* Keep CF mark on classic yellow; product chrome uses violet brand. */
+  /* Keep CF mark on classic yellow; product chrome uses sapphire brand. */
   background: var(--g-color-private-yellow-550-solid);
   color: var(--g-color-text-dark-primary);
   font-weight: 700;

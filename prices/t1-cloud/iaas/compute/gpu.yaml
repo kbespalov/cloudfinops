@@ -254,3 +254,120 @@ spec:
       - 2
       - 4
       - 8
+
+  # ---------------------------------------------------------------------------
+  # Synthetic full-node quotes matching VK Cloud H200 hosts (catalog compare).
+  # H200 SXM unit + T1 a1 vCPU + RAM; no boot disk. Not a published T1 SKU.
+  # ---------------------------------------------------------------------------
+  - sku: t1.gpu.h200.vk-host-1.synthetic
+    name: NVIDIA H200 141GB SXM · 44/256 *
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: ru-central2-a
+    priceProvenance: derived
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-24'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    dimensions:
+      series: g7
+      gpuModel: NVIDIA H200 141GB SXM
+      gpuCount: 1
+      gpuMemoryGb: 141
+      vramGb: 141
+      vcpu: 44
+      ramGb: 256
+      ramGiB: 256
+      cpuPlatformFamily: intel-sapphire-rapids
+      purchaseModel: on-demand
+      synthetic: true
+      syntheticFrom:
+      - t1.gpu.h200
+      - t1.compute.a1.vcpu
+      - t1.compute.ram
+      parityHost:
+        provider: vk-cloud
+        flavorSku: vk.gpu.h200-1
+        vcpu: 44
+        ramGiB: 256
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '725.326'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '725.326'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 593.0555554 + 44×1.2482635 + 256×0.3021367 (VK H200 ×1 host parity, VAT incl.)
+        vat: included
+    notes: >
+      Синтетическая позиция каталога Cloud FinOps (*): сборка T1 Cloud под хост
+      VK Cloud GPU-44-256-H200-1 (1×H200 SXM + 44 vCPU a1 + 256 GiB) из unit-ставок.
+      T1 продаёт карту отдельно; эта строка — чтобы сравнить «целиком» с VK.
+      Без загрузочного диска.
+
+  - sku: t1.gpu.h200.vk-host-8.synthetic
+    name: NVIDIA H200 141GB SXM · 240/2048 · ×8 *
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: ru-central2-a
+    priceProvenance: derived
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-24'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    dimensions:
+      series: g7
+      gpuModel: NVIDIA H200 141GB SXM
+      gpuCount: 8
+      gpuMemoryGb: 141
+      vramGb: 1128
+      vcpu: 240
+      ramGb: 2048
+      ramGiB: 2048
+      cpuPlatformFamily: intel-sapphire-rapids
+      purchaseModel: on-demand
+      synthetic: true
+      syntheticFrom:
+      - t1.gpu.h200
+      - t1.compute.a1.vcpu
+      - t1.compute.ram
+      parityHost:
+        provider: vk-cloud
+        flavorSku: vk.gpu.h200-8
+        vcpu: 240
+        ramGiB: 2048
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '5662.804'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '5662.804'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 8×593.0555554 + 240×1.2482635 + 2048×0.3021367 (VK H200 ×8 host parity, VAT incl.)
+        vat: included
+    notes: >
+      Синтетическая позиция каталога Cloud FinOps (*): сборка T1 Cloud под хост
+      VK Cloud GPU-240-2048-H200-8 (8×H200 SXM + 240 vCPU a1 + 2048 GiB) из unit-ставок.
+      Для сравнения «целиком» с VK; без загрузочного диска.

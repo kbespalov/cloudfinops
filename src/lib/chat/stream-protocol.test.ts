@@ -36,6 +36,23 @@ describe('stream-protocol', () => {
     assert.equal(parseChatStreamLine('{"type":"other","text":"x"}'), null);
   });
 
+  it('round-trips sidebar_config events for the calculator AI tab', () => {
+    const wire = encodeChatStreamEvent({
+      type: 'sidebar_config',
+      tool: 'get_quote',
+      args: {vcpu: 52, ramGiB: 128},
+    });
+    assert.deepEqual(parseChatStreamLine(wire), {
+      type: 'sidebar_config',
+      tool: 'get_quote',
+      args: {vcpu: 52, ramGiB: 128},
+    });
+    assert.equal(
+      parseChatStreamLine('{"type":"sidebar_config","tool":"search_prices","args":{}}'),
+      null,
+    );
+  });
+
   it('parses events split across chunk boundaries', () => {
     const parser = createChatStreamParser();
     const wire =

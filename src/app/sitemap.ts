@@ -44,6 +44,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'daily',
       priority: 0.9,
     },
+    {
+      url: `${SITE_URL}/calculator/ai`,
+      lastModified,
+      changeFrequency: 'weekly',
+      priority: 0.85,
+    },
     ...CALCULATOR_PROVIDER_SEO.map((p) => ({
       url: `${SITE_URL}/calculator/${p.slug}`,
       lastModified,

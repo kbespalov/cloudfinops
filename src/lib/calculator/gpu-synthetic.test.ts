@@ -124,6 +124,68 @@ describe('Cloud.ru H100 synthetic GPU units', () => {
   });
 });
 
+describe('Selectel/T1 H200 VK-host parity synthetics', () => {
+  it('assembles Selectel/T1 full nodes to VK H200 ×1 host (44/256)', () => {
+    const vk = catalog.meters.find((m) => m.sku === 'vk.gpu.h200-1')!;
+    const sel = catalog.meters.find((m) => m.sku === 'selectel.gpu.h200-141.vk-host-1.synthetic')!;
+    const t1 = catalog.meters.find((m) => m.sku === 't1.gpu.h200.vk-host-1.synthetic')!;
+    assert.ok(vk && sel && t1);
+    assert.equal(sel.synthetic, true);
+    assert.equal(t1.synthetic, true);
+    assert.equal(gpuPriceBasisLabel(sel), 'целиком');
+    assert.equal(formatGpuLabel(sel), 'целиком · 44 vCPU · 256 GiB · оценка *');
+
+    const vkH = amountNumber(vk, 'unit')!;
+    const selH = amountNumber(sel, 'unit')!;
+    const t1H = amountNumber(t1, 'unit')!;
+    assert.ok(nearlyEqual(selH, 725.731, 0.01));
+    assert.ok(nearlyEqual(t1H, 725.326, 0.01));
+    assert.ok(selH < vkH, 'Selectel assemble must undercut VK flavor');
+    assert.ok(t1H < vkH, 'T1 assemble must undercut VK flavor');
+
+    const gpu = amountNumber(
+      catalog.meters.find((m) => m.sku === 'selectel.gpu.h200-141')!,
+      'unit',
+    )!;
+    const vcpu = amountNumber(
+      catalog.meters.find((m) => m.sku === 'selectel.compute.vcpu-2250')!,
+      'unit',
+    )!;
+    const ram = amountNumber(
+      catalog.meters.find((m) => m.sku === 'selectel.compute.ram-2133-2933')!,
+      'unit',
+    )!;
+    assert.ok(nearlyEqual(selH, gpu + 44 * vcpu + 256 * ram, 0.01));
+  });
+
+  it('calculator still composes Selectel/T1 for VK H200 host (ignores synthetic bundles)', () => {
+    const preset: GpuPreset = {
+      id: 'h200-vk-parity',
+      kind: 'gpu',
+      title: 'H200 VK host',
+      subtitle: '44/256',
+      gpuModelMatch: 'H200',
+      gpuCount: 1,
+      vcpu: 44,
+      ramGiB: 256,
+      diskGiB: 100,
+      gpuMemoryGb: 141,
+      shapeSource: 'vk-cloud',
+    };
+    const result = quotePreset(preset, 'month');
+    const sel = result.quotes.find((q) => q.provider === 'selectel');
+    const t1 = result.quotes.find((q) => q.provider === 't1-cloud');
+    const vk = result.quotes.find((q) => q.provider === 'vk-cloud');
+    assert.ok(sel && t1 && vk);
+    assert.equal(sel.scope, 'gpu-synthetic');
+    assert.equal(t1.scope, 'gpu-synthetic');
+    assert.equal(vk.scope, 'bundle');
+    assert.ok(!sel.meters.some((m) => m.synthetic));
+    assert.ok(sel.total < vk.total);
+    assert.ok(t1.total < vk.total);
+  });
+});
+
 describe('Cloud.ru A100 synthetic GPU units', () => {
   const vcpuHour = () =>
     amountNumber(

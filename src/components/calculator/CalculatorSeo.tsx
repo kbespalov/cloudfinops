@@ -381,7 +381,7 @@ export function LakehouseCalculatorSeo() {
           <strong>Small (~10 TiB)</strong> — пилот / один домен, низкий порог входа, nightly ETL.
         </li>
         <li>
-          <strong>Medium (~75 TiB)</strong> — production-команда, высокодоступный master, регулярный
+          <strong>Medium (~75 TiB)</strong> — production-команда, отказоустойчивый master, регулярный
           ETL и SQL в рабочее время.
         </li>
         <li>
@@ -430,7 +430,7 @@ const LAKEHOUSE_FAQ = [
   {
     question: 'Как уменьшить стоимость lakehouse?',
     answer:
-      'Снизьте duty-cycle ETL/SQL, увеличьте долю cold для архива, проверьте, нужен ли высокодоступный master, и не держите query-пул always-on при редких запросах. Для ad hoc часто выгоднее serverless SQL — обсудите с AI-ассистентом на странице.',
+      'Снизьте duty-cycle ETL/SQL, увеличьте долю cold для архива, проверьте, нужен ли отказоустойчивый master, и не держите query-пул always-on при редких запросах. Для ad hoc часто выгоднее serverless SQL — обсудите с AI-ассистентом на странице.',
   },
   {
     question: 'Какие облака сравниваются в калькуляторе Data Platform?',

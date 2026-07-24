@@ -45,7 +45,8 @@
 }
 
 .heroIcon {
-  color: var(--g-color-text-brand);
+  /* AI surface — violet accent, not product sapphire. */
+  color: var(--cf-color-ai);
   flex-shrink: 0;
 }
 
@@ -56,10 +57,11 @@
 .chatShell {
   flex: 1 1 auto;
   min-height: 0;
-  border: 1px solid var(--g-color-line-generic);
+  border: 1px solid var(--cf-color-ai-line);
   border-radius: 16px;
   overflow: hidden;
   background: var(--g-color-base-background);
+  box-shadow: inset 3px 0 0 var(--cf-color-ai);
   display: flex;
   flex-direction: column;
   /* Keep history popup usable on phones */

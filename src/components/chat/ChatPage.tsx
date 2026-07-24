@@ -291,6 +291,7 @@ export function ChatPage() {
 
         const applyEvents = (events: ReturnType<typeof parser.push>) => {
           for (const event of events) {
+            if (event.type === 'sidebar_config') continue;
             if (event.type === 'status') {
               if (!startedAnswer) {
                 setAssistantContent(chatId, assistantId, event.text);

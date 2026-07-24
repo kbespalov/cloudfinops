@@ -1,0 +1,46 @@
+.shell {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 640px;
+  height: 100%;
+  border-radius: 12px;
+}
+
+/* Stacked calculator layout: shorter chat so results stay in reach. */
+@media (max-width: 960px) {
+  .shell {
+    height: min(52dvh, 480px);
+    min-height: 360px;
+    max-height: 520px;
+  }
+}
+
+@media (max-width: 720px) {
+  .shell {
+    /* Room for sticky price bar + page chrome; keep card fully rounded. */
+    height: min(46dvh, 400px);
+    min-height: 300px;
+    max-height: 420px;
+    border: 1px solid var(--cf-color-ai-line);
+    border-radius: 12px;
+  }
+
+  /* Composer stays inside the card (not viewport-sticky like /chat). */
+  .shell :global(.g-aikit-chat-container__footer) {
+    position: static;
+  }
+
+  /* Anti-zoom: 16px on iOS (aikit TextArea often ships smaller). */
+  .shell :global(.g-aikit-prompt-input textarea),
+  .shell :global(.g-aikit-prompt-input .g-text-area__control),
+  .shell :global(.g-text-area__control) {
+    font-size: 16px !important;
+    line-height: 22px !important;
+  }
+
+  .shell :global(.g-aikit-submit-button),
+  .shell :global(.g-aikit-prompt-input__content > .g-button) {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}

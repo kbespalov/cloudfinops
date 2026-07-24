@@ -5,23 +5,23 @@ import {ShaderGradient, ShaderGradientCanvas} from '@shadergradient/react';
 import {useAppTheme} from '@/components/AppProviders';
 import styles from './HomeLanding.module.css';
 
-/** Soft lilac / violet — keep in sync with `.bgFallback` in CSS. */
-const LILAC = {
-  color1: '#F4ECFF',
-  color2: '#B794F6',
-  color3: '#6D28D9',
+/** Soft sapphire — keep in sync with `.bgFallback` in CSS. */
+const SAPPHIRE = {
+  color1: '#EFF6FF',
+  color2: '#93C5FD',
+  color3: '#2563EB',
 } as const;
 
-/** Deep indigo + electric violet — keep in sync with dark `.bgFallback`. */
-const INDIGO = {
-  color1: '#12081F',
-  color2: '#5B21B6',
-  color3: '#C4B5FD',
+/** Deep navy + bright sapphire — keep in sync with dark `.bgFallback`. */
+const NAVY = {
+  color1: '#0B1220',
+  color2: '#1E3A8A',
+  color3: '#60A5FA',
 } as const;
 
 export function HeroShaderBg() {
   const {theme} = useAppTheme();
-  const palette = theme === 'dark' ? INDIGO : LILAC;
+  const palette = theme === 'dark' ? NAVY : SAPPHIRE;
   const isDark = theme === 'dark';
   // null until mounted — avoids flashing WebGL for reduced-motion users
   const [reduceMotion, setReduceMotion] = useState<boolean | null>(null);

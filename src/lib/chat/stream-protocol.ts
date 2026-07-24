@@ -7,7 +7,16 @@ import {CHAT_TOOL_NAMES, type ChatToolName} from './tool-call-recovery';
 
 export type ChatStreamStatusEvent = {type: 'status'; text: string};
 export type ChatStreamDeltaEvent = {type: 'delta'; text: string};
-export type ChatStreamEvent = ChatStreamStatusEvent | ChatStreamDeltaEvent;
+/** Drives the calculator AI-tab sidebar; full-page /chat ignores it. */
+export type ChatStreamSidebarConfigEvent = {
+  type: 'sidebar_config';
+  tool: 'get_quote' | 'get_lakehouse_quote';
+  args: Record<string, unknown>;
+};
+export type ChatStreamEvent =
+  | ChatStreamStatusEvent
+  | ChatStreamDeltaEvent
+  | ChatStreamSidebarConfigEvent;
 
 export const CHAT_STATUS_THINKING = 'Думаю…';
 export const CHAT_STATUS_COMPOSING = 'Формирую ответ…';
@@ -38,7 +47,23 @@ export function parseChatStreamLine(line: string): ChatStreamEvent | null {
   const trimmed = line.trim();
   if (!trimmed) return null;
   try {
-    const parsed = JSON.parse(trimmed) as {type?: unknown; text?: unknown};
+    const parsed = JSON.parse(trimmed) as {
+      type?: unknown;
+      text?: unknown;
+      tool?: unknown;
+      args?: unknown;
+    };
+    if (parsed.type === 'sidebar_config') {
+      if (parsed.tool !== 'get_quote' && parsed.tool !== 'get_lakehouse_quote') return null;
+      if (!parsed.args || typeof parsed.args !== 'object' || Array.isArray(parsed.args)) {
+        return null;
+      }
+      return {
+        type: 'sidebar_config',
+        tool: parsed.tool,
+        args: parsed.args as Record<string, unknown>,
+      };
+    }
     if (parsed.type !== 'status' && parsed.type !== 'delta') return null;
     if (typeof parsed.text !== 'string' || !parsed.text) return null;
     return {type: parsed.type, text: parsed.text};

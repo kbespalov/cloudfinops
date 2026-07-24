@@ -40,19 +40,28 @@ const LakehouseCalculatorPanel = dynamic(
     ),
   {ssr: true},
 );
+const AiCalculatorPanel = dynamic(
+  () => import('@/components/calculator/AiCalculatorPanel').then((m) => m.AiCalculatorPanel),
+  {ssr: false},
+);
 
-export type CalculatorMode = 'vm' | 'inference' | 'lakehouse';
+export type CalculatorMode = 'vm' | 'inference' | 'lakehouse' | 'ai';
 
 const MODE_HREF: Record<CalculatorMode, string> = {
   vm: '/calculator/vm',
   inference: '/calculator/self-host',
   lakehouse: '/calculator/lakehouse',
+  ai: '/calculator/ai',
 };
 
+/** Shared H1 — tabs carry the mode; per-mode titles made the hero jump on switch. */
+const PAGE_TITLE = 'Калькулятор цены облака';
+
 const MODE_TITLE: Record<CalculatorMode, string> = {
-  vm: 'Калькулятор цены облака',
-  inference: 'Калькулятор облачных нагрузок',
-  lakehouse: 'Калькулятор Lakehouse и платформы данных',
+  vm: PAGE_TITLE,
+  inference: PAGE_TITLE,
+  lakehouse: PAGE_TITLE,
+  ai: PAGE_TITLE,
 };
 
 const MODE_LEAD: Record<CalculatorMode, string> = {
@@ -60,6 +69,7 @@ const MODE_LEAD: Record<CalculatorMode, string> = {
   inference: 'Подбор GPU-конфигурации для open-weight моделей в облаках РФ',
   lakehouse:
     'Калькулятор Lakehouse / Data Platform: Object Storage + Managed Kubernetes + worker ВМ под Apache Iceberg, Spark, Trino и Airflow. Сравнение open lakehouse и стоимости платформы данных в облаках России.',
+  ai: 'Опишите конфигурацию текстом — справа минимальная расчётная цена и альтернативы провайдеров по публичным тарифам.',
 };
 
 export function CalculatorPage({
@@ -81,7 +91,8 @@ export function CalculatorPage({
   const subtitle = lead ?? MODE_LEAD[mode];
   /** Hide default leads visually; keep in DOM for SEO. Provider `lead` stays visible. */
   const leadClassName =
-    !lead && (mode === 'vm' || mode === 'inference' || mode === 'lakehouse')
+    !lead &&
+    (mode === 'vm' || mode === 'inference' || mode === 'lakehouse' || mode === 'ai')
       ? `${styles.heroLead} ${styles.heroLeadSeo}`
       : styles.heroLead;
 
@@ -142,6 +153,7 @@ export function CalculatorPage({
               <Tab value="vm">Виртуальные машины</Tab>
               <Tab value="inference">Хостинг LLM</Tab>
               <Tab value="lakehouse">Lakehouse и платформа данных</Tab>
+              <Tab value="ai">AI конфигурация</Tab>
             </TabList>
           </TabProvider>
         </header>
@@ -151,8 +163,10 @@ export function CalculatorPage({
             <VmCalculatorPanel period={period} gpuPresets={gpuPresets} />
           ) : mode === 'inference' ? (
             <InferenceCalculatorPanel period={period} />
-          ) : (
+          ) : mode === 'lakehouse' ? (
             <LakehouseCalculatorPanel period={period} />
+          ) : (
+            <AiCalculatorPanel period={period} />
           )}
         </div>
 
@@ -163,15 +177,19 @@ export function CalculatorPage({
               href={
                 mode === 'lakehouse'
                   ? '/calculator/vm'
-                  : mode === 'vm'
-                    ? '/calculator/lakehouse'
-                    : '/calculator/vm'
+                  : mode === 'ai'
+                    ? '/calculator/vm'
+                    : mode === 'vm'
+                      ? '/calculator/lakehouse'
+                      : '/calculator/vm'
               }
               view="flat-secondary"
               size="m"
               prefetch
             >
-              {mode === 'lakehouse' ? 'Калькулятор ВМ и GPU' : 'Калькулятор Lakehouse'}
+              {mode === 'lakehouse' || mode === 'ai'
+                ? 'Калькулятор ВМ и GPU'
+                : 'Калькулятор Lakehouse'}
               <Icon data={ChevronRight} size={16} />
             </Button>
             <Button

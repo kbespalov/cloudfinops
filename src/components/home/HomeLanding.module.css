@@ -35,9 +35,9 @@
   inset: 0;
   z-index: 0;
   background:
-    radial-gradient(ellipse 70% 55% at 28% 18%, #f4ecff 0%, transparent 55%),
-    radial-gradient(ellipse 55% 45% at 78% 70%, #b794f6 0%, transparent 55%),
-    linear-gradient(160deg, #faf5ff 0%, #b794f6 52%, #6d28d9 100%);
+    radial-gradient(ellipse 70% 55% at 28% 18%, #eff6ff 0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at 78% 70%, #93c5fd 0%, transparent 55%),
+    linear-gradient(160deg, #f8fafc 0%, #93c5fd 52%, #2563eb 100%);
 }
 
 .veil {
@@ -47,9 +47,9 @@
   background:
     radial-gradient(
       ellipse 52% 46% at 50% 42%,
-      rgba(250, 245, 255, 0.72) 0%,
-      rgba(237, 233, 254, 0.34) 48%,
-      rgba(237, 233, 254, 0.08) 74%,
+      rgba(239, 246, 255, 0.72) 0%,
+      rgba(219, 234, 254, 0.34) 48%,
+      rgba(219, 234, 254, 0.08) 74%,
       transparent 100%
     );
   pointer-events: none;
@@ -68,18 +68,18 @@
 
 :global(.g-root_theme_dark) .bgFallback {
   background:
-    radial-gradient(ellipse 70% 55% at 26% 16%, #5b21b6 0%, transparent 55%),
-    radial-gradient(ellipse 55% 45% at 80% 72%, #c4b5fd 0%, transparent 52%),
-    linear-gradient(160deg, #12081f 0%, #1e1040 48%, #4c1d95 100%);
+    radial-gradient(ellipse 70% 55% at 26% 16%, #1e3a8a 0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at 80% 72%, #60a5fa 0%, transparent 52%),
+    linear-gradient(160deg, #0b1220 0%, #12203a 48%, #1e40af 100%);
 }
 
 :global(.g-root_theme_dark) .veil {
   background:
     radial-gradient(
       ellipse 56% 50% at 50% 42%,
-      rgba(196, 181, 253, 0.14) 0%,
-      rgba(30, 16, 64, 0.28) 42%,
-      rgba(18, 8, 31, 0.12) 72%,
+      rgba(96, 165, 250, 0.14) 0%,
+      rgba(18, 32, 58, 0.28) 42%,
+      rgba(11, 18, 32, 0.12) 72%,
       transparent 100%
     );
 }
@@ -269,7 +269,7 @@
   border-radius: 16px;
 }
 
-/* Keep the hero CTA on classic Gravity yellow — rest of the app uses violet brand. */
+/* Keep the hero CTA on classic Gravity yellow — product chrome uses sapphire brand. */
 .searchSubmit:global(.g-button_view_action) {
   --g-color-base-brand: var(--g-color-private-yellow-550-solid);
   --g-color-base-brand-hover: var(--g-color-private-yellow-600-solid);

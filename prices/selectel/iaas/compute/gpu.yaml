@@ -506,3 +506,114 @@ spec:
     notes: >
       Выделенный сервер (не облачная GPU-ВМ): конфигурация GL8-B300-HGX-25GE —
       8×B300, 8 000 000 ₽/мес по публичному прайсу Selectel.
+
+  # ---------------------------------------------------------------------------
+  # Synthetic full-node quotes matching VK Cloud H200 hosts (catalog compare).
+  # GPU unit + Selectel vCPU/RAM; no boot disk. Not a published Selectel SKU.
+  # ---------------------------------------------------------------------------
+  - sku: selectel.gpu.h200-141.vk-host-1.synthetic
+    name: NVIDIA H200 141 ГБ · 44/256 *
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва / ru-6a
+    priceProvenance: derived
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-24'
+    sourceRefs:
+    - selectel.prices
+    - selectel.calculator
+    dimensions:
+      gpuModel: NVIDIA H200
+      gpuCount: 1
+      gpuMemoryGb: 141
+      vramGb: 141
+      vcpu: 44
+      ramGb: 256
+      ramGiB: 256
+      purchaseModel: on-demand
+      synthetic: true
+      syntheticFrom:
+      - selectel.gpu.h200-141
+      - selectel.compute.vcpu-2250
+      - selectel.compute.ram-2133-2933
+      parityHost:
+        provider: vk-cloud
+        flavorSku: vk.gpu.h200-1
+        vcpu: 44
+        ramGiB: 256
+    pricing:
+      rate:
+        amount: '725.731'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '725.731'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 587.6712 + 44×1.0071 + 256×0.3662 (VK H200 ×1 host parity, VAT incl.)
+        vat: included
+    notes: >
+      Синтетическая позиция каталога Cloud FinOps (*): сборка Selectel под хост
+      VK Cloud GPU-44-256-H200-1 (1×H200 + 44 vCPU + 256 GiB) из unit-ставок.
+      Selectel продаёт карту отдельно; эта строка — чтобы сравнить «целиком» с VK.
+      Без загрузочного диска.
+
+  - sku: selectel.gpu.h200-141.vk-host-8.synthetic
+    name: NVIDIA H200 141 ГБ · 240/2048 · ×8 *
+    meter: compute.flavor
+    status: available
+    pricingMode: bundle
+    region: Москва / ru-6a
+    priceProvenance: derived
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-24'
+    sourceRefs:
+    - selectel.prices
+    - selectel.calculator
+    dimensions:
+      gpuModel: NVIDIA H200
+      gpuCount: 8
+      gpuMemoryGb: 141
+      vramGb: 1128
+      vcpu: 240
+      ramGb: 2048
+      ramGiB: 2048
+      purchaseModel: on-demand
+      synthetic: true
+      syntheticFrom:
+      - selectel.gpu.h200-141
+      - selectel.compute.vcpu-2250
+      - selectel.compute.ram-2133-2933
+      parityHost:
+        provider: vk-cloud
+        flavorSku: vk.gpu.h200-8
+        vcpu: 240
+        ramGiB: 2048
+    pricing:
+      rate:
+        amount: '5693.051'
+        currency: RUB
+        unit:
+          quantity: flavor
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '5693.051'
+        unit:
+          currency: RUB
+          quantity: flavor
+          period: hour
+        formula: 8×587.6712 + 240×1.0071 + 2048×0.3662 (VK H200 ×8 host parity, VAT incl.)
+        vat: included
+    notes: >
+      Синтетическая позиция каталога Cloud FinOps (*): сборка Selectel под хост
+      VK Cloud GPU-240-2048-H200-8 (8×H200 + 240 vCPU + 2048 GiB) из unit-ставок.
+      Для сравнения «целиком» с VK; без загрузочного диска.

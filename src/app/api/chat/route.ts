@@ -121,16 +121,24 @@ export async function POST(req: Request) {
     return NextResponse.json({error: sanitized.error}, {status: 400});
   }
 
+  const surface =
+    (body as {surface?: unknown})?.surface === 'calculator' ? 'calculator' : 'chat';
+
   const history = sanitized.messages;
   const userText = lastUserText(history);
   const inferenceIntent = matchInferenceIntent(userText);
   const lakehouseIntent = matchLakehouseIntent(userText);
   // Inference wins if both match (rare); otherwise lakehouse persona + tool.
-  const systemContent = inferenceIntent.matched
-    ? `${SYSTEM_PROMPT}\n\n${INFERENCE_SYSTEM_ADDENDUM}`
-    : lakehouseIntent.matched
-      ? `${SYSTEM_PROMPT}\n\n${LAKEHOUSE_SYSTEM_ADDENDUM}`
-      : SYSTEM_PROMPT;
+  const calculatorAddendum =
+    surface === 'calculator'
+      ? '\n\nКонтекст: пользователь в калькуляторе «AI конфигурация». Для описания ВМ/GPU почти всегда вызывай get_quote (vcpu/ramGiB/diskGiB или gpuModel). Для lakehouse — get_lakehouse_quote. Не устраивай длинный опросник — сразу считай разумную конфигурацию.'
+      : '';
+  const systemContent =
+    (inferenceIntent.matched
+      ? `${SYSTEM_PROMPT}\n\n${INFERENCE_SYSTEM_ADDENDUM}`
+      : lakehouseIntent.matched
+        ? `${SYSTEM_PROMPT}\n\n${LAKEHOUSE_SYSTEM_ADDENDUM}`
+        : SYSTEM_PROMPT) + calculatorAddendum;
   const planningTools = inferenceIntent.matched
     ? CHAT_TOOLS_WITH_INFERENCE
     : lakehouseIntent.matched
@@ -224,6 +232,20 @@ export async function POST(req: Request) {
         ) => {
           if (event.type === 'tool_call') {
             send({type: 'status', text: statusLabelForTool(event.name)});
+            if (event.name === 'get_quote' || event.name === 'get_lakehouse_quote') {
+              try {
+                const args = JSON.parse(event.arguments) as unknown;
+                if (args && typeof args === 'object' && !Array.isArray(args)) {
+                  send({
+                    type: 'sidebar_config',
+                    tool: event.name,
+                    args: args as Record<string, unknown>,
+                  });
+                }
+              } catch {
+                // Malformed tool args — sidebar stays on the previous quote.
+              }
+            }
             chatLog('chat.tool', {
               requestId,
               ip,

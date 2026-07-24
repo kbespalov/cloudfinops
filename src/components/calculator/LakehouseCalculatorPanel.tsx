@@ -280,10 +280,10 @@ export function LakehouseCalculatorPanel({period}: {period: PeriodMode}) {
                     aria-label="Тип master Kubernetes"
                   >
                     <SegmentedRadioGroup.Option value="basic">
-                      Однозоновый
+                      Базовый
                     </SegmentedRadioGroup.Option>
                     <SegmentedRadioGroup.Option value="ha">
-                      Высокодоступный
+                      Отказоустойчивый
                     </SegmentedRadioGroup.Option>
                   </SegmentedRadioGroup>
                 </div>
