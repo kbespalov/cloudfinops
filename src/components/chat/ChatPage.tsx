@@ -19,6 +19,10 @@ const ChatContainer = dynamic(
   {ssr: false},
 );
 import {AppHeader} from '@/components/AppHeader';
+import {
+  CHAT_STATUS_THINKING,
+  createChatStreamParser,
+} from '@/lib/chat/stream-protocol';
 import {CHAT_SUGGESTIONS} from './suggestions';
 import styles from './ChatPage.module.css';
 
@@ -49,12 +53,15 @@ export function ChatPage() {
   const [messagesByChat, setMessagesByChat] = useState<Record<string, TChatMessage[]>>({});
   const [status, setStatus] = useState<ChatStatus>('ready');
   const [error, setError] = useState<Error | null>(null);
+  /** True while the assistant bubble shows a transient progress line (not answer text). */
+  const [showingProgress, setShowingProgress] = useState(false);
   // Start false for SSR/hydration match; matchMedia updates after mount.
   const [narrow, setNarrow] = useState(false);
   const [storageReady, setStorageReady] = useState(false);
 
   const deeplinkHandled = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
+  const progressAssistantRef = useRef<{chatId: string; messageId: string} | null>(null);
 
   // Lock document scroll so the composer stays in the viewport on mobile.
   useEffect(() => {
@@ -170,6 +177,16 @@ export function ChatPage() {
   const activeChat = chats.find((c) => c.id === activeChatId) ?? null;
   const messages = activeChatId ? messagesByChat[activeChatId] ?? [] : [];
 
+  const setAssistantContent = useCallback((chatId: string, messageId: string, content: string) => {
+    setMessagesByChat((prev) => {
+      const list = prev[chatId] ?? [];
+      const next = list.map((m) =>
+        m.id === messageId && m.role === 'assistant' ? {...m, content} : m,
+      );
+      return {...prev, [chatId]: next};
+    });
+  }, []);
+
   const appendToAssistant = useCallback(
     (chatId: string, messageId: string, delta: string) => {
       setMessagesByChat((prev) => {
@@ -185,22 +202,31 @@ export function ChatPage() {
     [],
   );
 
-  const setAssistantError = useCallback((chatId: string, messageId: string, text: string) => {
+  const clearProgressAssistant = useCallback(() => {
+    const ref = progressAssistantRef.current;
+    if (!ref) return;
     setMessagesByChat((prev) => {
-      const list = prev[chatId] ?? [];
+      const list = prev[ref.chatId] ?? [];
       const next = list.map((m) =>
-        m.id === messageId && m.role === 'assistant' && !assistantText(m.content)
-          ? {...m, content: text}
-          : m,
+        m.id === ref.messageId && m.role === 'assistant' ? {...m, content: ''} : m,
       );
-      return {...prev, [chatId]: next};
+      return {...prev, [ref.chatId]: next};
     });
+    progressAssistantRef.current = null;
+    setShowingProgress(false);
   }, []);
 
   const onSendMessage = useCallback(
     async (data: TSubmitData, options?: {forceNew?: boolean}) => {
       const content = data.content.trim();
-      if (!content || status === 'streaming' || status === 'submitted') return;
+      if (
+        !content ||
+        status === 'streaming' ||
+        status === 'submitted' ||
+        status === 'streaming_loading'
+      ) {
+        return;
+      }
 
       // Ensure an active chat exists (landing deep-link always starts a fresh one).
       let chatId = options?.forceNew ? null : activeChatId;
@@ -230,7 +256,11 @@ export function ChatPage() {
         prev.map((c) => (c.id === chatId ? {...c, lastMessage: content} : c)),
       );
       setError(null);
-      setStatus('submitted');
+      progressAssistantRef.current = {chatId, messageId: assistantId};
+      setAssistantContent(chatId, assistantId, CHAT_STATUS_THINKING);
+      setShowingProgress(true);
+      // streaming_loading keeps Send cancelable; progress lives in the assistant bubble.
+      setStatus('streaming_loading');
 
       const abort = new AbortController();
       abortRef.current = abort;
@@ -246,36 +276,68 @@ export function ChatPage() {
         if (!res.ok || !res.body) {
           const payload = await res.json().catch(() => null);
           const msg = payload?.error || `Ошибка сервера (${res.status}).`;
-          setAssistantError(chatId, assistantId, `⚠️ ${msg}`);
+          setShowingProgress(false);
+          progressAssistantRef.current = null;
+          setAssistantContent(chatId, assistantId, `⚠️ ${msg}`);
           setStatus('error');
           setError(new Error(msg));
           return;
         }
 
-        setStatus('streaming');
         const reader = res.body.getReader();
         const decoder = new TextDecoder();
+        const parser = createChatStreamParser();
+        let startedAnswer = false;
+
+        const applyEvents = (events: ReturnType<typeof parser.push>) => {
+          for (const event of events) {
+            if (event.type === 'status') {
+              if (!startedAnswer) {
+                setAssistantContent(chatId, assistantId, event.text);
+                setShowingProgress(true);
+              }
+              continue;
+            }
+            if (!startedAnswer) {
+              startedAnswer = true;
+              setShowingProgress(false);
+              progressAssistantRef.current = null;
+              setStatus('streaming');
+              setAssistantContent(chatId, assistantId, event.text);
+              continue;
+            }
+            appendToAssistant(chatId, assistantId, event.text);
+          }
+        };
+
         while (true) {
           const {done, value} = await reader.read();
           if (done) break;
           const chunk = decoder.decode(value, {stream: true});
-          if (chunk) appendToAssistant(chatId, assistantId, chunk);
+          if (chunk) applyEvents(parser.push(chunk));
         }
+        applyEvents(parser.flush());
+
+        setShowingProgress(false);
+        progressAssistantRef.current = null;
         setStatus('ready');
       } catch (err) {
         if (abort.signal.aborted) {
+          clearProgressAssistant();
           setStatus('ready');
           return;
         }
         const e = err instanceof Error ? err : new Error('Не удалось связаться с ассистентом.');
-        setAssistantError(chatId, assistantId, `⚠️ ${e.message}`);
+        setShowingProgress(false);
+        progressAssistantRef.current = null;
+        setAssistantContent(chatId, assistantId, `⚠️ ${e.message}`);
         setStatus('error');
         setError(e);
       } finally {
         abortRef.current = null;
       }
     },
-    [activeChatId, messagesByChat, status, appendToAssistant, setAssistantError],
+    [activeChatId, messagesByChat, status, appendToAssistant, setAssistantContent, clearProgressAssistant],
   );
 
   // Landing / shared links: /chat?q=… → new chat + auto-send, then strip query.
@@ -307,18 +369,23 @@ export function ChatPage() {
 
   const onCancel = useCallback(async () => {
     abortRef.current?.abort();
+    clearProgressAssistant();
     setStatus('ready');
-  }, []);
+  }, [clearProgressAssistant]);
 
   const onCreateChat = useCallback(() => {
     setActiveChatId(null);
     setError(null);
+    setShowingProgress(false);
+    progressAssistantRef.current = null;
     setStatus('ready');
   }, []);
 
   const onSelectChat = useCallback((chat: ChatType) => {
     setActiveChatId(chat.id);
     setError(null);
+    setShowingProgress(false);
+    progressAssistantRef.current = null;
     setStatus('ready');
   }, []);
 
@@ -351,7 +418,10 @@ export function ChatPage() {
           </Text>
         </div>
 
-        <div className={styles.chatShell}>
+        <div
+          className={styles.chatShell}
+          data-progress={showingProgress ? '1' : undefined}
+        >
           <ChatContainer
             chats={chats}
             activeChat={activeChat}
@@ -368,6 +438,10 @@ export function ChatPage() {
             hideTitleOnEmptyChat
             shouldParseIncompleteMarkdown
             openMarkdownLinksInNewTab
+            messageListConfig={{
+              // Progress is rendered inside the assistant bubble; hide the footer loader.
+              loaderStatuses: [],
+            }}
             promptInputProps={{
               bodyProps: {
                 autoFocus: false,

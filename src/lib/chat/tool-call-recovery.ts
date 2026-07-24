@@ -42,6 +42,137 @@ export function sanitizeUserFacingAnswer(text: string): string {
   return out.replace(/[ \t]{2,}/g, ' ').replace(/ \n/g, '\n');
 }
 
+/** Longest tool name + slack for `из \`name\`` so the cut never lands mid-match. */
+const STREAM_SANITIZE_HOLDBACK =
+  Math.max(...CHAT_TOOL_NAMES.map((name) => name.length)) + 8;
+
+function pullIzBacktickPrefix(emitPart: string): number {
+  const izPrefix = /из\s*`?$/i.exec(emitPart);
+  if (izPrefix) return izPrefix[0].length;
+  if (emitPart.endsWith('`')) return 1;
+  return 0;
+}
+
+/**
+ * Split so the emit side never contains a partial tool-name match that still
+ * continues in `rest` (and keep «из [`]name[`]» together for sanitize).
+ */
+function takeSafeEmitPrefix(text: string): [string, string] {
+  if (text.length <= STREAM_SANITIZE_HOLDBACK) return ['', text];
+
+  let cut = text.length - STREAM_SANITIZE_HOLDBACK;
+  const lower = text.toLowerCase();
+
+  // Don't cut inside a bare tool name.
+  for (const name of CHAT_TOOL_NAMES) {
+    const startMin = Math.max(0, cut - name.length + 1);
+    const startMax = Math.min(cut, text.length - name.length);
+    for (let i = startMin; i <= startMax; i++) {
+      if (lower.startsWith(name, i) && i < cut && i + name.length > cut) {
+        cut = i;
+      }
+    }
+  }
+
+  // Don't cut inside a complete `name` / из [`]name[`] span.
+  for (const name of CHAT_TOOL_NAMES) {
+    const wrapped = `\`${name}\``;
+    const startMin = Math.max(0, cut - wrapped.length + 1);
+    const startMax = Math.min(cut, text.length - wrapped.length);
+    for (let i = startMin; i <= startMax; i++) {
+      if (lower.startsWith(wrapped, i) && i < cut && i + wrapped.length > cut) {
+        cut = i;
+      }
+    }
+  }
+
+  if (cut <= 0) return ['', text];
+
+  let emitPart = text.slice(0, cut);
+  const restPart = text.slice(cut);
+  const restLower = restPart.toLowerCase();
+  const restStartsWithTool = CHAT_TOOL_NAMES.some((name) => restLower.startsWith(name));
+
+  // Opening backtick (or «из [`]») held back when the tool name starts rest.
+  if (restStartsWithTool) {
+    cut -= pullIzBacktickPrefix(emitPart);
+    if (cut <= 0) return ['', text];
+    emitPart = text.slice(0, cut);
+  }
+
+  // Closing backtick still in rest, tool name (with optional opening tick) at emit end.
+  if (restPart.startsWith('`')) {
+    const emitLower = emitPart.toLowerCase();
+    for (const name of CHAT_TOOL_NAMES) {
+      if (emitLower.endsWith(`\`${name}`)) {
+        cut -= name.length + 1;
+        break;
+      }
+      if (emitLower.endsWith(name)) {
+        cut -= name.length;
+        break;
+      }
+    }
+    if (cut <= 0) return ['', text];
+    emitPart = text.slice(0, cut);
+    cut -= pullIzBacktickPrefix(emitPart);
+  }
+
+  if (cut <= 0) return ['', text];
+  return [text.slice(0, cut), text.slice(cut)];
+}
+
+/**
+ * Incremental sanitize for token streaming: hold back a short tail, re-sanitize
+ * the growing safe prefix, and emit only the new sanitized suffix. That way
+ * spans like «из `name`» still match one-shot sanitize output.
+ */
+export function createAnswerStreamSanitizer(): {
+  push: (delta: string) => string;
+  flush: () => string;
+} {
+  let raw = '';
+  let committedRawLen = 0;
+  let emitted = '';
+
+  return {
+    push(delta: string): string {
+      if (!delta) return '';
+      raw += delta;
+      const [stable] = takeSafeEmitPrefix(raw);
+      // Cut can move left while a tool token straddles the window — wait.
+      if (stable.length <= committedRawLen) return '';
+
+      const sanitized = sanitizeUserFacingAnswer(stable);
+      if (!sanitized.startsWith(emitted)) {
+        // Footnote match completed across an already-emitted prefix — wait for flush.
+        return '';
+      }
+
+      committedRawLen = stable.length;
+      const piece = sanitized.slice(emitted.length);
+      emitted = sanitized;
+      return piece;
+    },
+    flush(): string {
+      const sanitized = sanitizeUserFacingAnswer(raw);
+      const previous = emitted;
+      raw = '';
+      committedRawLen = 0;
+      emitted = sanitized;
+      if (sanitized.startsWith(previous)) {
+        return sanitized.slice(previous.length);
+      }
+      // Already-streamed prefix diverged (rare); append after common prefix only.
+      let i = 0;
+      while (i < previous.length && i < sanitized.length && previous[i] === sanitized[i]) {
+        i += 1;
+      }
+      return sanitized.slice(i);
+    },
+  };
+}
+
 const LEAK_PATTERNS: RegExp[] = [
   /\bwe (?:will|need to|should|must|are going to) (?:call|use|invoke|produce)\b/i,
   /\blet'?s (?:call|use|invoke|do it)\b/i,

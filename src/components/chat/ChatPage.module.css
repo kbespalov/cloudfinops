@@ -77,6 +77,52 @@
   max-width: none;
 }
 
+/*
+ * Progress (“Думаю…”) lives in the assistant bubble — same column as the answer.
+ * Secondary text + leading pulse dots (replaces the crooked footer loader).
+ */
+.chatShell[data-progress='1']
+  :global(.g-aikit-message-list__messages > :last-child .g-aikit-assistant-message__content) {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  color: var(--g-color-text-secondary);
+}
+
+.chatShell[data-progress='1']
+  :global(.g-aikit-message-list__messages > :last-child .g-aikit-assistant-message__content)::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow:
+    8px 0 0 currentColor,
+    16px 0 0 currentColor;
+  margin-right: 16px;
+  opacity: 0.55;
+  animation: cf-chat-progress-pulse 800ms ease infinite;
+  flex-shrink: 0;
+}
+
+.chatShell[data-progress='1']
+  :global(.g-aikit-message-list__messages > :last-child .g-aikit-markdown-renderer),
+.chatShell[data-progress='1']
+  :global(.g-aikit-message-list__messages > :last-child .g-aikit-markdown-renderer p) {
+  color: var(--g-color-text-secondary);
+  margin: 0;
+}
+
+@keyframes cf-chat-progress-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
 .chatShell > * {
   flex: 1 1 auto;
   min-height: 0;

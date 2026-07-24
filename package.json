@@ -9,6 +9,8 @@
     "data:embeddings": "tsx scripts/build-embeddings.ts",
     "eval:retrieval": "tsx scripts/eval/retrieval-run.ts",
     "eval:smoke": "tsx scripts/eval/smoke.ts --suite",
+    "eval:smoke:new": "tsx scripts/eval/smoke.ts --new",
+    "eval:smoke:agent": "tsx scripts/eval/smoke.ts --agent",
     "eval:chat": "tsx scripts/eval/smoke.ts",
     "eval:bench": "tsx scripts/eval/benchmark.ts",
     "eval:run": "tsx scripts/eval/run.ts",

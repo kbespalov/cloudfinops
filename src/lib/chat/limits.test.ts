@@ -15,6 +15,6 @@ describe('chat limits', () => {
 
   it('reserves output + tool-loop buffer', () => {
     const reserved = reserveTokensForRequest(1000);
-    assert.equal(reserved, 1000 + CHAT_LIMITS.maxOutputTokens + 1600);
+    assert.equal(reserved, 1000 + CHAT_LIMITS.maxOutputTokens + 800);
   });
 });

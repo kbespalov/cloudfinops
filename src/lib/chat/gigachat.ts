@@ -69,9 +69,12 @@ function commonParams() {
 }
 
 /** Final answer budget (stream / fallback). Keep in sync with CHAT_LIMITS.maxOutputTokens. */
-const FINAL_MAX_TOKENS = 2500;
-/** Tool-loop budget: tool_calls are small; a lower cap cuts latency on the planning round. */
-const TOOL_LOOP_MAX_TOKENS = 1024;
+const FINAL_MAX_TOKENS = 1200;
+/**
+ * Tool-loop budget: native tool_calls are tiny. A high cap lets gpt-oss burn
+ * seconds on English CoT in `content` before emitting tool_calls.
+ */
+const TOOL_LOOP_MAX_TOKENS = 384;
 
 export type ToolChoice = 'auto' | 'required' | 'none';
 

@@ -2,8 +2,17 @@
  * Shared assistant tool-calling loop for /api/chat and eval harness.
  * Handles gpt-oss leaks: recover tool calls from prose or retry with
  * tool_choice=required — never return leaked English planning as the answer.
+ *
+ * Latency balance: after a single structured tool, prefer deterministic
+ * markdown (tryFormatAgentToolAnswer) over a second long final LLM call.
  */
 
+import {
+  extractLastToolPayloads,
+  lastUserQuestion,
+  messagesForShortFinal,
+  tryFormatAgentToolAnswer,
+} from './fast-path';
 import {chatCompletion, type ChatMessage} from './gigachat';
 import {resolveToolCalls, sanitizeUserFacingAnswer} from './tool-call-recovery';
 import {CHAT_TOOLS, runTool} from './tools';
@@ -31,23 +40,11 @@ const REQUIRED_RETRY_NUDGE =
 const EMPTY_AFTER_TOOLS_NUDGE =
   'Данные инструментов уже в истории. Дай пользователю полный ответ на русском: markdown-таблица и вывод. Без вызова инструментов и без пустого ответа.';
 
-/** Shrink oversized tool JSON before a tools-free final (Cloud.ru often returns empty otherwise). */
-function messagesForForcedFinal(messages: ChatMessage[]): ChatMessage[] {
-  return messages.map((m) => {
-    if (m.role !== 'tool' || typeof m.content !== 'string' || m.content.length < 4000) {
-      return m;
-    }
-    try {
-      const parsed = JSON.parse(m.content) as Record<string, unknown>;
-      if (Array.isArray(parsed.rows)) parsed.rows = parsed.rows.slice(0, 8);
-      if (Array.isArray(parsed.quotes)) parsed.quotes = parsed.quotes.slice(0, 8);
-      if (typeof parsed.note === 'string' && parsed.note.length > 240) {
-        parsed.note = `${parsed.note.slice(0, 240)}…`;
-      }
-      return {...m, content: JSON.stringify(parsed)};
-    } catch {
-      return {...m, content: `${m.content.slice(0, 3500)}…`};
-    }
+function tryDeterministicAfterTools(messages: ChatMessage[]): string | null {
+  if (messages.filter((m) => m.role === 'tool').length !== 1) return null;
+  return tryFormatAgentToolAnswer({
+    userText: lastUserQuestion(messages),
+    toolPayloads: extractLastToolPayloads(messages),
   });
 }
 
@@ -112,13 +109,17 @@ export async function runToolLoop(options: {
         finalText = sanitizeUserFacingAnswer(text);
         break;
       }
-      // Empty content after tools is common on Cloud.ru. Force a tools-free
-      // completion (tools still attached → model often returns empty again).
+      // Empty content after tools — prefer table short-circuit, then short final LLM.
       if (toolCallsTotal > 0 && !emptyAfterToolsNudgeUsed) {
+        const formatted = tryDeterministicAfterTools(messages);
+        if (formatted) {
+          finalText = sanitizeUserFacingAnswer(formatted);
+          break;
+        }
         emptyAfterToolsNudgeUsed = true;
         messages.push({role: 'assistant', content: ''});
         messages.push({role: 'user', content: EMPTY_AFTER_TOOLS_NUDGE});
-        const forced = await chatCompletion(messagesForForcedFinal(messages), undefined, {
+        const forced = await chatCompletion(messagesForShortFinal(messages), undefined, {
           signal: options.signal,
         });
         const forcedText = (forced.content ?? '').trim();
@@ -174,17 +175,38 @@ export async function runToolLoop(options: {
         content: result,
       });
     }
+
+    // One complete structured tool → skip planning another round + final LLM.
+    if (toolCalls.length === 1) {
+      const formatted = tryFormatAgentToolAnswer({
+        userText: lastUserQuestion(messages),
+        toolPayloads: toolResults.map(({call, result}) => ({
+          name: call.function.name,
+          content: result,
+          arguments: call.function.arguments,
+        })),
+      });
+      if (formatted) {
+        finalText = sanitizeUserFacingAnswer(formatted);
+        break;
+      }
+    }
   }
 
-  // Exhausted rounds with tool data but no prose — last-chance tools-free answer.
+  // Exhausted rounds with tool data but no prose — last-chance table, then short LLM.
   if (!finalText && toolCallsTotal > 0 && !emptyAfterToolsNudgeUsed) {
-    messages.push({role: 'user', content: EMPTY_AFTER_TOOLS_NUDGE});
-    const forced = await chatCompletion(messagesForForcedFinal(messages), undefined, {
-      signal: options.signal,
-    });
-    const forcedText = (forced.content ?? '').trim();
-    if (forcedText) {
-      finalText = sanitizeUserFacingAnswer(forcedText);
+    const formatted = tryDeterministicAfterTools(messages);
+    if (formatted) {
+      finalText = sanitizeUserFacingAnswer(formatted);
+    } else {
+      messages.push({role: 'user', content: EMPTY_AFTER_TOOLS_NUDGE});
+      const forced = await chatCompletion(messagesForShortFinal(messages), undefined, {
+        signal: options.signal,
+      });
+      const forcedText = (forced.content ?? '').trim();
+      if (forcedText) {
+        finalText = sanitizeUserFacingAnswer(forcedText);
+      }
     }
   }
 

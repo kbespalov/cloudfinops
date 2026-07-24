@@ -107,7 +107,7 @@ export async function runChat(
       (await runToolLoop({
         messages,
         tools: planningTools,
-        maxRounds: Math.min(MAX_TOOL_ROUNDS, 3),
+        maxRounds: Math.min(MAX_TOOL_ROUNDS, 2),
         onEvent: (event) => {
           if (event.type === 'tool_call') onToolCall(event.name, event.arguments);
         },

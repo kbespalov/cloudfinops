@@ -13,12 +13,28 @@ import {
 } from '@/lib/chat/limits';
 import {chatLog, clientIp} from '@/lib/chat/log';
 import {SYSTEM_PROMPT} from '@/lib/chat/system-prompt';
-import {tryRunFastPath} from '@/lib/chat/fast-path';
+import {
+  extractLastToolPayloads,
+  lastUserQuestion,
+  messagesForShortFinal,
+  tryFormatAgentToolAnswer,
+  tryRunFastPath,
+} from '@/lib/chat/fast-path';
 import {
   INFERENCE_SYSTEM_ADDENDUM,
   matchInferenceIntent,
 } from '@/lib/chat/inference-intent';
-import {sanitizeUserFacingAnswer} from '@/lib/chat/tool-call-recovery';
+import {
+  CHAT_STATUS_COMPOSING,
+  CHAT_STATUS_THINKING,
+  encodeChatStreamEvent,
+  statusLabelForTool,
+  type ChatStreamEvent,
+} from '@/lib/chat/stream-protocol';
+import {
+  createAnswerStreamSanitizer,
+  sanitizeUserFacingAnswer,
+} from '@/lib/chat/tool-call-recovery';
 import {runToolLoop} from '@/lib/chat/tool-loop';
 import {CHAT_TOOLS, CHAT_TOOLS_WITH_INFERENCE} from '@/lib/chat/tools';
 
@@ -161,8 +177,25 @@ export async function POST(req: Request) {
       let outputChars = 0;
       let fastPathId: string | null = null;
       let status: 'ok' | 'empty' | 'error' | 'aborted' = 'ok';
+      let composingAnnounced = false;
+
+      const send = (event: ChatStreamEvent) => {
+        controller.enqueue(encoder.encode(encodeChatStreamEvent(event)));
+      };
+      const sendDelta = (text: string) => {
+        if (!text) return;
+        if (!composingAnnounced) {
+          composingAnnounced = true;
+          send({type: 'status', text: CHAT_STATUS_COMPOSING});
+        }
+        outputChars += text.length;
+        send({type: 'delta', text});
+      };
 
       try {
+        // First byte ASAP — UI shows progress while planning LLM / tools run.
+        send({type: 'status', text: CHAT_STATUS_THINKING});
+
         const onToolEvent = (
           event:
             | {
@@ -174,6 +207,7 @@ export async function POST(req: Request) {
             | {type: 'tool_leak'; action: 'recovered' | 'retry_required' | 'dropped'; preview: string},
         ) => {
           if (event.type === 'tool_call') {
+            send({type: 'status', text: statusLabelForTool(event.name)});
             chatLog('chat.tool', {
               requestId,
               ip,
@@ -207,7 +241,7 @@ export async function POST(req: Request) {
             // First user turn: prefer 1–2 tool rounds, not long retry chains.
             maxRounds:
               history.length <= 1
-                ? Math.min(CHAT_LIMITS.maxToolRounds, 3)
+                ? Math.min(CHAT_LIMITS.maxToolRounds, 2)
                 : CHAT_LIMITS.maxToolRounds,
             signal: abort.signal,
             onEvent: onToolEvent,
@@ -221,9 +255,18 @@ export async function POST(req: Request) {
         leaksDropped = loop.leaksDropped;
         let finalText = loop.finalText;
 
+        if (!finalText && loop.toolCallsTotal > 0) {
+          // Same short-circuit as tool-loop (covers stream path when loop left final null).
+          const formatted = tryFormatAgentToolAnswer({
+            userText: lastUserQuestion(messages),
+            toolPayloads: extractLastToolPayloads(messages),
+          });
+          if (formatted) finalText = formatted;
+        }
+
         if (!finalText) {
-          // Prefer streaming for the post-tools answer; buffer then sanitize so
-          // tool names cannot leak mid-chunk (search_prices / get_quote).
+          // Prefer live token flush for the post-tools answer. Hold back a short
+          // tail while sanitizing so tool names cannot flash mid-chunk.
           // Fall back to non-stream if the SSE body has no content deltas.
           const alreadyNudged = messages.some(
             (m) =>
@@ -238,36 +281,44 @@ export async function POST(req: Request) {
                 'Данные инструментов уже в истории. Дай пользователю полный ответ на русском: markdown-таблица и вывод. Без вызова инструментов и без пустого ответа.',
             });
           }
-          let streamed = '';
+          send({type: 'status', text: CHAT_STATUS_COMPOSING});
+          composingAnnounced = true;
+
+          const finalMessages = messagesForShortFinal(messages);
+          let rawStreamed = '';
+          const sanitizer = createAnswerStreamSanitizer();
           try {
-            for await (const delta of chatCompletionStream(messages, abort.signal)) {
-              streamed += delta;
+            for await (const delta of chatCompletionStream(finalMessages, abort.signal)) {
+              rawStreamed += delta;
+              const safe = sanitizer.push(delta);
+              if (safe) sendDelta(safe);
             }
+            const tail = sanitizer.flush();
+            if (tail) sendDelta(tail);
           } catch (streamErr) {
             chatLog('chat.stream_fallback', {
               requestId,
               ip,
               error: streamErr instanceof Error ? streamErr.message.slice(0, 200) : String(streamErr),
             });
+            // Keep whatever was already typed; flush sanitized holdback only.
+            const tail = sanitizer.flush();
+            if (tail) sendDelta(tail);
           }
 
-          if (streamed) {
-            finalText = streamed;
-          } else {
-            const fallback = await chatCompletion(messages, undefined, abort.signal);
+          if (!rawStreamed) {
+            const fallback = await chatCompletion(finalMessages, undefined, abort.signal);
             finalText = (fallback.content ?? '').trim() || null;
           }
         }
 
         if (finalText) {
+          // One-shot paths: tool-loop/fast-path final text or non-stream fallback.
           finalText = sanitizeUserFacingAnswer(finalText);
-          outputChars += finalText.length;
-          controller.enqueue(encoder.encode(finalText));
+          sendDelta(finalText);
         } else if (outputChars === 0) {
           status = 'empty';
-          controller.enqueue(
-            encoder.encode('Не удалось получить ответ. Попробуйте переформулировать вопрос.'),
-          );
+          sendDelta('Не удалось получить ответ. Попробуйте переформулировать вопрос.');
         }
       } catch (err) {
         if (abort.signal.aborted) {
@@ -283,7 +334,7 @@ export async function POST(req: Request) {
             toolRounds,
             toolCallsTotal,
           });
-          controller.enqueue(encoder.encode(`\n\n⚠️ Ошибка обращения к модели: ${detail}`));
+          send({type: 'delta', text: `\n\n⚠️ Ошибка обращения к модели: ${detail}`});
         }
       } finally {
         chatLog('chat.done', {
@@ -308,7 +359,7 @@ export async function POST(req: Request) {
 
   return new Response(stream, {
     headers: {
-      'Content-Type': 'text/plain; charset=utf-8',
+      'Content-Type': 'application/x-ndjson; charset=utf-8',
       'Cache-Control': 'no-store',
       'X-Accel-Buffering': 'no',
       'X-Request-Id': requestId,

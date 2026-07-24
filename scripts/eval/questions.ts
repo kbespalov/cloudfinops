@@ -577,5 +577,124 @@ export function buildQuestions(): Question[] {
       truthFromSearch({query: 'Qwen 9.9', category: 'ai', aiModel: 'Qwen 9.9', limit: 30}, 'hour'),
   });
 
+  // --- Natural paraphrases / colloquial (2026-07 smoke companions) ---
+  qs.push({
+    id: 'nat-egress-1tb',
+    tag: 'network',
+    kind: 'search',
+    q: 'Сколько примерно выйдет 1 ТБ исходящего трафика (egress) в месяц у разных провайдеров?',
+    truth: () => truthFromSearch({query: 'egress трафик', category: 'network', limit: 30}, 'month'),
+  });
+  qs.push({
+    id: 'nat-public-ip-white',
+    tag: 'network',
+    kind: 'search',
+    q: 'Сравни цену внешнего белого IP в месяц. Где дешевле арендовать адрес?',
+    truth: () => truthFromSearch({query: 'публичный IP', category: 'network', limit: 30}, 'month'),
+  });
+  qs.push({
+    id: 'nat-l40s-hour',
+    tag: 'gpu-price',
+    kind: 'search',
+    q: 'Кто отдаёт L40S и сколько стоит GPU-час? Нужна таблица по провайдерам.',
+    truth: () => truthFromSearch({query: 'L40S', category: 'gpu', gpuModel: 'L40S', limit: 30}, 'hour'),
+  });
+  qs.push({
+    id: 'nat-h200-month',
+    tag: 'gpu-price',
+    kind: 'search',
+    q: 'Самый дешёвый H200 на месяц в российских облаках — кто и сколько?',
+    truth: () => truthFromSearch({query: 'H200', category: 'gpu', gpuModel: 'H200', limit: 30}, 'month'),
+  });
+  qs.push({
+    id: 'nat-cold-5tb',
+    tag: 'storage',
+    kind: 'search',
+    q: 'Оцени 5 ТБ холодного (Cold) объектного хранилища на месяц. Не мешай со Standard.',
+    truth: () => truthFromObjectStorageVolume({storageClass: 'cold', volumeGiB: 5 * 1024}),
+  });
+  qs.push({
+    id: 'nat-k8s-typo',
+    tag: 'kubernetes',
+    kind: 'search',
+    q: 'асистируй про кубернатис плиз, сколько мастер стоит',
+    truth: () =>
+      truthFromSearch({query: 'kubernetes мастер', category: 'kubernetes', limit: 30}, 'month'),
+  });
+  qs.push({
+    id: 'nat-kimi-k26-tokens',
+    tag: 'ai-version',
+    kind: 'search',
+    q: 'Сколько стоит Kimi K2.6 за миллион токенов и где в РФ её хостят?',
+    truth: () =>
+      truthFromSearch({query: 'Kimi K2.6', category: 'ai', aiModel: 'Kimi K2.6', limit: 30}, 'hour'),
+  });
+  qs.push({
+    id: 'nat-selectel-gpus-only',
+    tag: 'gpu-by-provider',
+    kind: 'search',
+    q: 'Какие GPU вообще есть у Selectel в каталоге? Только Selectel, без других.',
+    truth: () =>
+      truthFromSearch({query: 'GPU', category: 'gpu', provider: 'selectel', limit: 40}, 'hour'),
+  });
+  qs.push({
+    id: 'nat-a100-8x',
+    tag: 'gpu-multi',
+    kind: 'quote',
+    q: 'Сравни конфигурацию 8×A100 по провайдерам за месяц — кому выгоднее паритет.',
+    truth: () => truthFromQuote({gpuModel: 'A100', gpuCount: 8, period: 'month'}),
+  });
+  qs.push({
+    id: 'nat-ssd-10tb-block',
+    tag: 'disk-volume',
+    kind: 'unit',
+    q: 'Сколько стоит 10 ТБ именно блочного SSD в месяц? Это не S3 и не объектка.',
+    truth: () => {
+      const t = truthFromUnitPrice('ssd');
+      if (t.cheapestPrice != null) {
+        return {...t, cheapestPrice: Math.round(t.cheapestPrice * 10 * 1024 * 100) / 100};
+      }
+      return t;
+    },
+  });
+  qs.push({
+    id: 'nat-ram-unit-min',
+    tag: 'unit-price',
+    kind: 'unit',
+    q: 'Какая минимальная цена 1 GiB RAM в месяц по провайдерам?',
+    truth: () => truthFromUnitPrice('ram'),
+  });
+
+  // Near-miss / agent-lite (intentionally off homepage chip aliases).
+  qs.push({
+    id: 'nat-vm-16-64-200',
+    tag: 'vm-quote',
+    kind: 'quote',
+    q: 'Сравни 16 vCPU / 64 GiB / 200 GiB SSD на месяц по облакам РФ',
+    truth: () =>
+      truthFromQuote({vcpu: 16, ramGiB: 64, diskGiB: 200, period: 'month'}),
+  });
+  qs.push({
+    id: 'nat-a30-hour',
+    tag: 'gpu-price',
+    kind: 'search',
+    q: 'Сколько примерно выйдет A30 GPU-час у провайдеров РФ?',
+    truth: () => truthFromSearch({category: 'gpu', gpuModel: 'A30'}),
+  });
+  qs.push({
+    id: 'nat-t4-month',
+    tag: 'gpu-price',
+    kind: 'search',
+    q: 'Кто в РФ отдаёт T4 и сколько примерно за месяц выходит?',
+    truth: () => truthFromSearch({category: 'gpu', gpuModel: 'T4'}),
+  });
+  qs.push({
+    id: 'nat-vm-2-4-40',
+    tag: 'vm-quote',
+    kind: 'quote',
+    q: 'Нужна маленькая ВМ: 2 vCPU, 4 GiB RAM, 40 GiB SSD — сравни провайдеров за месяц',
+    truth: () => truthFromQuote({vcpu: 2, ramGiB: 4, diskGiB: 40, period: 'month'}),
+  });
+
   return qs;
 }

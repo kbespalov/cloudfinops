@@ -5,6 +5,9 @@
  *   npm run eval:smoke
  *   npx tsx scripts/eval/smoke.ts "свой вопрос"
  *   npx tsx scripts/eval/smoke.ts --suite
+ *   npx tsx scripts/eval/smoke.ts --new   # only freshly added natural questions
+ *   npx tsx scripts/eval/smoke.ts --agent # near-miss agent-lite (no alias)
+ *   npx tsx scripts/eval/smoke.ts --home
  *
  * Checks: no English tool-planning leak in the answer, tools fired when
  * expected, non-empty Russian response, basic price signals for price Qs.
@@ -164,6 +167,195 @@ const SUITE: SmokeCase[] = [
   },
 ];
 
+/**
+ * Fresh natural-language questions (2026-07): paraphrases, network, niche GPU,
+ * inference infra, typos — not covered by the original suite chips.
+ */
+/** Latency budget: fast-path + deterministic tables should stay near ~10s. */
+const FAST_BUDGET_MS = 12_000;
+
+const NEW_SUITE: SmokeCase[] = [
+  {
+    id: 'new-egress-1tb',
+    q: 'Сколько примерно выйдет 1 ТБ исходящего трафика (egress) в месяц у разных провайдеров?',
+    expectTools: true,
+    expectToolMatch: /search_prices|egress|трафик|network/i,
+    expectPriceSignal: true,
+    maxDurationMs: FAST_BUDGET_MS,
+  },
+  {
+    id: 'new-public-ip',
+    q: 'Сравни цену внешнего белого IP в месяц. Где дешевле арендовать адрес?',
+    expectTools: true,
+    expectToolMatch: /search_prices|IP|ipv4|адрес/i,
+    expectPriceSignal: true,
+    maxDurationMs: FAST_BUDGET_MS,
+  },
+  {
+    id: 'new-l40s-hour',
+    q: 'Кто отдаёт L40S и сколько стоит GPU-час? Нужна таблица по провайдерам.',
+    expectTools: true,
+    expectToolMatch: /search_prices|get_quote|L40S/i,
+    expectPriceSignal: true,
+    maxDurationMs: FAST_BUDGET_MS,
+  },
+  {
+    id: 'new-h200-month',
+    q: 'Самый дешёвый H200 на месяц в российских облаках — кто и сколько?',
+    expectTools: true,
+    expectToolMatch: /search_prices|get_quote|H200/i,
+    expectPriceSignal: true,
+    maxDurationMs: FAST_BUDGET_MS,
+  },
+  {
+    id: 'new-cold-5tb',
+    q: 'Оцени 5 ТБ холодного (Cold) объектного хранилища на месяц. Не мешай со Standard.',
+    expectTools: true,
+    expectToolMatch: /search_prices|cold|5120|хран/i,
+    expectPriceSignal: true,
+    maxDurationMs: FAST_BUDGET_MS,
+  },
+  {
+    id: 'new-k8s-ha',
+    q: 'Сравни отказоустойчивый / региональный мастер Managed Kubernetes по цене за месяц.',
+    expectTools: true,
+    expectToolMatch: /search_prices|kubernetes|k8s|регион|ha|отказоустойчив/i,
+    expectPriceSignal: true,
+    maxDurationMs: FAST_BUDGET_MS,
+  },
+  {
+    id: 'new-k8s-typo',
+    q: 'асистируй про кубернатис плиз, сколько мастер стоит',
+    expectTools: true,
+    expectToolMatch: /search_prices|kubernetes|k8s|кубер/i,
+    expectPriceSignal: true,
+    maxDurationMs: FAST_BUDGET_MS,
+  },
+  {
+    id: 'new-qwen32b-infra',
+    q: 'Хочу поднять Qwen3 32B у себя на GPU в РФ — какую карту и сколько штук брать, с ценами?',
+    expectTools: true,
+    expectToolMatch: /recommend_inference_infra|Qwen|32B/i,
+    expectPriceSignal: true,
+    expectAnswerMatch: /GPU|H100|L40|VRAM|карт/i,
+    maxDurationMs: FAST_BUDGET_MS,
+  },
+  {
+    id: 'new-kimi-tokens',
+    q: 'Сколько стоит Kimi K2.6 за миллион токенов и где в РФ её хостят?',
+    expectTools: true,
+    expectToolMatch: /search_prices|Kimi|K2\.6|ai/i,
+    expectPriceSignal: true,
+    maxDurationMs: FAST_BUDGET_MS,
+  },
+  {
+    id: 'new-budget-50k',
+    q: 'Есть 50 тыс ₽/мес на облако — что реально взять из обычных ВМ без GPU? Без допроса.',
+    expectTools: true,
+    expectToolMatch: /fit_budget|50000|budget/i,
+    expectPriceSignal: true,
+    expectAnswerMatch: /ВМ|vCPU|бюджет|конфиг/i,
+    maxDurationMs: FAST_BUDGET_MS,
+  },
+  {
+    id: 'new-ram-unit',
+    q: 'Какая минимальная цена 1 GiB RAM в месяц по провайдерам?',
+    expectTools: true,
+    expectToolMatch: /compare_unit_price|ram|search_prices/i,
+    expectPriceSignal: true,
+    maxDurationMs: FAST_BUDGET_MS,
+  },
+  {
+    id: 'new-a100-8x',
+    q: 'Сравни конфигурацию 8×A100 по провайдерам за месяц — кому выгоднее паритет.',
+    expectTools: true,
+    expectToolMatch: /get_quote|search_prices|A100|8/i,
+    expectPriceSignal: true,
+    maxDurationMs: FAST_BUDGET_MS,
+  },
+  {
+    id: 'new-selectel-gpus',
+    q: 'Какие GPU вообще есть у Selectel в каталоге? Только Selectel, без других.',
+    expectTools: true,
+    expectToolMatch: /search_prices|selectel|gpu/i,
+    expectAnswerMatch: /Selectel|GPU|H100|A100|L40|нет|не найден/i,
+    maxDurationMs: FAST_BUDGET_MS,
+  },
+  {
+    id: 'new-ssd-not-s3',
+    q: 'Сколько стоит 10 ТБ именно блочного SSD в месяц? Это не S3 и не объектка.',
+    expectTools: true,
+    expectToolMatch: /compare_unit_price|ssd|get_quote|disk/i,
+    expectPriceSignal: true,
+    expectAnswerMatch: /SSD|диск|GiB|ТБ|блоч/i,
+    maxDurationMs: FAST_BUDGET_MS,
+  },
+];
+
+/**
+ * Near-miss / agent-lite: intentionally miss homepage aliases so the LLM picks
+ * the tool, then deterministic formatting short-circuits the final RTT.
+ * Target: well under a minute (budget 20s).
+ */
+const AGENT_BUDGET_MS = 20_000;
+
+const AGENT_SUITE: SmokeCase[] = [
+  {
+    id: 'agent-vm-16-64-200',
+    q: 'Сравни 16 vCPU / 64 GiB / 200 GiB SSD на месяц по облакам РФ',
+    expectTools: true,
+    expectToolMatch: /get_quote|vcpu|16|64/i,
+    expectPriceSignal: true,
+    expectBestOfferPct: true,
+    maxDurationMs: AGENT_BUDGET_MS,
+  },
+  {
+    id: 'agent-a30-hour',
+    q: 'Сколько примерно выйдет A30 GPU-час у провайдеров РФ?',
+    expectTools: true,
+    expectToolMatch: /search_prices|get_quote|A30/i,
+    expectPriceSignal: true,
+    maxDurationMs: AGENT_BUDGET_MS,
+  },
+  {
+    id: 'agent-budget-70k',
+    q: 'Что взять на семьдесят тысяч рублей в месяц из обычных ВМ без GPU? Без опроса.',
+    expectTools: true,
+    expectToolMatch: /fit_budget|70000|budget/i,
+    expectPriceSignal: true,
+    expectAnswerMatch: /ВМ|vCPU|бюджет|конфиг/i,
+    maxDurationMs: AGENT_BUDGET_MS,
+  },
+  {
+    id: 'agent-ssd-12tb',
+    q: 'Оцени именно блочный SSD на 12 терабайт в месяц — не объектное хранилище.',
+    expectTools: true,
+    expectToolMatch: /compare_unit_price|ssd|disk/i,
+    expectPriceSignal: true,
+    expectAnswerMatch: /SSD|диск|ТБ|GiB|блоч/i,
+    maxDurationMs: AGENT_BUDGET_MS,
+  },
+  {
+    id: 'agent-t4-month',
+    q: 'Кто в РФ отдаёт T4 и сколько примерно за месяц выходит?',
+    expectTools: true,
+    expectToolMatch: /search_prices|get_quote|T4/i,
+    expectPriceSignal: true,
+    maxDurationMs: AGENT_BUDGET_MS,
+  },
+  {
+    id: 'agent-vm-2-4-40',
+    q: 'Нужна маленькая ВМ: 2 vCPU, 4 GiB RAM, 40 GiB SSD — сравни провайдеров за месяц',
+    expectTools: true,
+    expectToolMatch: /get_quote|vcpu|2/i,
+    expectPriceSignal: true,
+    expectBestOfferPct: true,
+    maxDurationMs: AGENT_BUDGET_MS,
+  },
+];
+
+const SUITE_ALL: SmokeCase[] = [...SUITE, ...NEW_SUITE, ...AGENT_SUITE];
+
 const CYRILLIC = /[А-Яа-яЁё]/;
 const PRICE_SIGNAL = /₽|руб|\bмес\b|\bчас\b|\d[\d\s.,]*\s*(₽|руб)/i;
 /** best / 0% / +12% / к best offer — signals from the new comparison column. */
@@ -196,7 +388,8 @@ function gradeCase(c: SmokeCase, run: Awaited<ReturnType<typeof runChat>>): Chec
     /\bsearch_prices\b/.test(answer) ||
     /\bget_quote\b/.test(answer) ||
     /\bcompare_unit_price\b/.test(answer) ||
-    /\bfit_budget\b/.test(answer);
+    /\bfit_budget\b/.test(answer) ||
+    /\brecommend_inference_infra\b/.test(answer);
   checks.push({
     ok: !toolNameLeak,
     detail: toolNameLeak
@@ -330,17 +523,27 @@ async function main() {
     await runSuite(HOME_SUITE, 'home chips');
     return;
   }
-  const args = argv.filter((a) => a !== '--suite');
+  if (argv.includes('--new')) {
+    await runSuite(NEW_SUITE, 'new natural questions');
+    return;
+  }
+  if (argv.includes('--agent')) {
+    await runSuite(AGENT_SUITE, 'agent near-miss');
+    return;
+  }
+  const args = argv.filter(
+    (a) => a !== '--suite' && a !== '--new' && a !== '--home' && a !== '--agent',
+  );
   const forceSuite = argv.includes('--suite') || args.length === 0;
   if (forceSuite && args.length === 0) {
-    await runSuite(SUITE, 'suite');
+    await runSuite(SUITE_ALL, 'suite+new+agent');
     return;
   }
   if (args.length) {
     await runOne(args.join(' '));
     return;
   }
-  await runSuite(SUITE, 'suite');
+  await runSuite(SUITE_ALL, 'suite+new+agent');
 }
 
 main().catch((err) => {

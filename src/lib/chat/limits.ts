@@ -14,8 +14,8 @@ export const CHAT_LIMITS = {
   maxTotalChars: 80_000,
   /** Multi-component stacks (VM+IP+S3+K8s) need headroom if the model serializes tool calls. */
   maxToolRounds: 6,
-  /** Soft cap on completion output (must stay in sync with gigachat COMMON_PARAMS). */
-  maxOutputTokens: 2500,
+  /** Soft cap on completion output (must stay in sync with gigachat FINAL_MAX_TOKENS). */
+  maxOutputTokens: 1200,
   /** Per-IP request budget (sliding 60s). */
   maxRequestsPerIpPerMinute: 20,
   /** Global estimated-token budget across all clients (sliding 60s). */
@@ -53,7 +53,8 @@ export function estimateMessagesTokens(messages: ChatMessage[]): number {
  * completions (not a full worst-case 5×max_tokens, which would starve the window).
  */
 export function reserveTokensForRequest(inputTokens: number): number {
-  const toolLoopBuffer = 2 * 800;
+  // Keep in sync with TOOL_LOOP_MAX_TOKENS in gigachat.ts (~384) × ~2 rounds.
+  const toolLoopBuffer = 2 * 400;
   return inputTokens + CHAT_LIMITS.maxOutputTokens + toolLoopBuffer;
 }
 
