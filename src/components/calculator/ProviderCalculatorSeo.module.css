@@ -44,6 +44,42 @@
   color: var(--g-color-text-secondary);
 }
 
+.method {
+  margin: 0;
+  max-width: 52rem;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--g-color-text-hint);
+}
+
+.method summary {
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--g-color-text-secondary);
+  list-style: none;
+}
+
+.method summary::-webkit-details-marker {
+  display: none;
+}
+
+.method summary::before {
+  content: '▸ ';
+  color: var(--g-color-text-hint);
+}
+
+.method[open] summary::before {
+  content: '▾ ';
+}
+
+.method ul {
+  margin: 6px 0 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 .subtitle {
   margin: 6px 0 0;
   font-size: 12px;

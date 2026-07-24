@@ -146,7 +146,7 @@ function ProviderList({
                 ) : null}
               </Flex>
               <Text variant="caption-2" color={index === 0 ? 'positive' : 'secondary'}>
-                {index === 0 ? 'лучшая цена' : `+${delta}% к лучшей`}
+                {index === 0 ? 'мин. в каталоге' : `+${delta}% к минимуму`}
               </Text>
             </Flex>
             <Text variant="subheader-2" className={styles.providerAmount}>
@@ -283,7 +283,7 @@ export function PresetDrawer({
             {result.best ? (
               <div className={styles.bestLine}>
                 <Text variant="caption-2" color="secondary" className={styles.eyebrow}>
-                  Best offer · {result.best.providerName}
+                  Минимальная цена в каталоге · {result.best.providerName}
                   {result.best.scope !== 'compute' ? ` · ${scopeLabel(result.best.scope)}` : ''}
                 </Text>
                 <Flex alignItems="baseline" gap={2}>
@@ -395,7 +395,7 @@ export function PresetDrawer({
                   <Flex direction="column" gap={1}>
                     <Text variant="subheader-2">{alternateTitle}</Text>
                     <Text variant="caption-2" color="secondary">
-                      Другой состав цены — не сравниваем с Best offer выше
+                      Другой состав цены — не сравниваем с минимумом в каталоге выше
                     </Text>
                   </Flex>
                   <Text variant="caption-2" color="secondary">

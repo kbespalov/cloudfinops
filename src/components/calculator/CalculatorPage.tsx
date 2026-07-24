@@ -18,7 +18,7 @@ import {Calculator, ChevronRight} from '@gravity-ui/icons';
 import {AppHeader} from '@/components/AppHeader';
 import dynamic from 'next/dynamic';
 import type {GpuPreset} from '@/lib/calculator/presets';
-import type {PeriodMode} from '@/lib/calculator/quote-view';
+import type {CalculatorProviderId, PeriodMode} from '@/lib/calculator/quote-view';
 import styles from './CalculatorPage.module.css';
 
 /** Code-split panels so /calculator/vm never pulls the self-host recommend graph. */
@@ -77,6 +77,8 @@ export function CalculatorPage({
   gpuPresets = [],
   title,
   lead,
+  independenceNote,
+  focusProviderId,
 }: {
   mode: CalculatorMode;
   gpuPresets?: GpuPreset[];
@@ -84,6 +86,10 @@ export function CalculatorPage({
   title?: string;
   /** Optional lead override (provider landings). */
   lead?: string;
+  /** Calm independence line under the lead (provider landings). */
+  independenceNote?: string;
+  /** Provider landing focus for sidebar comparison labels. */
+  focusProviderId?: CalculatorProviderId;
 }) {
   const router = useRouter();
   const [period, setPeriod] = useState<PeriodMode>('month');
@@ -118,6 +124,11 @@ export function CalculatorPage({
               <Text color="complementary" className={leadClassName}>
                 {subtitle}
               </Text>
+              {independenceNote ? (
+                <Text variant="caption-2" color="hint" className={styles.independenceNote}>
+                  {independenceNote}
+                </Text>
+              ) : null}
             </Flex>
 
             <Flex alignItems="center" gap={2} className={styles.periodWrap}>
@@ -160,7 +171,11 @@ export function CalculatorPage({
 
         <div className={styles.workspace} data-tab={mode}>
           {mode === 'vm' ? (
-            <VmCalculatorPanel period={period} gpuPresets={gpuPresets} />
+            <VmCalculatorPanel
+              period={period}
+              gpuPresets={gpuPresets}
+              focusProviderId={focusProviderId}
+            />
           ) : mode === 'inference' ? (
             <InferenceCalculatorPanel period={period} />
           ) : mode === 'lakehouse' ? (

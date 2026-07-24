@@ -98,8 +98,8 @@ export function AiCalculatorPanel({period}: {period: PeriodMode}) {
         result={result}
         loading={loading}
         emptyHint="Опишите конфигурацию в чате — здесь появится минимальная цена и альтернативы"
-        bestPriceHint="Минимальная расчётная цена среди предложений в каталоге для конфигурации из чата"
-        bestPriceBadge="Минимальная расчётная цена"
+        bestPriceHint="Для выбранной конфигурации среди предложений, доступных в каталоге. Расчёт выполнен по публичным тарифам без учёта индивидуальных скидок и промоакций."
+        bestPriceBadge="Минимальная цена в каталоге"
         configSummary={configSummary}
       />
     </>

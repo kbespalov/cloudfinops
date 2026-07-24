@@ -35,7 +35,7 @@ const GPU_CARDS = [
   {
     id: 'h200',
     title: 'NVIDIA H200 141GB',
-    text: '1× и 8× H200 под крупные MoE и длинный контекст — Best offer по публичным тарифам РФ.',
+    text: '1× и 8× H200 под крупные MoE и длинный контекст — минимальная цена в каталоге по публичным тарифам РФ.',
   },
   {
     id: 'a100',
@@ -71,7 +71,7 @@ export function VmCalculatorSeo({
         Бесплатный <strong>калькулятор цен облака</strong> для сравнения стоимости виртуальных машин
         (vCPU, RAM, SSD/NVMe, публичный IP) и аренды GPU NVIDIA — <strong>B300</strong>,{' '}
         <strong>H100</strong>, <strong>H200</strong>, <strong>A100</strong>, <strong>L4</strong>,{' '}
-        <strong>V100</strong> — у {PROVIDERS.join(', ')}. Best offer — минимальная ордерабельная
+        <strong>V100</strong> — у {PROVIDERS.join(', ')}. Минимальная цена в каталоге — ордерабельная
         конфигурация по открытому каталогу Cloud FinOps, без промо-тарифов. Месяц = 720 часов, цены в
         рублях с НДС.
       </p>
@@ -213,7 +213,7 @@ export function SelfHostCalculatorSeo() {
         Подберите конфигурацию под open-weight модель (квант INT4 / FP8 / BF16 / INT8) и сравните
         аренду <strong>NVIDIA H100</strong>, <strong>H200</strong>, <strong>A100</strong>,{' '}
         <strong>L4</strong> и выделенного <strong>B300</strong> у {PROVIDERS.join(', ')}. Калькулятор
-        оценивает VRAM и число карт, показывает Best offer по публичным тарифам — рядом ориентир
+        оценивает VRAM и число карт, показывает минимальную цену в каталоге по публичным тарифам — рядом ориентир
         Hosted API ₽/1M токенов, где модель есть в каталоге.
       </p>
 
@@ -292,7 +292,7 @@ export function LakehouseCalculatorSeo() {
         для оценки DIY open lakehouse: <strong>Object Storage (S3)</strong>,{' '}
         <strong>Managed Kubernetes</strong> и worker-ВМ под <strong>Apache Iceberg</strong>,{' '}
         <strong>Apache Spark</strong>, <strong>Trino</strong> и <strong>Airflow</strong>. Сравнение
-        публичных тарифов {PROVIDERS.join(', ')}. Best offer — минимальная сопоставимая сборка по
+        публичных тарифов {PROVIDERS.join(', ')}. Минимальная цена в каталоге — сопоставимая сборка по
         каталогу Cloud FinOps; месяц = 720 часов, цены в рублях с НДС. Удобно оценить стоимость{' '}
         <strong>озера данных</strong>, <strong>open lakehouse</strong> и аналитической платформы без
         выдуманных PaaS-тарифов Spark/Trino.
@@ -415,7 +415,7 @@ const LAKEHOUSE_FAQ = [
   {
     question: 'Сколько стоит lakehouse или платформа данных в облаке России?',
     answer:
-      'Зависит от объёма озера, hot/cold, тира K8s и часов ETL/SQL. На пресете Medium (~75 TiB, HA) калькулятор сравнивает Яндекс.Облако, VK Cloud, Selectel, Cloud.ru, MWS и T1 (если покрывают SKU) и показывает Best offer в ₽/мес.',
+      'Зависит от объёма озера, hot/cold, тира K8s и часов ETL/SQL. На пресете Medium (~75 TiB, HA) калькулятор сравнивает Яндекс.Облако, VK Cloud, Selectel, Cloud.ru, MWS и T1 (если покрывают SKU) и показывает минимальную цену в каталоге в ₽/мес.',
   },
   {
     question: 'Чем open lakehouse отличается от data warehouse?',
@@ -439,7 +439,7 @@ const LAKEHOUSE_FAQ = [
   {
     question: 'Есть ли калькулятор озера данных для Яндекс.Облака и Selectel?',
     answer:
-      'Да. Откройте /calculator/lakehouse — в таблице Best offer есть колонки Яндекс.Облако, Selectel, VK Cloud, Cloud.ru, MWS и T1 (если провайдер закрывает нужные SKU). Отдельные лендинги провайдеров: /calculator/yandex-cloud, /calculator/selectel.',
+      'Да. Откройте /calculator/lakehouse — в сравнении есть колонки Яндекс.Облако, Selectel, VK Cloud, Cloud.ru, MWS и T1 (если провайдер закрывает нужные SKU). Отдельные лендинги провайдеров: /calculator/yandex-cloud, /calculator/selectel.',
   },
   {
     question: 'Подходит ли калькулятор для ClickHouse?',
@@ -452,12 +452,12 @@ const VM_FAQ = [
   {
     question: 'Как посчитать цену облака в калькуляторе?',
     answer:
-      'Выберите конфигурацию ВМ или GPU-пресет. Калькулятор цены облака сравнит публичные тарифы Яндекс.Облако, VK Cloud, Selectel, Cloud.ru, MWS и T1 и покажет Best offer в ₽/час, ₽/мес или ₽/год (месяц = 720 часов, с НДС).',
+      'Выберите конфигурацию ВМ или GPU-пресет. Калькулятор цены облака сравнит публичные тарифы Яндекс.Облако, VK Cloud, Selectel, Cloud.ru, MWS и T1 и покажет минимальную цену в каталоге в ₽/час, ₽/мес или ₽/год (месяц = 720 часов, с НДС).',
   },
   {
     question: 'Как считается стоимость ВМ?',
     answer:
-      'Складываем публичные unit-цены vCPU, RAM и диск одного региона и платформы либо берём точный flavor плюс SSD. Best offer — минимальная ордерабельная цена среди провайдеров.',
+      'Складываем публичные unit-цены vCPU, RAM и диск одного региона и платформы либо берём точный flavor плюс SSD. Минимальная цена в каталоге — ордерабельная цена среди провайдеров по публичным тарифам.',
   },
   {
     question: 'Сколько стоит виртуальная машина в облаке России?',
@@ -504,7 +504,7 @@ const SELF_HOST_FAQ = [
   {
     question: 'Сколько стоит аренда H100 или H200 для self-host в России?',
     answer:
-      'Зависит от flavor vs unit GPU + host. Для 1×H100 80GB и 1×H200 141GB смотрите актуальный Best offer на странице (Selectel / Cloud.ru / T1 и др.); месяц = 720 часов. 8× узлы считаются отдельными пресетами.',
+      'Зависит от flavor vs unit GPU + host. Для 1×H100 80GB и 1×H200 141GB смотрите актуальную минимальную цену в каталоге на странице (Selectel / Cloud.ru / T1 и др.); месяц = 720 часов. 8× узлы считаются отдельными пресетами.',
   },
   {
     question: 'Нужен ли B300 для self-host LLM?',
@@ -620,10 +620,10 @@ export function vmCalculatorJsonLd(gpuShapeCount: number) {
           'Калькулятор цены облака',
           'Калькулятор стоимости ВМ',
           'Сравнение цен облаков России',
-          'Калькулятор Яндекс.Облако',
-          'Калькулятор VK Cloud',
-          'Калькулятор Selectel и B300',
-          'Калькулятор MWS и T1 Cloud',
+          'Калькулятор публичных цен Yandex Cloud',
+          'Калькулятор публичных цен VK Cloud',
+          'Калькулятор публичных цен Selectel',
+          'Калькулятор публичных цен MWS Cloud и T1 Cloud',
           'Калькулятор аренды H100 H200',
           'Пресеты General High CPU High Memory Low-cost',
         ],

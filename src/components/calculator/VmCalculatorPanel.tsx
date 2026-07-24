@@ -42,6 +42,7 @@ import {
 import {
   formatGiBCapacity,
   periodShortLabel,
+  type CalculatorProviderId,
   type PeriodMode,
 } from '@/lib/calculator/quote-view';
 import {vmChatPrompt} from '@/lib/calculator/self-host-links';
@@ -172,9 +173,11 @@ function gpuModelOptions(presets: GpuPreset[]) {
 export function VmCalculatorPanel({
   period,
   gpuPresets = [],
+  focusProviderId = null,
 }: {
   period: PeriodMode;
   gpuPresets?: GpuPreset[];
+  focusProviderId?: CalculatorProviderId | null;
 }) {
   const [mode, setMode] = useState<VmMode>(DEFAULT.family);
   const [family, setFamily] = useState<ComputeFamily>(DEFAULT.family);
@@ -276,11 +279,41 @@ export function VmCalculatorPanel({
   }
 
   function applyFamily(next: ComputeFamily) {
-    const clamped = clampShapeToShare(vcpuShare, next, vcpu, ramGiB);
+    let nextShare = vcpuShare;
+    let nextPurchase = purchaseModel;
+    let nextDisk = diskMedia;
+    let shapeVcpu = vcpu;
+    let shapeRam = ramGiB;
+
+    if (next === 'low-cost') {
+      // Budget path: cheapest comparable shelf is spot + HDD, shape 2/4.
+      // Cloud.ru 10%/30% flavors are on-demand only — incompatible with spot.
+      nextDisk = 'hdd';
+      nextPurchase = 'preemptible';
+      if (nextShare === '10%' || nextShare === '30%') nextShare = '100%';
+      shapeVcpu = 2;
+      shapeRam = 4;
+      setAdvancedOpen(true);
+    }
+
+    const clamped = clampShapeToShare(nextShare, next, shapeVcpu, shapeRam);
     setFamily(next);
+    setDiskMedia(nextDisk);
+    setPurchaseModel(nextPurchase);
+    setVcpuShare(nextShare);
     setCustomRam(false);
+    setForceCustomPreset(false);
     setVcpu(clamped.vcpu);
-    setRamGiB(defaultRamForShare(vcpuShare, next, clamped.vcpu));
+    setRamGiB(defaultRamForShare(nextShare, next, clamped.vcpu));
+  }
+
+  function onPurchaseModelChange(next: PurchaseModel) {
+    setPurchaseModel(next);
+    setForceCustomPreset(true);
+    // 10%/30% exist only as Cloud.ru on-demand economy flavors.
+    if (next === 'preemptible' && (vcpuShare === '10%' || vcpuShare === '30%')) {
+      onVcpuShareChange('100%');
+    }
   }
 
   function onVmCountChange(next: number) {
@@ -297,7 +330,16 @@ export function VmCalculatorPanel({
     setCustomRam(false);
     setVcpu(clamped.vcpu);
     setRamGiB(defaultRamForShare(next, family, clamped.vcpu));
+    // Cloud.ru economy shares are not sold as preemptible — flip to ordinary VM.
+    if ((next === '10%' || next === '30%') && purchaseModel === 'preemptible') {
+      setPurchaseModel('on-demand');
+    }
   }
+
+  const visibleShareOptions =
+    purchaseModel === 'preemptible'
+      ? VCPU_SHARE_OPTIONS.filter((s) => s !== '10%' && s !== '30%')
+      : VCPU_SHARE_OPTIONS;
 
   function onVcpuChange(next: number) {
     setForceCustomPreset(true);
@@ -628,7 +670,7 @@ export function VmCalculatorPanel({
                         <SegmentedRadioGroup
                           size="l"
                           value={purchaseModel}
-                          onUpdate={(v) => setPurchaseModel(v as PurchaseModel)}
+                          onUpdate={(v) => onPurchaseModelChange(v as PurchaseModel)}
                           aria-label="Тип виртуальной машины"
                           className={styles.compactToggle}
                         >
@@ -657,12 +699,12 @@ export function VmCalculatorPanel({
                           <HelpMark aria-label="Про долю CPU" iconSize="s">
                             Гарантированная доля производительности ядра. 100% — выделенное ядро.
                             Меньше 100% — дешевле (Yandex: 5/20/50%, до 4 vCPU и 16 GiB; Cloud.ru:
-                            10/30% по флейворам). Azure B-series — похожая burstable-модель, в
-                            каталоге РФ не сравниваем. {vcpuShareHint(vcpuShare)}
+                            10/30% по флейворам, только обычные ВМ). С прерываемой доли 10%/30% в
+                            каталоге нет. {vcpuShareHint(vcpuShare)}
                           </HelpMark>
                         </Flex>
                         <div className={styles.shareChips} role="radiogroup" aria-label="Доля CPU">
-                          {VCPU_SHARE_OPTIONS.map((share) => {
+                          {visibleShareOptions.map((share) => {
                             const active = vcpuShare === share;
                             return (
                               <button
@@ -776,8 +818,9 @@ export function VmCalculatorPanel({
         result={result}
         loading={loading}
         emptyHint={isGpu ? 'Для выбранных параметров предложения не найдены' : vmEmptyHint}
-        bestPriceHint="Минимальная расчётная цена среди предложений в каталоге для текущей конфигурации"
-        bestPriceBadge="Минимальная расчётная цена"
+        bestPriceHint="Для выбранной конфигурации среди предложений, доступных в каталоге. Расчёт выполнен по публичным тарифам без учёта индивидуальных скидок и промоакций."
+        bestPriceBadge="Минимальная цена в каталоге"
+        focusProviderId={focusProviderId}
         configSummary={
           isGpu && activeGpu
             ? {

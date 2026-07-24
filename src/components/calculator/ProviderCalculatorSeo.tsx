@@ -11,18 +11,43 @@ export function ProviderCalculatorSeo({seo}: {seo: CalculatorProviderSeo}) {
   return (
     <section className={styles.seo} aria-labelledby="provider-calc-seo-title">
       <h2 id="provider-calc-seo-title" className={styles.title}>
-        {seo.h1}: ВМ и GPU по публичным тарифам
+        {seo.h1}
       </h2>
       <p className={styles.lead}>{seo.intro}</p>
 
       <p className={styles.meta}>
         Также ищут: {[seo.brandRu, seo.brandEn, ...seo.aliases].join(', ')}. Полное сравнение без
-        фильтра провайдера — в{' '}
+        фокуса на одном провайдере — в{' '}
         <Link href="/calculator/vm">калькуляторе ВМ и GPU</Link> и{' '}
-        <Link href="/calculator/self-host">Self-host LLM</Link>.
+        <Link href="/calculator/self-host">хостинге LLM</Link>.
       </p>
 
-      <h3 className={styles.subtitle}>Частые вопросы · {seo.brandRu}</h3>
+      <details className={styles.method}>
+        <summary>Как рассчитывается цена</summary>
+        <ul>
+          <li>Источник: публичные тарифы провайдеров в каталоге Cloud FinOps.</li>
+          <li>
+            Валюта: рубли. Для каждого тарифа используется налоговый статус, указанный в каталоге и
+            источнике цены.
+          </li>
+          <li>Расчётный период: час, месяц (720 ч) или год — переключатель на странице.</li>
+          <li>
+            В итог входят компоненты выбранной конфигурации (например vCPU, RAM, диск, GPU, публичный
+            IP), если они участвуют в расчёте.
+          </li>
+          <li>Индивидуальные скидки, промоакции и закрытые прайсы не учитываются.</li>
+          <li>
+            Предложения могут различаться по модели предоставления ресурсов, производительности и
+            включённым услугам (VM, flavor, dedicated, доля CPU, класс диска и др.).
+          </li>
+          <li>
+            Перед заказом проверьте итоговую стоимость и доступность ресурсов на официальном сайте
+            провайдера.
+          </li>
+        </ul>
+      </details>
+
+      <h3 className={styles.subtitle}>Частые вопросы · {seo.brandDisplay}</h3>
       <dl className={styles.faq}>
         {seo.faq.map((item) => (
           <div key={item.question}>
@@ -32,7 +57,7 @@ export function ProviderCalculatorSeo({seo}: {seo: CalculatorProviderSeo}) {
         ))}
       </dl>
 
-      <h3 className={styles.subtitle}>Калькуляторы других облаков</h3>
+      <h3 className={styles.subtitle}>Калькуляторы публичных цен других облаков</h3>
       <ul className={styles.links}>
         {others.map((p) => (
           <li key={p.slug}>

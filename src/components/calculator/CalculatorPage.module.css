@@ -48,6 +48,12 @@
   color: var(--g-color-text-complementary);
 }
 
+.independenceNote {
+  max-width: 44rem;
+  margin-top: 2px;
+  line-height: 1.35;
+}
+
 /* Keep lead in DOM for SEO / crawlers; hide from visual UI. */
 .heroLeadSeo {
   position: absolute;

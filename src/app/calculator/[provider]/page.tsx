@@ -47,12 +47,12 @@ export async function generateMetadata({
       locale: 'ru_RU',
       url: path,
       siteName: 'Cloud FinOps',
-      title: `${seo.h1} · Cloud FinOps`,
+      title: seo.title,
       description: seo.description,
     },
     twitter: {
       card: 'summary_large_image',
-      title: seo.h1,
+      title: seo.title,
       description: seo.description,
     },
     category: 'technology',
@@ -82,6 +82,8 @@ export default async function ProviderCalculatorRoute({
         gpuPresets={gpuCardPresets}
         title={seo.h1}
         lead={seo.lead}
+        independenceNote={seo.independenceNote}
+        focusProviderId={seo.providerId}
       />
       <ProviderCalculatorSeo seo={seo} />
     </>

@@ -7,6 +7,7 @@ import {ProviderMark} from '@/components/catalog/ProviderMark';
 import {
   formatQuoteAmount,
   periodShortLabel,
+  type CalculatorProviderId,
   type PeriodMode,
   type ViewPresetQuote,
   type ViewProviderQuote,
@@ -16,6 +17,12 @@ import styles from './CalculatorSidebar.module.css';
 
 const VISIBLE_PROVIDERS = 4;
 const MOBILE_MQ = '(max-width: 720px)';
+
+const DEFAULT_BEST_BADGE = 'Минимальная цена в каталоге';
+const DEFAULT_BEST_HINT =
+  'Для выбранной конфигурации среди предложений, доступных в каталоге. Расчёт выполнен по публичным тарифам без учёта индивидуальных скидок и промоакций.';
+const ALT_DELTA_HINT =
+  'Разница относительно минимальной расчётной цены для выбранной конфигурации.';
 
 export type DeploymentSummary = {
   nodeCount: number;
@@ -48,6 +55,7 @@ function ProviderList({
   period,
   onSelect,
   bestHint,
+  focusProviderId,
 }: {
   quotes: ViewProviderQuote[];
   best: ViewProviderQuote | null;
@@ -55,6 +63,7 @@ function ProviderList({
   period: PeriodMode;
   onSelect: (key: string) => void;
   bestHint: string;
+  focusProviderId?: CalculatorProviderId | null;
 }) {
   const [expanded, setExpanded] = useState(false);
   const visible = expanded ? quotes : quotes.slice(0, VISIBLE_PROVIDERS);
@@ -69,21 +78,17 @@ function ProviderList({
       {visible.map((q) => {
         const key = quoteKey(q);
         const active = key === selectedKey;
-        const absoluteIndex = quotes.indexOf(q);
+        const isCatalogMin = best != null && quoteKey(q) === quoteKey(best);
         const deltaPct =
-          best && absoluteIndex > 0 && best.total > 0
+          best && !isCatalogMin && best.total > 0
             ? Math.round((q.total / best.total - 1) * 100)
             : 0;
-        const deltaAbs =
-          best && absoluteIndex > 0 ? Math.max(0, Math.round(q.total - best.total)) : 0;
-        const periodWord =
-          period === 'unit' ? 'в час' : period === 'year' ? 'в год' : 'в месяц';
-        const tip =
-          absoluteIndex === 0
-            ? bestHint
-            : deltaAbs > 0
-              ? `На ${formatQuoteAmount(deltaAbs, period)} дороже ${periodWord}`
-              : q.providerName;
+        const tip = isCatalogMin
+          ? bestHint
+          : deltaPct > 0
+            ? ALT_DELTA_HINT
+            : q.providerName;
+        const isFocus = focusProviderId != null && q.provider === focusProviderId;
         return (
           <Tooltip key={key} content={tip} openDelay={250}>
             <button
@@ -98,6 +103,12 @@ function ProviderList({
               <Flex alignItems="center" gap={1} className={styles.providerMeta}>
                 <Text variant="body-2" ellipsis>
                   {q.providerName}
+                  {isFocus ? (
+                    <Text as="span" variant="caption-2" color="complementary">
+                      {' '}
+                      · выбранный провайдер
+                    </Text>
+                  ) : null}
                 </Text>
                 {deltaPct > 0 ? (
                   <Text variant="caption-2" color="complementary" className={styles.providerDelta}>
@@ -138,6 +149,7 @@ export function CalculatorSidebar({
   configSummary,
   bestPriceHint,
   bestPriceBadge,
+  focusProviderId,
 }: {
   period: PeriodMode;
   result: ViewPresetQuote | null;
@@ -148,18 +160,18 @@ export function CalculatorSidebar({
   configSummary?: ConfigSummary | null;
   /** Tooltip for provider price badge. */
   bestPriceHint?: string;
-  /** Compact badge label on the cheapest provider. */
+  /** Compact badge label on the catalog-minimum provider. */
   bestPriceBadge?: string;
+  /** Provider landing focus — neutral label in the comparison list. */
+  focusProviderId?: CalculatorProviderId | null;
 }) {
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
   /** Hide sticky bar while the details card is on screen — avoids doubled price. */
   const [detailsInView, setDetailsInView] = useState(false);
   const detailsId = useId();
   const cardRef = useRef<HTMLDivElement | null>(null);
-  const priceHint =
-    bestPriceHint ??
-    'Минимальная расчётная цена среди предложений в каталоге для текущей конфигурации';
-  const priceBadge = bestPriceBadge ?? 'Минимальная расчётная цена';
+  const priceHint = bestPriceHint ?? DEFAULT_BEST_HINT;
+  const priceBadge = bestPriceBadge ?? DEFAULT_BEST_BADGE;
 
   useEffect(() => {
     setSelectedKey(result?.best ? quoteKey(result.best) : null);
@@ -269,7 +281,7 @@ export function CalculatorSidebar({
             {isBest ? (
               <Text as="span" variant="caption-2" color="complementary" className={styles.mobileBarBest}>
                 {' '}
-                · лучшая
+                · мин. в каталоге
               </Text>
             ) : null}
           </Text>
@@ -365,32 +377,44 @@ export function CalculatorSidebar({
 
         <div className={styles.divider} />
 
-        <div className={styles.block}>
-          <div className={styles.blockLabelRow}>
-            <Text variant="caption-2" color="complementary" className={styles.blockLabel}>
-              Альтернативы
-            </Text>
-            <HelpMark aria-label="Про альтернативы" iconSize="s">
-              Стоимость аналогичной конфигурации у других провайдеров. Процент — разница
-              относительно минимальной расчётной цены среди предложений в каталоге.
-            </HelpMark>
-          </div>
-          <ProviderList
-            quotes={result.quotes}
-            best={result.best}
-            selectedKey={selectedKey}
-            period={period}
-            onSelect={setSelectedKey}
-            bestHint={priceHint}
-          />
-        </div>
+        {(() => {
+          const otherQuotes = result.quotes.filter(
+            (q) => result.best == null || quoteKey(q) !== quoteKey(result.best),
+          );
+          if (otherQuotes.length === 0) return null;
+          return (
+            <>
+              <div className={styles.divider} />
+              <div className={styles.block}>
+                <div className={styles.blockLabelRow}>
+                  <Text variant="caption-2" color="complementary" className={styles.blockLabel}>
+                    Другие предложения
+                  </Text>
+                  <HelpMark aria-label="Про другие предложения" iconSize="s">
+                    {ALT_DELTA_HINT} Предложения могут различаться по модели предоставления
+                    ресурсов, производительности и включённым услугам.
+                  </HelpMark>
+                </div>
+                <ProviderList
+                  quotes={otherQuotes}
+                  best={result.best}
+                  selectedKey={selectedKey}
+                  period={period}
+                  onSelect={setSelectedKey}
+                  bestHint={priceHint}
+                  focusProviderId={focusProviderId}
+                />
+              </div>
+            </>
+          );
+        })()}
 
         {result.alternateQuotes.length > 0 ? (
           <>
             <div className={styles.divider} />
             <div className={styles.block}>
               <Text variant="caption-2" color="complementary" className={styles.blockLabel}>
-                Другой scope
+                Другой состав цены
               </Text>
               <ProviderList
                 quotes={result.alternateQuotes}
@@ -399,6 +423,7 @@ export function CalculatorSidebar({
                 period={period}
                 onSelect={setSelectedKey}
                 bestHint={priceHint}
+                focusProviderId={focusProviderId}
               />
             </div>
           </>

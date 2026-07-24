@@ -247,7 +247,7 @@ export function PresetPriceTable({
           const isBest = row.result?.best?.provider === providerId;
           if (isBest) {
             return (
-              <span className={styles.priceBest} title="Best offer">
+              <span className={styles.priceBest} title="Минимальная цена в каталоге">
                 {amount}
               </span>
             );
