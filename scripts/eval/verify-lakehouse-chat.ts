@@ -74,7 +74,11 @@ assert.ok(
     (t) => (t as {function: {name: string}}).function.name === 'get_lakehouse_quote',
   ),
 );
-assert.ok(!CHAT_TOOLS.some((t) => t.function.name === 'get_lakehouse_quote'));
+assert.ok(
+  !(CHAT_TOOLS as readonly {function: {name: string}}[]).some(
+    (t) => t.function.name === 'get_lakehouse_quote',
+  ),
+);
 assert.ok(LAKEHOUSE_SYSTEM_ADDENDUM.includes('get_lakehouse_quote'));
 
 const input = resolveLakehouseInput('medium', {

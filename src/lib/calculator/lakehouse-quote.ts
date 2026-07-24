@@ -188,12 +188,9 @@ function storageParts(
     },
   ];
 
-  let note: string | null = null;
-  if (wantColdGiB > 0 && !coldMeter) {
-    note =
-      'У провайдера нет cold-класса объектного хранилища — весь объём посчитан по тарифу standard (активные данные).';
-  }
-  return {parts, note};
+  // Cold fallback (bill entire lake as standard) stays in the math; do not
+  // surface a per-provider explanatory note in the result card.
+  return {parts, note: null};
 }
 
 export function quoteLakehouse(

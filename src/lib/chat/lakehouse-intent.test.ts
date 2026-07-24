@@ -33,7 +33,11 @@ describe('matchLakehouseIntent', () => {
 describe('get_lakehouse_quote tool', () => {
   it('is gated in CHAT_TOOLS_WITH_LAKEHOUSE only', () => {
     assert.equal(CHAT_TOOLS.length, 4);
-    assert.ok(!CHAT_TOOLS.map((t) => t.function.name).includes('get_lakehouse_quote' as never));
+    assert.ok(
+      !(CHAT_TOOLS as readonly {function: {name: string}}[])
+        .map((t) => t.function.name)
+        .includes('get_lakehouse_quote'),
+    );
     assert.equal(CHAT_TOOLS_WITH_LAKEHOUSE.length, 5);
     assert.ok(
       CHAT_TOOLS_WITH_LAKEHOUSE.map((t) => (t as {function: {name: string}}).function.name).includes(

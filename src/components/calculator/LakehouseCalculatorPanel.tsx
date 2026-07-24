@@ -4,7 +4,6 @@ import Link from 'next/link';
 import {useMemo, useState} from 'react';
 import {
   Button,
-  Flex,
   HelpMark,
   Icon,
   Label,
@@ -143,17 +142,21 @@ export function LakehouseCalculatorPanel({period}: {period: PeriodMode}) {
     <>
       <div className={`${panelStyles.formColumn} ${styles.configCard}`}>
         <div className={styles.configInner}>
-          <section className={styles.fieldGroup} aria-label="Пресет размера">
-            <Flex alignItems="center" gap={2}>
+          <Text as="h2" className={styles.formTitle}>
+            Параметры
+          </Text>
+
+          <section className={styles.fieldGroup} aria-label="Размер Lakehouse">
+            <div className={styles.groupHead}>
               <Text as="h3" className={styles.groupTitle}>
-                Размер lakehouse
+                Размер Lakehouse
               </Text>
               <HelpMark aria-label="Про пресеты" iconSize="s">
                 Пресет задаёт объём озера и типовой DIY-стек: Managed Kubernetes +
                 worker-ВМ под Airflow/catalog, Spark ETL и Trino. Дальше можно крутить
                 объём, hot/cold и duty-cycle.
               </HelpMark>
-            </Flex>
+            </div>
             <div className={styles.presetGrid} role="radiogroup" aria-label="Пресет S M L">
               {LAKEHOUSE_PRESETS.map((preset) => {
                 const active = preset.id === presetId;
@@ -168,177 +171,198 @@ export function LakehouseCalculatorPanel({period}: {period: PeriodMode}) {
                     onClick={() => applyPreset(preset.id)}
                   >
                     <div className={styles.presetTitle}>
-                      <Text variant="subheader-2">{preset.title}</Text>
-                      <Label size="xs" theme={active ? 'info' : 'unknown'}>
+                      <span className={styles.presetName}>{preset.title}</span>
+                      <Label
+                        size="xs"
+                        theme="unknown"
+                        className={styles.presetBadge}
+                      >
                         {preset.shortTitle}
                       </Label>
                     </div>
-                    <Text variant="body-2">{preset.subtitle}</Text>
-                    <Text variant="caption-2" color="secondary">
-                      {preset.audience}
-                    </Text>
+                    <span className={styles.presetSubtitle}>{preset.subtitle}</span>
+                    <span className={styles.presetAudience}>{preset.audience}</span>
                   </button>
                 );
               })}
             </div>
           </section>
 
-          <section className={styles.fieldGroup} aria-label="Хранилище">
-            <Flex alignItems="center" gap={2}>
+          <section className={styles.fieldGroup} aria-label="Object Storage">
+            <div className={styles.groupHead}>
               <Text as="h3" className={styles.groupTitle}>
                 Object Storage
               </Text>
               <HelpMark aria-label="Про hot и cold" iconSize="s">
                 Рабочий набор Iceberg (по нему ходят Trino/Spark) всегда держат в
-                hot-классе (standard). Cold — это lifecycle для редко читаемых данных:
-                сырьё landing-зоны, историчные партиции, старые снапшоты. У cold выше
-                задержка и цена извлечения, у части классов есть минимальный срок
-                хранения — активные таблицы туда не кладут.
+                hot-классе (standard). Cold — lifecycle для редко читаемых данных:
+                сырьё, история, старые снапшоты. У cold выше задержка и цена
+                извлечения — активные таблицы туда не кладут.
               </HelpMark>
-            </Flex>
-            <SliderField
-              icon={Database}
-              label="Объём озера"
-              value={lakeTiB}
-              options={LAKE_STEPS}
-              unit="TiB"
-              hint={`≈ ${formatGiBCapacity(lakeTiB * 1024)}`}
-              compactStepper
-              onUpdate={setLakeTiB}
-              aria-label="Объём озера в TiB"
-            />
-            <SliderField
-              icon={Archive}
-              label="Активные данные (hot)"
-              value={hotPercent}
-              options={HOT_STEPS}
-              unit="%"
-              hint={
-                coldPercent > 0
-                  ? `Остальные ${coldPercent}% — архив в cold-классе (редко читаемое: сырьё, история, снапшоты)`
-                  : 'Всё озеро в hot-классе (standard)'
-              }
-              compactStepper
-              onUpdate={setHotPercent}
-              aria-label="Доля активных данных в hot-классе"
-            />
-            <div
-              className={styles.splitBar}
-              role="img"
-              aria-label={`Активные ${hotPercent}%, архив ${coldPercent}%`}
-            >
-              <span className={styles.splitHot} style={{flexGrow: hotPercent}} />
-              {coldPercent > 0 ? (
-                <span className={styles.splitCold} style={{flexGrow: coldPercent}} />
-              ) : null}
             </div>
-            <div className={styles.splitLegend}>
-              <span className={styles.splitLegendItem}>
-                <span className={styles.splitSwatch} data-kind="hot" />
-                <Text variant="caption-2" color="secondary">
-                  Активные (hot) · {formatGiBCapacity(hotGiB)}
-                </Text>
-              </span>
-              {coldGiB > 0 ? (
-                <span className={styles.splitLegendItem}>
-                  <span className={styles.splitSwatch} data-kind="cold" />
-                  <Text variant="caption-2" color="secondary">
-                    Архив (cold) · {formatGiBCapacity(coldGiB)}
-                  </Text>
-                </span>
-              ) : null}
+            <div className={styles.controlsStack}>
+              <SliderField
+                align="form"
+                icon={Database}
+                label="Объём озера"
+                value={lakeTiB}
+                options={LAKE_STEPS}
+                unit="TiB"
+                hint={`≈ ${formatGiBCapacity(lakeTiB * 1024)}`}
+                compactStepper
+                onUpdate={setLakeTiB}
+                aria-label="Объём озера в TiB"
+              />
+              <SliderField
+                align="form"
+                icon={Archive}
+                label="Активные данные (hot)"
+                value={hotPercent}
+                options={HOT_STEPS}
+                unit="%"
+                hint={
+                  coldPercent > 0
+                    ? `Остальные ${coldPercent}% — архив (cold): сырьё, история, снапшоты`
+                    : 'Всё озеро в hot-классе (standard)'
+                }
+                compactStepper
+                onUpdate={setHotPercent}
+                aria-label="Доля активных данных в hot-классе"
+              />
+              <div className={styles.splitBlock}>
+                <div
+                  className={styles.splitBar}
+                  role="img"
+                  aria-label={`Активные ${hotPercent}%, архив ${coldPercent}%`}
+                >
+                  <span className={styles.splitHot} style={{flexGrow: hotPercent || 0.01}} />
+                  {coldPercent > 0 ? (
+                    <span className={styles.splitCold} style={{flexGrow: coldPercent}} />
+                  ) : null}
+                </div>
+                <div className={styles.splitLegend}>
+                  <span className={styles.splitLegendItem}>
+                    <span className={styles.splitSwatch} data-kind="hot" />
+                    <span className={styles.splitLegendText}>
+                      Hot · {formatGiBCapacity(hotGiB)} · {hotPercent}%
+                    </span>
+                  </span>
+                  {coldGiB > 0 ? (
+                    <span className={styles.splitLegendItem}>
+                      <span className={styles.splitSwatch} data-kind="cold" />
+                      <span className={styles.splitLegendText}>
+                        Cold · {formatGiBCapacity(coldGiB)} · {coldPercent}%
+                      </span>
+                    </span>
+                  ) : null}
+                </div>
+              </div>
             </div>
           </section>
 
-          <section className={styles.fieldGroup} aria-label="Кластер">
-            <Text as="h3" className={styles.groupTitle}>
-              Kubernetes и нагрузка
-            </Text>
-            <div className={styles.tierRow}>
-              <Flex alignItems="center" gap={2}>
-                <Icon data={Circles4Square} size={16} />
-                <Text variant="body-1">Managed Kubernetes master</Text>
-              </Flex>
-              <SegmentedRadioGroup
-                size="l"
-                value={k8sTier}
-                onUpdate={(v) => setK8sTier(v as 'basic' | 'ha')}
-                aria-label="Тип master Kubernetes"
-              >
-                <SegmentedRadioGroup.Option value="basic">Basic</SegmentedRadioGroup.Option>
-                <SegmentedRadioGroup.Option value="ha">HA</SegmentedRadioGroup.Option>
-              </SegmentedRadioGroup>
-              {k8sTier === 'ha' ? (
-                <Text variant="caption-2" color="secondary">
-                  HA-мастер есть не у всех — провайдеры без него в сравнении не участвуют.
-                </Text>
-              ) : null}
+          <section
+            className={`${styles.fieldGroup} ${styles.fieldGroupDivided}`}
+            aria-label="Kubernetes и нагрузка"
+          >
+            <div className={styles.groupHead}>
+              <Text as="h3" className={styles.groupTitle}>
+                Kubernetes и нагрузка
+              </Text>
             </div>
-            <SliderField
-              icon={Clock}
-              label="ETL / Spark"
-              value={etlHoursPerDay}
-              options={HOUR_STEPS}
-              unit="ч/день"
-              hint={`Активен ${etlHoursPerDay}/24 ч — платите за ${etlDutyPct}% времени. Duty-cycle — главный рычаг экономии.`}
-              compactStepper
-              onUpdate={setEtlHoursPerDay}
-              aria-label="Часы работы ETL в сутки"
-            />
-            <SliderField
-              icon={Pulse}
-              label="Query / Trino"
-              value={queryHoursPerDay}
-              options={HOUR_STEPS}
-              unit="ч/день"
-              hint={`Активен ${queryHoursPerDay}/24 ч — платите за ${queryDutyPct}% времени. Вне окна пул можно гасить.`}
-              compactStepper
-              onUpdate={setQueryHoursPerDay}
-              aria-label="Часы работы Query в сутки"
-            />
+            <div className={styles.controlsStack}>
+              <div className={styles.tierRow}>
+                <div className={styles.tierLabel}>
+                  <Icon data={Circles4Square} size={16} className={styles.tierLabelIcon} />
+                  <span className={styles.tierLabelText}>Managed Kubernetes master</span>
+                </div>
+                <div className={styles.tierControl}>
+                  <SegmentedRadioGroup
+                    size="m"
+                    value={k8sTier}
+                    onUpdate={(v) => setK8sTier(v as 'basic' | 'ha')}
+                    aria-label="Тип master Kubernetes"
+                  >
+                    <SegmentedRadioGroup.Option value="basic">Basic</SegmentedRadioGroup.Option>
+                    <SegmentedRadioGroup.Option value="ha">HA</SegmentedRadioGroup.Option>
+                  </SegmentedRadioGroup>
+                  {k8sTier === 'ha' ? (
+                    <span className={styles.tierHint}>
+                      Без HA-мастера в прайсе провайдер не участвует в сравнении.
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+              <SliderField
+                align="form"
+                icon={Clock}
+                label="ETL / Spark"
+                value={etlHoursPerDay}
+                options={HOUR_STEPS}
+                unit="ч/день"
+                hint={`Duty-cycle ${etlDutyPct}% суток — основной рычаг экономии на ETL.`}
+                compactStepper
+                onUpdate={setEtlHoursPerDay}
+                aria-label="Часы работы ETL в сутки"
+              />
+              <SliderField
+                align="form"
+                icon={Pulse}
+                label="Query / Trino"
+                value={queryHoursPerDay}
+                options={HOUR_STEPS}
+                unit="ч/день"
+                hint={`Duty-cycle ${queryDutyPct}% суток — вне окна SQL-пул можно гасить.`}
+                compactStepper
+                onUpdate={setQueryHoursPerDay}
+                aria-label="Часы работы Query в сутки"
+              />
+            </div>
           </section>
 
-          <section className={styles.fieldGroup} aria-label="Состав платформы">
-            <Flex alignItems="center" gap={2}>
+          <section
+            className={`${styles.fieldGroup} ${styles.fieldGroupDivided}`}
+            aria-label="Кластер под пиком"
+          >
+            <div className={styles.groupHead}>
               <Text as="h3" className={styles.groupTitle}>
                 Кластер под пиком
               </Text>
               <HelpMark aria-label="Про состав" iconSize="s">
-                Считаем публичные тарифы: Object Storage + master Managed Kubernetes +
-                обычные ВМ как worker-ноды. Airflow, Iceberg catalog, Spark и Trino —
-                софт на этих нодах, отдельными PaaS SKU не тарифицируем. Пик — когда
-                одновременно активны все пулы; счёт зависит от duty-cycle.
+                Публичные тарифы: Object Storage + master Managed Kubernetes + worker
+                ВМ. Airflow, Iceberg catalog, Spark и Trino — софт на нодах, не
+                отдельные PaaS SKU. Пик — когда активны все пулы; счёт зависит от
+                duty-cycle.
               </HelpMark>
-            </Flex>
+            </div>
             <div className={styles.footprintGrid}>
               <div className={styles.footprintChip}>
                 <span className={styles.footprintHead}>
                   <Icon data={Server} size={13} />
-                  <Text variant="caption-2">Ноды</Text>
+                  <span className={styles.footprintLabel}>Ноды</span>
                 </span>
-                <Text className={styles.footprintValue}>{peak.nodes}</Text>
+                <span className={styles.footprintValue}>{peak.nodes}</span>
               </div>
               <div className={styles.footprintChip}>
                 <span className={styles.footprintHead}>
                   <Icon data={Cpu} size={13} />
-                  <Text variant="caption-2">vCPU</Text>
+                  <span className={styles.footprintLabel}>vCPU</span>
                 </span>
-                <Text className={styles.footprintValue}>{peak.vcpu}</Text>
+                <span className={styles.footprintValue}>{peak.vcpu}</span>
               </div>
               <div className={styles.footprintChip}>
                 <span className={styles.footprintHead}>
                   <Icon data={Layers3Diagonal} size={13} />
-                  <Text variant="caption-2">RAM</Text>
+                  <span className={styles.footprintLabel}>RAM</span>
                 </span>
-                <Text className={styles.footprintValue}>
+                <span className={styles.footprintValue}>
                   {formatRuNumber(peak.ramGiB)} GiB
-                </Text>
+                </span>
               </div>
             </div>
             {insight ? (
               <div className={styles.insight}>
-                <Icon data={Pulse} size={16} />
-                <Text variant="body-2">{insight.title}</Text>
+                <Icon data={Pulse} size={14} className={styles.insightIcon} />
+                <span className={styles.insightText}>{insight.title}</span>
               </div>
             ) : null}
           </section>

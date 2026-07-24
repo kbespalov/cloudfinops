@@ -32,6 +32,11 @@ const TOOLS: {title: string; href: string; text: string}[] = [
     text: 'Подбор GPU под open-weight модель (Qwen, GLM, Kimi, DeepSeek): квант INT4/FP8, оценка VRAM, сравнение аренды H100/H200 в облаках РФ и ориентир Hosted API ₽/1M.',
   },
   {
+    title: 'Калькулятор Lakehouse / Data Platform',
+    href: '/calculator/lakehouse',
+    text: 'Оценка DIY open lakehouse: Object Storage + Managed Kubernetes + worker ВМ под Iceberg, Spark, Trino и Airflow. Пресеты Small/Medium/Large и Best offer по облакам РФ.',
+  },
+  {
     title: 'Расчёт GPU в чате FinOps',
     href: '/chat',
     text: 'Опишите модель своими словами — ассистент подскажет конфиг и сошлётся на тот же каталог цен, что и калькуляторы.',
@@ -52,7 +57,12 @@ const FAQ: {question: string; answer: string}[] = [
   {
     question: 'Чем калькулятор цен отличается от каталога?',
     answer:
-      'Каталог показывает отдельные строки прайса. Калькулятор ВМ (/calculator/vm) собирает полную конфигурацию у каждого провайдера и выбирает Best offer. Для self-host LLM с подбором карт под модель — /calculator/self-host.',
+      'Каталог показывает отдельные строки прайса. Калькулятор ВМ (/calculator/vm) собирает полную конфигурацию у каждого провайдера и выбирает Best offer. Для self-host LLM — /calculator/self-host. Для Lakehouse / Data Platform (Iceberg, Spark, Trino на S3 + Kubernetes) — /calculator/lakehouse.',
+  },
+  {
+    question: 'Есть ли калькулятор Lakehouse или платформы данных?',
+    answer:
+      'Да. Откройте /calculator/lakehouse: пресеты Small/Medium/Large, Object Storage, Managed Kubernetes, duty-cycle ETL/Spark и Query/Trino. Сравнение публичных тарифов облаков России и Best offer без выдуманных PaaS-цен.',
   },
   {
     question: 'Как считается стоимость облака?',
@@ -160,10 +170,11 @@ export function homeJsonLd() {
         operatingSystem: 'Web',
         inLanguage: 'ru-RU',
         description:
-          'Сервис сравнения цен и расчёта стоимости публичных облаков России. Калькулятор ВМ и GPU, каталог SKU и ИИ-ассистент FinOps для Yandex Cloud, VK Cloud, Selectel, Cloud.ru, MWS и T1.',
+          'Сервис сравнения цен и расчёта стоимости публичных облаков России. Калькулятор ВМ и GPU, Lakehouse / Data Platform, каталог SKU и ИИ-ассистент FinOps для Yandex Cloud, VK Cloud, Selectel, Cloud.ru, MWS и T1.',
         featureList: [
           'Сравнение цен облаков России',
           'Калькулятор цен ВМ и GPU',
+          'Калькулятор Lakehouse и Data Platform',
           'Расчёт стоимости конфигурации',
           'Расчёт GPU под инференс LLM',
           'Каталог SKU',

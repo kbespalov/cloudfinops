@@ -77,6 +77,34 @@
   align-items: start;
 }
 
+/* Lakehouse: clearer hierarchy + ~65/35 columns without touching the result card internals. */
+.page[data-mode='lakehouse'] {
+  gap: 20px;
+}
+
+.page[data-mode='lakehouse'] .hero {
+  gap: 16px;
+}
+
+.page[data-mode='lakehouse'] .heroTitle {
+  font-size: 28px;
+  line-height: 34px;
+}
+
+.page[data-mode='lakehouse'] .heroTop {
+  align-items: center;
+}
+
+.page[data-mode='lakehouse'] .periodWrap {
+  align-self: center;
+  padding: 4px 0;
+}
+
+.page[data-mode='lakehouse'] .workspace {
+  grid-template-columns: minmax(0, 1.65fr) minmax(340px, 0.9fr);
+  gap: 24px;
+}
+
 /* Panels return: form card + sticky result sidebar. */
 .workspace > :last-child {
   position: sticky;
@@ -89,6 +117,11 @@
   .workspace {
     grid-template-columns: minmax(0, 1fr) 380px;
     gap: 20px;
+  }
+
+  .page[data-mode='lakehouse'] .workspace {
+    grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.95fr);
+    gap: 24px;
   }
 }
 

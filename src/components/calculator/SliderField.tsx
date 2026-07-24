@@ -19,6 +19,11 @@ type SliderFieldProps = {
   hint?: string;
   /** Mobile: show − / + around the value instead of a plain readout. */
   compactStepper?: boolean;
+  /**
+   * form — wider left-column grid (label ~192px, track grows, input ~152px).
+   * Used by Lakehouse; default keeps VM/inference density.
+   */
+  align?: 'default' | 'form';
   onUpdate: (next: number) => void;
   'aria-label'?: string;
 };
@@ -134,6 +139,7 @@ export function SliderField({
   unit,
   hint,
   compactStepper,
+  align = 'default',
   onUpdate,
   'aria-label': ariaLabel,
 }: SliderFieldProps) {
@@ -177,7 +183,11 @@ export function SliderField({
   }
 
   return (
-    <div className={styles.root} data-stepper={compactStepper ? 'true' : undefined}>
+    <div
+      className={`${styles.root}${align === 'form' ? ` ${styles.rootForm}` : ''}`}
+      data-stepper={compactStepper ? 'true' : undefined}
+      data-align={align}
+    >
       <div className={styles.head}>
         <Flex alignItems="center" gap={2} className={styles.label}>
           <Icon data={icon} size={16} className={styles.icon} />

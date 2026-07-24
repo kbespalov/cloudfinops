@@ -209,32 +209,39 @@
   }
 
   .groupTitle {
-    font-size: 13px;
-    line-height: 18px;
-    font-weight: 500;
-    color: var(--g-color-text-secondary);
-    letter-spacing: 0.01em;
+    font-size: 16px;
+    line-height: 22px;
+    font-weight: 600;
+    color: var(--g-color-text-primary);
+    letter-spacing: -0.01em;
     text-transform: none;
+  }
+
+  .fieldGroup + .fieldGroup {
+    margin-top: 28px;
+    padding-top: 24px;
   }
 }
 
 .fieldGroup {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
   min-width: 0;
 }
 
 .fieldGroup + .fieldGroup {
-  padding-top: 4px;
+  margin-top: 36px;
+  padding-top: 32px;
   border-top: 1px solid var(--g-color-line-generic);
 }
 
 .groupTitle {
   margin: 0;
-  font-size: 16px;
-  line-height: 22px;
+  font-size: 18px;
+  line-height: 24px;
   font-weight: 600;
+  letter-spacing: -0.01em;
   color: var(--g-color-text-primary);
 }
 

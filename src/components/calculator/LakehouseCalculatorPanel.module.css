@@ -1,3 +1,5 @@
+/* Left-column Lakehouse form only. Do not restyle CalculatorSidebar. */
+
 .configCard {
   min-width: 0;
   padding: 0;
@@ -6,15 +8,65 @@
 .configInner {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 0;
   padding: 0;
   min-width: 0;
 }
 
+/* Same role as VM «Параметры» / «Сеть» section titles. */
+.formTitle,
+.groupTitle {
+  margin: 0;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--g-color-text-primary);
+}
+
+.formTitle {
+  margin-bottom: 20px;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* Vertical rhythm between undivided sections (Размер → Object Storage). */
+.fieldGroup + .fieldGroup:not(.fieldGroupDivided) {
+  margin-top: 32px;
+}
+
+/* Thin divider before Kubernetes / Кластер — mirrors VM fieldGroup + fieldGroup rule. */
+.fieldGroupDivided {
+  margin-top: 36px;
+  padding-top: 32px;
+  border-top: 1px solid var(--g-color-line-generic);
+}
+
+.groupHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
+}
+
+.controlsStack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+/* ——— Presets S / M / L ——— */
+
 .presetGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 12px;
 }
 
 .presetCard {
@@ -22,10 +74,11 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 6px;
+  gap: 4px;
   margin: 0;
-  min-height: 108px;
-  padding: 14px 14px 12px;
+  min-height: 112px;
+  height: 100%;
+  padding: 16px;
   border: 1px solid var(--g-color-line-generic);
   border-radius: var(--g-border-radius-l);
   background: var(--g-color-base-background);
@@ -41,6 +94,7 @@
 
 .presetCard:hover {
   background: var(--g-color-base-generic);
+  border-color: var(--g-color-line-generic-hover, var(--g-color-line-generic));
 }
 
 .presetCard:focus-visible {
@@ -49,38 +103,62 @@
 }
 
 .presetCard[data-active='true'] {
-  background: color-mix(in srgb, var(--g-color-base-brand) 12%, var(--g-color-base-background));
-  border-color: var(--g-color-line-brand);
+  background: color-mix(in srgb, var(--g-color-base-brand) 8%, var(--g-color-base-background));
+  border-color: color-mix(in srgb, var(--g-color-line-brand) 70%, var(--g-color-line-generic));
 }
 
 .presetTitle {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   width: 100%;
+  margin-bottom: 4px;
 }
 
-.fieldGroup {
+.presetName {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.presetBadge {
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.presetCard[data-active='true'] .presetBadge {
+  opacity: 1;
+}
+
+.presetSubtitle {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+  color: var(--g-color-text-complementary);
+}
+
+.presetAudience {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--g-color-text-secondary);
+  margin-top: 2px;
+}
+
+/* ——— Hot / cold split ——— */
+
+.splitBlock {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   min-width: 0;
-}
-
-.groupTitle {
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 600;
-}
-
-.stackHint {
-  margin: 0;
 }
 
 .splitBar {
   display: flex;
   width: 100%;
-  height: 12px;
+  height: 8px;
   border-radius: var(--g-border-radius-m);
   overflow: hidden;
   background: var(--g-color-base-generic);
@@ -110,6 +188,13 @@
   min-width: 0;
 }
 
+.splitLegendText {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--g-color-text-complementary);
+  white-space: nowrap;
+}
+
 .splitSwatch {
   width: 8px;
   height: 8px;
@@ -125,17 +210,66 @@
   background: var(--g-color-base-misc-heavy, #647a8d);
 }
 
+/* ——— K8s tier row ——— */
+
+.tierRow {
+  display: grid;
+  grid-template-columns: 192px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px 16px;
+  min-width: 0;
+  min-height: 44px;
+}
+
+.tierLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.tierLabelText {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--g-color-text-primary);
+}
+
+.tierLabelIcon {
+  color: var(--g-color-text-complementary);
+  flex-shrink: 0;
+}
+
+.tierControl {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+}
+
+.tierHint {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--g-color-text-complementary);
+  max-width: 36rem;
+}
+
+/* ——— Footprint + insight ——— */
+
 .footprintGrid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 12px;
 }
 
 .footprintChip {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: 10px 12px;
+  justify-content: center;
+  gap: 4px;
+  min-height: 72px;
+  padding: 12px 16px;
   border: 1px solid var(--g-color-line-generic);
   border-radius: var(--g-border-radius-m);
   background: var(--g-color-base-generic);
@@ -146,51 +280,105 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  color: var(--g-color-text-secondary);
+  color: var(--g-color-text-complementary);
+}
+
+.footprintLabel {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  color: var(--g-color-text-complementary);
 }
 
 .footprintValue {
-  font-size: 18px;
-  line-height: 22px;
+  font-size: 20px;
+  line-height: 24px;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--g-color-text-primary);
 }
 
 .insight {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
+  gap: 8px;
+  padding: 12px 16px;
   border: 1px solid var(--g-color-line-generic);
-  border-left: 3px solid var(--g-color-line-brand);
   border-radius: var(--g-border-radius-m);
-  background: var(--g-color-base-generic);
+  background: var(--g-color-base-background);
+  color: var(--g-color-text-complementary);
 }
 
-.tierRow {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.insightIcon {
+  color: var(--g-color-text-secondary);
+  flex-shrink: 0;
+}
+
+.insightText {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--g-color-text-complementary);
 }
 
 @media (max-width: 720px) {
+  .formTitle {
+    margin-bottom: 16px;
+    font-size: 16px;
+    line-height: 22px;
+  }
+
+  .groupTitle {
+    font-size: 16px;
+    line-height: 22px;
+  }
+
+  .fieldGroup {
+    gap: 12px;
+  }
+
+  .fieldGroup + .fieldGroup {
+    margin-top: 24px;
+  }
+
+  .fieldGroupDivided {
+    margin-top: 28px;
+    padding-top: 24px;
+  }
+
+  .controlsStack {
+    gap: 12px;
+  }
+
   .presetGrid {
     grid-template-columns: 1fr;
+    gap: 8px;
   }
 
   .presetCard {
-    min-height: 44px;
-    padding: 12px;
+    min-height: 0;
+    padding: 12px 14px;
+    gap: 2px;
+  }
+
+  .presetTitle {
+    margin-bottom: 2px;
+  }
+
+  .tierRow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    min-height: 0;
   }
 
   .footprintGrid {
-    /* Keep 3 metrics in one row — avoids orphan third chip. */
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 6px;
+    gap: 8px;
   }
 
   .footprintChip {
-    padding: 8px 8px;
+    min-height: 64px;
+    padding: 10px 10px;
   }
 
   .footprintValue {
@@ -201,12 +389,9 @@
   .insight {
     padding: 10px 12px;
   }
-
-  .configInner {
-    gap: 16px;
-  }
 }
 
+/* Passed into sidebar extras — keep spacing only; do not restyle the button. */
 .chatBridge {
   display: flex;
   flex-wrap: wrap;

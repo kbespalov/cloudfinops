@@ -12,6 +12,35 @@
   max-width: 720px;
 }
 
+/* Lakehouse left column: label | growing track | fixed numeric field. */
+.rootForm {
+  grid-template-columns: 192px minmax(0, 1fr) 152px;
+  justify-content: stretch;
+  max-width: none;
+  width: 100%;
+  gap: 8px 16px;
+}
+
+.rootForm .slider {
+  max-width: none;
+}
+
+.rootForm .inputWrap {
+  width: 152px;
+}
+
+.rootForm .labelText {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: var(--g-color-text-primary);
+}
+
+.rootForm .icon {
+  opacity: 1;
+  color: var(--g-color-text-complementary);
+}
+
 /* Desktop: children of .head join the parent grid as if unwrapped. */
 .head {
   display: contents;

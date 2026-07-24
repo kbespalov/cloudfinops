@@ -52,14 +52,14 @@ const MODE_HREF: Record<CalculatorMode, string> = {
 const MODE_TITLE: Record<CalculatorMode, string> = {
   vm: 'Калькулятор цены облака',
   inference: 'Калькулятор облачных нагрузок',
-  lakehouse: 'Калькулятор Lakehouse',
+  lakehouse: 'Калькулятор Lakehouse и платформы данных',
 };
 
 const MODE_LEAD: Record<CalculatorMode, string> = {
   vm: 'Сравните стоимость ВМ и GPU в облаках России по публичным тарифам',
   inference: 'Подбор GPU-конфигурации для open-weight моделей в облаках РФ',
   lakehouse:
-    'DIY data platform: Object Storage + Managed Kubernetes + worker ВМ под Iceberg / Airflow / Spark / Trino',
+    'Калькулятор Lakehouse / Data Platform: Object Storage + Managed Kubernetes + worker ВМ под Apache Iceberg, Spark, Trino и Airflow. Сравнение open lakehouse и стоимости платформы данных в облаках России.',
 };
 
 export function CalculatorPage({
@@ -88,11 +88,11 @@ export function CalculatorPage({
   return (
     <>
       <AppHeader />
-      <main className={styles.page}>
+      <main className={styles.page} data-mode={mode}>
         <header className={styles.hero}>
           <Flex
             justifyContent="space-between"
-            alignItems="flex-start"
+            alignItems="center"
             gap={4}
             wrap
             className={styles.heroTop}
