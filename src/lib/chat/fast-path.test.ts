@@ -32,6 +32,7 @@ describe('matchFastPath', () => {
     assert.ok(plan.id === 'disk-100tb' || plan.id === 'ssd-100tb');
     assert.equal(plan.tools[0]?.name, 'compare_unit_price');
     assert.equal(plan.tools[0]?.args.component, 'ssd');
+    assert.equal(plan.tools[0]?.args.diskMedia, 'ssd');
   });
 
   it('matches 10 ТБ block SSD and encodes volume in plan id', () => {
@@ -41,6 +42,18 @@ describe('matchFastPath', () => {
     assert.ok(plan);
     assert.equal(plan.id, 'ssd-10tb');
     assert.equal(plan.tools[0]?.name, 'compare_unit_price');
+    assert.equal(plan.tools[0]?.args.diskMedia, 'ssd');
+  });
+
+  it('matches NVMe volume with diskMedia=nvme (not cheapest SSD)', () => {
+    const plan = matchFastPath(
+      '55 ТБ NVME где лучше купить у кого — блочный диск в месяц',
+    );
+    assert.ok(plan);
+    assert.equal(plan.id, 'nvme-55tb');
+    assert.equal(plan.tools[0]?.name, 'compare_unit_price');
+    assert.equal(plan.tools[0]?.args.component, 'ssd');
+    assert.equal(plan.tools[0]?.args.diskMedia, 'nvme');
   });
 
   it('does not treat S3 volume asks as block SSD', () => {
@@ -49,6 +62,15 @@ describe('matchFastPath', () => {
     assert.notEqual(plan.tools[0]?.name, 'compare_unit_price');
     assert.equal(plan.tools[0]?.args.volumeGiB, 51200);
     assert.equal(plan.tools[0]?.args.storageClass, 'standard');
+  });
+
+  it('defaults object volume without class to Standard (not Ice)', () => {
+    const plan = matchFastPath('Сколько стоит 55 ТБ в объектном хранилище в месяц?');
+    assert.ok(plan);
+    assert.equal(plan.id, 's3-standard-55tb');
+    assert.equal(plan.tools[0]?.args.storageClass, 'standard');
+    assert.equal(plan.tools[0]?.args.meterKind, 'capacity');
+    assert.equal(plan.tools[0]?.args.volumeGiB, 55 * 1024);
   });
 
   it('matches budget paraphrases to fit_budget without planning LLM', () => {
@@ -203,9 +225,10 @@ describe('matchFastPath', () => {
         name: 'compare_unit_price',
         content: JSON.stringify({
           component: 'ssd',
+          diskMedia: 'ssd',
           providers: [
-            {providerName: 'T1 Cloud', priceMonth: 8},
-            {providerName: 'MWS Cloud', priceMonth: 10},
+            {providerName: 'T1 Cloud', priceMonth: 8, name: 'Дисковое пространство Basic'},
+            {providerName: 'MWS Cloud', priceMonth: 10, name: 'NBS-PL2'},
           ],
         }),
       },
@@ -213,8 +236,66 @@ describe('matchFastPath', () => {
     assert.ok(md);
     assert.match(md, /10 ТБ SSD/);
     assert.doesNotMatch(md, /100 ТБ/);
+    assert.match(md, /Basic/);
     // 10 × 1024 × 8 = 81920
     assert.match(md, /81[\s\u00a0]?920/);
+  });
+
+  it('formats NVMe volume without calling it plain SSD', () => {
+    const md = formatFastPathAnswer('nvme-55tb', [
+      {
+        name: 'compare_unit_price',
+        content: JSON.stringify({
+          component: 'ssd',
+          diskMedia: 'nvme',
+          providers: [
+            {
+              providerName: 'MWS Cloud',
+              priceMonth: 8.14,
+              name: 'Объем диска NBS-PL2',
+              diskMedia: 'NVMe',
+              includedIops: 1000,
+            },
+            {
+              providerName: 'T1 Cloud',
+              priceMonth: 13.13,
+              name: 'Дисковое пространство Average',
+              diskMedia: 'NVMe',
+              includedIops: 10000,
+            },
+          ],
+        }),
+      },
+    ]);
+    assert.ok(md);
+    assert.match(md, /55 ТБ NVMe/);
+    assert.doesNotMatch(md, /55 ТБ SSD/);
+    assert.match(md, /Average/);
+    assert.match(md, /NBS-PL2/);
+  });
+
+  it('labels object volumeEstimates by actual storageClass (Ice ≠ Standard)', () => {
+    const md = formatFastPathAnswer('s3-agent', [
+      {
+        name: 'search_prices',
+        content: JSON.stringify({
+          applied: {storageClass: null, volumeGiB: 56320},
+          volumeEstimates: [
+            {
+              providerName: 'Cloud.ru',
+              rateGiBMonth: 0.49,
+              totalMonth: 27570,
+              volumeGiB: 56320,
+              storageClass: 'ice',
+              name: 'Объектное хранилище · Ice',
+            },
+          ],
+        }),
+      },
+    ]);
+    assert.ok(md);
+    assert.match(md, /Ice/);
+    assert.doesNotMatch(md, /Standard/);
   });
 
   it('formats fit_budget highlights without LLM', () => {

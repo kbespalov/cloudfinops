@@ -12,7 +12,7 @@ import {
   type SearchParams,
 } from './search';
 import {quotePreset, listGpuPresets} from '@/lib/calculator/quote';
-import {compareUnitPrice, type UnitComponent} from './analytics';
+import {compareUnitPrice, type DiskMediaFilter, type UnitComponent} from './analytics';
 import {fitBudget, type FitBudgetProfile} from './fit-budget';
 import {recommendInferenceInfra} from './inference-recommend';
 import type {ComputePreset, GpuPreset, CalculatorPreset} from '@/lib/calculator/presets';
@@ -165,7 +165,7 @@ export const CHAT_TOOLS = [
     function: {
       name: 'compare_unit_price',
       description:
-        'Кросс-провайдерная аналитика цены за единицу базового ресурса на СОПОСТАВИМОЙ базе. Используй для вопросов «средняя цена ядра/памяти/диска по провайдерам», «в среднем по больнице», «кто дешевле в среднем и на сколько %», «какой разброс цен между провайдерами». Возвращает по каждому провайдеру сопоставимую цену (₽/час и ₽/мес) и агрегаты: минимум, максимум, среднее, медиану, самого дешёвого/дорогого, разброс max/min и отклонение каждого провайдера от среднего в %. ВАЖНО: не смешивает типы — для vCPU берётся строго on-demand 100% выделенное ядро; preemptible/долевые ядра вынесены отдельно (preemptibleFloor) как контекст. Провайдеры, которые продают только флейворы (напр. Cloud.ru), попадают в derivedFromFlavors с ОЦЕНОЧНОЙ ценой за единицу (декомпозиция флейворов) — показывай их с пометкой «оценка» и не включай в среднее. Среднее/медиану/разброс считай только по providers[].',
+        'Кросс-провайдерная аналитика цены за единицу базового ресурса на СОПОСТАВИМОЙ базе. Используй для вопросов «средняя цена ядра/памяти/диска по провайдерам», «в среднем по больнице», «кто дешевле в среднем и на сколько %», «какой разброс цен между провайдерами». Возвращает по каждому провайдеру сопоставимую цену (₽/час и ₽/мес) и агрегаты: минимум, максимум, среднее, медиану, самого дешёвого/дорогого, разброс max/min и отклонение каждого провайдера от среднего в %. ВАЖНО: не смешивает типы — для vCPU берётся строго on-demand 100% выделенное ядро; preemptible/долевые ядра вынесены отдельно (preemptibleFloor) как контекст. Для дисков: NVMe ≠ обычный SSD — передавай diskMedia=nvme или diskMedia=ssd; в ответе смотри name/sku/diskMedia. Провайдеры, которые продают только флейворы (напр. Cloud.ru), попадают в derivedFromFlavors с ОЦЕНОЧНОЙ ценой за единицу (декомпозиция флейворов) — показывай их с пометкой «оценка» и не включай в среднее. Среднее/медиану/разброс считай только по providers[].',
       parameters: {
         type: 'object',
         properties: {
@@ -173,7 +173,13 @@ export const CHAT_TOOLS = [
             type: 'string',
             enum: ['vcpu', 'ram', 'ssd'],
             description:
-              'Ресурс для сравнения: vcpu — цена 1 ядра (on-demand, 100%); ram — цена 1 GiB RAM; ssd — цена 1 GiB SSD-диска в месяц.',
+              'Ресурс для сравнения: vcpu — цена 1 ядра (on-demand, 100%); ram — цена 1 GiB RAM; ssd — цена 1 GiB блочного диска в месяц (уточняй media через diskMedia).',
+          },
+          diskMedia: {
+            type: 'string',
+            enum: ['ssd', 'nvme', 'any'],
+            description:
+              'Только для component=ssd. nvme — только NVMe-тир (не подставляй Basic SSD); ssd — обычный SSD без NVMe-тира; any — самый дешёвый SSD или NVMe у провайдера. Если пользователь сказал NVMe — обязательно nvme.',
           },
         },
         required: ['component'],
@@ -491,8 +497,15 @@ function round(n: number | null | undefined): number | null {
 function runCompareUnitPrice(args: Record<string, unknown>): unknown {
   const raw = typeof args.component === 'string' ? args.component.toLowerCase() : '';
   const component: UnitComponent =
-    raw === 'ram' ? 'ram' : raw === 'ssd' || raw === 'disk' ? 'ssd' : 'vcpu';
-  return compareUnitPrice(component);
+    raw === 'ram' ? 'ram' : raw === 'ssd' || raw === 'disk' || raw === 'nvme' ? 'ssd' : 'vcpu';
+  const mediaRaw = typeof args.diskMedia === 'string' ? args.diskMedia.toLowerCase() : '';
+  let diskMedia: DiskMediaFilter | undefined;
+  if (mediaRaw === 'ssd' || mediaRaw === 'nvme' || mediaRaw === 'any') {
+    diskMedia = mediaRaw;
+  } else if (raw === 'nvme') {
+    diskMedia = 'nvme';
+  }
+  return compareUnitPrice(component, diskMedia ? {diskMedia} : undefined);
 }
 
 function parseToolArgs(

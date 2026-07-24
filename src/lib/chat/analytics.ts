@@ -26,6 +26,14 @@ import {
 
 export type UnitComponent = 'vcpu' | 'ram' | 'ssd';
 
+/** Block-disk media filter for component=ssd. */
+export type DiskMediaFilter = 'ssd' | 'nvme' | 'any';
+
+export type CompareUnitPriceOptions = {
+  /** Default `any` (SSD|NVMe). Use `nvme` / `ssd` when the user named the media. */
+  diskMedia?: DiskMediaFilter;
+};
+
 type ProviderPrice = {
   provider: string;
   providerName: string;
@@ -34,6 +42,11 @@ type ProviderPrice = {
   platform: string | null;
   region: string | null;
   note: string | null;
+  sku: string | null;
+  name: string | null;
+  diskMedia: 'HDD' | 'SSD' | 'NVMe' | null;
+  storageTopology: string | null;
+  includedIops: number | null;
 };
 
 type FloorPrice = {
@@ -54,17 +67,31 @@ function pct(n: number): number {
   return Math.round(n * 10) / 10;
 }
 
-function meterForComponent(component: UnitComponent, m: CatalogMeter): boolean {
+function meterForComponent(
+  component: UnitComponent,
+  m: CatalogMeter,
+  diskMedia: DiskMediaFilter = 'any',
+): boolean {
   if (m.status !== 'available' || !isConfirmedAvailable(m)) return false;
   // Derived / synthetic unit rates (Cloud.ru lattice *) stay out of the
   // like-for-like average — they surface via derivedFromFlavors instead.
   if (m.synthetic) return false;
   if (component === 'vcpu') return m.meter === 'compute.vcpu' || isVcpuMeter(m);
   if (component === 'ram') return m.meter === 'compute.ram' || isRamMeter(m);
-  // ssd: block storage capacity, SSD/NVMe media (exclude HDD)
+  // ssd: block storage capacity; media filter separates SSD vs NVMe tiers.
   if (m.meter !== 'storage.block.capacity') return false;
   const media = extractDiskMedia(m);
+  if (diskMedia === 'ssd') return media === 'SSD';
+  if (diskMedia === 'nvme') return media === 'NVMe';
   return media === 'SSD' || media === 'NVMe';
+}
+
+/** Prefer network volumes; local NVMe is a different product. */
+function preferNetworkDisk(a: CatalogMeter, b: CatalogMeter): number {
+  const ta = String(a.dimensions.storageTopology ?? '');
+  const tb = String(b.dimensions.storageTopology ?? '');
+  const score = (t: string) => (t === 'network' ? 0 : t === 'local' ? 1 : 2);
+  return score(ta) - score(tb);
 }
 
 /** Synthetic unit SKUs published as catalog estimates (not orderable tariff rows). */
@@ -103,11 +130,21 @@ const COMPONENT_LABEL: Record<UnitComponent, string> = {
   ssd: '1 GiB SSD-диска',
 };
 
-const COMPONENT_BASIS: Record<UnitComponent, string> = {
-  vcpu: 'on-demand, 100% гарантированное выделенное ядро (preemptible и долевые ядра исключены)',
-  ram: 'on-demand цена за 1 GiB RAM',
-  ssd: 'on-demand цена за 1 GiB SSD-диска (месяц)',
-};
+function ssdUnitLabel(diskMedia: DiskMediaFilter): string {
+  if (diskMedia === 'nvme') return '1 GiB NVMe-диска';
+  if (diskMedia === 'ssd') return '1 GiB SSD-диска';
+  return '1 GiB блочного SSD/NVMe';
+}
+
+function ssdBasis(diskMedia: DiskMediaFilter): string {
+  if (diskMedia === 'nvme') {
+    return 'on-demand цена за 1 GiB сетевого NVMe (локальный NVMe — только если сетевого нет; HDD/обычный SSD исключены)';
+  }
+  if (diskMedia === 'ssd') {
+    return 'on-demand цена за 1 GiB блочного SSD (NVMe-тир и HDD исключены)';
+  }
+  return 'on-demand цена за 1 GiB блочного SSD или NVMe (месяц; берётся самый дешёвый тир у провайдера)';
+}
 
 type Decomposition = {vcpuHour: number; ramGiBHour: number; n: number; r2: number};
 
@@ -193,7 +230,14 @@ function computeStats(values: number[]) {
  * aggregates (min/max/mean/median, deviations, spread). Stats are computed on
  * the HOUR price for vcpu/ram and the MONTH price for ssd.
  */
-export function compareUnitPrice(component: UnitComponent) {
+export function compareUnitPrice(
+  component: UnitComponent,
+  opts: CompareUnitPriceOptions = {},
+) {
+  const diskMedia: DiskMediaFilter =
+    component === 'ssd' && (opts.diskMedia === 'ssd' || opts.diskMedia === 'nvme')
+      ? opts.diskMedia
+      : 'any';
   const comparable: ProviderPrice[] = [];
   const floor: FloorPrice[] = [];
   const noComparable: {provider: string; providerName: string; note: string}[] = [];
@@ -210,7 +254,7 @@ export function compareUnitPrice(component: UnitComponent) {
 
   for (const provider of catalog.providers) {
     const rows = catalog.meters.filter(
-      (m) => m.provider === provider.id && meterForComponent(component, m),
+      (m) => m.provider === provider.id && meterForComponent(component, m, diskMedia),
     );
     if (rows.length === 0) {
       // Prefer curated synthetic unit SKUs (Cloud.ru lattice *) when present;
@@ -260,10 +304,16 @@ export function compareUnitPrice(component: UnitComponent) {
       .map((m) => ({m, hour: amountNumber(m, 'unit'), month: amountNumber(m, 'month')}))
       .filter((x) => x.hour != null && x.hour > 0);
 
-    // Comparable (like-for-like) cheapest.
+    // Comparable (like-for-like) cheapest. For disks prefer network over local.
     const comp = priced
       .filter((x) => isComparable(component, x.m))
-      .sort((a, b) => (a.hour as number) - (b.hour as number))[0];
+      .sort((a, b) => {
+        if (component === 'ssd') {
+          const topo = preferNetworkDisk(a.m, b.m);
+          if (topo !== 0) return topo;
+        }
+        return (a.hour as number) - (b.hour as number);
+      })[0];
 
     // Absolute cheapest of ANY type (context floor; usually preemptible/fractional).
     const cheapestAny = priced
@@ -271,6 +321,7 @@ export function compareUnitPrice(component: UnitComponent) {
       .sort((a, b) => (a.hour as number) - (b.hour as number))[0];
 
     if (comp) {
+      const incl = comp.m.dimensions.includedIops;
       comparable.push({
         provider: provider.id,
         providerName: provider.name,
@@ -281,14 +332,28 @@ export function compareUnitPrice(component: UnitComponent) {
             ? comp.m.dimensions.cpuPlatformFamily
             : (comp.m.cpuPlatformFamily ?? null),
         region: comp.m.region ?? null,
-        note: coreType(comp.m),
+        note: component === 'ssd' ? null : coreType(comp.m),
+        sku: comp.m.sku ?? null,
+        name: comp.m.name ?? null,
+        diskMedia: component === 'ssd' ? extractDiskMedia(comp.m) : null,
+        storageTopology:
+          typeof comp.m.dimensions.storageTopology === 'string'
+            ? comp.m.dimensions.storageTopology
+            : null,
+        includedIops: typeof incl === 'number' && Number.isFinite(incl) ? incl : null,
       });
     } else {
       noComparable.push({
         provider: provider.id,
         providerName: provider.name,
         note:
-          'Есть только preemptible / долевые / shared позиции — сопоставимой (on-demand, 100%) цены нет.',
+          component === 'ssd'
+            ? diskMedia === 'nvme'
+              ? 'Нет отдельной цены за GiB NVMe-диска.'
+              : diskMedia === 'ssd'
+                ? 'Нет отдельной цены за GiB SSD-диска (не NVMe-тир).'
+                : 'Нет отдельной цены за GiB диска.'
+            : 'Есть только preemptible / долевые / shared позиции — сопоставимой (on-demand, 100%) цены нет.',
       });
     }
 
@@ -324,6 +389,11 @@ export function compareUnitPrice(component: UnitComponent) {
       priceMonth: p.month,
       coreType: p.note,
       platform: p.platform,
+      sku: p.sku,
+      name: p.name,
+      diskMedia: p.diskMedia,
+      storageTopology: p.storageTopology,
+      includedIops: p.includedIops,
       vsMeanPct: mean ? pct(((price - mean) / mean) * 100) : 0,
       vsCheapestTimes: cheapest ? round(price / cheapest, 2) : 1,
     };
@@ -331,8 +401,9 @@ export function compareUnitPrice(component: UnitComponent) {
 
   return {
     component,
-    unit: COMPONENT_LABEL[component],
-    basis: COMPONENT_BASIS[component],
+    diskMedia: component === 'ssd' ? diskMedia : null,
+    unit: component === 'ssd' ? ssdUnitLabel(diskMedia) : COMPONENT_LABEL[component],
+    basis: component === 'ssd' ? ssdBasis(diskMedia) : COMPONENT_BASIS_NON_DISK[component],
     currency: 'RUB',
     vatIncluded: true,
     statBasis: statPeriod === 'month' ? 'цена за GiB в месяц' : 'цена за единицу в час',
@@ -341,12 +412,19 @@ export function compareUnitPrice(component: UnitComponent) {
       ? {
           ...stats,
           cheapest: comparable[0]
-            ? {provider: comparable[0].providerName, price: priceOf(comparable[0])}
+            ? {
+                provider: comparable[0].providerName,
+                price: priceOf(comparable[0]),
+                sku: comparable[0].sku,
+                name: comparable[0].name,
+              }
             : null,
           dearest: comparable.length
             ? {
                 provider: comparable[comparable.length - 1].providerName,
                 price: priceOf(comparable[comparable.length - 1]),
+                sku: comparable[comparable.length - 1].sku,
+                name: comparable[comparable.length - 1].name,
               }
             : null,
         }
@@ -359,6 +437,11 @@ export function compareUnitPrice(component: UnitComponent) {
     preemptibleFloor: floor,
     noComparableUnitPrice: noComparable,
     note:
-      'providers[] — сопоставимая база (одинаковый тип у всех). Среднее/медиана/разброс в stats считаются ТОЛЬКО по providers[]. derivedFromFlavors — провайдеры, которые продают только флейворы (например Cloud.ru): их цена за единицу ОЦЕНЕНА декомпозицией флейворов (price ≈ a·vCPU + b·GiB RAM); обязательно показывай их с пометкой «оценка», можно упомянуть рядом с сопоставимыми, но НЕ включай в расчёт среднего/медианы. preemptibleFloor — самые дешёвые позиции иного типа (preemptible/долевые) как контекст, их НЕЛЬЗЯ усреднять. noComparableUnitPrice — провайдеры вообще без сопоставимой или оценочной цены.',
+      'providers[] — сопоставимая база (одинаковый тип у всех). Для дисков смотри diskMedia/name/sku — NVMe ≠ обычный SSD. Среднее/медиана/разброс в stats считаются ТОЛЬКО по providers[]. derivedFromFlavors — провайдеры, которые продают только флейворы (например Cloud.ru): их цена за единицу ОЦЕНЕНА декомпозицией флейворов (price ≈ a·vCPU + b·GiB RAM); обязательно показывай их с пометкой «оценка», можно упомянуть рядом с сопоставимыми, но НЕ включай в расчёт среднего/медианы. preemptibleFloor — самые дешёвые позиции иного типа (preemptible/долевые) как контекст, их НЕЛЬЗЯ усреднять. noComparableUnitPrice — провайдеры вообще без сопоставимой или оценочной цены.',
   };
 }
+
+const COMPONENT_BASIS_NON_DISK: Record<'vcpu' | 'ram', string> = {
+  vcpu: 'on-demand, 100% гарантированное выделенное ядро (preemptible и долевые ядра исключены)',
+  ram: 'on-demand цена за 1 GiB RAM',
+};

@@ -544,7 +544,7 @@ function collectCandidates(params: SearchParams): FilterContext {
   const gpuModel = params.gpuModel?.trim().toLowerCase() || null;
   const aiModel =
     params.aiModel?.trim().toLowerCase() || detectAiModelNeedle(params.query) || null;
-  const storageClass =
+  let storageClass =
     params.storageClass?.trim().toLowerCase() || detectStorageClass(params.query);
   let meterKind = detectMeterKind(params.query, params.meterKind);
   const looksLikeObject =
@@ -554,6 +554,15 @@ function collectCandidates(params: SearchParams): FilterContext {
     ) ||
     Boolean(storageClass);
   if (!meterKind && looksLikeObject) meterKind = 'capacity';
+  // Volume capacity asks without an explicit class must not fall through to Ice/Cold
+  // (cheapest-across-classes) and then get labeled «Standard» in the answer.
+  const hasVolume =
+    typeof params.volumeGiB === 'number' &&
+    Number.isFinite(params.volumeGiB) &&
+    params.volumeGiB > 0;
+  if (!storageClass && looksLikeObject && hasVolume && meterKind !== 'requests') {
+    storageClass = 'standard';
+  }
 
   const preferCapacity = meterKind === 'capacity';
   const k8sContext = looksLikeKubernetesQuery(category, searchTokens, params.query);

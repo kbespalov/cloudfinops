@@ -111,6 +111,22 @@ describe('searchPricesDetailed object storage', () => {
     assert.equal(best.provider, 'cloud-ru');
     assert.ok(Math.abs(best.totalMonth - best.rateGiBMonth * volumeGiB) < 1);
   });
+
+  it('defaults volume capacity without class to Standard (not Ice)', () => {
+    const volumeGiB = 55 * 1024;
+    const r = searchPricesDetailed({
+      query: 'объектное хранилище',
+      category: 'storage',
+      volumeGiB,
+      limit: 30,
+    });
+    assert.equal(r.applied?.storageClass, 'standard');
+    assert.ok((r.volumeEstimates?.length ?? 0) >= 4);
+    assert.ok(r.volumeEstimates!.every((v) => v.storageClass === 'standard'));
+    const cloud = r.volumeEstimates!.find((v) => v.provider === 'cloud-ru');
+    assert.ok(cloud);
+    assert.ok(cloud.rateGiBMonth > 1, 'Standard Cloud.ru is ~1.84, not Ice 0.49');
+  });
 });
 
 describe('AI model matching', () => {

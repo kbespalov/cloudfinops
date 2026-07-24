@@ -49,7 +49,8 @@ export const FAST_PATH_FINAL_SYSTEM = `Ты — AI-ассистент Cloud FinO
 - Markdown-таблица, сортировка по возрастанию цены / итога. Колонка «к best offer»: у победителя «best», у остальных «+N%».
 - НДС включён, месяц = 720 ч, валюта ₽. Явно назови самый дешёвый вариант.
 - Для S3 volumeEstimates — итог за месяц; операции/egress не включай, если не просили.
-- Для compare_unit_price(ssd) при запросе объёма умножь ₽/GiB·мес на объём (100 ТБ → 102400 GiB) и покажи итог.
+- Для compare_unit_price(ssd) при запросе объёма умножь ₽/GiB·мес на объём (55 ТБ → 56320 GiB) и покажи итог. Учитывай diskMedia: NVMe ≠ SSD; в таблице указывай name/sku диска.
+- Для S3 volumeEstimates класс бери из applied.storageClass / volumeEstimates[].storageClass — не называй Ice «Standard».
 - Для AI — input и output отдельно (₽/1M токенов), если оба есть.
 - Без вызова инструментов, без английского плана, без пустого ответа.`;
 
@@ -315,7 +316,7 @@ const HOME_EXACT: {id: string; prompt: string; tools: FastPathTool[]}[] = [
   {
     id: 'disk-100tb',
     prompt: 'Сколько стоит 100 ТБ SSD (блочный диск) в месяц по провайдерам?',
-    tools: [{name: 'compare_unit_price', args: {component: 'ssd'}}],
+    tools: [{name: 'compare_unit_price', args: {component: 'ssd', diskMedia: 'ssd'}}],
   },
   {
     id: 'k8s',
@@ -382,7 +383,7 @@ const HOME_EXACT: {id: string; prompt: string; tools: FastPathTool[]}[] = [
   },
 ];
 
-/** Block SSD «N ТБ» → compare_unit_price; volume encoded in plan id for the formatter. */
+/** Block SSD/NVMe «N ТБ» → compare_unit_price; volume + media encoded in plan id. */
 function matchSsdVolumePlan(userText: string): FastPathPlan | null {
   const t = userText.trim();
   if (!/(?:ssd|nvme|блочн)/i.test(t)) return null;
@@ -392,9 +393,46 @@ function matchSsdVolumePlan(userText: string): FastPathPlan | null {
   if (!m) return null;
   const tb = Math.round(parseFloat(m[1]!.replace(',', '.')));
   if (!(tb > 0) || tb > 500) return null;
+  const wantsNvme = /nvme/i.test(t);
+  const wantsSsd = /ssd/i.test(t);
+  const diskMedia = wantsNvme ? 'nvme' : wantsSsd ? 'ssd' : 'any';
+  const prefix = diskMedia === 'nvme' ? 'nvme' : 'ssd';
   return {
-    id: `ssd-${tb}tb`,
-    tools: [{name: 'compare_unit_price', args: {component: 'ssd'}}],
+    id: `${prefix}-${tb}tb`,
+    tools: [{name: 'compare_unit_price', args: {component: 'ssd', diskMedia}}],
+  };
+}
+
+/** Object storage «N ТБ» → search_prices capacity; default class Standard (not Ice). */
+function matchObjectVolumePlan(userText: string): FastPathPlan | null {
+  const t = userText.trim();
+  if (!/(?:s3|объектн|object\s*storage)/i.test(t)) return null;
+  if (/блочн/i.test(t)) return null;
+  const m = t.match(/(\d+(?:[.,]\d+)?)\s*тб/i);
+  if (!m) return null;
+  const tb = Math.round(parseFloat(m[1]!.replace(',', '.')));
+  if (!(tb > 0) || tb > 500) return null;
+
+  let storageClass: 'standard' | 'warm' | 'cold' | 'ice' = 'standard';
+  if (/(?<![а-яёa-z])ice(?![а-яёa-z])|ледян|icebox/i.test(t)) storageClass = 'ice';
+  else if (/(?<![а-яёa-z])cold(?![а-яёa-z])|холодн/i.test(t)) storageClass = 'cold';
+  else if (/(?<![а-яёa-z])warm(?![а-яёa-z])|тепл/i.test(t)) storageClass = 'warm';
+
+  return {
+    id: `s3-${storageClass}-${tb}tb`,
+    tools: [
+      {
+        name: 'search_prices',
+        args: {
+          query: 'объектное хранилище',
+          category: 'storage',
+          storageClass,
+          meterKind: 'capacity',
+          volumeGiB: tb * 1024,
+          limit: 12,
+        },
+      },
+    ],
   };
 }
 
@@ -421,7 +459,8 @@ function matchBudgetPlan(userText: string): FastPathPlan | null {
 }
 
 function ssdVolumeGiBFromPlanId(planId: string): number | null {
-  const m = planId.match(/(?:^|-)ssd-(\d+)tb$/i) || planId.match(/^disk-(\d+)tb$/i);
+  const m =
+    planId.match(/(?:^|-)(?:ssd|nvme)-(\d+)tb$/i) || planId.match(/^disk-(\d+)tb$/i);
   if (!m) return null;
   const tb = Number(m[1]);
   return tb > 0 ? tb * 1024 : null;
@@ -437,9 +476,11 @@ export function matchFastPath(userText: string): FastPathPlan | null {
     }
   }
 
-  // Dynamic volume / budget before static aliases (captures 10ТБ SSD, 50 тыс, …).
+  // Dynamic volume / budget before static aliases (captures 10ТБ SSD, 55ТБ NVMe, 50 тыс, …).
   const ssdVol = matchSsdVolumePlan(userText);
   if (ssdVol) return ssdVol;
+  const objectVol = matchObjectVolumePlan(userText);
+  if (objectVol) return objectVol;
   const budget = matchBudgetPlan(userText);
   if (budget) return budget;
 
@@ -756,8 +797,19 @@ export function formatFastPathAnswer(
   }
 
   if (primary.name === 'compare_unit_price') {
-    type P = {providerName: string; priceMonth: number | null; priceHour?: number | null};
+    type P = {
+      providerName: string;
+      priceMonth: number | null;
+      priceHour?: number | null;
+      name?: string | null;
+      diskMedia?: string | null;
+      storageTopology?: string | null;
+      includedIops?: number | null;
+    };
     const component = data.component as string | undefined;
+    const diskMedia =
+      (data.diskMedia as string | undefined) ||
+      (planId.startsWith('nvme-') ? 'nvme' : planId.startsWith('ssd-') || planId === 'disk-100tb' ? 'ssd' : 'any');
     const providers = ((data.providers as P[]) ?? [])
       .filter((p) => p.providerName && (typeof p.priceMonth === 'number' || typeof p.priceHour === 'number'))
       .slice();
@@ -771,6 +823,14 @@ export function formatFastPathAnswer(
       const volumeGiB =
         ssdVolumeGiBFromPlanId(planId) ?? (planId === 'disk-100tb' ? 100 * 1024 : null);
       const bestRate = withMonth[0].priceMonth as number;
+      const mediaLabel =
+        diskMedia === 'nvme' ? 'NVMe' : diskMedia === 'ssd' ? 'SSD' : 'SSD/NVMe';
+      const diskCell = (p: P) => {
+        const bits = [p.name || mediaLabel];
+        if (p.storageTopology === 'local') bits.push('local');
+        if (typeof p.includedIops === 'number') bits.push(`${p.includedIops.toLocaleString('ru-RU')} IOPS`);
+        return bits.join(', ');
+      };
       if (volumeGiB) {
         const tb = volumeGiB / 1024;
         const rows = withMonth
@@ -778,19 +838,20 @@ export function formatFastPathAnswer(
             const rate = p.priceMonth as number;
             const total = Math.round(rate * volumeGiB * 100) / 100;
             const bestTotal = bestRate * volumeGiB;
-            return `| ${p.providerName} | ${formatRub(rate)} | ${formatRub(total)} | ${pctVsBest(total, bestTotal)} |`;
+            return `| ${p.providerName} | ${diskCell(p)} | ${formatRub(rate)} | ${formatRub(total)} | ${pctVsBest(total, bestTotal)} |`;
           })
           .join('\n');
         const bestTotal = Math.round(bestRate * volumeGiB * 100) / 100;
-        return `**${tb.toLocaleString('ru-RU')} ТБ SSD (блочный диск) в месяц** (НДС вкл.; 1 ТБ = 1024 GiB → ${volumeGiB.toLocaleString('ru-RU')} GiB)\n\n| Провайдер | ₽/GiB·мес | Итого / мес | к best offer |\n|---|---:|---:|---|\n${rows}\n\nСамый дешёвый: **${withMonth[0].providerName}** — ${formatRub(bestTotal)}/мес.`;
+        const bestName = withMonth[0].name ? ` (${withMonth[0].name})` : '';
+        return `**${tb.toLocaleString('ru-RU')} ТБ ${mediaLabel} (блочный диск) в месяц** (НДС вкл.; 1 ТБ = 1024 GiB → ${volumeGiB.toLocaleString('ru-RU')} GiB)\n\n| Провайдер | Диск | ₽/GiB·мес | Итого / мес | к best offer |\n|---|---|---:|---:|---|\n${rows}\n\nСамый дешёвый: **${withMonth[0].providerName}**${bestName} — ${formatRub(bestTotal)}/мес.`;
       }
       const rows = withMonth
         .map(
           (p) =>
-            `| ${p.providerName} | ${formatRub(p.priceMonth as number)} | ${pctVsBest(p.priceMonth as number, bestRate)} |`,
+            `| ${p.providerName} | ${diskCell(p)} | ${formatRub(p.priceMonth as number)} | ${pctVsBest(p.priceMonth as number, bestRate)} |`,
         )
         .join('\n');
-      return `**Цена 1 GiB блочного SSD в месяц** (НДС вкл.)\n\n| Провайдер | ₽/GiB·мес | к best offer |\n|---|---:|---|\n${rows}\n\nСамый дешёвый: **${withMonth[0].providerName}** — ${formatRub(bestRate)}/GiB·мес.`;
+      return `**Цена 1 GiB блочного ${mediaLabel} в месяц** (НДС вкл.)\n\n| Провайдер | Диск | ₽/GiB·мес | к best offer |\n|---|---|---:|---|\n${rows}\n\nСамый дешёвый: **${withMonth[0].providerName}** — ${formatRub(bestRate)}/GiB·мес.`;
     }
 
     if (component === 'ram' || component === 'vcpu') {
@@ -848,30 +909,43 @@ export function formatFastPathAnswer(
       rateGiBMonth: number;
       volumeGiB?: number;
       name?: string;
+      storageClass?: string | null;
     };
     const volumes = data.volumeEstimates as Vol[] | undefined;
     if (Array.isArray(volumes) && volumes.length) {
       const sorted = volumes.slice().sort((a, b) => a.totalMonth - b.totalMonth);
       const best = sorted[0].totalMonth;
       const vol = sorted[0].volumeGiB ?? (data.applied as {volumeGiB?: number} | undefined)?.volumeGiB;
+      const classes = new Set(
+        sorted.map((v) => (v.storageClass || '').toLowerCase()).filter(Boolean),
+      );
+      const planClass = planId.match(/^s3-(standard|warm|cold|ice)-/i)?.[1]?.toLowerCase();
+      const storageClass =
+        ((data.applied as {storageClass?: string} | undefined)?.storageClass ||
+          planClass ||
+          (classes.size === 1 ? [...classes][0] : null) ||
+          (planId.includes('cold') ? 'cold' : planId.includes('ice') ? 'ice' : null)) ??
+        'standard';
+      // Never label Ice/Cold rows as Standard just because the plan id defaulted.
+      const estimateClass = sorted[0].storageClass?.toLowerCase();
+      const effectiveClass =
+        estimateClass && storageClass === 'standard' && estimateClass !== 'standard'
+          ? estimateClass
+          : storageClass;
+      const classLabel =
+        effectiveClass === 'cold'
+          ? 'Cold'
+          : effectiveClass === 'ice'
+            ? 'Ice'
+            : effectiveClass === 'warm'
+              ? 'Warm'
+              : 'Standard';
       const rows = sorted
         .map(
           (v) =>
             `| ${v.providerName} | ${formatRub(v.rateGiBMonth)} | ${formatRub(v.totalMonth)} | ${pctVsBest(v.totalMonth, best)} |`,
         )
         .join('\n');
-      const storageClass =
-        ((data.applied as {storageClass?: string} | undefined)?.storageClass ||
-          (planId.includes('cold') ? 'cold' : planId.includes('ice') ? 'ice' : 'standard')) ??
-        'standard';
-      const classLabel =
-        storageClass === 'cold'
-          ? 'Cold'
-          : storageClass === 'ice'
-            ? 'Ice'
-            : storageClass === 'warm'
-              ? 'Warm'
-              : 'Standard';
       return `**Объектное хранилище ${classLabel}${vol ? ` · ${Number(vol).toLocaleString('ru-RU')} GiB` : ''}** (НДС вкл., месяц)\n\n| Провайдер | ₽/GiB·мес | Итого / мес | к best offer |\n|---|---:|---:|---|\n${rows}\n\nСамый дешёвый: **${sorted[0].providerName}** — ${formatRub(best)}/мес. Операции и egress тарифицируются отдельно.`;
     }
 
@@ -1154,13 +1228,21 @@ function inferPlanIdFromAgentTool(
 
   if (name === 'compare_unit_price') {
     const component = typeof args.component === 'string' ? args.component : '';
-    if (component === 'ssd') {
+    if (component === 'ssd' || component === 'nvme') {
+      const mediaRaw = typeof args.diskMedia === 'string' ? args.diskMedia.toLowerCase() : '';
+      const diskMedia =
+        mediaRaw === 'nvme' || component === 'nvme' || /nvme/i.test(userText)
+          ? 'nvme'
+          : mediaRaw === 'ssd' || /ssd/i.test(userText)
+            ? 'ssd'
+            : 'any';
+      const prefix = diskMedia === 'nvme' ? 'nvme' : 'ssd';
       const m = userText.match(/(\d+(?:[.,]\d+)?)\s*тб/i);
       if (m) {
         const tb = Math.round(parseFloat(m[1]!.replace(',', '.')));
-        if (tb > 0) return `ssd-${tb}tb`;
+        if (tb > 0) return `${prefix}-${tb}tb`;
       }
-      return 'ssd-unit';
+      return diskMedia === 'nvme' ? 'nvme-unit' : 'ssd-unit';
     }
     if (component === 'ram') return 'ram-unit';
     if (component === 'vcpu') return 'vcpu-unit';
@@ -1197,7 +1279,20 @@ function inferPlanIdFromAgentTool(
       return 'search-generic';
     }
     if (category === 'storage') {
-      if (storageClass === 'cold') return 'cold-5tb';
+      const volMatch = userText.match(/(\d+(?:[.,]\d+)?)\s*тб/i);
+      const tb = volMatch ? Math.round(parseFloat(volMatch[1]!.replace(',', '.'))) : null;
+      const cls =
+        storageClass === 'cold' || storageClass === 'ice' || storageClass === 'warm'
+          ? storageClass
+          : storageClass === 'standard'
+            ? 'standard'
+            : /ice|ледян/i.test(`${query} ${userText}`)
+              ? 'ice'
+              : /cold|холод/i.test(`${query} ${userText}`)
+                ? 'cold'
+                : 'standard';
+      if (tb && tb > 0) return `s3-${cls}-${tb}tb`;
+      if (cls === 'cold') return 'cold-5tb';
       return 's3-50tb';
     }
     if (category === 'ai' || aiModel) {
