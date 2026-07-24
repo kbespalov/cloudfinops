@@ -174,8 +174,18 @@ export function CalculatorSidebar({
   const priceBadge = bestPriceBadge ?? DEFAULT_BEST_BADGE;
 
   useEffect(() => {
-    setSelectedKey(result?.best ? quoteKey(result.best) : null);
-  }, [result]);
+    if (!result) {
+      setSelectedKey(null);
+      return;
+    }
+    const focusQuote =
+      focusProviderId != null
+        ? result.quotes.find((q) => q.provider === focusProviderId) ??
+          result.alternateQuotes.find((q) => q.provider === focusProviderId)
+        : null;
+    const initial = focusQuote ?? result.best;
+    setSelectedKey(initial ? quoteKey(initial) : null);
+  }, [result, focusProviderId]);
 
   useEffect(() => {
     const card = cardRef.current;
@@ -253,9 +263,36 @@ export function CalculatorSidebar({
   }
 
   const isBest = result.best != null && quoteKey(selected) === quoteKey(result.best);
+  const focusQuote =
+    focusProviderId != null
+      ? result.quotes.find((q) => q.provider === focusProviderId) ??
+        result.alternateQuotes.find((q) => q.provider === focusProviderId) ??
+        null
+      : null;
+  const isFocus = focusQuote != null && quoteKey(selected) === quoteKey(focusQuote);
+  const bestVsFocus =
+    focusQuote != null &&
+    result.best != null &&
+    quoteKey(result.best) !== quoteKey(focusQuote)
+      ? result.best
+      : null;
+  const cheaperPct =
+    bestVsFocus && focusQuote && focusQuote.total > 0
+      ? Math.max(0, Math.round((1 - bestVsFocus.total / focusQuote.total) * 100))
+      : 0;
   const lines = configSummary ?? (deploymentSummary ? formatGpuDeployment(deploymentSummary) : null);
   const periodWord = periodShortLabel(period);
   const showMobileBar = !detailsInView;
+  const selectedBadge = isBest
+    ? priceBadge
+    : isFocus
+      ? 'Выбранный провайдер'
+      : null;
+  const selectedBadgeHint = isBest
+    ? priceHint
+    : isFocus
+      ? `Фокус этой страницы — ${selected.providerName}. Сравнение с другими провайдерами ниже.`
+      : null;
 
   return (
     <aside
@@ -283,6 +320,11 @@ export function CalculatorSidebar({
                 {' '}
                 · мин. в каталоге
               </Text>
+            ) : isFocus ? (
+              <Text as="span" variant="caption-2" color="complementary" className={styles.mobileBarBest}>
+                {' '}
+                · выбранный
+              </Text>
             ) : null}
           </Text>
           <Text variant="subheader-2" className={styles.mobileBarPrice}>
@@ -305,11 +347,11 @@ export function CalculatorSidebar({
             <Text variant="subheader-2" ellipsis className={styles.providerName}>
               {selected.providerName}
             </Text>
-            {isBest ? (
-              <Tooltip content={priceHint} openDelay={200}>
+            {selectedBadge && selectedBadgeHint ? (
+              <Tooltip content={selectedBadgeHint} openDelay={200}>
                 <span className={styles.bestBadge}>
-                  <Label size="xs" theme="success">
-                    {priceBadge}
+                  <Label size="xs" theme={isBest ? 'success' : 'normal'}>
+                    {selectedBadge}
                   </Label>
                 </span>
               </Tooltip>
@@ -330,6 +372,71 @@ export function CalculatorSidebar({
               / {periodWord}
             </Text>
           </div>
+          <Tooltip
+            content="Суммы в каталоге Cloud FinOps приведены с НДС. Если провайдер публикует тариф без НДС, он нормализован к цене с НДС для сопоставимости."
+            openDelay={200}
+          >
+            <Text
+              as="span"
+              variant="caption-2"
+              color="complementary"
+              className={styles.vatNote}
+              tabIndex={0}
+            >
+              включая НДС
+            </Text>
+          </Tooltip>
+
+          {bestVsFocus && !isBest ? (
+            <button
+              type="button"
+              className={styles.bestOffer}
+              onClick={() => setSelectedKey(quoteKey(bestVsFocus))}
+            >
+              <Text variant="caption-2" color="complementary" className={styles.bestOfferLabel}>
+                Дешевле при этих параметрах
+              </Text>
+              <Flex alignItems="center" gap={2} className={styles.bestOfferRow}>
+                <span className={styles.sellerMark}>
+                  <ProviderMark providerId={bestVsFocus.provider} size={12} />
+                </span>
+                <Text variant="body-2" ellipsis className={styles.bestOfferName}>
+                  {bestVsFocus.providerName}
+                </Text>
+                <Text variant="body-2" className={styles.bestOfferPrice}>
+                  {formatQuoteAmount(bestVsFocus.total, period)}
+                </Text>
+              </Flex>
+              {cheaperPct > 0 ? (
+                <Text variant="caption-2" color="complementary">
+                  На {cheaperPct}% дешевле при выбранных параметрах
+                </Text>
+              ) : null}
+            </button>
+          ) : null}
+
+          {focusQuote && isBest && !isFocus ? (
+            <button
+              type="button"
+              className={styles.bestOffer}
+              onClick={() => setSelectedKey(quoteKey(focusQuote))}
+            >
+              <Text variant="caption-2" color="complementary" className={styles.bestOfferLabel}>
+                Выбранный провайдер
+              </Text>
+              <Flex alignItems="center" gap={2} className={styles.bestOfferRow}>
+                <span className={styles.sellerMark}>
+                  <ProviderMark providerId={focusQuote.provider} size={12} />
+                </span>
+                <Text variant="body-2" ellipsis className={styles.bestOfferName}>
+                  {focusQuote.providerName}
+                </Text>
+                <Text variant="body-2" className={styles.bestOfferPrice}>
+                  {formatQuoteAmount(focusQuote.total, period)}
+                </Text>
+              </Flex>
+            </button>
+          ) : null}
         </div>
 
         <div className={styles.divider} />
@@ -378,9 +485,19 @@ export function CalculatorSidebar({
         <div className={styles.divider} />
 
         {(() => {
-          const otherQuotes = result.quotes.filter(
-            (q) => result.best == null || quoteKey(q) !== quoteKey(result.best),
-          );
+          const skipKeys = new Set<string>();
+          if (selectedKey) skipKeys.add(selectedKey);
+          if (bestVsFocus) skipKeys.add(quoteKey(bestVsFocus));
+          else if (result.best && !focusProviderId) skipKeys.add(quoteKey(result.best));
+          const otherQuotes = result.quotes.filter((q) => !skipKeys.has(quoteKey(q)));
+          // On provider landings keep the focus vendor near the top of the remaining list.
+          if (focusProviderId) {
+            otherQuotes.sort((a, b) => {
+              const aFocus = a.provider === focusProviderId ? 0 : 1;
+              const bFocus = b.provider === focusProviderId ? 0 : 1;
+              return aFocus - bFocus || a.total - b.total;
+            });
+          }
           if (otherQuotes.length === 0) return null;
           return (
             <>

@@ -16,74 +16,9 @@
   color: var(--cf-ink);
 }
 
-/* Below-fold SEO/nav: one H2 + six provider calculator links (not in first viewport). */
-.providers {
-  position: relative;
-  z-index: 2;
-  padding: 28px 20px 36px;
-  color: var(--cf-ink);
-  background: linear-gradient(180deg, #f4f7fb 0%, #e8eef6 100%);
-  border-top: 1px solid rgba(26, 18, 12, 0.08);
-}
-
-.providersInner {
-  width: min(100%, 54rem);
-  margin: 0 auto;
-}
-
-.providersTitle {
-  margin: 0 0 14px;
-  font-size: 1.05rem;
-  line-height: 1.3;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-
-.providersList {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px 20px;
-}
-
-.providersLink {
-  color: inherit;
-  text-decoration: underline;
-  text-underline-offset: 0.18em;
-  text-decoration-color: rgba(26, 18, 12, 0.28);
-  font-size: 0.95rem;
-  line-height: 1.4;
-}
-
-.providersLink:hover {
-  text-decoration-color: rgba(26, 18, 12, 0.7);
-}
-
-@media (max-width: 560px) {
-  .providersList {
-    grid-template-columns: 1fr;
-  }
-}
-
 :global(.g-root_theme_dark) .shell {
   --cf-ink: #f7f0e6;
   --cf-ink-muted: rgba(247, 240, 230, 0.78);
-}
-
-:global(.g-root_theme_dark) .providers {
-  background: linear-gradient(180deg, #121a2a 0%, #0b1220 100%);
-  border-top-color: rgba(255, 236, 210, 0.12);
-  color: var(--cf-ink);
-}
-
-:global(.g-root_theme_dark) .providersLink {
-  text-decoration-color: rgba(247, 240, 230, 0.35);
-}
-
-:global(.g-root_theme_dark) .providersLink:hover {
-  text-decoration-color: rgba(247, 240, 230, 0.75);
 }
 
 .shaderWrap {

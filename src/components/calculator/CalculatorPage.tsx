@@ -13,12 +13,14 @@ import {
   TabList,
   TabProvider,
   Text,
+  Tooltip,
 } from '@gravity-ui/uikit';
 import {Calculator, ChevronRight} from '@gravity-ui/icons';
 import {AppHeader} from '@/components/AppHeader';
 import dynamic from 'next/dynamic';
 import type {GpuPreset} from '@/lib/calculator/presets';
 import type {CalculatorProviderId, PeriodMode} from '@/lib/calculator/quote-view';
+import {catalogAsOfLabel} from '@/lib/catalog/compare-disclaimer';
 import styles from './CalculatorPage.module.css';
 
 /** Code-split panels so /calculator/vm never pulls the self-host recommend graph. */
@@ -78,6 +80,7 @@ export function CalculatorPage({
   title,
   lead,
   independenceNote,
+  independenceTooltip,
   focusProviderId,
 }: {
   mode: CalculatorMode;
@@ -86,8 +89,10 @@ export function CalculatorPage({
   title?: string;
   /** Optional lead override (provider landings). */
   lead?: string;
-  /** Calm independence line under the lead (provider landings). */
+  /** Short independence phrase under the lead (provider landings). */
   independenceNote?: string;
+  /** Tooltip for independenceNote (provider landings). */
+  independenceTooltip?: string;
   /** Provider landing focus for sidebar comparison labels. */
   focusProviderId?: CalculatorProviderId;
 }) {
@@ -124,7 +129,25 @@ export function CalculatorPage({
               <Text color="complementary" className={leadClassName}>
                 {subtitle}
               </Text>
-              {independenceNote ? (
+              {focusProviderId && independenceNote ? (
+                <Text variant="caption-2" color="hint" className={styles.methodLine}>
+                  {independenceTooltip ? (
+                    <Tooltip content={independenceTooltip} openDelay={200}>
+                      <span className={styles.independencePhrase} tabIndex={0}>
+                        {independenceNote}
+                      </span>
+                    </Tooltip>
+                  ) : (
+                    independenceNote
+                  )}
+                  {' · '}
+                  Обновлено {catalogAsOfLabel()}
+                  {' · '}
+                  <a href="#provider-calc-method" className={styles.methodLink}>
+                    Как считается цена
+                  </a>
+                </Text>
+              ) : independenceNote ? (
                 <Text variant="caption-2" color="hint" className={styles.independenceNote}>
                   {independenceNote}
                 </Text>

@@ -2,12 +2,10 @@
 
 import {useState, type FormEvent} from 'react';
 import dynamic from 'next/dynamic';
-import Link from 'next/link';
 import {useRouter} from 'next/navigation';
 import {Button, Flex, Icon, Text, TextInput, ThemeProvider} from '@gravity-ui/uikit';
 import {ArrowRight, Magnifier} from '@gravity-ui/icons';
 import {AppHeader} from '@/components/AppHeader';
-import {CALCULATOR_PROVIDER_SEO} from '@/data/calculator-providers-seo';
 import {
   HOME_EXAMPLES,
   HOME_SEARCH_PLACEHOLDER,
@@ -102,23 +100,6 @@ export function HomeLanding() {
           </div>
         </main>
       </div>
-
-      <section className={styles.providers} aria-labelledby="home-provider-calcs">
-        <div className={styles.providersInner}>
-          <h2 id="home-provider-calcs" className={styles.providersTitle}>
-            Публичные цены облачных провайдеров
-          </h2>
-          <ul className={styles.providersList}>
-            {CALCULATOR_PROVIDER_SEO.map((p) => (
-              <li key={p.slug}>
-                <Link href={`/calculator/${p.slug}`} className={styles.providersLink}>
-                  Публичные цены {p.brandDisplay}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
     </div>
   );
 }

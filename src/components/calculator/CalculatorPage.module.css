@@ -54,6 +54,31 @@
   line-height: 1.35;
 }
 
+.methodLine {
+  max-width: 44rem;
+  margin-top: 4px;
+  line-height: 1.35;
+}
+
+.independencePhrase {
+  cursor: help;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 0.15em;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+}
+
+.methodLink {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+}
+
+.methodLink:hover {
+  text-decoration-color: currentColor;
+}
+
 /* Keep lead in DOM for SEO / crawlers; hide from visual UI. */
 .heroLeadSeo {
   position: absolute;

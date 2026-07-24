@@ -3,6 +3,7 @@ import {
   CALCULATOR_PROVIDER_SEO,
   type CalculatorProviderSeo,
 } from '@/data/calculator-providers-seo';
+import {catalogAsOfLabel} from '@/lib/catalog/compare-disclaimer';
 import styles from './ProviderCalculatorSeo.module.css';
 
 export function ProviderCalculatorSeo({seo}: {seo: CalculatorProviderSeo}) {
@@ -22,30 +23,25 @@ export function ProviderCalculatorSeo({seo}: {seo: CalculatorProviderSeo}) {
         <Link href="/calculator/self-host">хостинге LLM</Link>.
       </p>
 
-      <details className={styles.method}>
-        <summary>Как рассчитывается цена</summary>
+      <details className={styles.method} id="provider-calc-method">
+        <summary>Как считается цена</summary>
         <ul>
           <li>
-            Источник: публичные тарифы провайдеров в каталоге Cloud FinOps. Это не официальный
-            прайс-лист вендора.
+            Цены получены из открытых источников. Каталог Cloud FinOps на {catalogAsOfLabel()}.
+            Cloud FinOps не связан с {seo.brandDisplay} и не является его официальным калькулятором.
           </li>
           <li>
-            Валюта: рубли. Для каждого тарифа используется налоговый статус, указанный в каталоге и
-            источнике цены.
-          </li>
-          <li>Расчётный период: час, месяц (720 ч) или год — переключатель на странице.</li>
-          <li>
-            В итог входят компоненты выбранной конфигурации (например vCPU, RAM, диск, GPU, публичный
-            IP), если они участвуют в расчёте.
-          </li>
-          <li>Индивидуальные скидки, промоакции и закрытые прайсы не учитываются.</li>
-          <li>
-            Предложения могут различаться по модели предоставления ресурсов, производительности и
-            включённым услугам (VM, flavor, dedicated, доля CPU, класс диска и др.).
+            Для сравнения используются максимально близкие конфигурации. Предложения могут
+            различаться по модели предоставления ресурсов, производительности и включённым услугам.
           </li>
           <li>
-            Перед заказом проверьте итоговую стоимость и доступность ресурсов на официальном сайте
-            провайдера.
+            Показанные суммы приведены с НДС. Если провайдер публикует тариф без НДС, в каталоге он
+            нормализован к цене с НДС для сопоставимости. Индивидуальные скидки и специальные
+            условия договоров не учитываются.
+          </li>
+          <li>
+            Расчётный месяц = 720 часов. Перед заказом проверьте итоговую стоимость, регион и
+            доступность на сайте провайдера.
           </li>
         </ul>
       </details>
@@ -60,11 +56,11 @@ export function ProviderCalculatorSeo({seo}: {seo: CalculatorProviderSeo}) {
         ))}
       </dl>
 
-      <h3 className={styles.subtitle}>Публичные цены других облаков</h3>
+      <h3 className={styles.subtitle}>Калькуляторы других облаков</h3>
       <ul className={styles.links}>
         {others.map((p) => (
           <li key={p.slug}>
-            <Link href={`/calculator/${p.slug}`}>Публичные цены {p.brandDisplay}</Link>
+            <Link href={`/calculator/${p.slug}`}>Калькулятор стоимости {p.brandDisplay}</Link>
           </li>
         ))}
         <li>

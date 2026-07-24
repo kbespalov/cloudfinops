@@ -83,6 +83,7 @@ export default async function ProviderCalculatorRoute({
         title={seo.h1}
         lead={seo.lead}
         independenceNote={seo.independenceNote}
+        independenceTooltip={seo.independenceTooltip}
         focusProviderId={seo.providerId}
       />
       <ProviderCalculatorSeo seo={seo} />

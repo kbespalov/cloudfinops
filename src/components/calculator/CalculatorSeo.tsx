@@ -92,12 +92,12 @@ export function VmCalculatorSeo({
         </li>
       </ul>
 
-      <h3 className={styles.subtitle}>Публичные цены облачных провайдеров</h3>
+      <h3 className={styles.subtitle}>Калькуляторы стоимости по облакам</h3>
       <ul className={styles.list}>
         {CALCULATOR_PROVIDER_SEO.map((p) => (
           <li key={p.slug}>
             <a href={`/calculator/${p.slug}`}>
-              <strong>Публичные цены {p.brandDisplay}</strong>
+              <strong>Калькулятор стоимости {p.brandDisplay}</strong>
             </a>
             {' — '}
             {p.brandRu}
@@ -618,12 +618,12 @@ export function vmCalculatorJsonLd(gpuShapeCount: number) {
           'Калькулятор цены облака: сравнение стоимости ВМ и аренды GPU NVIDIA H100, H200, B300, A100, L4 у Яндекс.Облако, VK Cloud, Selectel, Cloud.ru, MWS и T1 Cloud по публичным тарифам с НДС.',
         featureList: [
           'Сравнение цен облаков России',
-          'Публичные цены Yandex Cloud: расчёт и сравнение',
-          'Публичные цены VK Cloud: расчёт и сравнение',
-          'Публичные цены Selectel: расчёт и сравнение',
-          'Публичные цены Cloud.ru: расчёт и сравнение',
-          'Публичные цены MWS Cloud: расчёт и сравнение',
-          'Публичные цены T1 Cloud: расчёт и сравнение',
+          'Калькулятор стоимости Yandex Cloud',
+          'Калькулятор стоимости VK Cloud',
+          'Калькулятор стоимости Selectel',
+          'Калькулятор стоимости Cloud.ru',
+          'Калькулятор стоимости MWS Cloud',
+          'Калькулятор стоимости T1 Cloud',
           'Калькулятор стоимости аренды GPU H100 и H200',
           'Пресеты General, High CPU, High Memory и Low-cost',
         ],
