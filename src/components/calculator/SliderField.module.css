@@ -12,6 +12,11 @@
   max-width: 720px;
 }
 
+/* Desktop: children of .head join the parent grid as if unwrapped. */
+.head {
+  display: contents;
+}
+
 .label {
   grid-area: label;
   min-width: 0;
@@ -22,6 +27,7 @@
   line-height: 18px;
   font-weight: 500;
   color: var(--g-color-text-complementary);
+  white-space: nowrap;
 }
 
 .icon {
@@ -78,11 +84,16 @@
   color: var(--g-color-text-danger);
 }
 
-.input {
+.inputWrap {
   grid-area: input;
   width: 160px;
   min-width: 0;
   justify-self: end;
+}
+
+.input {
+  width: 100%;
+  min-width: 0;
 }
 
 .unit {
@@ -92,23 +103,34 @@
 
 @media (max-width: 720px) {
   .root {
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      'label value'
-      'slider slider';
-    gap: 4px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
     max-width: none;
     min-height: 0;
     padding-block: 2px;
   }
 
-  .label {
+  .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    width: 100%;
     min-height: 28px;
+  }
+
+  .label {
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .labelText {
     font-size: 14px;
     line-height: 20px;
+    overflow: visible;
+    text-overflow: clip;
   }
 
   /* Icon is noise when every row already has a short label. */
@@ -117,13 +139,12 @@
   }
 
   .valueCluster {
-    grid-area: value;
     display: inline-flex;
     align-items: center;
     justify-content: flex-end;
+    flex: 0 0 auto;
     gap: 2px;
     min-width: 0;
-    justify-self: end;
   }
 
   .valueCluster[data-stepper='true'] {
@@ -138,11 +159,11 @@
   }
 
   .valueCluster[data-stepper='true'] .valueText {
-    min-width: 4.5ch;
+    min-width: 3.5ch;
   }
 
   .slider {
-    grid-area: slider;
+    width: 100%;
     max-width: none;
     /* Slim iOS-like track; keep a usable touch band via padding. */
     padding-block: 6px;
@@ -176,8 +197,8 @@
       0 1px 3px color-mix(in srgb, var(--g-color-text-primary) 22%, transparent);
   }
 
-  /* Desktop NumberInput is too tall for phone density. */
-  .input {
+  /* Hide desktop NumberInput entirely (wrapper, not Gravity's inner class). */
+  .inputWrap {
     display: none;
   }
 }

@@ -178,28 +178,30 @@ export function SliderField({
 
   return (
     <div className={styles.root} data-stepper={compactStepper ? 'true' : undefined}>
-      <Flex alignItems="center" gap={2} className={styles.label}>
-        <Icon data={icon} size={16} className={styles.icon} />
-        <Text as="span" ellipsis className={styles.labelText}>
-          {label}
-        </Text>
-        {hint ? (
-          <HelpMark aria-label={`Про ${label}`} iconSize="s">
-            {hint}
-          </HelpMark>
-        ) : null}
-      </Flex>
+      <div className={styles.head}>
+        <Flex alignItems="center" gap={2} className={styles.label}>
+          <Icon data={icon} size={16} className={styles.icon} />
+          <Text as="span" className={styles.labelText}>
+            {label}
+          </Text>
+          {hint ? (
+            <HelpMark aria-label={`Про ${label}`} iconSize="s">
+              {hint}
+            </HelpMark>
+          ) : null}
+        </Flex>
 
-      <CompactValue
-        value={value}
-        unit={unit}
-        stepper={compactStepper}
-        canDec={idx > 0}
-        canInc={idx < options.length - 1}
-        onDec={() => onUpdate(bump(options, value, -1))}
-        onInc={() => onUpdate(bump(options, value, 1))}
-        ariaLabel={fieldAria}
-      />
+        <CompactValue
+          value={value}
+          unit={unit}
+          stepper={compactStepper}
+          canDec={idx > 0}
+          canInc={idx < options.length - 1}
+          onDec={() => onUpdate(bump(options, value, -1))}
+          onInc={() => onUpdate(bump(options, value, 1))}
+          ariaLabel={fieldAria}
+        />
+      </div>
 
       <Slider
         key={`${absMin}-${absMax}`}
@@ -216,21 +218,24 @@ export function SliderField({
         className={styles.slider}
       />
 
-      <NumberInput
-        size="m"
-        min={absMin}
-        max={absMax}
-        step={1}
-        allowDecimal={false}
-        value={value}
-        onUpdate={handleInput}
-        endContent={<Unit unit={unit} />}
-        className={styles.input}
-        validationState={rangeError ? 'invalid' : undefined}
-        errorMessage={rangeError ?? undefined}
-        errorPlacement="outside"
-        controlProps={{'aria-label': fieldAria}}
-      />
+      {/* Wrapper owns display:none — Gravity may put className on an inner node. */}
+      <div className={styles.inputWrap}>
+        <NumberInput
+          size="m"
+          min={absMin}
+          max={absMax}
+          step={1}
+          allowDecimal={false}
+          value={value}
+          onUpdate={handleInput}
+          endContent={<Unit unit={unit} />}
+          className={styles.input}
+          validationState={rangeError ? 'invalid' : undefined}
+          errorMessage={rangeError ?? undefined}
+          errorPlacement="outside"
+          controlProps={{'aria-label': fieldAria}}
+        />
+      </div>
     </div>
   );
 }
@@ -265,28 +270,30 @@ export function IntegerSliderField({
 
   return (
     <div className={styles.root} data-stepper={compactStepper ? 'true' : undefined}>
-      <Flex alignItems="center" gap={2} className={styles.label}>
-        <Icon data={icon} size={16} className={styles.icon} />
-        <Text as="span" ellipsis className={styles.labelText}>
-          {label}
-        </Text>
-        {hint ? (
-          <HelpMark aria-label={`Про ${label}`} iconSize="s">
-            {hint}
-          </HelpMark>
-        ) : null}
-      </Flex>
+      <div className={styles.head}>
+        <Flex alignItems="center" gap={2} className={styles.label}>
+          <Icon data={icon} size={16} className={styles.icon} />
+          <Text as="span" className={styles.labelText}>
+            {label}
+          </Text>
+          {hint ? (
+            <HelpMark aria-label={`Про ${label}`} iconSize="s">
+              {hint}
+            </HelpMark>
+          ) : null}
+        </Flex>
 
-      <CompactValue
-        value={clamped}
-        unit={unit}
-        stepper={compactStepper}
-        canDec={clamped > min}
-        canInc={clamped < safeMax}
-        onDec={() => onUpdate(clamped - 1)}
-        onInc={() => onUpdate(clamped + 1)}
-        ariaLabel={fieldAria}
-      />
+        <CompactValue
+          value={clamped}
+          unit={unit}
+          stepper={compactStepper}
+          canDec={clamped > min}
+          canInc={clamped < safeMax}
+          onDec={() => onUpdate(clamped - 1)}
+          onInc={() => onUpdate(clamped + 1)}
+          ariaLabel={fieldAria}
+        />
+      </div>
 
       <Slider
         key={`${min}-${safeMax}`}
@@ -303,21 +310,23 @@ export function IntegerSliderField({
         disabled={safeMax <= min}
       />
 
-      <NumberInput
-        size="m"
-        min={min}
-        max={safeMax}
-        step={1}
-        allowDecimal={false}
-        value={clamped}
-        onUpdate={(next) => {
-          if (next == null || !Number.isFinite(next)) return;
-          onUpdate(Math.min(safeMax, Math.max(min, Math.round(next))));
-        }}
-        endContent={<Unit unit={unit} />}
-        className={styles.input}
-        controlProps={{'aria-label': fieldAria}}
-      />
+      <div className={styles.inputWrap}>
+        <NumberInput
+          size="m"
+          min={min}
+          max={safeMax}
+          step={1}
+          allowDecimal={false}
+          value={clamped}
+          onUpdate={(next) => {
+            if (next == null || !Number.isFinite(next)) return;
+            onUpdate(Math.min(safeMax, Math.max(min, Math.round(next))));
+          }}
+          endContent={<Unit unit={unit} />}
+          className={styles.input}
+          controlProps={{'aria-label': fieldAria}}
+        />
+      </div>
     </div>
   );
 }

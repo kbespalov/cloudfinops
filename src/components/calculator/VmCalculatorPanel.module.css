@@ -455,10 +455,17 @@
 
   .diskTypeRow,
   .compactToggleRow {
-    grid-template-columns: minmax(0, 1fr) auto;
+    display: flex;
+    flex-wrap: nowrap;
     align-items: center;
-    gap: 8px;
+    justify-content: space-between;
+    gap: 10px;
     min-height: 0;
+  }
+
+  .diskTypeLabel {
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .shareRow {
