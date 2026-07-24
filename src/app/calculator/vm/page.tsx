@@ -6,15 +6,30 @@ import {getGpuCardPresets, getGpuFlavorPresets} from '@/lib/calculator/quotes-ca
 export const dynamic = 'force-static';
 
 export const metadata: Metadata = {
-  title: 'Калькулятор ВМ и GPU — Яндекс.Облако, VK, Selectel, MWS, T1',
+  title: 'Калькулятор цены облака — ВМ и GPU в России',
   description:
-    'Калькулятор стоимости ВМ и аренды GPU NVIDIA (H100, H200, B300, A100, L4): сравнение Яндекс.Облако, VK Cloud, Selectel, Cloud.ru, MWS Cloud и T1 Cloud по публичным тарифам.',
+    'Калькулятор цены облака: сравните стоимость ВМ и аренды GPU (H100, H200, B300, A100, L4) у Яндекс.Облако, VK Cloud, Selectel, Cloud.ru, MWS и T1 по публичным тарифам с НДС.',
   keywords: [
+    'калькулятор цены облака',
+    'калькулятор цен облака',
+    'калькулятор стоимости облака',
+    'калькулятор облачных цен',
     'калькулятор облака',
     'калькулятор облаков',
+    'цена облака калькулятор',
+    'стоимость облака калькулятор',
+    'расчёт стоимости облака',
+    'расчет стоимости облака',
+    'сравнение цен облаков',
+    'сравнение цен облаков России',
+    'сколько стоит облако',
+    'сколько стоит виртуальная машина',
+    'стоимость ВМ',
+    'цена vCPU',
     'калькулятор ВМ',
     'калькулятор стоимости ВМ',
     'калькулятор GPU',
+    'цена GPU облако',
     'калькулятор H100',
     'калькулятор H200',
     'калькулятор B300',
@@ -31,11 +46,6 @@ export const metadata: Metadata = {
     'аренда L4',
     'стоимость H100 Россия',
     'стоимость B300 Selectel',
-    'цена GPU облако',
-    'стоимость ВМ',
-    'цена vCPU',
-    'сравнение цен облако',
-    'сравнение облаков России',
     'калькулятор Яндекс.Облако',
     'калькулятор Яндекс Облако',
     'калькулятор Yandex Cloud',
@@ -69,15 +79,15 @@ export const metadata: Metadata = {
     locale: 'ru_RU',
     url: '/calculator/vm',
     siteName: 'Cloud FinOps',
-    title: 'Калькулятор ВМ и GPU · Яндекс.Облако, VK, Selectel',
+    title: 'Калькулятор цены облака — ВМ и GPU в России',
     description:
       'Сравните цены на ВМ и аренду NVIDIA H100, H200, B300 у Яндекс.Облака, VK Cloud, Selectel, Cloud.ru, MWS и T1.',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Калькулятор ВМ и GPU · Cloud FinOps',
+    title: 'Калькулятор цены облака · Cloud FinOps',
     description:
-      'Цены ВМ и GPU: Яндекс.Облако, VK Cloud, Selectel, Cloud.ru, MWS, T1.',
+      'Цены ВМ и GPU в облаках России: Яндекс.Облако, VK, Selectel, Cloud.ru, MWS, T1.',
   },
   category: 'technology',
 };

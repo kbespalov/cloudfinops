@@ -65,21 +65,22 @@ export function VmCalculatorSeo({
   return (
     <section className={styles.seo} aria-labelledby="calculator-vm-seo-title">
       <h2 id="calculator-vm-seo-title" className={styles.title}>
-        Калькулятор стоимости ВМ и аренды GPU H100, H200, B300 в облаках России
+        Калькулятор цены облака: стоимость ВМ и аренды GPU в России
       </h2>
       <p className={styles.lead}>
-        Сравните публичные цены на виртуальные машины (vCPU, RAM, SSD/NVMe, публичный IP) и аренду
-        видеокарт NVIDIA — <strong>B300</strong>, <strong>H100</strong>, <strong>H200</strong>,{' '}
-        <strong>A100</strong>, <strong>L4</strong>, <strong>V100</strong> — у {PROVIDERS.join(', ')}.
-        Best offer — минимальная ордерабельная конфигурация по открытому каталогу Cloud FinOps, без
-        промо-тарифов.
+        Бесплатный <strong>калькулятор цен облака</strong> для сравнения стоимости виртуальных машин
+        (vCPU, RAM, SSD/NVMe, публичный IP) и аренды GPU NVIDIA — <strong>B300</strong>,{' '}
+        <strong>H100</strong>, <strong>H200</strong>, <strong>A100</strong>, <strong>L4</strong>,{' '}
+        <strong>V100</strong> — у {PROVIDERS.join(', ')}. Best offer — минимальная ордерабельная
+        конфигурация по открытому каталогу Cloud FinOps, без промо-тарифов. Месяц = 720 часов, цены в
+        рублях с НДС.
       </p>
 
       <h3 className={styles.subtitle}>Для кого этот калькулятор</h3>
       <ul className={styles.list}>
         <li>
-          <strong>FinOps и закупки</strong> — быстрый ориентир «сколько стоит 4/16 или 8/32 в РФ»
-          без ручного сбора прайсов.
+          <strong>FinOps и закупки</strong> — быстро понять, сколько стоит облако на типовых
+          конфигурациях 4/16 или 8/32 в РФ, без ручного сбора прайсов.
         </li>
         <li>
           <strong>Архитекторы и DevOps</strong> — сравнение General / High CPU / High Memory /
@@ -168,7 +169,7 @@ export function VmCalculatorSeo({
         </div>
       </div>
 
-      <h3 className={styles.subtitle}>Частые вопросы · калькулятор ВМ и GPU</h3>
+      <h3 className={styles.subtitle}>Частые вопросы · калькулятор цены облака</h3>
       <dl className={styles.faq}>
         {VM_FAQ.map((item) => (
           <div key={item.question}>
@@ -213,7 +214,7 @@ export function SelfHostCalculatorSeo() {
         </li>
         <li>
           Для сырого сравнения flavor без модели (включая B300 dedicated) откройте{' '}
-          <a href="/calculator/vm">калькулятор ВМ и GPU</a>.
+          <a href="/calculator/vm">калькулятор цены облака</a>.
         </li>
       </ul>
 
@@ -263,9 +264,19 @@ export const CalculatorSeo = VmCalculatorSeo;
 
 const VM_FAQ = [
   {
-    question: 'Как считается стоимость ВМ в калькуляторе Cloud FinOps?',
+    question: 'Как посчитать цену облака в калькуляторе?',
     answer:
-      'Складываем публичные unit-цены vCPU, RAM и диск одного региона и платформы либо берём точный flavor плюс SSD. Best offer — минимальная ордерабельная цена среди провайдеров. Месяц = 720 часов.',
+      'Выберите конфигурацию ВМ или GPU-пресет. Калькулятор цены облака сравнит публичные тарифы Яндекс.Облако, VK Cloud, Selectel, Cloud.ru, MWS и T1 и покажет Best offer в ₽/час, ₽/мес или ₽/год (месяц = 720 часов, с НДС).',
+  },
+  {
+    question: 'Как считается стоимость ВМ?',
+    answer:
+      'Складываем публичные unit-цены vCPU, RAM и диск одного региона и платформы либо берём точный flavor плюс SSD. Best offer — минимальная ордерабельная цена среди провайдеров.',
+  },
+  {
+    question: 'Сколько стоит виртуальная машина в облаке России?',
+    answer:
+      'Зависит от vCPU, RAM, диска, сети и провайдера. На типовых пресетах 2/8, 4/16, 8/32 калькулятор показывает актуальные цены сразу у шести облаков РФ — удобнее, чем считать вручную в каждом прайсе.',
   },
   {
     question: 'Какие облака России сравниваются?',
@@ -294,7 +305,7 @@ const VM_FAQ = [
   {
     question: 'Чем этот калькулятор отличается от калькулятора провайдера?',
     answer:
-      'Мы сравниваем несколько облаков РФ на одних и тех же пресетах H100/H200/B300/A100/L4. Калькуляторы Selectel или Яндекс.Облака считают только свой прайс.',
+      'Мы сравниваем несколько облаков РФ на одних и тех же пресетах ВМ и H100/H200/B300/A100/L4. Калькуляторы Selectel или Яндекс.Облака считают только свой прайс.',
   },
 ];
 
@@ -337,14 +348,20 @@ export function vmCalculatorJsonLd(gpuShapeCount: number) {
       {
         '@type': 'WebApplication',
         '@id': 'https://cloudfinops.ru/calculator/vm#app',
-        name: 'Калькулятор ВМ и GPU · Cloud FinOps',
+        name: 'Калькулятор цены облака · Cloud FinOps',
+        alternateName: [
+          'Калькулятор цен облака',
+          'Калькулятор стоимости облака',
+          'Калькулятор ВМ и GPU',
+        ],
         url: 'https://cloudfinops.ru/calculator/vm',
         applicationCategory: 'BusinessApplication',
         operatingSystem: 'Web',
         inLanguage: 'ru-RU',
         description:
-          'Калькулятор стоимости виртуальных машин и аренды GPU NVIDIA H100, H200, B300, A100, L4 в России: сравнение Яндекс.Облако, VK Cloud, Selectel, Cloud.ru, MWS и T1 Cloud.',
+          'Калькулятор цены облака: сравнение стоимости ВМ и аренды GPU NVIDIA H100, H200, B300, A100, L4 у Яндекс.Облако, VK Cloud, Selectel, Cloud.ru, MWS и T1 Cloud по публичным тарифам с НДС.',
         featureList: [
+          'Калькулятор цены облака',
           'Калькулятор стоимости ВМ',
           'Сравнение цен облаков России',
           'Калькулятор Яндекс.Облако',
@@ -382,7 +399,7 @@ export function vmCalculatorJsonLd(gpuShapeCount: number) {
           {
             '@type': 'ListItem',
             position: 2,
-            name: 'Калькулятор ВМ и GPU',
+            name: 'Калькулятор цены облака',
             item: 'https://cloudfinops.ru/calculator/vm',
           },
         ],

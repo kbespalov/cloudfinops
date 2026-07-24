@@ -42,12 +42,12 @@ const MODE_HREF: Record<CalculatorMode, string> = {
 };
 
 const MODE_TITLE: Record<CalculatorMode, string> = {
-  vm: 'Калькулятор облачных нагрузок',
+  vm: 'Калькулятор цены облака',
   inference: 'Калькулятор облачных нагрузок',
 };
 
 const MODE_LEAD: Record<CalculatorMode, string> = {
-  vm: 'Подбор конфигурации ВМ и сравнение цен в облаках РФ',
+  vm: 'Сравните стоимость ВМ и GPU в облаках России по публичным тарифам',
   inference: 'Подбор GPU-конфигурации для open-weight моделей в облаках РФ',
 };
 
