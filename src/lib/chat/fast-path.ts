@@ -493,6 +493,44 @@ export function matchFastPath(userText: string): FastPathPlan | null {
   return null;
 }
 
+function gpuCountFromText(text: string, fallback = 1): number {
+  const m = text.match(/(\d+)\s*[×xх]/i);
+  if (!m) return fallback;
+  const n = Number(m[1]);
+  if (!Number.isFinite(n) || n < 1 || n > 16) return fallback;
+  return Math.round(n);
+}
+
+/**
+ * Calculator AI tab drives the shared quote sidebar via get_quote / lakehouse.
+ * GPU catalog chips that only run search_prices would leave the sidebar empty and
+ * show card-only rows — rewrite them to the calculator engine.
+ */
+export function adaptFastPathForSurface(
+  plan: FastPathPlan,
+  surface: 'chat' | 'calculator',
+  userText = '',
+): FastPathPlan {
+  if (surface !== 'calculator') return plan;
+  if (!plan.tools.length || !plan.tools.every((t) => t.name === 'search_prices')) {
+    return plan;
+  }
+  const gpuTool = plan.tools.find(
+    (t) => typeof t.args.gpuModel === 'string' && String(t.args.gpuModel).trim(),
+  );
+  if (!gpuTool) return plan;
+  const gpuModel = String(gpuTool.args.gpuModel).trim();
+  const fromArgs =
+    typeof gpuTool.args.gpuCount === 'number' && gpuTool.args.gpuCount > 0
+      ? Math.round(gpuTool.args.gpuCount)
+      : null;
+  const gpuCount = fromArgs ?? gpuCountFromText(userText, 1);
+  return {
+    id: plan.id,
+    tools: [{name: 'get_quote', args: {gpuModel, gpuCount, period: 'month'}}],
+  };
+}
+
 function lastUserText(messages: ChatMessage[]): string {
   for (let i = messages.length - 1; i >= 0; i--) {
     const m = messages[i];
@@ -1317,12 +1355,19 @@ export async function tryRunFastPath(options: {
   messages: ChatMessage[];
   signal?: AbortSignal;
   onEvent?: (event: FastPathEvent) => void;
+  /** calculator → rewrite GPU search chips to get_quote for the price sidebar */
+  surface?: 'chat' | 'calculator';
 }): Promise<FastPathResult | null> {
   if (userTurnCount(options.messages) !== 1) return null;
 
   const userText = lastUserText(options.messages);
-  const plan = matchFastPath(userText);
-  if (!plan) return null;
+  const matched = matchFastPath(userText);
+  if (!matched) return null;
+  const plan = adaptFastPathForSurface(
+    matched,
+    options.surface === 'calculator' ? 'calculator' : 'chat',
+    userText,
+  );
 
   const messages = options.messages;
   const toolCalls = plan.tools.map((t, i) => ({

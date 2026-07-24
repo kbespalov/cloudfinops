@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import {
+  adaptFastPathForSurface,
   formatFastPathAnswer,
   matchFastPath,
   tryFormatAgentToolAnswer,
@@ -21,6 +22,20 @@ describe('matchFastPath', () => {
     assert.ok(plan);
     assert.equal(plan.tools[0]?.name, 'search_prices');
     assert.equal(plan.tools[0]?.args.gpuModel, 'H100');
+  });
+
+  it('rewrites GPU search chips to get_quote on the calculator surface', () => {
+    const plan = matchFastPath('Сколько стоит 1x H100 в месяц?');
+    assert.ok(plan);
+    assert.equal(plan.tools[0]?.name, 'search_prices');
+    const adapted = adaptFastPathForSurface(plan, 'calculator', 'Сколько стоит 1x H100 в месяц?');
+    assert.equal(adapted.tools[0]?.name, 'get_quote');
+    assert.equal(adapted.tools[0]?.args.gpuModel, 'H100');
+    assert.equal(adapted.tools[0]?.args.gpuCount, 1);
+    assert.equal(
+      adaptFastPathForSurface(plan, 'chat', 'Сколько стоит 1x H100 в месяц?').tools[0]?.name,
+      'search_prices',
+    );
   });
 
   it('matches block SSD via compare_unit_price (not category=storage)', () => {

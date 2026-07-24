@@ -232,15 +232,38 @@ export async function POST(req: Request) {
         ) => {
           if (event.type === 'tool_call') {
             send({type: 'status', text: statusLabelForTool(event.name)});
-            if (event.name === 'get_quote' || event.name === 'get_lakehouse_quote') {
+            if (
+              event.name === 'get_quote' ||
+              event.name === 'get_lakehouse_quote' ||
+              event.name === 'search_prices'
+            ) {
               try {
                 const args = JSON.parse(event.arguments) as unknown;
                 if (args && typeof args === 'object' && !Array.isArray(args)) {
-                  send({
-                    type: 'sidebar_config',
-                    tool: event.name,
-                    args: args as Record<string, unknown>,
-                  });
+                  const record = args as Record<string, unknown>;
+                  if (event.name === 'search_prices') {
+                    // Fallback when the model still catalogs GPU via search_prices.
+                    const gpuModel =
+                      typeof record.gpuModel === 'string' ? record.gpuModel.trim() : '';
+                    if (gpuModel) {
+                      send({
+                        type: 'sidebar_config',
+                        tool: 'get_quote',
+                        args: {
+                          gpuModel,
+                          gpuCount:
+                            typeof record.gpuCount === 'number' ? record.gpuCount : 1,
+                          period: 'month',
+                        },
+                      });
+                    }
+                  } else {
+                    send({
+                      type: 'sidebar_config',
+                      tool: event.name,
+                      args: record,
+                    });
+                  }
                 }
               } catch {
                 // Malformed tool args — sidebar stays on the previous quote.
@@ -269,6 +292,7 @@ export async function POST(req: Request) {
           messages,
           signal: abort.signal,
           onEvent: onToolEvent,
+          surface,
         });
 
         const loop =
