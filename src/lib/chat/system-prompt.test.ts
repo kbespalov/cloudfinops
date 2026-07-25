@@ -122,6 +122,8 @@ describe('matchPlanningDomains', () => {
     assert.match(SYSTEM_PROMPT_CORE, /INTENT/);
     assert.match(SYSTEM_PROMPT_CORE, /Отдельная цена/);
     assert.match(SYSTEM_PROMPT_CORE, /Workload без ТЗ/);
+    assert.match(SYSTEM_PROMPT_CORE, /CAPACITY \/ RPS/);
+    assert.match(SYSTEM_PROMPT_CORE, /RpsPerCore|Concurrency/);
     assert.match(SYSTEM_PROMPT_CORE, /покрытие ≠ 100%|needs_clarification/);
     assert.match(SYSTEM_PROMPT_CORE, /ашка/);
     assert.match(SYSTEM_PROMPT_CORE, /PREVIEW FIRST/);
@@ -131,6 +133,15 @@ describe('matchPlanningDomains', () => {
   it('attaches stack for shop / web infra asks', () => {
     const d = matchPlanningDomains('Собери инфраструктуру для небольшого интернет-магазина');
     assert.ok(d.includes('stack'), d.join(','));
+  });
+
+  it('RPS / Go capacity asks attach compute+stack and keep sizing rules', () => {
+    const d = matchPlanningDomains('Тысяча RPS на Go — сколько CPU-ядер нужно?');
+    assert.ok(d.includes('compute'), d.join(','));
+    assert.ok(d.includes('stack'), d.join(','));
+    const prompt = buildSystemPrompt('API на Go, 1000 RPS, латентность 10 мс — подбери ВМ');
+    assert.match(prompt, /CAPACITY \/ RPS|RpsPerCore/);
+    assert.match(prompt, /get_quote|compose/);
   });
 });
 

@@ -76,7 +76,7 @@ function sc(
 }
 
 /** Expected corpus size — bump when appending cases. */
-export const SOFT_SCENARIO_COUNT = 209;
+export const SOFT_SCENARIO_COUNT = 220;
 
 /** Build the full soft UX corpus. */
 export function buildUserScenarios(): SoftScenario[] {
@@ -2696,6 +2696,188 @@ export function buildUserScenarios(): SoftScenario[] {
         answerIncludes: ['Cloud.ru', 'оценк', 'vCPU', 'Selectel'],
       },
       'Cloud.ru must appear via derivedFromFlavors with * / оценка — not «нет в каталоге».',
+    ),
+    sc(
+      210,
+      'budget',
+      'Около 10 тысяч рублей в месяц — что смогу позволить из виртуальных машин? Хочу максимально утилизировать бюджет и получить больше ресурсов. Cloud.ru тоже сравни.',
+      ['budget', 'vm', 'compare'],
+      'medium',
+      {
+        toolsAny: ['fit_budget', 'get_quote'],
+        toolsAvoid: ['compose_solution'],
+        mustExposeAssumptions: true,
+        mustShowBreakdown: true,
+        answerIncludes: ['Cloud.ru', '10', 'утил', 'vCPU', 'VK', 'Selectel'],
+      },
+      'fit_budget ~10k: rank max totalVcpu then util% (VK/Selectel 2/8×2 win). Cloud.ru is quoted (flavor) but 2/8 only fits ×1; 4/16 is cheapest same-4-vCPU with lower util — must appear via valuePick / note, not «Cloud.ru нет».',
+    ),
+    sc(
+      211,
+      'unit-price',
+      'Минимальная цена 1 vCPU (on-demand 100%) в месяц с НДС у всех провайдеров — таблица и разброс к минимуму. Cloud.ru не забудь.',
+      ['price', 'unit', 'compare', 'compute'],
+      'medium',
+      {
+        toolsAny: ['compare_unit_price'],
+        toolsAvoid: ['compose_solution', 'get_quote'],
+        catalogAnchor: 'unit',
+        anchorParams: {component: 'vcpu'},
+        mustShowBreakdown: true,
+        answerIncludes: [
+          'Cloud.ru',
+          'Selectel',
+          'VK',
+          'MWS',
+          'Yandex',
+          'T1',
+          'оценк',
+          'vCPU',
+        ],
+      },
+      'Full 6-provider vCPU unit table: providers[] + Cloud.ru* from derivedFromFlavors. Human answer: % к минимуму / разброс; never «Cloud.ru нет в каталоге». Cheapest unit meter = Selectel; Cloud.ru* is estimate.',
+    ),
+    sc(
+      212,
+      'unit-price',
+      'А теперь то же для памяти: минимальная цена 1 GiB RAM в месяц у всех, включая Cloud.ru, и кто дороже всех.',
+      ['price', 'unit', 'compare', 'compute'],
+      'medium',
+      {
+        toolsAny: ['compare_unit_price'],
+        toolsAvoid: ['compose_solution', 'get_quote'],
+        catalogAnchor: 'unit',
+        anchorParams: {component: 'ram'},
+        mustShowBreakdown: true,
+        answerIncludes: [
+          'Cloud.ru',
+          'Selectel',
+          'T1',
+          'RAM',
+          'памят',
+          'оценк',
+          'GiB',
+          'ГиБ',
+        ],
+      },
+      'RAM unit table with Cloud.ru*. Expect inversion vs vCPU: T1 cheapest among unit meters, Selectel often dearest; Cloud.ru* estimate still lowest overall.',
+    ),
+    sc(
+      213,
+      'unit-price',
+      'Сравни цену на ядро и на память у всех провайдеров — какой там разброс? И по vCPU, и по RAM, по-человечески, с Cloud.ru.',
+      ['price', 'unit', 'compare', 'compute', 'explain'],
+      'hard',
+      {
+        toolsAny: ['compare_unit_price'],
+        toolsAvoid: ['compose_solution'],
+        mustShowBreakdown: true,
+        mustExposeAssumptions: true,
+        answerIncludes: [
+          'Cloud.ru',
+          'Selectel',
+          'vCPU',
+          'RAM',
+          'памят',
+          'оценк',
+          'разброс',
+          'T1',
+        ],
+      },
+      'Dual unit compare (vcpu + ram). Must call compare_unit_price twice or cover both; include Cloud.ru* both times; narrate spread (~20–25%) and CPU-cheap/RAM-dear inversion (Selectel) — not tool dumps only.',
+    ),
+
+    // ── 18. Capacity sizing (RPS → vCPU/RAM → quote) ─────────────────────
+    sc(
+      214,
+      'sizing',
+      'Тысяча RPS на Go — сколько CPU-ядер нужно?',
+      ['sizing', 'compute', 'web'],
+      'medium',
+      {
+        mustExposeAssumptions: true,
+        answerIncludes: ['ядр', 'RPS', 'латент'],
+      },
+      'Latency-based concurrency + ~250 RPS/core × safety ≈ 5–6 vCPU at ~10 ms; expose assumptions; priced flavor is a plus, not required for pure core-count ask.',
+    ),
+    sc(
+      215,
+      'sizing',
+      'API на Go, около 1000 RPS, средняя латентность 10 мс — подбери ВМ и сравни провайдеров за месяц.',
+      ['sizing', 'compose', 'vm', 'compare'],
+      'medium',
+      {
+        toolsAny: ['get_quote', 'compose_solution'],
+        mustExposeAssumptions: true,
+        mustShowBreakdown: true,
+        answerIncludes: ['vCPU', 'ядр', 'RPS', '₽'],
+      },
+      'Derive ~6 vCPU (+ RAM assumption), get_quote/compose, provider table with ₽ — not theory-only.',
+    ),
+    sc(
+      216,
+      'sizing',
+      'При 1000 RPS и средней латентности 50 мс сколько ядер понадобится для Go-сервиса?',
+      ['sizing', 'compute'],
+      'hard',
+      {
+        mustExposeAssumptions: true,
+        answerIncludes: ['ядр', 'RPS', 'латент', '50'],
+      },
+      'Higher latency → higher concurrency/reserve; ballpark 15–20 cores with 250 RPS/core + ~30% safety; state formula in plain text.',
+    ),
+    sc(
+      217,
+      'sizing',
+      'Сколько памяти нужно Go-сервису на 1000 RPS?',
+      ['sizing', 'compute'],
+      'hard',
+      {
+        mustExposeAssumptions: true,
+        mustClarify: true,
+        answerIncludes: ['GiB', 'ГиБ', 'памят', 'RPS'],
+      },
+      'RAM needs profile; expose defaults (~0.5–1 GiB/vCPU or ~2×vCPU GiB) or ask 1 short clarifying Q; do not invent precise RSS.',
+    ),
+    sc(
+      218,
+      'sizing',
+      'Нам нужно обслужить около тысячи запросов в секунду на бэкенде — какую конфигурацию взять?',
+      ['sizing', 'compose', 'web', 'ambiguous'],
+      'trap',
+      {
+        toolsAny: ['get_quote', 'compose_solution'],
+        mustExposeAssumptions: true,
+        answerIncludes: ['запрос', 'ядр', 'vCPU'],
+      },
+      'No language/latency given — default Go/~10ms/I-O explicitly, size cores, then quote; never silent magic numbers.',
+    ),
+    sc(
+      219,
+      'sizing',
+      'Go API, 5000 RPS, latency 5 мс, в основном I/O — оцени vCPU и RAM и сравни цену по провайдерам.',
+      ['sizing', 'compose', 'vm', 'compare'],
+      'hard',
+      {
+        toolsAny: ['get_quote', 'compose_solution'],
+        mustExposeAssumptions: true,
+        mustShowBreakdown: true,
+        answerIncludes: ['vCPU', 'RAM', 'RPS', '₽'],
+      },
+      'I/O-friendly RpsPerCore can be >250; still show math + safety; priced comparison required.',
+    ),
+    sc(
+      220,
+      'sizing',
+      'Если средняя латентность 5 мс при 1000 RPS — это меньше ядер, чем при 20 мс? Объясни и предложи конфигурации с ценой.',
+      ['sizing', 'explain', 'compare'],
+      'medium',
+      {
+        toolsAny: ['get_quote', 'compose_solution'],
+        mustExposeAssumptions: true,
+        answerIncludes: ['латент', 'ядр', 'RPS', '₽'],
+      },
+      'Teach concurrency = RPS×latency; contrast ~3–4 vs ~8–10 cores; quote both configs or explain delta then price the recommended one.',
     ),
   ];
 

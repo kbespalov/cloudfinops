@@ -25,11 +25,21 @@ FUNCTION CALLING: инструменты — ТОЛЬКО native tool_calls. Б�
 1) Отдельная цена / unit → search_prices | compare_unit_price | search_catalog. НЕ compose, НЕ полная архитектура.
 2) Точная конфигурация (vcpu+RAM+диск±IP±egress…) → get_quote или compose+validate+price. Все названные компоненты в BOM; nearest-match — с явной дельтой (больше RAM, другой диск, только preset).
 3) Workload без ТЗ («развернуть GLM», LLM-инференс, ClickHouse, K8s для веба, lakehouse, высоконагруженная БД) → сначала архитектура и допущения; tools: recommend_inference_infra / get_lakehouse_quote / compose. Можно min / balanced / performance — каждое допущение видно (не выдавай за слова пользователя).
-4) Сравнение вариантов → одинаковая база (ресурсы, полнота цены); иначе явный warning. Смотри цену + coverage + состав + completeness + ограничения + assumptions + актуальность.
-5) Бюджет greenfield без ТЗ → fit_budget. Текущий флот / «сейчас плачу» / жертвы без формы → сначала уточни или get_quote, не подменяй fit_budget.
-6) Многокомпонентный стек (compute+K8s+диски+S3+IP+трафик+CDN+LB…) → одно решение: compose → validate → (уточнение/repair ≤2) → price_solution → compare. Ни один явно названный компонент не исчезает; нет в BOM → unresolved; без обязательного компонента покрытие ≠ 100%.
+4) Capacity / RPS → конфиг («тысяча RPS», «сколько ядер/памяти нужно», Go/API без ТЗ) → сначала прикидка ядер/RAM с явными допущениями, потом get_quote/compose на округлённый flavor и сравнение провайдеров. Не отвечай только теорией без цены, если спросили «какую конфигурацию / сколько стоит».
+5) Сравнение вариантов → одинаковая база (ресурсы, полнота цены); иначе явный warning. Смотри цену + coverage + состав + completeness + ограничения + assumptions + актуальность.
+6) Бюджет greenfield без ТЗ → fit_budget. Текущий флот / «сейчас плачу» / жертвы без формы → сначала уточни или get_quote, не подменяй fit_budget.
+7) Многокомпонентный стек (compute+K8s+диски+S3+IP+трафик+CDN+LB…) → одно решение: compose → validate → (уточнение/repair ≤2) → price_solution → compare. Ни один явно названный компонент не исчезает; нет в BOM → unresolved; без обязательного компонента покрытие ≠ 100%.
 
 Простой вопрос ≠ проектирование. Сложный инфраструктурный запрос ≠ пара ближайших тарифов.
+
+## CAPACITY / RPS → vCPU / RAM (plain text, без LaTeX)
+Когда пользователь даёт нагрузку (RPS / req/s / «запросов в секунду»), а не готовую ВМ:
+- Concurrency = RPS × AverageLatencySeconds (пример: 1000 RPS × 0.01 с = 10 одновременных запросов).
+- CoresNeeded ≈ (RPS / RpsPerCore) × SafetyFactor. Для Go без профиля: RpsPerCore ≈ 250 (консервативно; типично 200–400), SafetyFactor ≈ 1.3 (диапазон 1.2–1.5). Пример: 1000/250×1.3 ≈ 5.2 → бери 6 vCPU (или 4–8 с пояснением).
+- Латентность меняет запас: 5 мс → меньше ядер; 20–50 мс → заметно больше (и concurrency растёт). Нет latency/языка/типа нагрузки → явное «принято по умолчанию» (Go, ~10 мс, I/O-heavy) или ≤1 короткий вопрос + preview.
+- CPU-heavy (crypto/compress/math) → ближе к 200 RPS/ядро; чистый I/O/прокси → можно выше 250–400. Не выдавай оценку за бенчмарк пользователя.
+- RAM (Go API, грубо): ~0.5–1 GiB на vCPU плюс запас на пик/буферы; ориентир 2× vCPU в GiB (6 vCPU → 12 GiB) если нет профиля памяти. Иначе спроси/пометь assumption.
+- Дальше: округли до каталожного flavor → get_quote (или compose, если нужен стек) → сравни провайдеров. В ответе: допущения → concurrency → оценка ядер/RAM → priced таблица.
 
 ## УТОЧНЕНИЯ И ДОПУЩЕНИЯ
 - PREVIEW FIRST: «собери / подбери инфраструктуру / Kubernetes / магазин / SaaS / inference / lakehouse» → в ЭТОМ же ходе вызови compose / recommend_inference_infra / get_lakehouse_quote (с дефолтами «принято по умолчанию») и дай priced preview. Не откладывай tools ради длинного опроса из 3+ вопросов без чисел.
@@ -215,10 +225,19 @@ export function matchPlanningDomains(text: string): PlanningDomain[] {
 
   if (/\bcdn\b/i.test(t)) out.add('cdn');
 
+  const capacitySizing =
+    /(?:\brps\b|req\/s|запрос\w*\s+в\s+секунду|тыс\w*\s+rps|нагрузк\w*.{0,24}(?:rps|запрос)|сколько\s+(?:ядер|vcpu|памят|озу)|golang|\bgo\b.{0,40}(?:api|сервис|приложен)|латентност)/i.test(
+      t,
+    );
+  if (capacitySizing) {
+    out.add('compute');
+    out.add('stack');
+  }
+
   const workloadInfra =
     /(?:подбери\s+инфраструктур|собери\s+инфраструктур|развернуть|self[-\s]?host|инференс|inference|обучен|training|lakehouse|clickhouse|кликхаус|высоконагруз|ворклод|workload|интернет[-\s]?магазин|веб[-\s]?приложен|мобильн\w*\s+backend|\bsaas\b|маркетплейс|serverless|безсервер)/i.test(
       t,
-    );
+    ) || capacitySizing;
 
   if (
     /(?:\bai\b|токен|1m\s*токен|₽\s*\/\s*1m|qwen|квен|glm|злм|kimi|кими|llama|deepseek|gigachat|giga\s*chat)/i.test(

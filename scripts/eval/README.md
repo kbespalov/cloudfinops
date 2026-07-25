@@ -3,7 +3,7 @@
 Два слоя:
 
 1. **Grounded bench** (`questions.ts` + `eval:bench`) — жёсткий gold из каталожных tools, `pass/fail` по cheapest / no-halluc.
-2. **Soft UX scenarios** (`user-scenarios.ts` + `eval:scenarios`) — корпус естественных запросов (сейчас 209) с мягкими рубриками (score/signals). **Не** vitest и **не** frozen prices.
+2. **Soft UX scenarios** (`user-scenarios.ts` + `eval:scenarios`) — корпус естественных запросов (сейчас 220) с мягкими рубриками (score/signals). **Не** vitest и **не** frozen prices.
 
 ## Файлы
 
@@ -82,7 +82,7 @@ npm run eval:smoke          # homepage chips + latency budget
 npx tsx scripts/eval/smoke.ts --suite
 ```
 
-## Soft UX scenarios (209)
+## Soft UX scenarios (220)
 
 Корпус разговорных/архитектурных/конфликтных запросов. Ожидания — **сигналы** (tools, clarify, refuse/partial, breakdown, forbiddenExtras, optional live `catalogAnchor`), а не зашитая цена в датасете.
 
@@ -105,7 +105,8 @@ npm run eval:scenarios -- --limit 5 --no-fast-path --label smoke-ux
 # Секция / выбранные id
 npm run eval:scenarios -- --section kubernetes --no-fast-path --label ux-k8s
 npm run eval:scenarios -- --section sku-compare --no-fast-path --label ux-sku
-npm run eval:scenarios -- --ids ux-001,ux-050,ux-201,ux-206 --no-fast-path
+npm run eval:scenarios -- --section sizing --no-fast-path --label ux-sizing
+npm run eval:scenarios -- --ids ux-001,ux-050,ux-201,ux-206,ux-214 --no-fast-path
 
 # Кросс-валидация двух прогонов (согласованность signals, не дословный текст)
 npm run eval:scenarios -- --compare \
@@ -121,6 +122,18 @@ npm run eval:scenarios -- --compare \
 - `signals.catalog` — live cheapest/hallucination из tools; **не** golden в git.
 - Revise-кейсы (`ux-191`…`ux-200`) сначала гоняют `seedId`, затем follow-up с `history`.
 - Platform/SKU compare (`ux-201`…`ux-208`): Ice Lake ≠ S3 Ice, nearest preemptible analogs, non-empty tables.
-- Unit price (`ux-209`): Cloud.ru vCPU via `derivedFromFlavors` with `*` / оценка — не «нет в каталоге».
+- Unit price (`ux-209`…`ux-213`): Cloud.ru via `derivedFromFlavors` with `*` / оценка — не «нет в каталоге».
+  - `ux-211` — полная таблица min 1 vCPU + разброс (все 6, Cloud.ru*)
+  - `ux-212` — то же для 1 GiB RAM (инверсия: T1 floor / Selectel dear)
+  - `ux-213` — ядро + память вместе, по-человечески (разброс, не tool-dump)
+- Budget (`ux-210`): ~10k ₽/мес max resources+util; Cloud.ru quoted but often outside util top-6 — surface via `valuePick` (cheaper same vCPU), not «нет в каталоге».
+- Capacity sizing (`ux-214`…`ux-220`): RPS/latency → concurrency → vCPU/RAM assumptions → get_quote/compose. Plain-text formulas (no LaTeX). Go defaults ~250 RPS/core × 1.3 safety.
+  - `ux-214` — 1000 RPS Go → how many cores
+  - `ux-215` — 1000 RPS @ 10 ms → VM + provider prices
+  - `ux-216` — 1000 RPS @ 50 ms → higher core ballpark
+  - `ux-217` — RAM for Go @ 1000 RPS (clarify/assume)
+  - `ux-218` — «тысяча запросов/с» without language/latency (trap)
+  - `ux-219` — 5000 RPS I/O-heavy + priced compare
+  - `ux-220` — 5 ms vs 20 ms latency teaching + configs
 
 Эти soft-кейсы **не** добавляются в `npm test` / vitest.
