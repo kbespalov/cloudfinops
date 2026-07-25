@@ -22,21 +22,27 @@
 }
 
 .familyGroup {
-  width: 100%;
-  max-width: 100%;
-  /* Prefer fitting labels; scroll only if the form column is unusually narrow. */
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.familyGroup::-webkit-scrollbar {
-  display: none;
+  /* Content-sized control — width=max + Gravity overflow:hidden was clipping the last chip (GPU). */
+  width: max-content;
+  max-width: none;
+  overflow: visible;
 }
 
 .familyDesktop {
   display: block;
   width: 100%;
   min-width: 0;
+  /* Scroll the wrapper if RU labels don't fit; keep last option border visible. */
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  padding-block: 1px;
+  padding-inline-end: 1px;
+}
+
+.familyDesktop::-webkit-scrollbar {
+  display: none;
 }
 
 .familyMobile {
@@ -84,10 +90,12 @@
   color: var(--g-color-text-brand);
 }
 
-/* Content-sized segments (not equal-width): long RU labels must not ellipsis.
- * Gravity width=max forces overflow:hidden + text-overflow:ellipsis — override. */
+/* Content-sized segments: do not shrink/ellipsis long RU labels (esp. last “GPU”).
+ * Beat Gravity width_auto/max rules that set overflow:hidden on options. */
+.familyGroup:global(.g-segmented-radio-group_width_auto) :global(.g-segmented-radio-group__option),
+.familyGroup:global(.g-segmented-radio-group_width_max) :global(.g-segmented-radio-group__option),
 .familyGroup :global(.g-segmented-radio-group__option) {
-  flex: 1 0 auto;
+  flex: 0 0 auto;
   min-width: max-content;
   overflow: visible;
   display: flex;
@@ -95,6 +103,8 @@
   justify-content: center;
 }
 
+.familyGroup:global(.g-segmented-radio-group_width_auto) :global(.g-segmented-radio-group__option-text),
+.familyGroup:global(.g-segmented-radio-group_width_max) :global(.g-segmented-radio-group__option-text),
 .familyGroup :global(.g-segmented-radio-group__option-text) {
   display: inline-flex !important;
   align-items: center;
@@ -103,7 +113,7 @@
   max-width: none;
   height: 100%;
   margin: 0;
-  padding: 0 6px;
+  padding: 0 10px;
   box-sizing: border-box;
   overflow: visible;
   text-overflow: clip;

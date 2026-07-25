@@ -144,11 +144,21 @@ function presetFromMeter(meter: CatalogMeter, shapeSource: string): GpuPreset | 
   const key = shapeKeyFromMeter(meter);
   if (!key) return null;
 
+  const bootDisk = finiteDim(meter.dimensions.bootDiskGb);
+  const dataDisk = finiteDim(meter.dimensions.dataDiskGb);
+  const dedicatedDiskSum = (bootDisk ?? 0) + (dataDisk ?? 0);
+  const dedicatedDiskGiB = dedicatedDiskSum > 0 ? dedicatedDiskSum : undefined;
+  const diskGiB = dedicated ? dedicatedDiskGiB : 100;
+
   const highlight = family === 'B300' || dedicated;
+  const hostSpec =
+    vcpu != null && ramGiB != null ? `${vcpu} vCPU · ${ramGiB} GiB` : null;
   const subtitle = dedicated
-    ? `Выделенный узел · ${shapeSource}`
-    : vcpu != null && ramGiB != null
-      ? `Flavor · ${vcpu} vCPU · ${ramGiB} GiB · источник ${shapeSource}`
+    ? hostSpec
+      ? `Выделенный узел · ${hostSpec} · ${shapeSource}`
+      : `Выделенный узел · ${shapeSource}`
+    : hostSpec
+      ? `Flavor · ${hostSpec} · источник ${shapeSource}`
       : `GPU unit · источник ${shapeSource}`;
 
   return {
@@ -160,7 +170,7 @@ function presetFromMeter(meter: CatalogMeter, shapeSource: string): GpuPreset | 
     gpuCount: count,
     vcpu,
     ramGiB,
-    diskGiB: dedicated ? undefined : 100,
+    diskGiB,
     shapeSource,
     shapeKey: key,
     highlight,

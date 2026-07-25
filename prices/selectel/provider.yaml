@@ -82,6 +82,15 @@ spec:
     - storage.object.requests
     - network.traffic.ingress
     - network.traffic.egress
+  - id: selectel.gpu-landing
+    title: Аренда серверов с GPU (HGX B300 и др.)
+    url: https://selectel.ru/services/gpu/
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - compute.gpu
+    - compute.flavor
   - id: selectel.fmc
     title: Foundation Models Catalog
     url: https://selectel.ru/services/cloud/foundation-models-catalog/

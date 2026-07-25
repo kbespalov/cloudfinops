@@ -97,7 +97,9 @@ export function GpuPresetGrid({presets, period, activePresetId, onSelect}: Props
           const ram = preset.ramGiB != null ? formatGiBCapacity(preset.ramGiB) : '—';
           const disk =
             preset.diskGiB != null
-              ? `${preset.diskGiB} SSD`
+              ? preset.dedicated
+                ? `${formatGiBCapacity(preset.diskGiB)} NVMe`
+                : `${preset.diskGiB} SSD`
               : preset.dedicated
                 ? 'dedicated'
                 : '—';

@@ -476,16 +476,27 @@ spec:
     pricingMode: bundle
     region: Санкт-Петербург
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-25'
     sourceRefs:
     - selectel.prices
+    - selectel.gpu-landing
     dimensions:
       gpuModel: NVIDIA B300
       gpuCount: 8
       gpuMemoryGb: 288
+      vramGb: 288
+      # Host from Selectel public GPU page (GL8-B300-HGX-25GE / HGX B300 cluster).
+      # 128 = physical cores (2× Intel Xeon 6767P); catalog field is vcpu for parity with GPU flavors.
+      vcpu: 128
+      ramGb: 2048
+      ramGiB: 2048
+      cpuPlatformNative: 2× Intel Xeon 6767P 2.4 GHz (128 cores)
       nativeSku: GL8-B300-HGX-25GE
       deployment: dedicated
       purchaseModel: reserved-monthly
+      # Boot + data NVMe from the same public config table (not billed as cloud SSD unit).
+      bootDiskGb: 1000
+      dataDiskGb: 15360
     pricing:
       rate:
         amount: '8000000'
@@ -504,8 +515,10 @@ spec:
         formula: published dedicated monthly rate
         vat: included
     notes: >
-      Выделенный сервер (не облачная GPU-ВМ): конфигурация GL8-B300-HGX-25GE —
-      8×B300, 8 000 000 ₽/мес по публичному прайсу Selectel.
+      Выделенный сервер (не облачная GPU-ВМ): GL8-B300-HGX-25GE —
+      8×B300 288GB, 2×Intel Xeon 6767P (128 ядер), 2048 ГБ DDR5,
+      1×1000 ГБ + 2×7680 ГБ NVMe. 8 000 000 ₽/мес по публичному прайсу Selectel.
+      Спека хоста: selectel.ru/services/gpu/ (таблица HGX B300).
 
   # ---------------------------------------------------------------------------
   # Synthetic full-node quotes matching VK Cloud H200 hosts (catalog compare).

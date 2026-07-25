@@ -448,7 +448,7 @@ export function VmCalculatorPanel({
             <div className={styles.familyDesktop}>
               <SegmentedRadioGroup
                 size="l"
-                width="max"
+                width="auto"
                 className={styles.familyGroup}
                 value={mode}
                 onUpdate={(v) => applyMode(v as VmMode)}
@@ -537,7 +537,9 @@ export function VmCalculatorPanel({
                   </Text>
                   <Text variant="subheader-2">
                     {activeGpu?.diskGiB != null
-                      ? `${activeGpu.diskGiB} GiB SSD`
+                      ? activeGpu.dedicated
+                        ? `${formatGiBCapacity(activeGpu.diskGiB)} NVMe`
+                        : `${activeGpu.diskGiB} GiB SSD`
                       : activeGpu?.dedicated
                         ? 'dedicated'
                         : '—'}

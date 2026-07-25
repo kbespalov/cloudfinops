@@ -457,8 +457,6 @@ export function CalculatorSidebar({
           ) : null}
         </div>
 
-        <div className={styles.divider} />
-
         {(() => {
           const skipKeys = new Set<string>();
           if (selectedKey) skipKeys.add(selectedKey);

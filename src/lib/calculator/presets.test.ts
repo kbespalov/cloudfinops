@@ -70,6 +70,8 @@ describe('calculator presets', () => {
     assert.ok(b300, 'Selectel B300 must be present');
     assert.ok(b300.dedicated);
     assert.ok(b300.highlight);
+    assert.equal(b300.vcpu, 128, 'Selectel HGX B300 host cores');
+    assert.equal(b300.ramGiB, 2048, 'Selectel HGX B300 host RAM');
     const selectelFlavors = all.filter((p) => p.shapeSource === 'selectel' && p.vcpu != null);
     assert.ok(selectelFlavors.length >= 40, `expected Selectel GPU Line shapes, got ${selectelFlavors.length}`);
     assert.ok(
