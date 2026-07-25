@@ -1,5 +1,5 @@
 .seo {
-  max-width: 1200px;
+  max-width: var(--cf-page-max);
   margin: 0 auto;
   padding: 4px 24px 40px;
   display: flex;

@@ -1,10 +1,15 @@
 /* next/font Inter → Gravity sans token (overrides uikit default family name). */
-:root,
-.g-root {
-  --g-font-family-sans: var(--font-inter), 'Helvetica Neue', Arial, Helvetica, sans-serif;
+:root {
+  /* Shared product column (header + catalog/chat/calculator/…). */
+  --cf-page-max: 1200px;
   /* Chat / keyboard: visualViewport sync (ChatPage). Fallback = dynamic viewport. */
   --cf-vv-height: 100dvh;
   --cf-vv-offset-top: 0px;
+}
+
+:root,
+.g-root {
+  --g-font-family-sans: var(--font-inter), 'Helvetica Neue', Arial, Helvetica, sans-serif;
 }
 
 html,
@@ -13,6 +18,49 @@ body {
   min-height: 100%;
   background: var(--g-color-base-background);
   color: var(--g-color-text-primary);
+}
+
+/*
+ * Large external monitors only: mild whole-UI scale (fonts, controls, spacing)
+ * + slightly wider column. Gravity UI is mostly px-based, so root font-size
+ * alone would not enlarge chrome — CSS zoom matches a soft browser zoom.
+ *
+ * Intentionally above typical MacBook CSS widths (~1440–1728) and far above
+ * mobile. pointer:fine avoids tablets / touch-first devices.
+ */
+@media (min-width: 1800px) and (pointer: fine) {
+  :root {
+    --cf-page-max: 1400px;
+  }
+
+  html {
+    zoom: 1.12;
+  }
+}
+
+@media (min-width: 2400px) and (pointer: fine) {
+  :root {
+    --cf-page-max: 1520px;
+  }
+
+  html {
+    zoom: 1.2;
+  }
+}
+
+/* Fallback when CSS zoom is unavailable: enlarge rem-based type/spacing only. */
+@supports not (zoom: 1) {
+  @media (min-width: 1800px) and (pointer: fine) {
+    html {
+      font-size: 112.5%;
+    }
+  }
+
+  @media (min-width: 2400px) and (pointer: fine) {
+    html {
+      font-size: 120%;
+    }
+  }
 }
 
 * {

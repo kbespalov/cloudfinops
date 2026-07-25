@@ -9,7 +9,7 @@
 
 .inner {
   /* Match CatalogPage / NewsPage content column so CF brand lines up with the table. */
-  max-width: 1200px;
+  max-width: var(--cf-page-max);
   margin: 0 auto;
   padding: 12px 24px;
   width: 100%;
