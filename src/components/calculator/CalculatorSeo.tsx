@@ -25,31 +25,43 @@ const GPU_CARDS = [
   {
     id: 'b300',
     title: 'NVIDIA B300',
+    href: '/gpu/b300',
     text: 'Выделенный 8×B300 288GB (Selectel) — калькулятор показывает bundle dedicated-узла, не облачную GPU-ВМ.',
   },
   {
     id: 'h100',
     title: 'NVIDIA H100 80GB',
+    href: '/gpu/h100',
     text: '1× и 8× H100 PCIe/NVLink: сравнение Cloud.ru flavor и сборки GPU + host у Selectel / T1 / других.',
   },
   {
     id: 'h200',
     title: 'NVIDIA H200 141GB',
+    href: '/gpu/h200',
     text: '1× и 8× H200 под крупные MoE и длинный контекст — минимальная цена в каталоге по публичным тарифам РФ.',
   },
   {
     id: 'a100',
     title: 'NVIDIA A100 80GB',
+    href: '/gpu/a100',
     text: 'Классика датацентрового инференса и обучения; flavor и unit-цены в одном сравнении.',
+  },
+  {
+    id: 'l40s',
+    title: 'NVIDIA L40S',
+    href: '/gpu/l40s',
+    text: 'Ada mid-range для inference и графики: отдельный facet от L4, ступень к A100/H100 по бюджету.',
   },
   {
     id: 'l4',
     title: 'NVIDIA L4 24GB',
+    href: '/gpu/l4',
     text: 'Экономичный inference / embedding; часто дешевле H100 при подходящем размере модели.',
   },
   {
     id: 'v100',
     title: 'NVIDIA V100 32GB',
+    href: '/catalog?category=gpu&gpu=v100',
     text: 'Legacy-карта в каталоге — полезно для оценки миграции со старых кластеров.',
   },
 ] as const;
@@ -110,7 +122,10 @@ export function VmCalculatorSeo({
       <ul className={styles.list}>
         {GPU_CARDS.map((card) => (
           <li key={card.id}>
-            <strong>{card.title}</strong> — {card.text}
+            <a href={card.href}>
+              <strong>{card.title}</strong>
+            </a>{' '}
+            — {card.text}
           </li>
         ))}
       </ul>
@@ -243,7 +258,10 @@ export function SelfHostCalculatorSeo() {
       <ul className={styles.list}>
         {GPU_CARDS.map((card) => (
           <li key={card.id}>
-            <strong>{card.title}</strong> — {card.text}
+            <a href={card.href}>
+              <strong>{card.title}</strong>
+            </a>{' '}
+            — {card.text}
           </li>
         ))}
       </ul>

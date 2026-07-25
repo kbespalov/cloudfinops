@@ -7,7 +7,7 @@ import {
   BookOpen,
   Calculator,
   CircleInfo,
-  Code,
+  Gpu,
   LogoTelegram,
   Moon,
   Sparkles,
@@ -33,9 +33,9 @@ type NavItem = {
 const NAV: NavItem[] = [
   {href: '/chat', label: 'AI-ассистент', icon: Sparkles, accent: true},
   {href: '/catalog', label: 'Каталог SKU', icon: SquareListUl},
+  {href: '/gpu', label: 'GPU', icon: Gpu},
   {href: '/calculator', label: 'Калькулятор', icon: Calculator},
   {href: '/news', label: 'Новости', icon: BookOpen},
-  {href: '/api', label: 'API', icon: Code, badge: 'planned'},
   {href: '/about', label: 'О нас', icon: CircleInfo},
   {
     href: 'https://t.me/cloudfinopsru',
@@ -181,6 +181,7 @@ export function AppHeader() {
           <Button
             view="flat"
             size="l"
+            className={styles.themeButton}
             aria-label={theme === 'light' ? 'Включить тёмную тему' : 'Включить светлую тему'}
             onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
           >
