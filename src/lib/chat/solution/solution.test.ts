@@ -124,6 +124,29 @@ describe('compose_solution', () => {
     assert.match(result.note, /price_solution/);
   });
 
+  it('VM system disk with diskMedia=hdd prices HDD (not silent NVMe)', () => {
+    const result = composeSolution({
+      solutionType: 'virtual_machine',
+      requirements: {
+        vcpu: 8,
+        ramGiB: 32,
+        diskGiB: 100,
+        diskMedia: 'hdd',
+        publicIpCount: 1,
+      },
+      strategy: 'cheapest',
+      maxSolutions: 6,
+    });
+    assert.ok(result.solutions.length >= 1);
+    const withDisk = result.solutions.find((s) =>
+      s.components.some((c) => c.role === 'block_storage'),
+    );
+    assert.ok(withDisk, 'expected at least one provider with a block disk line');
+    const disk = withDisk!.components.find((c) => c.role === 'block_storage')!;
+    assert.match(disk.title, /HDD/i);
+    assert.doesNotMatch(disk.title, /NVMe/i);
+  });
+
   it('kubernetes recipe respects policy: S3 only if requested; egress unresolved otherwise', () => {
     assert.equal(KUBERNETES_RECIPE_POLICY.objectStorage, 'only_if_requested');
     const withS3 = composeSolution({
@@ -301,6 +324,30 @@ describe('validate_solution', () => {
     assert.ok(sol.components.some((c) => c.role === 'block_storage'));
     assert.ok(sol.components.some((c) => c.role === 'public_ip'));
     assert.ok(sol.components.some((c) => c.role === 'internet_egress'));
+  });
+
+  it('HA / availability with a single explicit worker → needs_clarification', () => {
+    const composed = composeSolution({
+      solutionType: 'kubernetes',
+      strategy: 'availability',
+      requirements: {
+        workerCount: 1,
+        workerVcpu: 4,
+        workerRamGiB: 16,
+        k8sTier: 'ha',
+      },
+      maxSolutions: 1,
+    });
+    const sol = composed.solutions[0];
+    assert.ok(sol);
+    const report = validateSolution({
+      solution: sol,
+      requirements: composed.requirementSpec,
+      validationLevel: 'full',
+    });
+    assert.equal(report.status, 'needs_clarification');
+    assert.ok(report.issues.some((i) => i.code === 'HA_INSUFFICIENT_WORKERS'));
+    assert.ok(report.coverage < 1 || report.valid === false);
   });
 
   it('rejects LLM-only k8s_master+k8s_worker BOM when quantities require more', () => {

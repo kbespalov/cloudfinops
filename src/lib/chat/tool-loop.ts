@@ -20,6 +20,32 @@ import {chatCompletion, type ChatMessage} from './gigachat';
 import {resolveToolCalls, sanitizeUserFacingAnswer} from './tool-call-recovery';
 import {CHAT_TOOLS, runTool} from './tools';
 
+/**
+ * Agent-path guard: if the model answers with prose and zero tools on a
+ * catalog/compose question, retry once with tool_choice=required.
+ * This is NOT a fast-path — the LLM still chooses which tool and args.
+ */
+export function shouldForceToolRound(userText: string): boolean {
+  const t = userText.trim();
+  if (!t) return false;
+  // Meta / explainability without a concrete BOM to price — allow clarify-only.
+  if (
+    /(?:почему\s+рекоменд|какие\s+допущен|какие\s+части\s+решения|не\s+посчитал\s+ли|покажи\s+100\s*%|насколько\s+актуальн|есть\s+ли\s+в\s+решении\s+компонент)/i.test(
+      t,
+    ) &&
+    !/(?:собери|подбери|посчитай|сравни\s+(?:цен|вм|gpu|провайд))/i.test(t)
+  ) {
+    return false;
+  }
+  if (looksMultiComponentStack(t)) return true;
+  return /(?:подбери\s+инфраструктур|собери\s+(?:инфраструктур|kubernetes|кубер|кластер|решени)|сравни.{0,64}(?:managed|self|clickhouse|serverless|gpu|nvlink|kubernetes|кубер|готовую|card-only)|lakehouse|clickhouse|кликхаус|инференс|inference|синтетическ|без\s+синтетическ|актуальн\w*\s+цен|infiniband|nat\s*gateway|serverless|три\s+среды|production.{0,20}staging)/i.test(
+    t,
+  );
+}
+
+const FORCE_TOOLS_NUDGE =
+  'Для этого вопроса сначала вызови подходящий инструмент (compose_solution / get_quote / search_prices / get_lakehouse_quote / recommend_inference_infra / search_catalog). Не отвечай без данных из tool results.';
+
 async function finalizeStackWithLlm(
   messages: ChatMessage[],
   signal?: AbortSignal,
@@ -56,7 +82,7 @@ const REQUIRED_RETRY_NUDGE =
   'Вызови нужный инструмент через нативный function calling (tool_calls). Не пиши план вызова и JSON аргументов в тексте.';
 
 const EMPTY_AFTER_TOOLS_NUDGE =
-  'Данные инструментов уже в истории. Дай пользователю полный ответ на русском: markdown-таблица и вывод. Без вызова инструментов и без пустого ответа.';
+  'Данные инструментов уже в истории. Дай пользователю полный ответ на русском: markdown-таблица и вывод. Если бюджет/требования нереалистичны или SKU нет в каталоге — явно скажи «невозможно / не укладывается / в каталоге нет / частичное покрытие». Без вызова инструментов и без пустого ответа.';
 
 const EMPTY_AFTER_STACK_NUDGE =
   'Данные инструментов уже в истории. Собери ОДНУ итоговую таблицу по провайдерам: отдельная колонка на каждый запрошенный компонент (ВМ, IP, S3/Object Storage, CDN, K8s…) плюс «Итого» и «к минимуму» по сумме. Цифры только из tool results (quotes / volumeEstimates / rows). НДС вкл., месяц=720ч. Без новых tool calls и без пустого ответа.';
@@ -96,9 +122,10 @@ export async function runToolLoop(options: {
   let finalText: string | null = null;
   let requiredRetryUsed = false;
   let emptyAfterToolsNudgeUsed = false;
+  let forceToolsUsed = false;
 
   for (let round = 0; round < options.maxRounds; round++) {
-    const reply = await chatCompletion(messages, tools, {
+    let reply = await chatCompletion(messages, tools, {
       signal: options.signal,
       toolChoice: 'auto',
     });
@@ -113,11 +140,11 @@ export async function runToolLoop(options: {
         action: 'retry_required',
         preview: resolved.leakedContent.slice(0, 200),
       });
-      const retry = await chatCompletion(messages, tools, {
+      reply = await chatCompletion(messages, tools, {
         signal: options.signal,
         toolChoice: 'required',
       });
-      resolved = resolveToolCalls(retry);
+      resolved = resolveToolCalls(reply);
     }
 
     if (resolved.kind === 'leak_unrecoverable') {
@@ -135,12 +162,32 @@ export async function runToolLoop(options: {
 
     if (resolved.kind === 'final') {
       const text = (resolved.text ?? '').trim();
-      if (text) {
+      // Prose-only on a catalog/compose ask → one forced tool round (LLM still picks the tool).
+      if (
+        text &&
+        toolCallsTotal === 0 &&
+        !forceToolsUsed &&
+        shouldForceToolRound(lastUserQuestion(messages))
+      ) {
+        forceToolsUsed = true;
+        messages.push({role: 'assistant', content: text});
+        messages.push({role: 'user', content: FORCE_TOOLS_NUDGE});
+        reply = await chatCompletion(messages, tools, {
+          signal: options.signal,
+          toolChoice: 'required',
+        });
+        resolved = resolveToolCalls(reply);
+        if (resolved.kind === 'final') {
+          const forcedText = (resolved.text ?? '').trim();
+          finalText = sanitizeUserFacingAnswer(forcedText || text);
+          break;
+        }
+        // kind === 'tools' → fall through to tool execution below
+      } else if (text) {
         finalText = sanitizeUserFacingAnswer(text);
         break;
-      }
-      // Empty content after tools — single-SKU table short-circuit, else LLM (+ stack digest).
-      if (toolCallsTotal > 0 && !emptyAfterToolsNudgeUsed) {
+      } else if (toolCallsTotal > 0 && !emptyAfterToolsNudgeUsed) {
+        // Empty content after tools — single-SKU table short-circuit, else LLM (+ stack digest).
         const formatted = tryDeterministicAfterTools(messages);
         if (formatted) {
           finalText = sanitizeUserFacingAnswer(formatted);
@@ -166,8 +213,14 @@ export async function runToolLoop(options: {
           finalText = sanitizeUserFacingAnswer(forcedText);
         }
         break;
+      } else {
+        finalText = null;
+        break;
       }
-      finalText = null;
+    }
+
+    if (resolved.kind !== 'tools') {
+      finalText = finalText ?? null;
       break;
     }
 
@@ -217,7 +270,13 @@ export async function runToolLoop(options: {
 
     // One complete structured tool → skip planning another round + final LLM.
     // Multi-SKU stacks never short-circuit here (looksMultiComponentStack → null).
-    if (toolCalls.length === 1) {
+    // search_catalog alone is discovery — keep the agent loop when the ask needs pricing/compose.
+    const onlyCatalog =
+      toolCalls.length === 1 && toolCalls[0]!.function.name === 'search_catalog';
+    if (
+      toolCalls.length === 1 &&
+      !(onlyCatalog && shouldForceToolRound(lastUserQuestion(messages)))
+    ) {
       const formatted = tryFormatAgentToolAnswer({
         userText: lastUserQuestion(messages),
         toolPayloads: toolResults.map(({call, result}) => ({

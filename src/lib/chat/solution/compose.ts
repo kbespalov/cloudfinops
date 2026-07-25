@@ -168,6 +168,7 @@ export function buildPresetFromRequirements(req: RequirementSpec | Record<string
 
   const resolvedVcpu = spec.constraints.minVcpu ?? 1;
   const resolvedRam = spec.constraints.minRamGiB ?? resolvedVcpu * 4;
+  const media = spec.constraints.storage?.media;
   const preset: ComputePreset = {
     id: `compose-compute-${resolvedVcpu}-${resolvedRam}`,
     kind: 'compute',
@@ -177,6 +178,11 @@ export function buildPresetFromRequirements(req: RequirementSpec | Record<string
     vcpu: resolvedVcpu,
     ramGiB: resolvedRam,
     diskGiB,
+    // Quote path already supports HDD strict pick; without this, modular compute
+    // silently prices NVMe/SSD even when the user asked for HDD.
+    ...(media === 'hdd' ? {diskMedia: 'hdd' as const} : {}),
+    ...(media === 'nvme' ? {preferNvme: true} : {}),
+    ...(media === 'ssd' ? {diskMedia: 'ssd' as const} : {}),
   };
   return {preset, assumedHost: null, assumptions};
 }

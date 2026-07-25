@@ -53,7 +53,7 @@ export const FAST_PATH_FINAL_SYSTEM = `Ты — AI-ассистент Cloud FinO
 - Для S3 volumeEstimates — итог за месяц; операции/egress не включай, если не просили.
 - Для compare_unit_price(ssd) при запросе объёма умножь ₽/GiB·мес на объём (55 ТБ → 56320 GiB) и покажи итог. Учитывай diskMedia: NVMe ≠ SSD; в таблице указывай name/sku диска.
 - Для S3 volumeEstimates класс бери из applied.storageClass / volumeEstimates[].storageClass — не называй Ice «Standard».
-- Для AI — input и output отдельно (₽/1M токенов), если оба есть.
+- Для AI — input и output рядом в одной строке модели (₽/1M); не сравнивай output с input через «к минимуму».
 - МУЛЬТИКОМПОНЕНТНЫЙ СТЕК (несколько tool results): одна таблица по провайдерам с колонкой на каждый запрошенный компонент (ВМ, IP, S3, CDN, K8s…) плюс «Итого» и «к минимуму» по итогу. S3/CDN итоги — из volumeEstimates. Не выкидывай компоненты.
 - Без вызова инструментов, без английского плана, без пустого ответа.`;
 
@@ -752,6 +752,574 @@ function formatRub(n: number): string {
   return `${n.toLocaleString('ru-RU', {maximumFractionDigits: 2})} ₽`;
 }
 
+const COMPOSE_ROLE_LABELS: Record<string, string> = {
+  compute: 'ВМ / compute',
+  gpu_compute: 'GPU',
+  k8s_master: 'K8s control plane',
+  k8s_worker: 'K8s worker',
+  block_storage: 'Блочный диск',
+  object_storage: 'Object Storage (S3)',
+  public_ip: 'Публичный IP',
+  internet_egress: 'Исходящий трафик',
+  cdn_egress: 'CDN',
+  load_balancer: 'Балансировщик',
+};
+
+type ComposeComp = {
+  role?: string;
+  title?: string;
+  quantity?: number;
+  estimatedMonthlyCostRub?: number | null;
+  monthlyCostRub?: number | null;
+  configuration?: Record<string, unknown>;
+  synthetic?: boolean;
+};
+
+type ComposeSol = {
+  providerName?: string;
+  provider?: string;
+  monthlyCostRub?: number | null;
+  estimatedMonthlyCostRub?: number | null;
+  requirementsCoverage?: number;
+  coverage?: {score?: number};
+  status?: string;
+  unresolved?: {code?: string; message?: string; role?: string}[] | string[];
+  components?: ComposeComp[];
+};
+
+function composeSolTotal(s: ComposeSol): number | null {
+  const n = s.estimatedMonthlyCostRub ?? s.monthlyCostRub;
+  return typeof n === 'number' && Number.isFinite(n) ? n : null;
+}
+
+function aiTokenDirection(label: string): 'input' | 'output' | null {
+  if (/\binput\b|вход/i.test(label)) return 'input';
+  if (/\boutput\b|выход/i.test(label)) return 'output';
+  return null;
+}
+
+function aiTokenModelBase(name: string): string {
+  return name
+    .replace(/\s*[·•|-]\s*(input|output|вход|выход).*$/i, '')
+    .replace(/\s*\((input|output|вход|выход)\)\s*$/i, '')
+    .trim();
+}
+
+type AiTokenFlat = {
+  provider: string;
+  name: string;
+  month: number;
+  synthetic?: boolean;
+};
+
+/**
+ * Input/output are complementary rates for one model — never rank output as
+ * «+N% к минимуму» against input.
+ */
+export function formatAiTokenPairAnswer(
+  flat: AiTokenFlat[],
+  planId = 'ai',
+): string | null {
+  if (!flat.length) return null;
+
+  type Pair = {
+    provider: string;
+    model: string;
+    input: number | null;
+    output: number | null;
+    synthetic: boolean;
+  };
+  const pairs = new Map<string, Pair>();
+  const unpaired: AiTokenFlat[] = [];
+
+  for (const row of flat) {
+    const dir = aiTokenDirection(row.name);
+    if (!dir) {
+      unpaired.push(row);
+      continue;
+    }
+    const model = aiTokenModelBase(row.name) || row.name;
+    const key = `${row.provider}::${model.toLowerCase()}`;
+    const prev = pairs.get(key) ?? {
+      provider: row.provider,
+      model,
+      input: null,
+      output: null,
+      synthetic: false,
+    };
+    if (dir === 'input') prev.input = row.month;
+    else prev.output = row.month;
+    prev.synthetic = prev.synthetic || Boolean(row.synthetic);
+    pairs.set(key, prev);
+  }
+
+  const paired = [...pairs.values()].filter((p) => p.input != null || p.output != null);
+  if (!paired.length && !unpaired.length) return null;
+
+  // Prefer paired table when we successfully grouped input/output.
+  if (paired.length) {
+    const withBlend = paired.map((p) => ({
+      ...p,
+      blend:
+        p.input != null && p.output != null
+          ? p.input + p.output
+          : (p.input ?? p.output ?? Number.POSITIVE_INFINITY),
+    }));
+    withBlend.sort((a, b) => a.blend - b.blend);
+    const multi = withBlend.length > 1;
+    const bestBlend = withBlend[0]!.blend;
+    const header = multi
+      ? '| Провайдер | Модель | Input | Output | 1M in + 1M out | к минимуму |'
+      : '| Провайдер | Модель | Input | Output |';
+    const sep = multi ? '|---|---|---:|---:|---:|---|' : '|---|---|---:|---:|';
+    const rows = withBlend
+      .map((p) => {
+        const inn = p.input != null ? formatRub(p.input) : '—';
+        const out = p.output != null ? formatRub(p.output) : '—';
+        if (!multi) return `| ${p.provider} | ${p.model} | ${inn} | ${out} |`;
+        const blendText =
+          p.input != null && p.output != null ? formatRub(p.blend) : '—';
+        return `| ${p.provider} | ${p.model} | ${inn} | ${out} | ${blendText} | ${
+          Number.isFinite(p.blend) ? pctVsBest(p.blend, bestBlend) : '—'
+        } |`;
+      })
+      .join('\n');
+
+    const title =
+      planId.includes('glm')
+        ? 'GLM · токены API'
+        : planId.includes('qwen')
+          ? 'Qwen · токены API'
+          : planId.includes('kimi')
+            ? 'Kimi · токены API'
+            : 'AI / токены API';
+
+    const best = withBlend[0]!;
+    const summary =
+      !multi && best.input != null && best.output != null
+        ? `У **${best.provider}**: input **${formatRub(best.input)}**/1M, output **${formatRub(best.output)}**/1M (НДС вкл.).`
+        : best.input != null && best.output != null
+          ? cheapestInCatalogLine({
+              provider: best.provider,
+              priceText: `${formatRub(best.blend)} за 1M input + 1M output`,
+              derived: best.synthetic,
+            })
+          : cheapestInCatalogLine({
+              provider: best.provider,
+              priceText: formatRub(best.input ?? best.output ?? 0),
+              derived: best.synthetic,
+            });
+
+    const explain =
+      'Input и output — разные ставки одной модели (вход/выход инференса), не конкурирующие позиции. Стоимость запроса ≈ input×токены_входа + output×токены_выхода.';
+
+    return `**${title}** (₽ за 1M токенов, НДС вкл.)\n\n${header}\n${sep}\n${rows}\n\n${summary}\n\n${explain}${
+      multi && best.input != null && best.output != null
+        ? `\n\n«К минимуму» — по сумме **1M input + 1M output** (иллюстративная смесь; реальная доля выхода обычно меньше).`
+        : ''
+    }`;
+  }
+
+  // Fallback: unmatched rows (no input/output labels) — list without cross-ranking.
+  const rows = unpaired
+    .slice()
+    .sort((a, b) => a.month - b.month)
+    .map((r) => `| ${r.provider} | ${r.name} | ${formatRub(r.month)} |`)
+    .join('\n');
+  return `**Цены AI / токены (₽ за 1M токенов, НДС вкл.)**\n\n| Провайдер | Позиция | ₽ / 1M |\n|---|---|---:|\n${rows}`;
+}
+
+function composeCompCost(c: ComposeComp): number | null {
+  const n = c.estimatedMonthlyCostRub ?? c.monthlyCostRub;
+  return typeof n === 'number' && Number.isFinite(n) ? n : null;
+}
+
+function formatComposeRequestSummary(data: Record<string, unknown>): string {
+  const spec =
+    data.requirementSpec && typeof data.requirementSpec === 'object'
+      ? (data.requirementSpec as {
+          quantities?: Record<string, unknown>;
+          constraints?: {
+            minVcpu?: number;
+            minRamGiB?: number;
+            storage?: {media?: string; class?: string};
+            k8sTier?: string;
+          };
+          requiredRoles?: string[];
+        })
+      : null;
+  const q = spec?.quantities ?? {};
+  const lines: string[] = [];
+  const vcpu =
+    typeof q.vcpu === 'number'
+      ? q.vcpu
+      : typeof q.workerVcpu === 'number'
+        ? q.workerVcpu
+        : typeof spec?.constraints?.minVcpu === 'number'
+          ? spec.constraints.minVcpu
+          : null;
+  const ram =
+    typeof q.ramGiB === 'number'
+      ? q.ramGiB
+      : typeof q.workerRamGiB === 'number'
+        ? q.workerRamGiB
+        : typeof spec?.constraints?.minRamGiB === 'number'
+          ? spec.constraints.minRamGiB
+          : null;
+  if (vcpu != null || ram != null) {
+    lines.push(
+      `- Compute: ${vcpu != null ? `${vcpu} vCPU` : '—'} / ${ram != null ? `${ram} GiB RAM` : '—'}`,
+    );
+  }
+  const disk =
+    typeof q.diskGiB === 'number'
+      ? q.diskGiB
+      : typeof q.workerDiskGiB === 'number'
+        ? q.workerDiskGiB
+        : null;
+  const block = typeof q.blockStorageGiB === 'number' ? q.blockStorageGiB : null;
+  const media = spec?.constraints?.storage?.media;
+  if (disk != null) {
+    lines.push(`- Системный диск: ${disk} GiB${media ? ` (${media.toUpperCase()})` : ''}`);
+  }
+  if (block != null) {
+    lines.push(`- Блочный диск: ${block} GiB${media ? ` (${media.toUpperCase()})` : ''}`);
+  }
+  if (typeof q.publicIpCount === 'number' && q.publicIpCount > 0) {
+    lines.push(`- Публичный IP: ×${q.publicIpCount}`);
+  }
+  if (typeof q.storageGiB === 'number' && q.storageGiB > 0) {
+    const cls = spec?.constraints?.storage?.class ?? 'standard';
+    lines.push(`- Object Storage: ${q.storageGiB} GiB (${cls})`);
+  }
+  if (typeof q.cdnEgressGiB === 'number' && q.cdnEgressGiB > 0) {
+    lines.push(`- CDN egress: ${q.cdnEgressGiB} GiB`);
+  } else if (q.cdnRequested === true) {
+    lines.push('- CDN: запрошен, объём не указан');
+  }
+  if (typeof q.egressGiB === 'number' && q.egressGiB > 0) {
+    lines.push(`- Internet egress: ${q.egressGiB} GiB`);
+  }
+  if (typeof q.workerCount === 'number') {
+    lines.push(`- Kubernetes workers: ${q.workerCount}`);
+  }
+  if (!lines.length) return '';
+  return `### Запрос (как собрали)\n${lines.join('\n')}`;
+}
+
+function formatComposeBomTable(sol: ComposeSol): string {
+  const comps = sol.components ?? [];
+  if (!comps.length) return '';
+  const rows = comps.map((c) => {
+    const role = c.role ?? '—';
+    const roleRu = COMPOSE_ROLE_LABELS[role] ?? role;
+    const title = (c.title ?? roleRu).replace(/\|/g, '/');
+    const qty = typeof c.quantity === 'number' && c.quantity > 0 ? c.quantity : 1;
+    const cost = composeCompCost(c);
+    const costText = cost != null ? formatRub(cost) : '—';
+    const syn = c.synthetic ? ' *' : '';
+    return `| ${title}${syn} | ${roleRu} | ${qty} | ${costText} |`;
+  });
+  const total = composeSolTotal(sol);
+  const name = sol.providerName || sol.provider || 'провайдер';
+  return (
+    `### Разбивка — ${name} (минимум)\n` +
+    `| Позиция | Роль | Кол-во | ₽/мес |\n|---|---|---:|---:|\n` +
+    `${rows.join('\n')}\n` +
+    `| **Итого** | | | **${total != null ? formatRub(total) : '—'}** |`
+  );
+}
+
+function formatComposeUnresolved(sol: ComposeSol, data: Record<string, unknown>): string {
+  const lines: string[] = [];
+  const unresolved = Array.isArray(sol.unresolved) ? sol.unresolved : [];
+  for (const u of unresolved.slice(0, 8)) {
+    if (typeof u === 'string') lines.push(`- ${u}`);
+    else if (u && typeof u === 'object') {
+      const msg = typeof u.message === 'string' ? u.message : u.code ?? 'unresolved';
+      lines.push(`- ${msg}`);
+    }
+  }
+  const roles = new Set((sol.components ?? []).map((c) => c.role).filter(Boolean));
+  const spec =
+    data.requirementSpec && typeof data.requirementSpec === 'object'
+      ? (data.requirementSpec as {requiredRoles?: string[]; quantities?: Record<string, unknown>})
+      : null;
+  const required = Array.isArray(spec?.requiredRoles) ? spec!.requiredRoles! : [];
+  for (const role of required) {
+    if (!roles.has(role)) {
+      const label = COMPOSE_ROLE_LABELS[role] ?? role;
+      if (!lines.some((l) => l.toLowerCase().includes(String(role).toLowerCase()))) {
+        lines.push(`- ${label}: не попал в BOM (покрытие неполное)`);
+      }
+    }
+  }
+  const q = spec?.quantities ?? {};
+  if ((q.cdnRequested === true || (typeof q.cdnEgressGiB === 'number' && q.cdnEgressGiB > 0)) && !roles.has('cdn_egress')) {
+    if (!lines.some((l) => /cdn/i.test(l))) {
+      lines.push('- CDN: запрошен, но не включён в оценку (нужен объём или отдельный тариф)');
+    }
+  }
+  if (!lines.length) return '';
+  return `### Не покрыто / пробелы\n${lines.join('\n')}`;
+}
+
+/** Human-readable self-host inference answer (not a sterile system digest). */
+export function formatRecommendInferenceAnswer(data: Record<string, unknown>): string | null {
+  type Cfg = {
+    gpuFamily: string;
+    gpuCount: number;
+    quant: string;
+    estimatedVramGiB: number;
+    assumedHost: string | null;
+    best: {provider: string; totalMonth: number | null} | null;
+    quotes: {provider: string; totalMonth: number | null}[];
+    notes?: string;
+    why?: string;
+    vramBreakdown?: {
+      totalGiB: number;
+      capacityGiB: number | null;
+      loadBand: 'excess' | 'optimal' | 'tight' | 'limit' | 'overload' | null;
+    } | null;
+  };
+  const model = data.model as {
+    displayName: string;
+    parameterCountB?: number;
+    activeParameterCountB?: number;
+    parameterCountNote?: string;
+    deployment?: string;
+    confidence: string;
+    contextDefault?: number;
+  } | null;
+  if (!model?.displayName) return null;
+
+  const configs = (data.configs as Cfg[] | undefined) ?? [];
+  const params =
+    model.parameterCountB == null
+      ? model.parameterCountNote || 'параметры не раскрыты'
+      : model.activeParameterCountB != null
+        ? `${model.parameterCountB}B (${model.activeParameterCountB}B active)`
+        : `${model.parameterCountB}B`;
+  const ctxBit =
+    typeof model.contextDefault === 'number' && model.contextDefault > 0
+      ? `контекст до ${model.contextDefault.toLocaleString('ru-RU')}`
+      : null;
+  const caveats = (Array.isArray(data.caveats) ? data.caveats : []).filter(
+    (c): c is string => typeof c === 'string' && Boolean(c),
+  );
+  const hosted = data.hostedAlternative as
+    | {
+        providersMatched?: {
+          provider: string;
+          cheapestMonth: number | null;
+          inputMonth?: number | null;
+          outputMonth?: number | null;
+        }[];
+      }
+    | undefined;
+
+  const hostedTable = hosted?.providersMatched?.length
+    ? [
+        '| Провайдер | Input | Output |',
+        '|---|---:|---:|',
+        ...hosted.providersMatched.slice(0, 4).map((p) => {
+          const inn =
+            p.inputMonth != null
+              ? formatRub(p.inputMonth)
+              : p.cheapestMonth != null
+                ? formatRub(p.cheapestMonth)
+                : '—';
+          const out = p.outputMonth != null ? formatRub(p.outputMonth) : '—';
+          return `| ${p.provider} | ${inn} | ${out} |`;
+        }),
+      ].join('\n')
+    : '';
+
+  if (model.deployment === 'api-only' || !configs.length) {
+    return [
+      `**${model.displayName}** — self-host пока не собрать`,
+      '',
+      `По каталогу это **API-only**: публичного checkpoint нет, честно подобрать число GPU нельзя (${params}).`,
+      '',
+      'Имеет смысл смотреть hosted/API или соседнюю open-weight модель с известными весами.',
+      hostedTable
+        ? `\n**Hosted API** (₽ за 1M токенов; input и output — разные ставки):\n\n${hostedTable}`
+        : '',
+      caveats.length ? `\n**Важно:**\n${caveats.slice(0, 4).map((c) => `- ${c}`).join('\n')}` : '',
+    ]
+      .filter(Boolean)
+      .join('\n');
+  }
+
+  const primary = configs[0]!;
+  const primaryLabel = `${primary.gpuCount}×${primary.gpuFamily} · ${primary.quant}`;
+  const primaryPrice =
+    typeof primary.best?.totalMonth === 'number' ? formatRub(primary.best.totalMonth) : null;
+  const primaryWho = primary.best?.provider ?? null;
+  const primaryWhy =
+    (data.primaryRecommendation as {why?: string} | undefined)?.why ||
+    primary.why ||
+    '';
+  const primaryNotes = primary.notes?.trim() || '';
+  const whyText = (primaryNotes || primaryWhy).replace(/\s+/g, ' ').trim();
+  const whyShort = whyText.length > 280 ? `${whyText.slice(0, 260).trim()}…` : whyText;
+
+  const fatOrPending =
+    model.deployment === 'weights-pending' ||
+    (typeof model.parameterCountB === 'number' && model.parameterCountB >= 1000);
+
+  const leadPara = fatOrPending
+    ? `Если коротко — это не «возьми одну карту и готово». Модель **${params}**${
+        ctxBit ? `, ${ctxBit}` : ''
+      }: в публичном каталоге РФ ближайший ориентир узла — **${primaryLabel}**${
+        primaryWho && primaryPrice ? ` у ${primaryWho} (~${primaryPrice}/мес)` : ''
+      }. Официальный recipe часто требует multi-node / supernode; open-weight веса могут быть ещё не в общем доступе — цифры ниже предварительные.`
+    : `Под ${model.displayName} (${params}${
+        ctxBit ? `, ${ctxBit}` : ''
+      }) в каталоге РФ разумный старт — **${primaryLabel}**${
+        primaryWho && primaryPrice ? ` · ${primaryWho} · ~${primaryPrice}/мес` : ''
+      }.`;
+  const leadBits = [
+    `**${model.displayName}** self-host в РФ`,
+    '',
+    leadPara,
+    ...(whyShort ? ['', whyShort] : []),
+  ];
+
+  const rows = configs
+    .map((c) => {
+      const best = c.best?.totalMonth;
+      const label = `${c.gpuCount}×${c.gpuFamily} · ${c.quant}`;
+      const price = typeof best === 'number' ? formatRub(best) : '—';
+      const who = c.best?.provider ?? '—';
+      const vram = formatInferenceVramCell(c.vramBreakdown ?? null, c.estimatedVramGiB);
+      const load = formatInferenceLoadBandCell(c.vramBreakdown ?? null);
+      return `| ${label} | ${vram} | ${load} | ${who} | ${price} |`;
+    })
+    .join('\n');
+
+  const priceTable = [
+    '| Конфиг | Использование VRAM | Запас памяти | Провайдер | ₽/мес |',
+    '|---|---|---|---|---:|',
+    rows,
+  ].join('\n');
+
+  const altBlock = configs.slice(1, 4).length
+    ? [
+        '**Если смотреть шире**',
+        ...configs.slice(1, 4).map((c) => {
+          const title = `${c.gpuCount}×${c.gpuFamily} · ${c.quant}`;
+          const blurb = (c.notes || c.why || '').trim();
+          const short = blurb.length > 140 ? `${blurb.slice(0, 120).trim()}…` : blurb;
+          const price =
+            typeof c.best?.totalMonth === 'number' ? ` · ${formatRub(c.best.totalMonth)}/мес` : '';
+          const who = c.best?.provider ? ` · ${c.best.provider}` : '';
+          return short ? `- **${title}**${who}${price} — ${short}` : `- **${title}**${who}${price}`;
+        }),
+      ].join('\n')
+    : '';
+
+  const calcCta = selfHostCalculatorCtaMarkdown({
+    model: model.displayName,
+    quant: primary.quant ?? null,
+  });
+
+  const sections = [
+    leadBits.join('\n'),
+    `**Ориентир по железу** (НДС вкл., месяц = 720 ч; минимум среди паритетных узлов в каталоге)\n\n${priceTable}`,
+    altBlock,
+    hostedTable
+      ? `**Hosted API** (₽ за 1M токенов; input и output считаются отдельно)\n\n${hostedTable}`
+      : '',
+    caveats.length
+      ? `**На что обратить внимание**\n${caveats.slice(0, 5).map((c) => `- ${c}`).join('\n')}`
+      : '',
+    model.deployment === 'weights-pending'
+      ? '_Веса open-weight ещё не вышли или только анонсированы — конфиги предварительные._'
+      : '',
+    calcCta,
+    '_Цены и VRAM — ориентиры Cloud FinOps; tok/s здесь не оцениваем._',
+  ].filter(Boolean);
+
+  return sections.join('\n\n');
+}
+
+/** Deterministic compose answer: summary + request + BOM for cheapest provider. */
+export function formatComposeSolutionAnswer(data: Record<string, unknown>): string | null {
+  type Sol = ComposeSol;
+  const solutions = ((data.solutions as Sol[]) ?? [])
+    .filter((s) => (s.providerName || s.provider) && composeSolTotal(s) != null)
+    .slice()
+    .sort((a, b) => (composeSolTotal(a) as number) - (composeSolTotal(b) as number));
+  if (!solutions.length) return null;
+  const best = composeSolTotal(solutions[0]) as number;
+  const solutionType =
+    typeof data.solutionType === 'string'
+      ? data.solutionType
+      : typeof (data.requirementSpec as {solutionType?: string} | undefined)?.solutionType ===
+          'string'
+        ? (data.requirementSpec as {solutionType: string}).solutionType
+        : 'solution';
+  const rows = solutions
+    .map((s) => {
+      const name = s.providerName || s.provider || '—';
+      const roleCounts = new Map<string, number>();
+      for (const c of s.components ?? []) {
+        if (!c.role) continue;
+        roleCounts.set(c.role, (roleCounts.get(c.role) ?? 0) + 1);
+      }
+      const roles = [...roleCounts.entries()]
+        .map(([role, n]) => {
+          const label = COMPOSE_ROLE_LABELS[role] ?? role;
+          return n > 1 ? `${label}×${n}` : label;
+        })
+        .join(', ');
+      const covScore =
+        typeof s.coverage?.score === 'number'
+          ? s.coverage.score
+          : typeof s.requirementsCoverage === 'number'
+            ? s.requirementsCoverage
+            : null;
+      const cov = covScore != null ? `${Math.round(covScore * 100)}%` : '—';
+      const total = composeSolTotal(s) as number;
+      return `| ${name} | ${roles || '—'} | ${formatRub(total)} | ${cov} | ${pctVsBest(total, best)} |`;
+    })
+    .join('\n');
+  const rawAssumptions = data.assumptions as unknown;
+  const assumptions = Array.isArray(rawAssumptions)
+    ? rawAssumptions
+        .map((a) => (typeof a === 'string' ? a : (a as {message?: string})?.message))
+        .filter((m): m is string => typeof m === 'string' && Boolean(m))
+        .slice(0, 6)
+    : [];
+  const requestBlock = formatComposeRequestSummary(data);
+  const bomBlock = formatComposeBomTable(solutions[0]!);
+  const gapsBlock = formatComposeUnresolved(solutions[0]!, data);
+  // Keep each markdown table as ONE contiguous block — blank lines between
+  // header/separator/rows break Streamdown/GFM table rendering in chat.
+  const compareTable = [
+    '| Провайдер | Состав | Итого / мес | Покрытие | к минимуму |',
+    '|---|---|---:|---:|---|',
+    rows,
+  ].join('\n');
+  const sections = [
+    `**Сравнение решений (${solutionType}) за месяц** (НДС вкл., 720 ч; оценка compose)`,
+    compareTable,
+    cheapestInCatalogLine({
+      provider: solutions[0].providerName || solutions[0].provider || '—',
+      priceText: `${formatRub(best)}/мес`,
+    }),
+    requestBlock,
+    bomBlock,
+    gapsBlock,
+    assumptions.length ? `Допущения: ${assumptions.join('; ')}.` : '',
+    typeof data.note === 'string' && /price_solution|estimated/i.test(data.note)
+      ? '_Предварительная оценка compose; итоговые суммы уточняются отдельным расчётом._'
+      : '',
+  ].filter(Boolean);
+  return sections.join('\n\n');
+}
+
 function pctVsBest(price: number, best: number): string {
   if (!(best > 0) || !(price >= 0)) return '—';
   // Keep token aligned with column «к минимуму» / system prompt («min», not «best»).
@@ -1073,226 +1641,13 @@ export function formatFastPathAnswer(
   if (!data || data.error) return null;
 
   if (primary.name === 'recommend_inference_infra' && data.ok && data.model) {
-    type Cfg = {
-      gpuFamily: string;
-      gpuCount: number;
-      quant: string;
-      estimatedVramGiB: number;
-      assumedHost: string | null;
-      best: {provider: string; totalMonth: number | null} | null;
-      quotes: {provider: string; totalMonth: number | null}[];
-      notes?: string;
-      why?: string;
-      vramBreakdown?: {
-        totalGiB: number;
-        capacityGiB: number | null;
-        loadBand: 'excess' | 'optimal' | 'tight' | 'limit' | 'overload' | null;
-      } | null;
-    };
-    const model = data.model as {
-      displayName: string;
-      parameterCountB?: number;
-      activeParameterCountB?: number;
-      parameterCountNote?: string;
-      deployment?: string;
-      confidence: string;
-      contextDefault?: number;
-    };
-    const configs = (data.configs as Cfg[] | undefined) ?? [];
-    const params =
-      model.parameterCountB == null
-        ? model.parameterCountNote || 'параметры не раскрыты'
-        : model.activeParameterCountB != null
-          ? `${model.parameterCountB}B (${model.activeParameterCountB}B active)`
-          : `${model.parameterCountB}B`;
-    const ctxBit =
-      typeof model.contextDefault === 'number' && model.contextDefault > 0
-        ? `, ctx ${model.contextDefault.toLocaleString('ru-RU')}`
-        : '';
-    const hosted = data.hostedAlternative as
-      | {
-          providersMatched?: {
-            provider: string;
-            cheapestMonth: number | null;
-            inputMonth?: number | null;
-            outputMonth?: number | null;
-          }[];
-        }
-      | undefined;
-    const hostedBlock = hosted?.providersMatched?.length
-      ? [
-          '',
-          '### Hosted API',
-          '',
-          '₽ за **1M токенов** (не за GPU-узел). Считайте **input + output**.',
-          '',
-          '| Провайдер | Input | Output |',
-          '|---|---:|---:|',
-          ...hosted.providersMatched.slice(0, 4).map((p) => {
-            const inn =
-              p.inputMonth != null
-                ? formatRub(p.inputMonth)
-                : p.cheapestMonth != null
-                  ? formatRub(p.cheapestMonth)
-                  : '—';
-            const out = p.outputMonth != null ? formatRub(p.outputMonth) : '—';
-            return `| ${p.provider} | ${inn} | ${out} |`;
-          }),
-        ].join('\n')
-      : '';
-    const caveats = Array.isArray(data.caveats)
-      ? (data.caveats as string[]).filter(Boolean)
-      : [];
-    const caveatBlock = caveats.length
-      ? ['', '### Оговорки', '', ...caveats.slice(0, 4).map((c) => `- ${c}`)].join('\n')
-      : '';
-
-    if (model.deployment === 'api-only' || !configs.length) {
-      return [
-        `### ${model.displayName}`,
-        '',
-        `${params} · confidence: **${model.confidence}**`,
-        '',
-        '### Self-host',
-        '',
-        'Публичного checkpoint нет (**API-only**) — число GPU честно не подобрать.',
-        '',
-        'Смотрите open-weight соседние модели или hosted/API.',
-        hostedBlock,
-        caveatBlock,
-      ]
-        .filter((line) => line != null)
-        .join('\n');
-    }
-
-    const primaryWhy =
-      (data.primaryRecommendation as {why?: string} | undefined)?.why ||
-      configs[0]?.why ||
-      '';
-    const primaryNotes = configs[0]?.notes?.trim() || '';
-    const whyShort =
-      primaryNotes ||
-      (primaryWhy.length > 220 ? `${primaryWhy.slice(0, 200).trim()}…` : primaryWhy);
-    const whyBlock = whyShort
-      ? ['### Почему так', '', whyShort].join('\n')
-      : '';
-    const rows = configs
-      .map((c) => {
-        const best = c.best?.totalMonth;
-        const label = `${c.gpuCount}×${c.gpuFamily} · ${c.quant}`;
-        const price = typeof best === 'number' ? formatRub(best) : '—';
-        const who = c.best?.provider ?? '—';
-        const vram = formatInferenceVramCell(c.vramBreakdown ?? null, c.estimatedVramGiB);
-        const load = formatInferenceLoadBandCell(c.vramBreakdown ?? null);
-        return `| ${label} | ${vram} | ${load} | ${who} | ${price} |`;
-      })
-      .join('\n');
-    const primaryQuant = configs[0]?.quant ?? null;
-    const calcCta = selfHostCalculatorCtaMarkdown({
-      model: model.displayName,
-      quant: primaryQuant,
-    });
-    const altBlock = configs.slice(1, 4).length
-      ? [
-          '',
-          '### Альтернативы',
-          '',
-          ...configs.slice(1, 4).map((c) => {
-            const title = `**${c.gpuCount}×${c.gpuFamily} · ${c.quant}**`;
-            const blurb = (c.notes || c.why || '').trim();
-            const short =
-              blurb.length > 160 ? `${blurb.slice(0, 140).trim()}…` : blurb;
-            return short ? `- ${title} — ${short}` : `- ${title}`;
-          }),
-        ].join('\n')
-      : '';
-    const pendingNote =
-      model.deployment === 'weights-pending'
-        ? '\n\n> Веса open-weight ещё не вышли или только анонсированы — конфиги предварительные.'
-        : '';
-    const metaBits = [
-      params,
-      ctxBit.replace(/^,\s*/, '') || null,
-      `confidence: **${model.confidence}**`,
-    ].filter(Boolean);
-
-    return [
-      `### Self-host: ${model.displayName}`,
-      '',
-      metaBits.join(' · '),
-      '',
-      whyBlock,
-      '',
-      '### Цены узлов',
-      '',
-      'НДС вкл., месяц = 720 ч. Цена — минимальная среди паритетных узлов в каталоге Cloud FinOps.',
-      '',
-      `| Конфиг | Использование VRAM | Запас памяти | Провайдер | ₽/мес |`,
-      `|---|---|---|---|---:|`,
-      rows,
-      altBlock,
-      hostedBlock,
-      caveatBlock,
-      pendingNote,
-      '',
-      calcCta,
-      '',
-      '> Цены и VRAM — ориентиры Cloud FinOps; tok/s не оцениваем.',
-    ]
-      .filter((line, i, arr) => !(line === '' && arr[i - 1] === ''))
-      .join('\n')
-      .replace(/\n{3,}/g, '\n\n')
-      .trim();
+    const formatted = formatRecommendInferenceAnswer(data);
+    if (formatted) return formatted;
   }
 
   if (primary.name === 'compose_solution' && Array.isArray(data.solutions)) {
-    type Sol = {
-      providerName?: string;
-      provider?: string;
-      monthlyCostRub?: number | null;
-      requirementsCoverage?: number;
-      status?: string;
-      assumptions?: string[];
-      unresolved?: string[];
-      components?: {role: string; monthlyCostRub?: number | null}[];
-    };
-    const solutions = (data.solutions as Sol[])
-      .filter((s) => (s.providerName || s.provider) && typeof s.monthlyCostRub === 'number')
-      .slice()
-      .sort((a, b) => (a.monthlyCostRub as number) - (b.monthlyCostRub as number));
-    if (!solutions.length) return null;
-    const best = solutions[0].monthlyCostRub as number;
-    const solutionType =
-      typeof data.solutionType === 'string' ? data.solutionType : 'solution';
-    const rows = solutions
-      .map((s) => {
-        const name = s.providerName || s.provider || '—';
-        const roles = (s.components ?? []).map((c) => c.role).filter(Boolean).join(', ');
-        const cov =
-          typeof s.requirementsCoverage === 'number'
-            ? `${Math.round(s.requirementsCoverage * 100)}%`
-            : '—';
-        return `| ${name} | ${roles || '—'} | ${formatRub(s.monthlyCostRub as number)} | ${cov} | ${pctVsBest(s.monthlyCostRub as number, best)} |`;
-      })
-      .join('\n');
-    const rawAssumptions = data.assumptions as unknown;
-    const assumptions = Array.isArray(rawAssumptions)
-      ? rawAssumptions
-          .map((a) => (typeof a === 'string' ? a : (a as {message?: string})?.message))
-          .filter((m): m is string => typeof m === 'string' && Boolean(m))
-          .slice(0, 4)
-      : [];
-    const assumptionBlock = assumptions.length
-      ? `\n\nДопущения: ${assumptions.join('; ')}.`
-      : '';
-    const note =
-      typeof data.note === 'string' && /price_solution|estimated/i.test(data.note)
-        ? '\n\n_Оценка compose; итоговые totals — через price_solution._'
-        : '';
-    return `**Сравнение решений (${solutionType}) за месяц** (НДС вкл., 720 ч; оценка compose)\n\n| Провайдер | Компоненты | Итого / мес | Покрытие | к минимуму |\n|---|---|---:|---:|---|\n${rows}\n\n${cheapestInCatalogLine({
-      provider: solutions[0].providerName || solutions[0].provider || '—',
-      priceText: `${formatRub(best)}/мес`,
-    })}${assumptionBlock}${note}`;
+    const formatted = formatComposeSolutionAnswer(data);
+    if (formatted) return formatted;
   }
 
   if (primary.name === 'validate_solution') {
@@ -1712,6 +2067,13 @@ export function formatFastPathAnswer(
     };
     const matched = data.providersMatched as Matched[] | undefined;
     if (Array.isArray(matched) && matched.length) {
+      const isGpuCardAsk =
+        planId.includes('h100') ||
+        planId.includes('h200') ||
+        planId.includes('a100') ||
+        planId.includes('l40') ||
+        planId.includes('b300') ||
+        planId.startsWith('gpu-');
       const withPrice = matched
         .map((m) => ({
           provider: m.provider,
@@ -1722,7 +2084,13 @@ export function formatFastPathAnswer(
           unit: m.cheapest?.unit ?? '',
           synthetic: Boolean(m.cheapest?.synthetic),
         }))
-        .filter((m) => typeof m.month === 'number' || typeof m.hour === 'number');
+        .filter((m) => typeof m.month === 'number' || typeof m.hour === 'number')
+        // Never crown Cloud.ru «1 GB GPU» / GB-GPU as whole-card rent.
+        .filter(
+          (m) =>
+            !isGpuCardAsk ||
+            !/GB-GPU|1\s*GB\s*GPU|доля\s*GPU/i.test(`${m.unit} ${m.name} ${m.config}`),
+        );
 
       if (!withPrice.length) return null;
 
@@ -1745,35 +2113,25 @@ export function formatFastPathAnswer(
               (r) => r.provider && r.name && typeof r.month === 'number',
             )
           : [];
-        const rowsData = (fromRows.length
-          ? fromRows.map((r) => ({
-              provider: r.provider,
-              name: r.name,
-              month: r.month as number,
-              synthetic: Boolean(r.synthetic),
-            }))
-          : withPrice
-              .filter((m) => typeof m.month === 'number')
-              .map((m) => ({
-                provider: m.provider,
-                name: m.name,
-                month: m.month as number,
-                synthetic: m.synthetic,
+        const flat = (
+          fromRows.length
+            ? fromRows.map((r) => ({
+                provider: r.provider,
+                name: r.name,
+                month: r.month as number,
+                synthetic: Boolean(r.synthetic),
               }))
-        ).sort((a, b) => a.month - b.month);
-        if (!rowsData.length) return null;
-        const best = rowsData[0].month;
-        const rows = rowsData
-          .map(
-            (r) =>
-              `| ${r.provider} | ${r.name} | ${formatRub(r.month)} | ${pctVsBest(r.month, best)} |`,
-          )
-          .join('\n');
-        return `**Цены AI / токены (₽ за 1M токенов, НДС вкл.)**\n\n| Провайдер | Позиция | ₽ / 1M | к минимуму |\n|---|---|---:|---|\n${rows}\n\n${cheapestInCatalogLine({
-          provider: rowsData[0].provider,
-          priceText: formatRub(best),
-          derived: rowsData[0].synthetic,
-        })}`;
+            : withPrice
+                .filter((m) => typeof m.month === 'number')
+                .map((m) => ({
+                  provider: m.provider,
+                  name: m.name,
+                  month: m.month as number,
+                  synthetic: m.synthetic,
+                }))
+        ).filter((r) => r.month > 0);
+        const aiMd = formatAiTokenPairAnswer(flat, planId);
+        if (aiMd) return aiMd;
       }
 
       const rowsData = withPrice
@@ -1852,6 +2210,58 @@ export function formatFastPathAnswer(
  * single structured tool already has everything for a table. Keeps "reasoning"
  * on tool choice; drops the 15–40s prose rewrite.
  */
+/**
+ * Conflict / optimize / fake-coverage asks need LLM narrative (refuse, clarify,
+ * trade-offs). Deterministic tables alone would hide that and look like a full answer.
+ */
+export function needsNarrativeCaveat(userText: string): boolean {
+  const t = userText.trim();
+  if (!t) return false;
+  // Impossible / conflicting architecture
+  if (
+    /(?:без\s+worker|без\s+воркер|без\s+нод|kubernetes\s+без)/i.test(t) ||
+    (/(?:отказоустойч|\bha\b|трёх\s+зон|трех\s+зон|2\s+зон|двух\s+зон)/i.test(t) &&
+      /(?:одной?\s+нод|одн[ау]\s+worker|1\s+worker|один\s+worker|только\s+одна\s+нод)/i.test(t)) ||
+    (/(?:публичн\w*\s+сервис|публичн\w*\s+endpoint)/i.test(t) &&
+      /(?:без\s+публичн|ip\s+запрещ|балансир\w*\s+запрещ|запрещены)/i.test(t)) ||
+    /100\s*%\s*покрыт|полное\s+покрыт.{0,40}отсутств|покрыт.{0,40}даже\s+если/i.test(t)
+  ) {
+    return true;
+  }
+  // GPU count × tiny budget
+  if (
+    /(?:h100|h200|b200|a100|gpu)/i.test(t) &&
+    /(?:\d+|три|две|четыре|восемь)\s*(?:gpu[-\s]?нод|gpu|нод|карточек|машин)/i.test(t) &&
+    /(?:до\s+\d+[\s_]*тыс|до\s+\d[\d\s_]*000|\d+[\s_]*тыс(?:яч)?\s*₽|бюджет.{0,24}\d+)/i.test(t)
+  ) {
+    return true;
+  }
+  // Existing fleet / sacrifice — not greenfield fit_budget
+  if (
+    /сейчас\s+я\s+плачу|у\s+меня\s+(?:\d+|десять|двадцать)\s*вм|чем\s+придётся\s+пожертвовать|пожертвовать.{0,40}уложить|диск\s+стоит\s+больше/i.test(
+      t,
+    )
+  ) {
+    return true;
+  }
+  // Ambiguous cluster sizing: total cores vs per-node
+  if (
+    /(?:на\s+весь\s+кластер|на\s+кластер\s+из|ядер.{0,24}кластер|кластер.{0,24}ядер)/i.test(t) &&
+    /(?:нод|worker|воркер)/i.test(t)
+  ) {
+    return true;
+  }
+  // Duty-cycle / cheap-vs-latency / backup horizon — need narrative, not bare unit table.
+  if (
+    /(?:загрузка\s+будет|%\s*времени|30\s*%|дешёв\w*.{0,40}задерж|задерж\w*.{0,40}дешёв|минимальн\w*\s+задерж|резервн\w*\s+копи|бэкап|backup)/i.test(
+      t,
+    )
+  ) {
+    return true;
+  }
+  return false;
+}
+
 export function tryFormatAgentToolAnswer(options: {
   userText: string;
   toolPayloads: {name: string; content: string; arguments?: string}[];
@@ -1861,6 +2271,7 @@ export function tryFormatAgentToolAnswer(options: {
    */
   allowStackCompose?: boolean;
 }): string | null {
+  if (needsNarrativeCaveat(options.userText)) return null;
   const payloads = options.toolPayloads;
   if (payloads.length > 1) {
     if (!options.allowStackCompose) return null;

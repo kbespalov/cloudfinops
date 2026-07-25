@@ -3,6 +3,8 @@ import {describe, it} from 'node:test';
 import {
   adaptFastPathForSurface,
   extractAllToolPayloads,
+  formatAiTokenPairAnswer,
+  formatComposeSolutionAnswer,
   formatFastPathAnswer,
   formatStackFastPathAnswer,
   matchFastPath,
@@ -243,6 +245,41 @@ describe('matchFastPath', () => {
     assert.equal(matchFastPath('Что такое preemptible?'), null);
   });
 
+  it('formats AI tokens as input/output pair without ranking output vs input', () => {
+    const md = formatAiTokenPairAnswer(
+      [
+        {provider: 'MWS Cloud', name: 'glm-5.2 · input', month: 178.12},
+        {provider: 'MWS Cloud', name: 'glm-5.2 · output', month: 746.64},
+      ],
+      'glm-52-mws',
+    );
+    assert.ok(md);
+    assert.match(md!, /Input/);
+    assert.match(md!, /Output/);
+    assert.match(md!, /178/);
+    assert.match(md!, /746/);
+    assert.doesNotMatch(md!, /\+319%/);
+    assert.doesNotMatch(md!, /к минимуму/);
+    assert.match(md!, /не конкурирующие позиции/);
+  });
+
+  it('ranks multi-provider AI tokens on 1M in + 1M out blend', () => {
+    const md = formatAiTokenPairAnswer(
+      [
+        {provider: 'MWS Cloud', name: 'qwen · input', month: 100},
+        {provider: 'MWS Cloud', name: 'qwen · output', month: 400},
+        {provider: 'Yandex Cloud', name: 'qwen · input', month: 80},
+        {provider: 'Yandex Cloud', name: 'qwen · output', month: 300},
+      ],
+      'qwen-36',
+    );
+    assert.ok(md);
+    assert.match(md!, /1M in \+ 1M out/);
+    assert.match(md!, /Yandex Cloud/);
+    assert.match(md!, /\bmin\b/);
+    assert.match(md!, /иллюстративная смесь/);
+  });
+
   it('formats get_quote payload without LLM', () => {
     const md = formatFastPathAnswer('vm', [
       {
@@ -329,20 +366,20 @@ describe('matchFastPath', () => {
       },
     ]);
     assert.ok(md);
-    assert.match(md, /### Self-host: Qwen3-Coder-Next/);
-    assert.match(md, /### Почему так/);
-    assert.match(md, /### Цены узлов/);
+    assert.match(md, /Qwen3-Coder-Next/);
+    assert.match(md, /разумный старт|Ориентир по железу/);
     assert.match(md, /Использование VRAM/);
     assert.match(md, /Запас памяти/);
     assert.match(md, /52 из 80 GiB/);
     assert.match(md, /Оптимально/);
     assert.match(md, /Малый запас/);
-    assert.match(md, /### Альтернативы/);
-    assert.match(md, /### Hosted API/);
-    assert.match(md, /### Оговорки/);
+    assert.match(md, /Если смотреть шире|Альтернатив/);
+    assert.match(md, /Hosted API/);
+    assert.match(md, /На что обратить внимание|Не путать/);
     assert.match(md, /Input/);
     assert.match(md, /Output/);
     assert.match(md, /PoC \/ лёгкий agent/);
+    assert.doesNotMatch(md, /confidence:\s*\*\*high\*\*/);
     assert.match(md, /Открыть в калькуляторе/);
     assert.match(md, /\/calculator\/self-host\?model=Qwen3-Coder-Next/);
   });
@@ -456,6 +493,183 @@ describe('matchFastPath', () => {
     assert.match(md, /Selectel/);
     assert.match(md, /Утилизация/);
     assert.match(md, /\bmin\b/);
+  });
+
+  it('does not short-circuit impossible GPU budget / HA+1 node (needs narrative)', () => {
+    assert.equal(
+      tryFormatAgentToolAnswer({
+        userText: 'Собери три GPU-ноды с H100 до 100 тысяч рублей в месяц.',
+        toolPayloads: [
+          {
+            name: 'search_prices',
+            arguments: JSON.stringify({query: 'H100', category: 'gpu'}),
+            content: JSON.stringify({providersMatched: []}),
+          },
+        ],
+      }),
+      null,
+    );
+    assert.equal(
+      tryFormatAgentToolAnswer({
+        userText: 'Собери Kubernetes с одной нодой, но чтобы он был отказоустойчивым.',
+        toolPayloads: [
+          {
+            name: 'compose_solution',
+            arguments: JSON.stringify({solutionType: 'kubernetes', requirements: {workerCount: 1}}),
+            content: JSON.stringify({solutions: []}),
+          },
+        ],
+      }),
+      null,
+    );
+  });
+
+  it('formats compose_solution with request summary and BOM line items', () => {
+    const md = tryFormatAgentToolAnswer({
+      userText: 'ВМ 44 vCPU 300 GiB, диск HDD 100, IP, S3 2 ТБ и CDN',
+      toolPayloads: [
+        {
+          name: 'compose_solution',
+          arguments: JSON.stringify({
+            solutionType: 'virtual_machine',
+            requirements: {
+              vcpu: 44,
+              ramGiB: 300,
+              diskGiB: 100,
+              diskMedia: 'hdd',
+              publicIpCount: 1,
+              storageGiB: 2048,
+              cdnRequested: true,
+            },
+          }),
+          content: JSON.stringify({
+            solutionType: 'virtual_machine',
+            requirementSpec: {
+              solutionType: 'virtual_machine',
+              quantities: {
+                vcpu: 44,
+                ramGiB: 300,
+                diskGiB: 100,
+                publicIpCount: 1,
+                storageGiB: 2048,
+                cdnRequested: true,
+              },
+              constraints: {storage: {media: 'hdd', class: 'standard'}},
+              requiredRoles: [
+                'compute',
+                'block_storage',
+                'public_ip',
+                'object_storage',
+                'cdn_egress',
+              ],
+            },
+            assumptions: [{message: 'CDN без объёма — не оценён'}],
+            note: 'estimatedMonthlyCostRub — ranking only; use price_solution',
+            solutions: [
+              {
+                provider: 'mws-cloud',
+                providerName: 'MWS Cloud',
+                estimatedMonthlyCostRub: 108_712,
+                requirementsCoverage: 0.75,
+                components: [
+                  {
+                    role: 'compute',
+                    title: '44 vCPU',
+                    quantity: 1,
+                    estimatedMonthlyCostRub: 40_000,
+                  },
+                  {
+                    role: 'compute',
+                    title: '300 GiB RAM',
+                    quantity: 1,
+                    estimatedMonthlyCostRub: 50_000,
+                  },
+                  {
+                    role: 'block_storage',
+                    title: 'HDD 100 GiB',
+                    quantity: 1,
+                    estimatedMonthlyCostRub: 500,
+                  },
+                  {
+                    role: 'public_ip',
+                    title: 'Публичный IPv4',
+                    quantity: 1,
+                    estimatedMonthlyCostRub: 200,
+                  },
+                  {
+                    role: 'object_storage',
+                    title: 'Object Storage Standard · 2048 GiB',
+                    quantity: 1,
+                    estimatedMonthlyCostRub: 18_012,
+                  },
+                ],
+              },
+              {
+                provider: 'vk-cloud',
+                providerName: 'VK Cloud',
+                estimatedMonthlyCostRub: 109_014,
+                requirementsCoverage: 0.75,
+                components: [
+                  {role: 'compute', title: '44 vCPU', estimatedMonthlyCostRub: 41_000},
+                  {role: 'object_storage', title: 'S3', estimatedMonthlyCostRub: 19_000},
+                ],
+              },
+            ],
+          }),
+        },
+      ],
+    });
+    assert.ok(md);
+    assert.match(md!, /Запрос \(как собрали\)/);
+    assert.match(md!, /44 vCPU/);
+    assert.match(md!, /300 GiB RAM/);
+    assert.match(md!, /Разбивка — MWS Cloud/);
+    assert.match(md!, /HDD 100 GiB/);
+    assert.match(md!, /Object Storage/);
+    assert.match(md!, /Публичный IPv4/);
+    assert.match(md!, /Не покрыто|CDN/);
+    assert.match(md!, /108[\s\u00a0]?712/);
+    // GFM tables break if blank lines sit between header / separator / body.
+    assert.doesNotMatch(md!, /\|\n\n\|/);
+  });
+
+  it('compose request summary reads vCPU/RAM from constraints.min*', () => {
+    const md = formatComposeSolutionAnswer({
+      solutionType: 'virtual_machine',
+      requirementSpec: {
+        solutionType: 'virtual_machine',
+        quantities: {diskGiB: 100, publicIpCount: 1, storageGiB: 2048, cdnRequested: true},
+        constraints: {
+          minVcpu: 44,
+          minRamGiB: 300,
+          storage: {media: 'hdd', class: 'standard'},
+        },
+        requiredRoles: ['compute', 'block_storage', 'public_ip', 'object_storage'],
+      },
+      solutions: [
+        {
+          provider: 'mws-cloud',
+          providerName: 'MWS Cloud',
+          estimatedMonthlyCostRub: 100_000,
+          components: [
+            {role: 'compute', title: 'CPU: 44 vCPU', estimatedMonthlyCostRub: 36_000},
+            {role: 'compute', title: 'RAM: 300 GiB', estimatedMonthlyCostRub: 60_000},
+            {role: 'block_storage', title: 'Диск: HDD, 100 GiB', estimatedMonthlyCostRub: 400},
+            {role: 'public_ip', title: 'Публичный IP: 1', estimatedMonthlyCostRub: 150},
+            {
+              role: 'object_storage',
+              title: 'Object Storage · 2048 GiB',
+              quantity: 2048,
+              estimatedMonthlyCostRub: 5_000,
+            },
+          ],
+        },
+      ],
+    });
+    assert.ok(md);
+    assert.match(md!, /Compute: 44 vCPU \/ 300 GiB RAM/);
+    assert.match(md!, /Системный диск: 100 GiB \(HDD\)/);
+    assert.match(md!, /Диск: HDD, 100 GiB/);
   });
 
   it('short-circuits agent fit_budget / get_quote without alias match', () => {

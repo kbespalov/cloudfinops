@@ -111,7 +111,7 @@ export const CHAT_TOOLS = [
     function: {
       name: 'search_catalog',
       description:
-        'Ищи отдельные облачные продукты/SKU/GPU/S3/CDN/IP с match-метаданными (exactFields/conflictingFields). НЕ для окончательной сборки многокомпонентного решения — там compose_solution. Для unit CPU/RAM/SSD — compare_unit_price.',
+        'Ищи отдельные облачные продукты/SKU/GPU/S3/CDN/IP с match-метаданными (exactFields/conflictingFields). Только discovery/наличие. НЕ финальный ответ для стека, K8s, lakehouse, ВМ-конфига, сравнения TCO — после него обязателен compose_solution / get_quote / get_lakehouse_quote / search_prices / recommend_inference_infra. Для unit CPU/RAM/SSD — compare_unit_price.',
       parameters: {
         type: 'object',
         properties: {
@@ -433,7 +433,7 @@ export const CHAT_TOOLS = [
     function: {
       name: 'fit_budget',
       description:
-        'Подобрать инфраструктуру под месячный бюджет (₽ с НДС): сколько целых ВМ (или GPU) каждого типового размера укладывается у каждого провайдера и какая утилизация бюджета. Используй для «бюджет 100 тысяч», «что можно позволить за N ₽/мес», «максимально утилизировать бюджет» — НЕ устраивай длинный опросник. По умолчанию profile=general (типовые ВМ).',
+        'Подобрать инфраструктуру под месячный бюджет (₽ с НДС): сколько целых ВМ (или GPU) каждого типового размера укладывается у каждого провайдера и какая утилизация бюджета. Используй для greenfield «бюджет 100 тысяч», «что можно позволить за N ₽/мес», «максимально утилизировать бюджет» — НЕ устраивай длинный опросник. НЕ используй, если пользователь описывает текущий флот («сейчас плачу», «у меня N ВМ»), просит жертвы/trade-off без ТЗ, или N×GPU заведомо не влезает в бюджет — тогда get_quote/search_prices + явный отказ «не укладывается» / уточнение формы. По умолчанию profile=general (типовые ВМ).',
       parameters: {
         type: 'object',
         properties: {
@@ -541,6 +541,9 @@ function runFitBudget(args: Record<string, unknown>): unknown {
 
 /** Distinguish a whole-VM/GPU flavor price from a GPU-only accelerator rate. */
 function priceKind(r: PriceRow): string {
+  if (/GB-GPU|1\s*GB\s*GPU/i.test(`${r.unit} ${r.name} ${r.config}`)) {
+    return 'доля GPU · 1 ГБ памяти (не целая карта; полный H100 ≈ ×80)';
+  }
   if (r.unit.includes('flavor') || /vCPU/i.test(r.config)) {
     return 'конфигурация целиком (vCPU+RAM+GPU в цене)';
   }

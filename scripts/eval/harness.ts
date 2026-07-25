@@ -71,6 +71,11 @@ export type RunChatOptions = {
   model?: string;
   /** Disable homepage deterministic fast-path (required for fair model A/B). */
   disableFastPath?: boolean;
+  /**
+   * Prior turns (user/assistant only) for revise / follow-up eval.
+   * System message is always rebuilt from the current question.
+   */
+  history?: {role: 'user' | 'assistant'; content: string}[];
 };
 
 /** Run the full assistant pipeline for one user question. */
@@ -102,6 +107,7 @@ export async function runChat(
       : CHAT_TOOLS;
   const messages: ChatMessage[] = [
     {role: 'system', content: effectiveSystem},
+    ...(opts.history ?? []).map((m) => ({role: m.role, content: m.content}) as ChatMessage),
     {role: 'user', content: question},
   ];
   const toolCalls: {name: string; arguments: string}[] = [];

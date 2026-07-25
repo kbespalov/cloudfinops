@@ -6,7 +6,7 @@
 import {findInferenceModel, listInferenceModelAliases} from '@/data/inference-models';
 
 const INFRA_VERBS =
-  /(?:запуск|запустить|развернуть|развёртыван|self[-\s]?host|сво(и[хм]|ём|ем)|своей|на\s+свои[хм]|инфраструктур|сколько\s+gpu|скольк[оа]\s+карт|vram|видеопамят|tensor\s*parallel|\btp\b|квантизац|quant|на\s+сво(ём|ем)\s+железе|нужн[аоы]\s+(?:gpu|видеокарт|сервер|кластер)|конфиг(?:ураци[яи])?\s+под\s+инференс|для\s+инференс)/i;
+  /(?:запуск|запустить|развернуть|развёртыван|self[-\s]?host|сво(и[хм]|ём|ем)|своей|на\s+свои[хм]|инфраструктур|сколько\s+gpu|скольк[оа]\s+карт|vram|видеопамят|tensor\s*parallel|\btp\b|nvlink|квантизац|quant|на\s+сво(ём|ем)\s+железе|нужн[аоы]\s+(?:gpu|видеокарт|сервер|кластер)|конфиг(?:ураци[яи])?\s+под\s+инференс|для\s+инференс|online\s+inference|batch\s+inference|внешнего\s+api|hosted\s+api)/i;
 
 const TOKEN_PRICE =
   /(?:токен|1m\s*токен|₽\s*\/\s*1m|за\s*1m|api\s*цен|сколько\s+стоит.{0,40}(?:у\s+)?mws|hosted)/i;
@@ -86,6 +86,16 @@ export function matchInferenceIntent(userText: string): InferenceIntent {
     return {matched: true, modelQuery: extractModelHint(text), reason: 'infra-only'};
   }
 
+  // NVLink / self-host vs API / GPU cluster topology — still inference infra.
+  if (
+    hasInfra &&
+    /(?:nvlink|self[-\s]?host.{0,48}api|api.{0,48}self[-\s]?host|gpu[-\s]?кластер|независим\w*\s+gpu)/i.test(
+      text,
+    )
+  ) {
+    return {matched: true, modelQuery: extractModelHint(text), reason: 'infra-only'};
+  }
+
   return {matched: false, modelQuery: null, reason: 'none'};
 }
 
@@ -101,12 +111,12 @@ function extractModelHint(text: string): string | null {
 /** System addendum appended only on gated inference turns. */
 export const INFERENCE_SYSTEM_ADDENDUM = `
 ## Self-host inference (активен этот ход)
-Пользователь спрашивает про инфраструктуру для запуска модели. Сначала вызови recommend_inference_infra.
+Пользователь спрашивает про инфраструктуру для запуска модели. PREVIEW FIRST: в этом же ходе вызови recommend_inference_infra (при необходимости + get_quote/search_prices). Не длинный опрос без tool.
 Правила:
 - VRAM, число GPU, квантизацию бери ТОЛЬКО из configs[] / primaryRecommendation / model.parameterCountB. Не выдумывай и не «округляй» до 8×GPU.
 - Не подменяй модель соседней (Coder-Next ≠ Coder-480B, Kimi K3 ≠ K2.6). Если tool вернул другой id — скажи об этом явно или переспроси.
-- Структура markdown: заголовки ### (Self-host / Почему так / Цены узлов / Альтернативы / Hosted API / Оговорки). Короткие абзацы, не один «простынёй».
-- ### Почему так — 2–4 коротких предложения (VRAM/квант/GPU + провайдер). Таблица configs[] под ### Цены узлов с колонками Использование VRAM и Запас памяти (из vramBreakdown). Альтернативы — буллеты, не повтор длинного why целиком.
+- Тон: ответ инженеру-коллеге, не системный дайджест. Сначала короткий лид с выводом, потом таблица и оговорки. Без канцелярита («confidence: medium», сухие «Почему так»).
+- Таблица configs[]: Конфиг | Использование VRAM | Запас памяти | Провайдер | ₽/мес (из vramBreakdown). Альтернативы — короткие буллеты.
 - В конце ответа добавь markdown-ссылку «Открыть в калькуляторе» из answerHint (deep link на /calculator/self-host с model/quant) — тот же recommender, можно крутить batch/context.
 - НЕ вызывай get_quote с другим gpuCount/gpuModel. Цены уже в recommend_inference_infra.
 - HostedAlternative — только та же modelId; всегда разделяй input/output (поля inputMonth/outputMonth). Не подмешивай 480B вместо Coder-Next. TCO: input×Pin + output×Pout, не «аренда ÷ только input».

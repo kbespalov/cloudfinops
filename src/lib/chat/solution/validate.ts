@@ -17,6 +17,7 @@ import type {
 /** Hard errors that mean incomplete user input / repairable BOM gaps — not catalog bugs. */
 const CLARIFICATION_ERROR_CODES = new Set([
   'WORKER_COUNT_UNKNOWN',
+  'HA_INSUFFICIENT_WORKERS',
   'MISSING_REQUIRED_ROLE',
   'BLOCK_STORAGE_UNAVAILABLE',
   'PUBLIC_IP_UNAVAILABLE',
@@ -117,6 +118,31 @@ export function validateSolution(input: ValidateInput): ValidationReport {
       category: 'requirements',
       requirementPath: 'quantities.workerCount',
       message: 'Количество worker-нод не определено',
+    });
+  }
+
+  const workerN = num(spec.quantities.workerCount);
+  const wantsHa =
+    spec.constraints.k8sTier === 'ha' ||
+    spec.strategy === 'availability' ||
+    (typeof spec.constraints.availabilityZones === 'number' &&
+      spec.constraints.availabilityZones >= 2);
+  if (
+    spec.solutionType === 'kubernetes' &&
+    wantsHa &&
+    workerN != null &&
+    workerN < 2 &&
+    spec.quantities.workerCountExplicit === true
+  ) {
+    issues.push({
+      code: 'HA_INSUFFICIENT_WORKERS',
+      severity: 'error',
+      category: 'compatibility',
+      requirementPath: 'quantities.workerCount',
+      required: '≥2 workers for HA / multi-zone',
+      actual: workerN,
+      message:
+        'Отказоустойчивый / multi-zone Kubernetes несовместим с одной worker-нодой — нужно ≥2 (лучше ≥3) или снять требование HA',
     });
   }
 

@@ -13,6 +13,7 @@
     "eval:smoke:agent": "tsx scripts/eval/smoke.ts --agent",
     "eval:chat": "tsx scripts/eval/smoke.ts",
     "eval:bench": "tsx scripts/eval/benchmark.ts",
+    "eval:scenarios": "tsx scripts/eval/scenario-run.ts",
     "eval:run": "tsx scripts/eval/run.ts",
     "dev": "next dev --turbopack",
     "build": "next build",

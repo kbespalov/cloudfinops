@@ -146,10 +146,10 @@ describe('recommendInferenceInfra', () => {
 
   it('attaches a short why to each config', () => {
     const result = recommendInferenceInfra({model: 'gpt-oss-120b', maxConfigs: 2});
+    assert.equal(result.ok, true);
     assert.ok(result.primaryRecommendation?.why?.includes('H100'));
     assert.ok(result.configs?.[0]?.why?.length);
-    assert.ok(result.answerHint?.includes('###'));
-    assert.ok(result.answerHint?.includes('Почему так'));
+    assert.ok(result.answerHint?.includes('короткий лид') || result.answerHint?.includes('человеку'));
     assert.ok(result.answerHint?.includes('/calculator/self-host?'));
     assert.ok(result.answerHint?.includes('Запас памяти'));
   });

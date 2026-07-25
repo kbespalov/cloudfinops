@@ -481,9 +481,9 @@ export function recommendInferenceInfra(args: InferenceRecommendArgs): Inference
       : null,
     configs,
     answerHint:
-      'Формат ответа (markdown): ### Self-host: {модель}; строка метаданных (параметры · ctx · confidence); ### Почему так (2–4 коротких предложения); ### Цены узлов + таблица configs[] с колонками Конфиг | Использование VRAM | Запас памяти | Провайдер | ₽/мес (Использование/Запас из configs[].vramBreakdown: «N из M GiB» и loadBand label — Впритык/Малый запас/Оптимально/Большой запас/Не влезает); ### Альтернативы (буллеты по configs[1+], кратко); ### Hosted API (input/output отдельно, если есть); ### Оговорки (буллеты). В конце обязательно ссылка: [Открыть в калькуляторе](' +
+      'Ответ человеку, не системный дайджест. 1) Короткий лид: что нужно для self-host {модель} в РФ и главный вывод (конфиг + провайдер + порядок цены). 2) Таблица configs[]: Конфиг | Использование VRAM | Запас памяти | Провайдер | ₽/мес (vramBreakdown: «N из M GiB», loadBand). 3) При необходимости — альтернативы буллетами, Hosted API (input/output отдельно). 4) «На что обратить внимание» из caveats. Живой тон, без канцелярита «confidence / Почему так» как сухих заголовков. В конце ссылка: [Открыть в калькуляторе](' +
       calcUrl +
-      '). Не лей всё в один абзац.' +
+      ').' +
       fatHint,
     hostedAlternative: hostedAlternative(profile),
     caveats: profile.caveats,

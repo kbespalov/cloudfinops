@@ -222,6 +222,36 @@ describe('searchPricesDetailed kubernetes masters', () => {
   });
 });
 
+describe('searchPricesDetailed GPU', () => {
+  it('does not rank Cloud.ru ML Inference 1 GB GPU as cheapest whole H100', () => {
+    const r = searchPricesDetailed({
+      query: 'Самый дешёвый H100 в месяц',
+      gpuModel: 'H100',
+      limit: 20,
+    });
+    assert.ok(r.providers.length >= 2);
+    for (const p of r.providers) {
+      assert.doesNotMatch(p.cheapest.name, /1\s*GB\s*GPU/i);
+      assert.doesNotMatch(p.cheapest.unit, /GB-GPU/i);
+    }
+    assert.doesNotMatch(r.providers[0]!.cheapest.name, /1\s*GB\s*GPU/i);
+    // Real card / flavor rent is hundreds of thousands ₽/мес, not ~5k for 1 GB share.
+    assert.ok(
+      (r.providers[0]!.cheapest.month ?? 0) > 50_000,
+      `expected whole-card month price, got ${r.providers[0]!.cheapest.month}`,
+    );
+  });
+
+  it('keeps GB-GPU meters when query explicitly asks for per-GB share', () => {
+    const r = searchPricesDetailed({
+      query: 'Cloud.ru ML Inference цена за 1 GB GPU H100',
+      gpuModel: 'H100',
+      limit: 10,
+    });
+    assert.ok(r.rows.some((row) => /GB-GPU|1\s*GB\s*GPU/i.test(`${row.unit} ${row.name}`)));
+  });
+});
+
 describe('searchPricesDetailed CDN volume', () => {
   it('volumeEstimates use egress traffic, not free ingress or request meters', () => {
     const r = searchPricesDetailed({

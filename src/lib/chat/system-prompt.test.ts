@@ -115,6 +115,13 @@ describe('matchPlanningDomains', () => {
     assert.match(SYSTEM_PROMPT_CORE, /Workload без ТЗ/);
     assert.match(SYSTEM_PROMPT_CORE, /покрытие ≠ 100%|needs_clarification/);
     assert.match(SYSTEM_PROMPT_CORE, /ашка/);
+    assert.match(SYSTEM_PROMPT_CORE, /PREVIEW FIRST/);
+    assert.match(SYSTEM_PROMPT_CORE, /КОНФЛИКТЫ|невозмож/i);
+  });
+
+  it('attaches stack for shop / web infra asks', () => {
+    const d = matchPlanningDomains('Собери инфраструктуру для небольшого интернет-магазина');
+    assert.ok(d.includes('stack'), d.join(','));
   });
 });
 

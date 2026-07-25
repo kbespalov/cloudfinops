@@ -15,7 +15,7 @@ const DATA_PLATFORM_SIGNAL =
   /(?:платформ\w*\s+данных|data\s*platform|дата[-\s]?платформ|аналитическ\w*\s+платформ|dwh|data\s*warehouse|витрин\w*\s+данных|data\s*mart)/i;
 
 const ANALYTICS_STACK_SIGNAL =
-  /(?:trino|spark\s*sql|clickhouse|airflow|etl\s+(?:пайплайн|pipeline)|sql[-\s]?движок|query[-\s]?engine|serverless\s*sql|managed\s*warehouse)/i;
+  /(?:trino|spark(?:\s*sql)?|clickhouse|кликхаус|airflow|etl\s+(?:пайплайн|pipeline)|sql[-\s]?движок|query[-\s]?engine|serverless\s*sql|managed\s*warehouse|olap)/i;
 
 /** True when the user is sizing / comparing a lakehouse or analytics data platform. */
 export function matchLakehouseIntent(userText: string): LakehouseIntent {
@@ -29,6 +29,15 @@ export function matchLakehouseIntent(userText: string): LakehouseIntent {
   }
   if (DATA_PLATFORM_SIGNAL.test(text)) {
     return {matched: true, reason: 'data-platform'};
+  }
+  // ClickHouse / Trino / Spark sizing or managed-vs-DIY — always gate lakehouse tools.
+  if (
+    /(?:clickhouse|кликхаус|trino|spark)/i.test(text) &&
+    /(?:кластер|на\s+вм|managed|self[-\s]?host|стоим|цен|сколько|сравни|подбер|оцен|тб|tib|хранили)/i.test(
+      text,
+    )
+  ) {
+    return {matched: true, reason: 'analytics-stack'};
   }
   if (
     ANALYTICS_STACK_SIGNAL.test(text) &&
@@ -60,8 +69,9 @@ export const LAKEHOUSE_SYSTEM_ADDENDUM = `
 - Разделяй постоянные и переменные расходы. Если K8s-first избыточен для маленькой команды — скажи прямо и предложи managed/serverless.
 - Редкие запросы + низкий idle → проверь serverless. Постоянный BI + concurrency/SLA → warehouse/managed. Open formats / anti lock-in → open lakehouse. Near-real-time hot layer → отдельно OLAP поверх озера.
 - Сравнивай провайдеров только на сопоставимых моделях; иначе явно скажи, почему сравнение неполное.
-- Цены DIY open lakehouse (S3 + Managed K8s master + worker ВМ: platform/Airflow+catalog, ETL/Spark, Query/Trino с duty-cycle) бери ТОЛЬКО из get_lakehouse_quote. Не выдумывай тарифы managed Spark/Trino/ClickHouse, если их нет в каталоге — помечай как «не в каталоге / sales».
-- Не называй результат get_lakehouse_quote «ClickHouse», «ClickHouse-кластером» или managed warehouse. В заголовке используй формулировку из stackLabel/modelNote tool («DIY open lakehouse» / «open lakehouse на K8s»). ClickHouse/OLAP — только как альтернатива в п.8, без выдуманной цены.
+- PREVIEW FIRST: в этом же ходе вызови get_lakehouse_quote и/или compose_solution (не один search_catalog и не длинный опрос без чисел).
+- Цены DIY open lakehouse (S3 + Managed K8s master + worker ВМ: platform/Airflow+catalog, ETL/Spark, Query/Trino с duty-cycle) бери ТОЛЬКО из get_lakehouse_quote. Не выдумывай тарифы managed Spark/Trino/ClickHouse, если их нет в каталоге — помечай как «не в каталоге / невозможно сравнить полностью / частичное покрытие».
+- Не называй результат get_lakehouse_quote «ClickHouse», «ClickHouse-кластером» или managed warehouse. В заголовке используй формулировку из stackLabel/modelNote tool («DIY open lakehouse» / «open lakehouse на K8s»). ClickHouse/OLAP — только как альтернатива в п.8, без выдуманной цены; для CH на ВМ можно compose/get_quote как DIY compute+disk.
 - В конце ответа добавь ссылку на калькулятор из answerHint (если tool её вернул).
 
 Формат ответа:

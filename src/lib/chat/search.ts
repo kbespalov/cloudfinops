@@ -422,6 +422,35 @@ function wantsK8sUnitComponents(query: string | undefined): boolean {
   );
 }
 
+/**
+ * Cloud.ru ML Inference publishes per-GB-GPU share rates (≈1/80 of a full H100).
+ * Those must not win «самый дешёвый H100» / card rental rankings.
+ */
+export function isGpuGbShareMeter(meter: CatalogMeter): boolean {
+  const unit = String(meter.dimensions.meterUnit ?? '').toUpperCase();
+  if (unit === 'GB-GPU' || unit === 'GIB-GPU') return true;
+  if (meter.meter === 'ai.ml.gpu.gb') return true;
+  const hay = `${meter.name} ${meter.sku}`.toLowerCase();
+  return /\b1\s*gb\s*gpu\b/.test(hay) || /\bgb-gpu\b/.test(hay);
+}
+
+/** Explicit «цена за 1 ГБ GPU» / share asks — keep GB-GPU meters. */
+function wantsGpuGbShare(query: string | undefined): boolean {
+  if (!query) return false;
+  const q = normalize(query);
+  return (
+    q.includes('gb-gpu') ||
+    q.includes('за гб gpu') ||
+    q.includes('за гигабайт gpu') ||
+    q.includes('1 gb gpu') ||
+    q.includes('1 гб gpu') ||
+    q.includes('доля gpu') ||
+    q.includes('долю gpu') ||
+    q.includes('per gb gpu') ||
+    q.includes('gpu share')
+  );
+}
+
 function looksLikeKubernetesQuery(
   category: CategoryKey | null,
   searchTokens: string[],
@@ -591,6 +620,15 @@ function collectCandidates(params: SearchParams): FilterContext {
     if (gpuModel) {
       const gm = (extractGpuModel(meter) ?? '').toLowerCase();
       if (!gm.includes(gpuModel) && !hay.includes(gpuModel)) continue;
+    }
+    // Whole-card / «дешёвый H100» search: drop per-GB ML Inference shares unless asked.
+    // Also when the free-text query names a GPU family (even without gpuModel/category).
+    const queryLooksLikeGpuCard =
+      Boolean(gpuModel) ||
+      category === 'gpu' ||
+      /\b(h100|h200|a100|a10|l40s?|l4|b300|v100|t4|rtx)\b/i.test(params.query ?? '');
+    if (isGpuGbShareMeter(meter) && !wantsGpuGbShare(params.query) && queryLooksLikeGpuCard) {
+      continue;
     }
     if (aiModel && !aiModelMatchesNeedle(aiModel, meter, hay)) continue;
     if (storageClass) {
