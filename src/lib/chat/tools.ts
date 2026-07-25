@@ -150,8 +150,15 @@ export const CHAT_TOOLS = [
       parameters: {
         type: 'object',
         properties: {
-          vcpu: {type: 'integer', description: 'Количество vCPU (для GPU можно опустить).'},
-          ramGiB: {type: 'integer', description: 'Объём RAM в GiB (для GPU можно опустить).'},
+          vcpu: {
+            type: 'integer',
+            description: 'Количество vCPU (для GPU можно опустить).',
+          },
+          ramGiB: {
+            type: 'integer',
+            description:
+              'Объём RAM в GiB. Для обычной ВМ, если не задан — 4×vCPU (general). Для GPU можно опустить (подставится типовой хост).',
+          },
           diskGiB: {type: 'integer', description: 'Системный диск в GiB (по умолчанию 100).'},
           gpuModel: {
             type: 'string',
@@ -463,14 +470,17 @@ function buildPreset(args: Record<string, unknown>): BuiltPreset {
     return {preset, assumedHost};
   }
 
+  // Align with calculator sidebar: omitted RAM → 4×vCPU (general), not 1 GiB.
+  const resolvedVcpu = vcpu ?? 1;
+  const resolvedRam = ramGiB ?? resolvedVcpu * 4;
   const preset: ComputePreset = {
-    id: `chat-compute-${vcpu ?? 0}-${ramGiB ?? 0}`,
+    id: `chat-compute-${resolvedVcpu}-${resolvedRam}`,
     kind: 'compute',
     family: 'general',
-    title: `${vcpu ?? 0} / ${ramGiB ?? 0}`,
+    title: `${resolvedVcpu} / ${resolvedRam}`,
     subtitle: 'AI-ассистент',
-    vcpu: vcpu ?? 1,
-    ramGiB: ramGiB ?? 1,
+    vcpu: resolvedVcpu,
+    ramGiB: resolvedRam,
     diskGiB,
   };
   return {preset, assumedHost: null};

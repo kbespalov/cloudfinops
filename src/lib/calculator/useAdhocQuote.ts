@@ -14,6 +14,8 @@ export type AdhocComputeQuoteRequest = {
   family?: ComputeFamily;
   vmCount?: number;
   publicIpCount?: number;
+  /** CDN egress GiB/month to fold into the sidebar basket. */
+  cdnEgressGiB?: number;
   purchaseModel?: PurchaseModel;
   vcpuShare?: VcpuShare;
 };

@@ -134,7 +134,7 @@ export async function POST(req: Request) {
   // Inference wins if both match (rare); otherwise lakehouse persona + tool.
   const calculatorAddendum =
     surface === 'calculator'
-      ? '\n\nКонтекст: пользователь в калькуляторе «AI конфигурация». Для описания ВМ/GPU почти всегда вызывай get_quote (vcpu/ramGiB/diskGiB или gpuModel). Для lakehouse — get_lakehouse_quote. Не устраивай длинный опросник — сразу считай разумную конфигурацию.'
+      ? '\n\nКонтекст: пользователь в калькуляторе «AI конфигурация» (корзина справа). Для описания ВМ/GPU почти всегда вызывай get_quote (vcpu/ramGiB/diskGiB или gpuModel; если RAM не назвали — 4×vCPU). Для lakehouse — get_lakehouse_quote. Follow-up «докинь / докинем / добавь / добавим / плюс CDN [N ТБ|TB]» — это ДОБАВЛЕНИЕ в корзину: вызывай search_prices query «исходящий трафик CDN», category=cdn, volumeGiB (1 ТБ → 1024); НЕ Object Storage, НЕ network ingress/межзональный трафик, НЕ пересчитывай ВМ заново через get_quote. Не устраивай длинный опросник — сразу считай разумную конфигурацию.'
       : '';
   const systemContent =
     (inferenceIntent.matched
@@ -259,6 +259,21 @@ export async function POST(req: Request) {
                           period: 'month',
                         },
                       });
+                    } else {
+                      // CDN volume → merge into AI-calculator basket (category=cdn).
+                      const category =
+                        typeof record.category === 'string'
+                          ? record.category.trim().toLowerCase()
+                          : '';
+                      const query =
+                        typeof record.query === 'string' ? record.query : '';
+                      if (category === 'cdn' || /\bcdn\b/i.test(query)) {
+                        send({
+                          type: 'sidebar_config',
+                          tool: 'search_prices',
+                          args: record,
+                        });
+                      }
                     }
                   } else {
                     send({

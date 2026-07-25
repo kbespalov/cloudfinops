@@ -994,6 +994,78 @@ export function addPublicIpParts(
   };
 }
 
+/** Cheapest billable CDN traffic rate (₽/GiB) — egress or bidirectional, never free ingress. */
+function pickCdnTrafficRate(provider: string): number | null {
+  const meters = [
+    ...(getMeterIndex().byKey.get(`${provider}|cdn.traffic.egress`) ?? []),
+    ...(getMeterIndex().byKey.get(`${provider}|cdn.traffic.bidirectional`) ?? []),
+  ].filter((m) => m.status === 'available' && isConfirmedAvailable(m));
+
+  let best: number | null = null;
+  for (const m of meters) {
+    const blob = `${m.sku} ${m.name} ${m.meter}`.toLowerCase();
+    if (/request|запрос|ресурс|shielding|лог|dedicated/.test(blob)) continue;
+    if (
+      /cdn\.traffic\.ingress|(^|[^а-яё])входящ/.test(blob) &&
+      !/bidirectional|вход и выход/.test(blob)
+    ) {
+      continue;
+    }
+    const rate = amountNumber(m, 'month');
+    if (rate == null || !Number.isFinite(rate) || rate <= 0) continue;
+    if (best == null || rate < best) best = rate;
+  }
+  return best;
+}
+
+function scaleMonthUsageAmount(monthAmount: number, period: PeriodMode): number {
+  if (period === 'year') return monthAmount * 12;
+  if (period === 'unit') return monthAmount / 720;
+  return monthAmount;
+}
+
+/**
+ * Add CDN egress volume (GiB/month) to an already-built compute/GPU view.
+ * Rate is ₽/GiB from the catalog; period toggle scales the monthly estimate.
+ */
+export function addCdnEgressParts(
+  view: ViewPresetQuote,
+  volumeGiB: number,
+  period: PeriodMode,
+): ViewPresetQuote {
+  if (!Number.isFinite(volumeGiB) || volumeGiB <= 0) return view;
+
+  const volLabel =
+    volumeGiB >= 1024
+      ? `${Math.round((volumeGiB / 1024) * 10) / 10} ТиБ`
+      : `${Math.round(volumeGiB)} GiB`;
+
+  const enrich = (q: ViewProviderQuote): ViewProviderQuote => {
+    const withoutCdn = {
+      ...q,
+      total: q.parts.filter((p) => p.id !== 'cdn').reduce((s, p) => s + p.amount, 0),
+      parts: q.parts.filter((p) => p.id !== 'cdn'),
+    };
+    const rate = pickCdnTrafficRate(q.provider);
+    if (rate == null) return withoutCdn;
+    const amount = scaleMonthUsageAmount(rate * volumeGiB, period);
+    return {
+      ...withoutCdn,
+      total: withoutCdn.total + amount,
+      parts: [...withoutCdn.parts, {id: 'cdn', label: `CDN egress: ${volLabel}`, amount}],
+    };
+  };
+
+  const quotes = view.quotes.map(enrich).sort((a, b) => a.total - b.total);
+  const alternateQuotes = view.alternateQuotes.map(enrich).sort((a, b) => a.total - b.total);
+  return {
+    ...view,
+    quotes,
+    alternateQuotes,
+    best: quotes[0] ?? null,
+  };
+}
+
 let cachedQuotesByPeriod: QuotesByPeriod | null = null;
 
 /** Precompute all periods on the server so the client never loads the catalog. Cached per process. */

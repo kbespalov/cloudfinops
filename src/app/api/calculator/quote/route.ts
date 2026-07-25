@@ -1,5 +1,10 @@
 import {NextResponse} from 'next/server';
-import {addPublicIpParts, quotePreset, toViewQuote} from '@/lib/calculator/quote';
+import {
+  addCdnEgressParts,
+  addPublicIpParts,
+  quotePreset,
+  toViewQuote,
+} from '@/lib/calculator/quote';
 import type {
   ComputeFamily,
   ComputePreset,
@@ -27,6 +32,8 @@ type ComputeBody = {
   vmCount?: number;
   /** Public IPv4 count; capped by vmCount. */
   publicIpCount?: number;
+  /** CDN egress volume in GiB/month (binary); added as a separate cost part. */
+  cdnEgressGiB?: number;
   purchaseModel?: PurchaseModel;
   vcpuShare?: VcpuShare;
 };
@@ -124,11 +131,17 @@ export async function POST(request: Request) {
       purchaseModel,
       vcpuShare,
     };
-    const view = addPublicIpParts(
+    const rawCdn = Number(body.cdnEgressGiB ?? 0);
+    const cdnEgressGiB =
+      Number.isFinite(rawCdn) && rawCdn > 0 ? Math.min(Math.round(rawCdn), 512 * 1024) : 0;
+    let view = addPublicIpParts(
       scaleQuote(toViewQuote(quotePreset(preset, body.period)), vmCount),
       publicIpCount,
       body.period,
     );
+    if (cdnEgressGiB > 0) {
+      view = addCdnEgressParts(view, cdnEgressGiB, body.period);
+    }
     return NextResponse.json(view);
   }
 

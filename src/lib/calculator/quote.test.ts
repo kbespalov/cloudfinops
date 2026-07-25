@@ -8,6 +8,7 @@ import {
   type GpuPreset,
 } from '@/lib/calculator/presets';
 import {
+  addCdnEgressParts,
   addPublicIpParts,
   buildQuotesByPeriod,
   quoteAllPresets,
@@ -707,5 +708,18 @@ describe('calculator quote arbitration', () => {
     // Idempotent: second call must not stack another IP line.
     const twice = addPublicIpParts(withIp, 2, 'month');
     assert.equal(twice.best!.parts.filter((p) => p.id === 'ip').length, 1);
+  });
+
+  it('addCdnEgressParts folds 1 TiB CDN egress into the basket total', () => {
+    const base = toViewQuote(quotePreset(COMPUTE_PRESETS[0]!, 'month'));
+    const withCdn = addCdnEgressParts(base, 1024, 'month');
+    assert.ok(withCdn.best);
+    const cdnPart = withCdn.best!.parts.find((p) => p.id === 'cdn');
+    assert.ok(cdnPart, 'expected cdn cost part on a provider with CDN rates');
+    assert.match(cdnPart!.label, /CDN egress/);
+    assert.ok(cdnPart!.amount > 0);
+    assert.ok(withCdn.best!.total > base.best!.total);
+    const again = addCdnEgressParts(withCdn, 1024, 'month');
+    assert.equal(again.best!.parts.filter((p) => p.id === 'cdn').length, 1);
   });
 });

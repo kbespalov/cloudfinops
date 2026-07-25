@@ -6,7 +6,10 @@ import {
   CalculatorSidebar,
   type ConfigSummary,
 } from '@/components/calculator/CalculatorSidebar';
-import type {SidebarConfigPayload} from '@/lib/chat/sidebar-config';
+import {
+  mergeSidebarPatch,
+  type SidebarConfigPayload,
+} from '@/lib/chat/sidebar-config';
 import type {PeriodMode} from '@/lib/calculator/quote-view';
 import {
   useAdhocQuote,
@@ -18,10 +21,12 @@ import {
 } from '@/lib/calculator/useLakehouseQuote';
 import panelStyles from './CalculatorPanel.module.css';
 
+type AppliedSidebarPayload = Exclude<SidebarConfigPayload, {kind: 'adhoc-patch'}>;
+
 function withPeriod(
-  payload: SidebarConfigPayload,
+  payload: AppliedSidebarPayload,
   period: PeriodMode,
-): SidebarConfigPayload {
+): AppliedSidebarPayload {
   if (payload.kind === 'adhoc') {
     return {
       ...payload,
@@ -35,7 +40,7 @@ function withPeriod(
 }
 
 function applyPayload(
-  payload: SidebarConfigPayload,
+  payload: AppliedSidebarPayload,
   setAdhoc: (r: AdhocQuoteRequest | null) => void,
   setLakehouse: (r: LakehouseQuoteRequest | null) => void,
   setSummary: (s: ConfigSummary | null) => void,
@@ -56,7 +61,7 @@ export function AiCalculatorPanel({period}: {period: PeriodMode}) {
     null,
   );
   const [configSummary, setConfigSummary] = useState<ConfigSummary | null>(null);
-  const lastPayloadRef = useRef<SidebarConfigPayload | null>(null);
+  const lastPayloadRef = useRef<AppliedSidebarPayload | null>(null);
 
   const adhoc = useAdhocQuote(adhocRequest);
   const lakehouse = useLakehouseQuote(lakehouseRequest);
@@ -80,6 +85,13 @@ export function AiCalculatorPanel({period}: {period: PeriodMode}) {
       setAdhocRequest(null);
       setLakehouseRequest(null);
       setConfigSummary(null);
+      return;
+    }
+    if (payload.kind === 'adhoc-patch') {
+      const merged = mergeSidebarPatch(lastPayloadRef.current, payload, period);
+      if (!merged) return;
+      lastPayloadRef.current = merged;
+      applyPayload(merged, setAdhocRequest, setLakehouseRequest, setConfigSummary);
       return;
     }
     const next = withPeriod(payload, period);

@@ -459,6 +459,8 @@ function matchObjectVolumePlan(userText: string): FastPathPlan | null {
   if (looksMultiComponentStack(t)) return null;
   if (!/(?:s3|объектн|object\s*storage)/i.test(t)) return null;
   if (/блочн/i.test(t)) return null;
+  // CDN phrasing must not fall into S3 («докинь CDN +1TB»).
+  if (/\bcdn\b/i.test(t)) return null;
   const m = t.match(/(\d+(?:[.,]\d+)?)\s*тб/i);
   if (!m) return null;
   const tb = Math.round(parseFloat(m[1]!.replace(',', '.')));
@@ -480,6 +482,41 @@ function matchObjectVolumePlan(userText: string): FastPathPlan | null {
           storageClass,
           meterKind: 'capacity',
           volumeGiB: tb * 1024,
+          limit: 12,
+        },
+      },
+    ],
+  };
+}
+
+/** «докинь CDN +1TB» / «CDN 10 ТБ» → search_prices category=cdn (egress volume). */
+function matchCdnVolumePlan(userText: string): FastPathPlan | null {
+  const t = userText.trim();
+  if (looksMultiComponentStack(t)) return null;
+  if (!/\bcdn\b/i.test(t)) return null;
+  if (/(?:s3|объектн|object\s*storage)/i.test(t)) return null;
+
+  // Avoid \\b after Cyrillic units — JS word boundaries treat «ТБ» as non-word.
+  const m = t.match(/(\d+(?:[.,]\d+)?)\s*(?:тиб|tib|тб|tb)(?![а-яёa-z])/i);
+  const tb = m ? Math.round(parseFloat(m[1]!.replace(',', '.'))) : null;
+  // Cover conjugated RU verbs: докинь/докинем/докиньте, добавь/добавим/добавьте…
+  const actionable =
+    /докин\w*|добав\w*|прибав\w*|плюс|\+|трафик|сравни|сколько|стоим|цен|корзин/i.test(t) ||
+    tb != null;
+  if (!actionable) return null;
+
+  const volumeTb = tb != null && tb > 0 ? tb : 1;
+  if (volumeTb > 500) return null;
+
+  return {
+    id: `cdn-${volumeTb}tb`,
+    tools: [
+      {
+        name: 'search_prices',
+        args: {
+          query: 'исходящий трафик CDN',
+          category: 'cdn',
+          volumeGiB: volumeTb * 1024,
           limit: 12,
         },
       },
@@ -533,6 +570,8 @@ export function matchFastPath(userText: string): FastPathPlan | null {
   // Dynamic volume / budget before static aliases (captures 10ТБ SSD, 55ТБ NVMe, 50 тыс, …).
   const ssdVol = matchSsdVolumePlan(userText);
   if (ssdVol) return ssdVol;
+  const cdnVol = matchCdnVolumePlan(userText);
+  if (cdnVol) return cdnVol;
   const objectVol = matchObjectVolumePlan(userText);
   if (objectVol) return objectVol;
   const budget = matchBudgetPlan(userText);
@@ -1825,15 +1864,15 @@ function inferPlanIdFromAgentTool(
 }
 
 /**
- * Chat fast-path sampling rate. Default 0.5 (coin flip).
- * Override with CHAT_FAST_PATH_PROBABILITY=0|1|0.25 for eval/tests.
- * Calculator surface always keeps fast-path (sidebar needs get_quote).
+ * Chat fast-path sampling rate. Default 0 — prefer the agent (stronger model).
+ * Override with CHAT_FAST_PATH_PROBABILITY=0|1|0.25 for eval/A-B.
+ * Calculator surface still always keeps fast-path (sidebar needs get_quote ASAP).
  */
 export function fastPathProbabilityFromEnv(): number {
   const raw = process.env.CHAT_FAST_PATH_PROBABILITY;
-  if (raw == null || raw === '') return 0.5;
+  if (raw == null || raw === '') return 0;
   const n = Number(raw);
-  if (!Number.isFinite(n)) return 0.5;
+  if (!Number.isFinite(n)) return 0;
   return Math.min(1, Math.max(0, n));
 }
 
@@ -1854,7 +1893,7 @@ export function shouldUseFastPath(options?: {
 /**
  * If this is a first-turn chip/alias query, run tools locally and one short final LLM call.
  * Returns null when the query should use the normal tool loop.
- * Chat surface: sampled at ~50% (see CHAT_FAST_PATH_PROBABILITY).
+ * Chat surface: off by default (CHAT_FAST_PATH_PROBABILITY, default 0).
  */
 export async function tryRunFastPath(options: {
   messages: ChatMessage[];

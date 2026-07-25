@@ -14,8 +14,9 @@
 Агент умеет собирать мультикомпонентные стеки (ВМ + IP + S3 + CDN + K8s…) через параллельные tool calls и итоговую таблицу по провайдерам.
 
 - Дефолтная модель: **Google Gemini 3.1 Flash Lite** (`google/gemini-3.1-flash-lite`).
-- Fast path в чате ~50/50 (`CHAT_FAST_PATH_PROBABILITY`, по умолчанию 0.5); калькулятор — всегда on. Одиночный S3/volume fast path больше не «съедает» стековые вопросы.
+- Fast path в чате **выключен по умолчанию** (`CHAT_FAST_PATH_PROBABILITY=0`, agent-first); калькулятор — всегда on для сайдбара. Для latency A/B: `CHAT_FAST_PATH_PROBABILITY=1`. Одиночный S3/volume fast path больше не «съедает» стековые вопросы.
 - Recovery: русские лейблы tool (`прайс-листа` и т.п.) → правильный tool по форме args; финальный ответ по стеку — digest LLM / compose, без слияния tool results из прошлых ходов.
+- Калькулятор «AI-конфигурация»: follow-up «докинь / докинем CDN» → `category=cdn`, **мерж в корзину** (CDN egress), не Object Storage / network ingress. `get_quote` без RAM → 4×vCPU (как сайдбар).
 
 ### Каталог / MWS GPT Model Hub
 

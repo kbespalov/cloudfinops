@@ -10,7 +10,8 @@ export type ChatStreamDeltaEvent = {type: 'delta'; text: string};
 /** Drives the calculator AI-tab sidebar; full-page /chat ignores it. */
 export type ChatStreamSidebarConfigEvent = {
   type: 'sidebar_config';
-  tool: 'get_quote' | 'get_lakehouse_quote';
+  /** get_quote / lakehouse replace the basket; search_prices (CDN) patches it. */
+  tool: 'get_quote' | 'get_lakehouse_quote' | 'search_prices';
   args: Record<string, unknown>;
 };
 export type ChatStreamEvent =
@@ -54,7 +55,13 @@ export function parseChatStreamLine(line: string): ChatStreamEvent | null {
       args?: unknown;
     };
     if (parsed.type === 'sidebar_config') {
-      if (parsed.tool !== 'get_quote' && parsed.tool !== 'get_lakehouse_quote') return null;
+      if (
+        parsed.tool !== 'get_quote' &&
+        parsed.tool !== 'get_lakehouse_quote' &&
+        parsed.tool !== 'search_prices'
+      ) {
+        return null;
+      }
       if (!parsed.args || typeof parsed.args !== 'object' || Array.isArray(parsed.args)) {
         return null;
       }

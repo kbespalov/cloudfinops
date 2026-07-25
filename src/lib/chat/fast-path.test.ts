@@ -22,7 +22,9 @@ describe('shouldUseFastPath', () => {
     assert.equal(shouldUseFastPath({surface: 'chat', probability: 1, random: () => 0.99}), true);
   });
 
-  it('coin-flips at 0.5 using injected RNG', () => {
+  it('defaults chat fast-path off (agent-first)', () => {
+    // Explicit undefined probability → env default (0) via shouldUseFastPath path
+    // when callers pass probability: 0 from tests; coin-flip still works if p=0.5.
     assert.equal(shouldUseFastPath({surface: 'chat', probability: 0.5, random: () => 0.49}), true);
     assert.equal(shouldUseFastPath({surface: 'chat', probability: 0.5, random: () => 0.5}), false);
   });
@@ -166,6 +168,36 @@ describe('matchFastPath', () => {
       matchFastPath('Сравни 100 ТБ S3 Standard и 100 ТБ трафика CDN по провайдерам'),
       null,
     );
+  });
+
+  it('matches calculator follow-up «докинь CDN +1TB» to CDN egress search', () => {
+    const plan = matchFastPath('докинь CDN +1TB');
+    assert.ok(plan);
+    assert.equal(plan.id, 'cdn-1tb');
+    assert.equal(plan.tools[0]?.name, 'search_prices');
+    assert.equal(plan.tools[0]?.args.category, 'cdn');
+    assert.equal(plan.tools[0]?.args.volumeGiB, 1024);
+    assert.match(String(plan.tools[0]?.args.query ?? ''), /CDN/i);
+
+    const ru = matchFastPath('добавь CDN 2 ТБ в корзину');
+    assert.ok(ru);
+    assert.equal(ru.id, 'cdn-2tb');
+    assert.equal(ru.tools[0]?.args.volumeGiB, 2048);
+  });
+
+  it('matches conjugated «докинем / добавим CDN» (not only imperative докинь)', () => {
+    for (const q of [
+      'окей, давай докинем туда CDN еще',
+      'докинем CDN',
+      'добавим CDN 1 ТБ',
+      'давайте добавим CDN',
+    ]) {
+      const plan = matchFastPath(q);
+      assert.ok(plan, q);
+      assert.match(plan.id, /^cdn-\d+tb$/);
+      assert.equal(plan.tools[0]?.name, 'search_prices');
+      assert.equal(plan.tools[0]?.args.category, 'cdn');
+    }
   });
 
   it('matches budget paraphrases to fit_budget without planning LLM', () => {

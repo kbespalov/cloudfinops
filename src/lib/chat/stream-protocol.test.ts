@@ -47,8 +47,18 @@ describe('stream-protocol', () => {
       tool: 'get_quote',
       args: {vcpu: 52, ramGiB: 128},
     });
+    assert.deepEqual(
+      parseChatStreamLine(
+        '{"type":"sidebar_config","tool":"search_prices","args":{"category":"cdn","volumeGiB":1024}}',
+      ),
+      {
+        type: 'sidebar_config',
+        tool: 'search_prices',
+        args: {category: 'cdn', volumeGiB: 1024},
+      },
+    );
     assert.equal(
-      parseChatStreamLine('{"type":"sidebar_config","tool":"search_prices","args":{}}'),
+      parseChatStreamLine('{"type":"sidebar_config","tool":"fit_budget","args":{}}'),
       null,
     );
   });
