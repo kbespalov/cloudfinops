@@ -3,6 +3,7 @@ import {notFound} from 'next/navigation';
 import {GpuModelPage} from '@/components/gpu/GpuModelPage';
 import {
   allGpuLandingSlugs,
+  faqForLanding,
   getGpuLanding,
   type GpuLandingDef,
 } from '@/data/gpu-landings';
@@ -74,7 +75,7 @@ function modelJsonLd(def: GpuLandingDef) {
       },
       {
         '@type': 'FAQPage',
-        mainEntity: def.faq.map((item) => ({
+        mainEntity: faqForLanding(def).map((item) => ({
           '@type': 'Question',
           name: item.question,
           acceptedAnswer: {

@@ -57,3 +57,11 @@
   line-height: 1.55;
   max-width: 40em;
 }
+
+.legalMeta {
+  margin: 40px 0 0;
+  max-width: 40em;
+  font-size: 11px;
+  line-height: 1.4;
+  color: color-mix(in srgb, var(--g-color-text-secondary) 55%, var(--g-color-base-background));
+}

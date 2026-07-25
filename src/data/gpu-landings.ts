@@ -39,6 +39,12 @@ export type GpuLandingDef = {
   eyebrow: string;
   /** Short comparison facts for hub cards (VRAM, form-factor). */
   hubFacts: string[];
+  /** «О модели» — год, архитектура, память и особенности (SEO + решение). */
+  about: string;
+  /** Compact fact chips under about. */
+  aboutFacts: string[];
+  /** Short «Подходит для» scenarios (one line each). */
+  useCases: string[];
   /** Whether to feature on hub grid (not only related links). */
   hubFeatured: boolean;
   /** Sort weight on hub (lower = earlier). */
@@ -52,6 +58,31 @@ export function catalogHrefForLanding(def: Pick<GpuLandingDef, 'gpuFacet' | 'cat
   if (def.gpuFacet) params.set('gpu', def.gpuFacet);
   if (def.catalogQuery?.trim()) params.set('q', def.catalogQuery.trim());
   return `/catalog?${params.toString()}`;
+}
+
+export type GpuLandingFaq = GpuLandingDef['faq'][number];
+
+/** Shared FAQ for every model landing — pricing / catalog scope. */
+export const COMMON_GPU_LANDING_FAQ: GpuLandingFaq[] = [
+  {
+    question: 'Это официальные цены NVIDIA или облачных провайдеров?',
+    answer:
+      'Нет. Cloud FinOps — независимый каталог публичных тарифов облаков России. Итоговая цена у провайдера может отличаться из‑за квот, наличия, контракта и скидок.',
+  },
+  {
+    question: 'Почему цена может отличаться от сайта провайдера?',
+    answer:
+      'Мы нормализуем публичные тарифы в единый каталог (₽ с НДС, час/месяц). У провайдера могут быть другие единицы, скрытые компоненты, региональные отличия или изменения после даты среза.',
+  },
+];
+
+/** Common pricing FAQ first, then model-specific items (no duplicate questions). */
+export function faqForLanding(def: Pick<GpuLandingDef, 'faq'>): GpuLandingFaq[] {
+  const seen = new Set(COMMON_GPU_LANDING_FAQ.map((item) => item.question));
+  return [
+    ...COMMON_GPU_LANDING_FAQ,
+    ...def.faq.filter((item) => !seen.has(item.question)),
+  ];
 }
 
 export const GPU_LANDINGS: GpuLandingDef[] = [
@@ -80,18 +111,28 @@ export const GPU_LANDINGS: GpuLandingDef[] = [
     ],
     faq: [
       {
-        question: 'Это официальные цены NVIDIA или провайдеров?',
+        question: 'Чем H200 отличается от H100?',
         answer:
-          'Нет. Cloud FinOps — независимый каталог публичных тарифов облаков России. Итоговая цена у провайдера может отличаться из‑за квот, наличия, контракта и скидок.',
+          'У H200 больше HBM (ориентир 141 GB) — чаще берут под длинный контекст и крупные MoE. В каталоге это разные фильтры: gpu=h200 и gpu=h100.',
       },
       {
-        question: 'Чем H200 отличается от H100 в каталоге?',
+        question: 'Что входит в стоимость выделенного HGX-сервера?',
         answer:
-          'У H200 больше HBM (ориентир 141GB) — чаще берут под длинный контекст и крупные MoE. В каталоге это разные facet: gpu=h200 и gpu=h100.',
+          'Обычно это bundle на 8× GPU с хостом (CPU/RAM/сеть) по публичному прайсу dedicated или flavor. Не делите цену «на одну карту» без оговорки — в каталоге такие строки помечены как выделенный узел.',
       },
     ],
     eyebrow: 'Топ по спросу',
-    hubFacts: ['141 GB', '1× / 8×'],
+    hubFacts: ['141 GB', '1× или 8×'],
+    about:
+      'NVIDIA H200 (Hopper, анонс 2023, поставки с 2024) — датацентровый ускоритель с 141 GB HBM3e и пропускной способностью памяти до ~4,8 ТБ/с: почти вдвое больше ёмкости, чем у H100 80 GB, и заметно выше bandwidth. Тот же класс Hopper Tensor Cores (FP8/BF16), но с запасом VRAM под длинный контекст, крупные MoE и модели, которым H100 уже тесно. В облаках РФ встречается как отдельная GPU, flavor «GPU + хост» и полка 8× / HGX — в каталоге это разные форматы аренды, а не одна «цена за карту».',
+    aboutFacts: [
+      '2024 · Hopper',
+      '141 GB HBM3e',
+      '~4,8 ТБ/с',
+      '1× или 8× GPU',
+      'отдельная GPU, GPU + хост, выделенный сервер',
+    ],
+    useCases: ['инференс крупных LLM', 'длинный контекст', 'обучение и дообучение моделей'],
     hubFeatured: true,
     hubOrder: 1,
   },
@@ -119,6 +160,10 @@ export const GPU_LANDINGS: GpuLandingDef[] = [
     ],
     eyebrow: 'Спека',
     hubFacts: ['141 GB', 'NVL'],
+    about:
+      'NVIDIA H200 NVL (2024) — тот же Hopper H200 с 141 GB HBM3e, но в форм-факторе NVL (PCIe / NVLink Bridge): удобен, когда нужна связка из двух или нескольких карт без полной SXM/HGX-полки. Память и bandwidth сопоставимы с H200 SXM; отличается упаковка, охлаждение и типичная конфигурация узла у провайдера. В каталоге Cloud FinOps NVL часто публикуют отдельной строкой — если строк мало, смотрите соседние H200 SXM/PCIe в том же facet.',
+    aboutFacts: ['2024 · Hopper', '141 GB HBM3e', 'форм-фактор NVL', 'семейство H200'],
+    useCases: ['инференс на H200 NVL', 'длинный контекст', 'крупные open-weight модели'],
     hubFeatured: true,
     hubOrder: 2,
   },
@@ -152,7 +197,17 @@ export const GPU_LANDINGS: GpuLandingDef[] = [
       },
     ],
     eyebrow: 'Классика AI',
-    hubFacts: ['80 GB', '1× / 8×'],
+    hubFacts: ['80 GB', '1× или 8×'],
+    about:
+      'NVIDIA H100 (Hopper, 2022) — базовая «рабочая» карта поколения Hopper: обычно 80 GB HBM3 (SXM) или HBM2e (PCIe), Transformer Engine и FP8 Tensor Cores, NVLink 4.0 на многокартовых узлах. Именно её чаще всего сравнивают по ₽/час для обучения и production-инференса mid/large LLM. В облаках встречаются 1× PCIe, многокартовые flavor и полки 8× / HGX — в каталоге важно не смешивать «только GPU» и bundle «целиком».',
+    aboutFacts: [
+      '2022 · Hopper',
+      '80 GB HBM',
+      'FP8 / Transformer Engine',
+      '1× или 8× GPU',
+      'PCIe, SXM, HGX',
+    ],
+    useCases: ['обучение и инференс', 'production LLM', 'multi-GPU конфигурации'],
     hubFeatured: true,
     hubOrder: 3,
   },
@@ -178,7 +233,17 @@ export const GPU_LANDINGS: GpuLandingDef[] = [
       },
     ],
     eyebrow: 'Массовый GPU',
-    hubFacts: ['40 / 80 GB', '1× / multi'],
+    hubFacts: ['40 или 80 GB', '1× или несколько'],
+    about:
+      'NVIDIA A100 (Ampere, 2020) — массовый датацентровый GPU предыдущего поколения: линейки 40 GB HBM2 и 80 GB HBM2e, Tensor Cores 3-го поколения, MIG и NVLink 3.0 на SXM-узлах. До сих пор выгодная полка, когда Hopper/Blackwell избыточны по бюджету, а модель и батч помещаются в 40/80 GB. В каталоге сравнивайте 40 vs 80 GB и 1× vs multi-GPU — это разные TCO, даже при одном facet A100.',
+    aboutFacts: [
+      '2020 · Ampere',
+      '40 или 80 GB HBM',
+      'MIG / NVLink 3.0',
+      '1× и multi-GPU',
+      'GPU и ВМ',
+    ],
+    useCases: ['inference mid-size моделей', 'обучение при ограниченном бюджете', 'миграция со старых A100'],
     hubFeatured: true,
     hubOrder: 4,
   },
@@ -205,7 +270,17 @@ export const GPU_LANDINGS: GpuLandingDef[] = [
       },
     ],
     eyebrow: 'Dedicated',
-    hubFacts: ['288 GB', '8× HGX'],
+    hubFacts: ['288 GB', '8× GPU'],
+    about:
+      'NVIDIA B300 (Blackwell Ultra, 2025) — ускоритель следующего поколения после Hopper: ориентир до ~288 GB HBM3e на GPU и существенно выше memory bandwidth, чем у H200. В публичных прайсах облаков РФ B300 почти всегда идёт как выделенный HGX-узел на 8 GPU, а не как card-only on-demand. Сравнивайте помесячный bundle и условия dedicated — это другая экономика, чем аренда одной H100/H200.',
+    aboutFacts: [
+      '2025 · Blackwell',
+      'до 288 GB HBM3e',
+      '8× GPU / HGX',
+      'выделенный узел',
+      'часто ₽/мес',
+    ],
+    useCases: ['крупный training', 'dedicated AI-кластер', 'HGX-полки нового поколения'],
     hubFeatured: true,
     hubOrder: 5,
   },
@@ -239,7 +314,17 @@ export const GPU_LANDINGS: GpuLandingDef[] = [
       },
     ],
     eyebrow: '8×GPU',
-    hubFacts: ['8× H200', 'узел'],
+    hubFacts: ['8× H200', 'выделенный'],
+    about:
+      'HGX H200 — серверная полка NVIDIA на 8× H200 (Hopper, 2024): до ~1,1 ТБ суммарной HBM3e на узле при NVLink/NVSwitch между GPU. Так обычно берут крупные MoE (например GLM-класса), multi-GPU training и высоконагруженный инференс, когда одной карты мало. В каталоге это flavor ×8 / dedicated, а не «цена одной H200» — сравнивайте ₽ за узел и период (час/месяц).',
+    aboutFacts: [
+      '2024 · Hopper',
+      '8× H200',
+      '141 GB на GPU',
+      '~1,1 ТБ на узел',
+      'выделенный / HGX',
+    ],
+    useCases: ['обучение на 8× H200', 'крупный инференс', 'выделенная HGX-полка'],
     hubFeatured: true,
     hubOrder: 6,
   },
@@ -264,7 +349,17 @@ export const GPU_LANDINGS: GpuLandingDef[] = [
       },
     ],
     eyebrow: 'HGX',
-    hubFacts: ['8× B300', 'dedicated'],
+    hubFacts: ['8× B300', 'выделенный'],
+    about:
+      'HGX B300 — выделенная полка Blackwell Ultra (2025) на 8× B300: максимальная публичная конфигурация этого семейства в облаках РФ. Предназначена под крупнейший training и multi-GPU инференс нового поколения; тариф обычно помесячный dedicated-bundle. В каталоге смотрите facet B300 и строки HGX / 8× — не путайте с on-demand ВМ на одной карте.',
+    aboutFacts: [
+      '2025 · Blackwell',
+      '8× B300',
+      'выделенный HGX',
+      'до 288 GB на GPU',
+      'часто ₽/мес',
+    ],
+    useCases: ['dedicated B300', 'крупный training', 'HGX нового поколения'],
     hubFeatured: true,
     hubOrder: 7,
   },
@@ -304,6 +399,16 @@ export const GPU_LANDINGS: GpuLandingDef[] = [
     ],
     eyebrow: 'Ada mid-range',
     hubFacts: ['48 GB', '1×'],
+    about:
+      'NVIDIA L40S (Ada Lovelace, 2023) — датацентровый PCIe-ускоритель с 48 GB GDDR6 и поддержкой FP8 Tensor Cores: ступень между экономичным L4 и дорогими HBM-картами A100/H100. Берут для mid-size LLM inference, batch-обработки и смешанных AI/графических нагрузок, когда 24 GB L4 уже мало, а Hopper избыточен по TCO. В каталоге L40S — отдельный facet от L4; сравнивать ₽/час между ними можно, но это разные модели.',
+    aboutFacts: [
+      '2023 · Ada Lovelace',
+      '48 GB GDDR6',
+      'FP8 Tensor Cores',
+      'PCIe 1×',
+      'inference / графика',
+    ],
+    useCases: ['mid-range inference', 'графика и рендер', 'ступень между L4 и A100'],
     hubFeatured: true,
     hubOrder: 8,
   },
@@ -326,7 +431,17 @@ export const GPU_LANDINGS: GpuLandingDef[] = [
       },
     ],
     eyebrow: 'Эконом inference',
-    hubFacts: ['24 GB', '1× / vGPU'],
+    hubFacts: ['24 GB', '1× или vGPU'],
+    about:
+      'NVIDIA L4 (Ada Lovelace, 2023) — энергоэффективный PCIe GPU на 24 GB GDDR6 (типичный TDP около 72 Вт): наследник линейки T4 для embedding, лёгкого LLM inference, ASR и vGPU-долей. Удобен, когда H100/H200 избыточны, а модель и контекст помещаются в 24 GB (часто INT4/FP8). В каталоге не смешивайте с L40S (48 GB) — это разные facet и разный класс задач.',
+    aboutFacts: [
+      '2023 · Ada Lovelace',
+      '24 GB GDDR6',
+      '~72 Вт',
+      '1× или vGPU',
+      'лёгкий inference',
+    ],
+    useCases: ['embedding и лёгкий inference', 'vGPU-доли', 'экономичные AI-задачи'],
     hubFeatured: true,
     hubOrder: 9,
   },

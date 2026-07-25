@@ -4,6 +4,7 @@ import Link from 'next/link';
 import {Button, Flex, Icon, Text} from '@gravity-ui/uikit';
 import {LogoTelegram, SquareListUl} from '@gravity-ui/icons';
 import {AppHeader} from '@/components/AppHeader';
+import {LegalMetaNotice} from '@/components/LegalMetaNotice';
 import styles from './AboutPage.module.css';
 
 export function AboutPage() {
@@ -52,6 +53,7 @@ export function AboutPage() {
             </Flex>
           </section>
         </div>
+        <LegalMetaNotice className={styles.legalMeta} />
       </main>
     </>
   );

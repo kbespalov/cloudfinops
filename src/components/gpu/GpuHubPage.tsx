@@ -5,22 +5,151 @@ import Link from 'next/link';
 import {Button, Flex, Icon, Text} from '@gravity-ui/uikit';
 import {ArrowRight, Magnifier, SquareListUl} from '@gravity-ui/icons';
 import {AppHeader} from '@/components/AppHeader';
-import {catalogHrefForLanding} from '@/data/gpu-landings';
-import {hubGpuStats} from '@/lib/gpu-landing';
+import {LegalMetaNotice} from '@/components/LegalMetaNotice';
+import {getGpuLanding, type GpuLandingSlug} from '@/data/gpu-landings';
+import {MODEL_FAMILY_META, type ModelFamily} from '@/lib/calculator/model-family';
+import {hubGpuStats, showcaseModelsForLanding} from '@/lib/gpu-landing';
 import styles from './GpuLanding.module.css';
 
-const CATALOG_CHIPS = [
-  {label: 'Все GPU', href: '/catalog?category=gpu'},
-  {label: 'H200', href: catalogHrefForLanding({gpuFacet: 'h200'})},
-  {label: 'H100', href: catalogHrefForLanding({gpuFacet: 'h100'})},
-  {label: 'A100', href: catalogHrefForLanding({gpuFacet: 'a100'})},
-  {label: 'B300', href: catalogHrefForLanding({gpuFacet: 'b300'})},
-  {label: 'L40S', href: catalogHrefForLanding({gpuFacet: 'l40s'})},
-  {label: 'L4', href: catalogHrefForLanding({gpuFacet: 'l4'})},
-] as const;
+const VIRTUAL_SLUGS: GpuLandingSlug[] = ['h200', 'h200-nvl', 'h100', 'a100', 'l40s', 'l4'];
+const DEDICATED_SLUGS: GpuLandingSlug[] = ['b300', 'hgx-h200', 'hgx-b300'];
+
+type HubCard = ReturnType<typeof hubGpuStats>['familyCards'][number];
+
+function labChipLabel(family: ModelFamily): string {
+  if (family === 'gpt-oss') return 'gpt-oss';
+  if (family === 'mixtral') return 'Mixtral';
+  return MODEL_FAMILY_META[family].title;
+}
+
+function cardStatusBadge(card: HubCard): string | null {
+  if (card.slug === 'h200-nvl') return 'NVL';
+  if (card.preferNode) return 'выделенный';
+  return null;
+}
+
+function cardSpecsLine(card: HubCard, badge: string | null): string {
+  return card.hubFacts
+    .filter((fact) => {
+      if (badge === 'NVL' && /^nvl$/i.test(fact.trim())) return false;
+      if (badge === 'выделенный' && /выделен/i.test(fact)) return false;
+      return true;
+    })
+    .join(' · ');
+}
+
+function suitedLabs(card: HubCard): {labels: string[]; more: number} {
+  const landing = getGpuLanding(card.slug);
+  if (!landing) return {labels: [], more: 0};
+  const showcase = showcaseModelsForLanding(landing, 8);
+  const families: ModelFamily[] = [];
+  const seen = new Set<ModelFamily>();
+  for (const item of showcase) {
+    if (seen.has(item.family) || item.family === 'other') continue;
+    seen.add(item.family);
+    families.push(item.family);
+  }
+  const shown = families.slice(0, 3);
+  return {
+    labels: shown.map(labChipLabel),
+    more: Math.max(0, families.length - shown.length),
+  };
+}
+
+function HubModelCard({card, index}: {card: HubCard; index: number}) {
+  const href = `/gpu/${card.slug}`;
+  const badge = cardStatusBadge(card);
+  const specs = cardSpecsLine(card, badge);
+  const labs = suitedLabs(card);
+  const hasPrice = Boolean(card.fromLabel);
+
+  return (
+    <Link
+      href={href}
+      className={styles.hubCard}
+      prefetch
+      style={{'--card-i': index} as CSSProperties}
+    >
+      <div className={styles.hubCardHead}>
+        <Text as="h3" variant="header-2" className={styles.hubCardTitle}>
+          {card.shortTitle}
+        </Text>
+        <Icon data={ArrowRight} size={16} className={styles.hubCardArrow} />
+      </div>
+
+      <p className={styles.hubCardSpecs}>
+        {specs}
+        {badge ? <span className={styles.hubCardBadge}>{badge}</span> : null}
+      </p>
+
+      {labs.labels.length > 0 ? (
+        <div className={styles.hubSuit}>
+          <span className={styles.hubSuitLabel}>Подходит для</span>
+          <ul className={styles.hubSuitList}>
+            {labs.labels.map((label) => (
+              <li key={label}>{label}</li>
+            ))}
+            {labs.more > 0 ? <li className={styles.hubSuitMore}>+{labs.more}</li> : null}
+          </ul>
+        </div>
+      ) : null}
+
+      <div className={styles.hubCardFoot}>
+        {hasPrice ? (
+          <>
+            <Text as="div" variant="subheader-2" className={styles.hubCardPrice}>
+              {card.fromLabel}
+            </Text>
+            <Text as="div" variant="body-2" className={styles.hubCardMeta}>
+              {card.offerCount} предложений
+            </Text>
+          </>
+        ) : (
+          <>
+            <Text as="div" variant="subheader-2" className={styles.hubCardPriceMuted}>
+              Конфигурации в каталоге
+            </Text>
+            <Text as="div" variant="body-2" className={styles.hubCardMeta}>
+              {card.offerCount > 0 ? `${card.offerCount} предложений` : 'Несколько вариантов'}
+            </Text>
+          </>
+        )}
+      </div>
+    </Link>
+  );
+}
+
+function CardGroup({
+  title,
+  cards,
+  startIndex,
+}: {
+  title?: string;
+  cards: HubCard[];
+  startIndex: number;
+}) {
+  if (cards.length === 0) return null;
+  return (
+    <div className={styles.hubGroup}>
+      {title ? (
+        <Text as="h3" variant="subheader-2" className={styles.hubGroupTitle}>
+          {title}
+        </Text>
+      ) : null}
+      <div className={styles.hubGrid}>
+        {cards.map((card, i) => (
+          <HubModelCard key={card.slug} card={card} index={startIndex + i} />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function GpuHubPage() {
   const hub = hubGpuStats();
+  const bySlug = new Map(hub.familyCards.map((c) => [c.slug, c]));
+  const virtual = VIRTUAL_SLUGS.map((s) => bySlug.get(s)).filter((c): c is HubCard => c != null);
+  const dedicated = DEDICATED_SLUGS.map((s) => bySlug.get(s)).filter((c): c is HubCard => c != null);
 
   return (
     <div className={styles.page}>
@@ -30,129 +159,52 @@ export function GpuHubPage() {
       </div>
 
       <main className={styles.main}>
-        <header className={styles.heroBand}>
-          <div className={styles.heroCopy}>
-            <Text as="h1" variant="display-1" className={`${styles.title} ${styles.titleOneLine}`}>
-              Аренда GPU в облаке России
-            </Text>
-            <Text as="p" variant="body-2" className={styles.lead}>
-              Сравнивайте публичные тарифы российских облаков на NVIDIA H200, H100, A100, B300 и L4.
-            </Text>
-            <Flex className={styles.actions}>
-              <Button view="action" size="xl" href="/catalog?category=gpu" component={Link} prefetch>
-                <Icon data={SquareListUl} size={18} />
-                Каталог GPU
-                <Icon data={ArrowRight} size={18} />
-              </Button>
-              <Button
-                view="outlined"
-                size="xl"
-                href="/chat?q=%D0%A1%D0%B0%D0%BC%D1%8B%D0%B9%20%D0%B4%D0%B5%D1%88%D1%91%D0%B2%D1%8B%D0%B9%20H100%20%D0%B2%20%D0%BC%D0%B5%D1%81%D1%8F%D1%86"
-                component={Link}
-                prefetch
-              >
-                <Icon data={Magnifier} size={18} />
-                Спросить ассистента
-              </Button>
-            </Flex>
-          </div>
-
-          <aside className={styles.heroPanel} aria-label="Срез каталога">
-            <div className={styles.heroMetrics}>
-              <div className={styles.heroMetric}>
-                <Text as="div" variant="display-1" className={styles.heroMetricValue}>
-                  {hub.gpuOfferCount}
-                </Text>
-                <Text variant="body-2">предложений</Text>
-              </div>
-              <div className={styles.heroMetric}>
-                <Text as="div" variant="display-1" className={styles.heroMetricValue}>
-                  {hub.providerCount}
-                </Text>
-                <Text variant="body-2">облачных провайдеров</Text>
-              </div>
-            </div>
-            <div className={styles.heroPanelMeta}>
-              <p>Обновлено {hub.updatedLabel}</p>
-              <p>Цены с НДС, без промо и индивидуальных скидок</p>
-            </div>
-            <div className={styles.heroChips}>
-              {CATALOG_CHIPS.map((chip) => (
-                <Button
-                  key={chip.href}
-                  view="outlined"
-                  size="m"
-                  href={chip.href}
-                  component={Link}
-                  prefetch
-                >
-                  {chip.label}
-                </Button>
-              ))}
-            </div>
-          </aside>
+        <header className={styles.hubHero}>
+          <Text as="h1" variant="display-1" className={styles.hubTitle}>
+            Аренда GPU в облаке России
+          </Text>
+          <Text as="p" variant="body-2" className={styles.hubLead}>
+            Сравнивайте публичные тарифы на NVIDIA H200, H100, A100, B300 и L4 в российских облаках.
+          </Text>
+          <Flex className={styles.actions}>
+            <Button view="action" size="xl" href="/catalog?category=gpu" component={Link} prefetch>
+              <Icon data={SquareListUl} size={18} />
+              Каталог GPU
+              <Icon data={ArrowRight} size={18} />
+            </Button>
+            <Button
+              view="outlined"
+              size="xl"
+              href="/chat?q=%D0%A1%D0%B0%D0%BC%D1%8B%D0%B9%20%D0%B4%D0%B5%D1%88%D1%91%D0%B2%D1%8B%D0%B9%20H100%20%D0%B2%20%D0%BC%D0%B5%D1%81%D1%8F%D1%86"
+              component={Link}
+              prefetch
+            >
+              <Icon data={Magnifier} size={18} />
+              Спросить ассистента
+            </Button>
+          </Flex>
         </header>
 
         <section className={styles.section} aria-labelledby="gpu-models-title">
-          <Text as="h2" variant="header-2" id="gpu-models-title" className={styles.sectionTitle}>
+          <Text as="h2" variant="header-1" id="gpu-models-title" className={styles.sectionTitle}>
             Модели и цены
           </Text>
-          <div className={styles.grid}>
-            {hub.familyCards.map((card, index) => {
-              const href = `/gpu/${card.slug}`;
-              const meta = [
-                card.offerCount > 0 ? `${card.offerCount} предложений` : null,
-                card.fromProvider,
-              ]
-                .filter(Boolean)
-                .join(' · ');
-              return (
-                <Link
-                  key={card.slug}
-                  href={href}
-                  className={styles.card}
-                  prefetch
-                  style={{'--card-i': index} as CSSProperties}
-                >
-                  <div className={styles.cardTop}>
-                    <Text as="h3" variant="header-1" className={styles.cardTitle}>
-                      {card.shortTitle}
-                    </Text>
-                    <ul className={styles.cardFacts}>
-                      {card.hubFacts.map((fact) => (
-                        <li key={fact}>{fact}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className={styles.cardFoot}>
-                    <div className={styles.cardPriceBlock}>
-                      <Text variant="header-1" className={styles.cardPrice}>
-                        {card.fromLabel ?? 'В каталоге'}
-                      </Text>
-                      {meta ? (
-                        <Text variant="body-2" className={styles.cardMeta}>
-                          {meta}
-                        </Text>
-                      ) : null}
-                    </div>
-                    <span className={styles.cardGo} aria-hidden>
-                      <Icon data={ArrowRight} size={16} />
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+
+          <CardGroup cards={virtual} startIndex={0} />
+          <CardGroup
+            title="Выделенные GPU-серверы"
+            cards={dedicated}
+            startIndex={virtual.length}
+          />
         </section>
 
         <footer className={styles.disclaimer}>
-          <p>{hub.scopeHint}</p>
           <p>
-            NVIDIA, H100, H200, A100, B300, L40S, L4, HGX и связанные обозначения — товарные знаки
-            соответствующих правообладателей. Cloud FinOps не аффилирован с NVIDIA и облачными
-            провайдерами; страницы носят информационно-сравнительный характер и не являются офертой
-            или витриной продажи оборудования.
+            Цены рассчитаны по публичным тарифам, доступным в каталоге Cloud FinOps на{' '}
+            {hub.updatedLabel}. Итоговая стоимость может отличаться из-за конфигурации, скидок и
+            условий провайдера.
           </p>
+          <LegalMetaNotice className={styles.legalMeta} />
         </footer>
       </main>
     </div>

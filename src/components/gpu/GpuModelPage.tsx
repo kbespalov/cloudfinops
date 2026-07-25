@@ -1,33 +1,25 @@
 'use client';
 
 import Link from 'next/link';
-import {Button, Flex, HelpMark, Icon, Text} from '@gravity-ui/uikit';
-import {ArrowRight, Magnifier, SquareListUl} from '@gravity-ui/icons';
+import {Button, Flex, Icon, Text} from '@gravity-ui/uikit';
+import {ArrowRight, ChevronDown, SquareListUl} from '@gravity-ui/icons';
 import {AppHeader} from '@/components/AppHeader';
-import {getGpuLanding, type GpuLandingDef} from '@/data/gpu-landings';
-import {buildGpuLandingStats, periodWord, type GpuOfferSummary} from '@/lib/gpu-landing';
+import {LegalMetaNotice} from '@/components/LegalMetaNotice';
+import {ModelFamilyMark} from '@/components/calculator/ModelFamilyMark';
+import {faqForLanding, getGpuLanding, type GpuLandingDef} from '@/data/gpu-landings';
+import {buildGpuLandingStats, showcaseModelsForLanding} from '@/lib/gpu-landing';
 import styles from './GpuLanding.module.css';
-
-const PROMO_NOTE = 'Без промо и индивидуальных скидок — только публичные тарифы каталога.';
-
-function offerLine(offer: GpuOfferSummary | null, empty: string): string {
-  if (!offer) return empty;
-  const basis = offer.basis ? ` · ${offer.basis}` : '';
-  const synth = offer.synthetic ? ' · оценка *' : '';
-  return `${offer.amountLabel}/${periodWord(offer.period)} · ${offer.providerName}${basis}${synth}`;
-}
 
 export function GpuModelPage({def}: {def: GpuLandingDef}) {
   const stats = buildGpuLandingStats(def);
-  const primary = def.preferNode
-    ? stats.cheapestNode ?? stats.cheapestSingle
-    : stats.cheapestSingle ?? stats.cheapestNode;
-  const secondary = def.preferNode ? stats.cheapestSingle : stats.cheapestNode;
+  const showcase = showcaseModelsForLanding(def, 5);
+  const faq = faqForLanding(def);
 
-  const chatQ = encodeURIComponent(`Сколько стоит ${def.shortTitle} в месяц в облаках РФ?`);
   const related = def.related
     .map((slug) => getGpuLanding(slug))
-    .filter((x): x is GpuLandingDef => Boolean(x));
+    .filter((x): x is GpuLandingDef => x != null && x.slug !== def.slug);
+
+  const primaryCta = `Смотреть ${stats.offerCount} предложений`;
 
   return (
     <div className={styles.page}>
@@ -37,89 +29,100 @@ export function GpuModelPage({def}: {def: GpuLandingDef}) {
       </div>
 
       <main className={styles.main}>
-        <header className={styles.heroBand}>
-          <div className={styles.heroCopy}>
-            <p className={styles.backLink}>
-              <Link href="/gpu">← Все GPU</Link>
-            </p>
-            <Text as="h1" variant="display-1" className={styles.title}>
-              {def.title}
-            </Text>
-            <ul className={styles.cardFacts}>
-              {def.hubFacts.map((fact) => (
-                <li key={fact}>{fact}</li>
-              ))}
-            </ul>
-            <Flex className={styles.actions}>
-              <Button view="action" size="xl" href={stats.catalogHref} component={Link} prefetch>
-                <Icon data={SquareListUl} size={18} />
-                Открыть в каталоге
-                <Icon data={ArrowRight} size={18} />
-              </Button>
-              <Button view="outlined" size="xl" href={`/chat?q=${chatQ}`} component={Link} prefetch>
-                <Icon data={Magnifier} size={18} />
-                Обсудить в чате
-              </Button>
-            </Flex>
-            <p className={styles.metaLine}>
-              {stats.offerCount} предложений · обновлено {stats.updatedLabel} · цены с НДС{' '}
-              <HelpMark aria-label="Про состав цен" iconSize="s">
-                {PROMO_NOTE}
-              </HelpMark>
-            </p>
-          </div>
-
-          <aside className={styles.heroPanel} aria-label="Ориентир цены">
-            <div className={styles.heroMetrics}>
-              <div className={styles.heroMetric}>
-                <Text variant="body-2">
-                  {def.preferNode ? 'Узел / 8×GPU' : '1× GPU'}
-                </Text>
-                <Text as="div" variant="display-1" className={styles.heroMetricValue}>
-                  {primary ? primary.amountLabel : '—'}
-                </Text>
-                <Text variant="body-2">
-                  {offerLine(primary, 'Нет минимума в срезе')}
-                </Text>
-              </div>
-              <div className={styles.heroMetric}>
-                <Text variant="body-2">
-                  {def.preferNode ? '1× GPU' : 'Узел / multi'}
-                </Text>
-                <Text as="div" variant="header-1" className={styles.statValue}>
-                  {secondary ? secondary.amountLabel : '—'}
-                </Text>
-                <Text variant="body-2">
-                  {offerLine(secondary, 'Смотрите каталог')}
-                </Text>
-              </div>
-            </div>
-          </aside>
-        </header>
-
-        <section className={styles.section} aria-labelledby="gpu-highlights-title">
-          <Text as="h2" variant="header-2" id="gpu-highlights-title" className={styles.sectionTitle}>
-            На что смотреть
+        <header className={styles.heroSolo}>
+          <p className={styles.backLink}>
+            <Link href="/gpu">← Все GPU</Link>
+          </p>
+          <Text as="h1" variant="display-1" className={styles.title}>
+            {def.title}
           </Text>
-          <ul className={styles.list}>
-            {def.highlights.map((line) => (
-              <li key={line}>{line}</li>
+          <ul className={styles.cardFacts}>
+            {def.hubFacts.map((fact) => (
+              <li key={fact}>{fact}</li>
             ))}
           </ul>
-          <Flex className={styles.actions}>
-            <Button view="action" size="l" href={stats.catalogHref} component={Link} prefetch>
-              Все цены {def.shortTitle} в каталоге
+          <div className={styles.heroActions}>
+            <Button view="action" size="xl" href={stats.catalogHref} component={Link} prefetch>
+              <Icon data={SquareListUl} size={18} />
+              {primaryCta}
+              <Icon data={ArrowRight} size={18} />
             </Button>
-            <Button view="flat" size="l" href="/calculator/self-host" component={Link} prefetch>
-              Подобрать GPU под LLM
+            <Button
+              view="outlined"
+              size="xl"
+              href="/calculator/self-host"
+              component={Link}
+              prefetch
+            >
+              Подобрать конфигурацию
             </Button>
-          </Flex>
+          </div>
+          <p className={styles.metaLine}>
+            {stats.offerCount} предложений · обновлено {stats.updatedLabel} · цены с НДС
+          </p>
+        </header>
+
+        <section className={styles.modelBand} aria-labelledby="gpu-about-title">
+          <div className={styles.aboutCol}>
+            <Text as="h2" variant="header-1" id="gpu-about-title" className={styles.sectionTitle}>
+              О модели
+            </Text>
+            <Text as="p" variant="body-2" className={styles.aboutText}>
+              {def.about}
+            </Text>
+            {def.aboutFacts.length > 0 ? (
+              <ul className={styles.aboutFacts}>
+                {def.aboutFacts.map((fact) => (
+                  <li key={fact}>{fact}</li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+
+          {showcase.length > 0 ? (
+            <aside className={styles.showcasePanel} aria-labelledby="gpu-showcase-title">
+              <Text
+                as="h2"
+                variant="subheader-2"
+                id="gpu-showcase-title"
+                className={styles.showcaseTitle}
+              >
+                Можно запустить
+              </Text>
+              <ul className={styles.showcaseList}>
+                {showcase.map((item) => (
+                  <li key={item.id}>
+                    <Link href={item.href} className={styles.showcaseItem} prefetch>
+                      <ModelFamilyMark name={item.name} size={22} />
+                      <span className={styles.showcaseText}>
+                        <span className={styles.showcaseName}>{item.name}</span>
+                        <span className={styles.showcaseNote}>{item.note}</span>
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </aside>
+          ) : null}
         </section>
+
+        {def.useCases.length > 0 ? (
+          <section className={styles.useCasesSection} aria-labelledby="gpu-usecases-title">
+            <Text as="h2" variant="header-1" id="gpu-usecases-title" className={styles.sectionTitle}>
+              Подходит для
+            </Text>
+            <ul className={styles.useCases}>
+              {def.useCases.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
         {related.length > 0 ? (
           <section className={styles.section} aria-labelledby="gpu-related-title">
-            <Text as="h2" variant="header-2" id="gpu-related-title" className={styles.sectionTitle}>
-              Рядом
+            <Text as="h2" variant="header-1" id="gpu-related-title" className={styles.sectionTitle}>
+              Другие модели
             </Text>
             <Flex className={styles.related}>
               {related.map((item) => (
@@ -141,35 +144,30 @@ export function GpuModelPage({def}: {def: GpuLandingDef}) {
           </section>
         ) : null}
 
-        <section className={styles.section} aria-labelledby="gpu-faq-title">
-          <Text as="h2" variant="header-2" id="gpu-faq-title" className={styles.sectionTitle}>
-            Вопросы
+        <section className={styles.faqSection} aria-labelledby="gpu-faq-title">
+          <Text as="h2" variant="header-1" id="gpu-faq-title" className={styles.sectionTitle}>
+            Частые вопросы
           </Text>
           <div className={styles.faq}>
-            {def.faq.map((item) => (
+            {faq.map((item) => (
               <details key={item.question} className={styles.faqItem}>
-                <summary>{item.question}</summary>
+                <summary>
+                  <span>{item.question}</span>
+                  <Icon data={ChevronDown} size={16} className={styles.faqChevron} />
+                </summary>
                 <p>{item.answer}</p>
               </details>
             ))}
-            <details className={styles.faqItem}>
-              <summary>Почему цифры могут отличаться от сайта провайдера?</summary>
-              <p>
-                Мы нормализуем публичные тарифы в единый каталог (₽ с НДС, час/месяц). У провайдера
-                могут быть другие единицы, скрытые компоненты, региональные отличия или актуальные
-                изменения после даты среза {stats.asOfLabel}.
-              </p>
-            </details>
           </div>
         </section>
 
         <footer className={styles.disclaimer}>
-          <p>{stats.scopeHint}</p>
           <p>
-            Обозначения NVIDIA и названия GPU — товарные знаки правообладателей. Cloud FinOps не
-            продаёт серверы и не гарантирует наличие квот; страница помогает сравнить опубликованные
-            тарифы и перейти к строкам каталога.
+            Цены рассчитаны по публичным тарифам, доступным в каталоге Cloud FinOps на{' '}
+            {stats.updatedLabel}. Итоговая стоимость может отличаться из-за конфигурации, скидок и
+            условий провайдера.
           </p>
+          <LegalMetaNotice className={styles.legalMeta} />
         </footer>
       </main>
     </div>

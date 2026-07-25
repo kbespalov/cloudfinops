@@ -16,6 +16,7 @@ import {
 } from '@gravity-ui/uikit';
 import {Calculator, ChevronRight} from '@gravity-ui/icons';
 import {AppHeader} from '@/components/AppHeader';
+import {LegalMetaNotice} from '@/components/LegalMetaNotice';
 import dynamic from 'next/dynamic';
 import type {GpuPreset} from '@/lib/calculator/presets';
 import type {CalculatorProviderId, PeriodMode} from '@/lib/calculator/quote-view';
@@ -242,10 +243,7 @@ export function CalculatorPage({
             </Button>
           </Flex>
           {!focusProviderId ? (
-            <Text variant="caption-2" color="hint" className={styles.disclaimer}>
-              * Meta признана экстремистской организацией, её деятельность на территории России
-              запрещена
-            </Text>
+            <LegalMetaNotice className={styles.disclaimer} />
           ) : null}
         </footer>
       </main>
