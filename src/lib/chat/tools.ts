@@ -204,7 +204,7 @@ export const CHAT_TOOLS = [
           requirements: {
             type: 'object',
             description:
-              'Структурированные требования: vcpu/ramGiB/diskGiB, workerCount, objectStorageGiB, cdnEgressGiB, k8sTier, budgetMonthRub, gpuModel, providers…',
+              'Структурированные требования: workerCount, workerVcpu/workerRamGiB (или vcpu/ramGiB), diskGiB (системный), blockStorageGiB+diskMedia (hdd|ssd для крупного диска), publicIpCount, egressGiB (internet), cdnEgressGiB или cdnRequested, objectStorageGiB, k8sTier, budgetMonthRub, gpuModel, providers, workerShapeScope=per_worker|cluster…',
           },
           providers: {type: 'array', items: {type: 'string', enum: PROVIDER_IDS}},
           strategy: {
@@ -223,7 +223,7 @@ export const CHAT_TOOLS = [
     function: {
       name: 'validate_solution',
       description:
-        'Проверь solution после compose: requirements/compatibility/pricing/provenance. Не объявляй решение корректным без этого вызова. При invalid — применяй repairSuggestions через повторный compose (≤2).',
+        'Проверь solution после compose: requirements/compatibility/pricing/provenance. status=needs_clarification|invalid → не финализируй и не пиши 100% coverage; уточни пробелы или repair (≤2). valid только при status=valid|valid_with_warnings. Coverage пересчитывает backend.',
       parameters: {
         type: 'object',
         properties: {
@@ -246,7 +246,7 @@ export const CHAT_TOOLS = [
     function: {
       name: 'price_solution',
       description:
-        'Authoritative totals для BOM. По умолчанию strict_pinned (не подменяет отсутствующий meterId). Не считай итог сам — бери totals.monthlyRubVatIncluded. Вызывай только для non-invalid решений.',
+        'Authoritative totals для BOM. По умолчанию strict_pinned (не подменяет отсутствующий meterId). Не считай итог сам — бери totals.monthlyRubVatIncluded. Только после validate со status=valid|valid_with_warnings; не для needs_clarification/invalid.',
       parameters: {
         type: 'object',
         properties: {

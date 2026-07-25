@@ -100,10 +100,16 @@ export type RequirementConstraints = {
 
 export type RequirementQuantities = {
   workerCount?: number;
+  /** True only when the user/LLM explicitly set workerCount (not a preview default). */
+  workerCountExplicit?: boolean;
   instanceCount?: number;
   storageGiB?: number;
+  /** Attached block volume (GiB), distinct from small system/worker boot disk. */
+  blockStorageGiB?: number;
   egressGiB?: number;
   cdnEgressGiB?: number;
+  /** CDN requested but volume may be unknown. */
+  cdnRequested?: boolean;
   publicIpCount?: number;
   diskGiB?: number;
   workerVcpu?: number;
@@ -273,8 +279,8 @@ export type RepairSuggestion =
 
 export type ValidationReport = {
   solutionId: string;
-  status: 'valid' | 'valid_with_warnings' | 'invalid';
-  /** Convenience: status !== 'invalid' */
+  status: 'valid' | 'valid_with_warnings' | 'invalid' | 'needs_clarification';
+  /** Convenience: status is valid or valid_with_warnings (not invalid / needs_clarification). */
   valid: boolean;
   coverage: number;
   issues: ValidationIssue[];

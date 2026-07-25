@@ -27,6 +27,9 @@ const SOLUTION_TYPES: SolutionType[] = [
   'custom',
 ];
 
+/** Volumes at/above this GiB with HDD media are treated as attached block storage, not boot disk. */
+const BLOCK_STORAGE_DISK_THRESHOLD_GIB = 2048;
+
 function num(v: unknown): number | undefined {
   const n = typeof v === 'number' ? v : Number(v);
   return Number.isFinite(n) && n > 0 ? n : undefined;
@@ -47,6 +50,15 @@ function hashId(parts: string[]): string {
   return `req_${createHash('sha1').update(parts.join('|')).digest('hex').slice(0, 12)}`;
 }
 
+function pushUniqueRole(roles: SolutionComponentRole[], role: SolutionComponentRole): void {
+  if (!roles.includes(role)) roles.push(role);
+}
+
+function removeRole(roles: SolutionComponentRole[], role: SolutionComponentRole): void {
+  const i = roles.indexOf(role);
+  if (i >= 0) roles.splice(i, 1);
+}
+
 function defaultRoles(type: SolutionType): {
   required: SolutionComponentRole[];
   optional: SolutionComponentRole[];
@@ -55,7 +67,7 @@ function defaultRoles(type: SolutionType): {
     case 'kubernetes':
       return {
         required: ['k8s_master', 'k8s_worker'],
-        optional: ['object_storage', 'public_ip', 'cdn_egress', 'internet_egress', 'load_balancer'],
+        optional: ['object_storage', 'public_ip', 'cdn_egress', 'internet_egress', 'load_balancer', 'block_storage'],
       };
     case 'web_application':
       return {
@@ -74,6 +86,122 @@ function defaultRoles(type: SolutionType): {
     default:
       return {required: ['compute'], optional: ['block_storage', 'public_ip']};
   }
+}
+
+/**
+ * Promote quantities into requiredRoles so incomplete LLM envelopes cannot claim 100% coverage.
+ * Mutates spec in place; returns new assumptions/rules.
+ */
+export function enrichSpecFromQuantities(spec: RequirementSpec): {
+  assumptions: Assumption[];
+  appliedRules: NormalizationRule[];
+} {
+  const assumptions: Assumption[] = [];
+  const appliedRules: NormalizationRule[] = [];
+  const q = spec.quantities;
+  const requiredRoles = [...spec.requiredRoles];
+  const optionalRoles = [...spec.optionalRoles];
+
+  if (q.storageGiB) {
+    pushUniqueRole(requiredRoles, 'object_storage');
+    removeRole(optionalRoles, 'object_storage');
+  }
+
+  let blockStorageGiB = q.blockStorageGiB;
+  const media = spec.constraints.storage?.media;
+  const diskGiB = q.diskGiB;
+  if (
+    blockStorageGiB == null &&
+    diskGiB != null &&
+    media === 'hdd' &&
+    diskGiB >= BLOCK_STORAGE_DISK_THRESHOLD_GIB
+  ) {
+    blockStorageGiB = diskGiB;
+    q.blockStorageGiB = diskGiB;
+    // Keep a small system disk for workers/VMs; large volume is attached block.
+    if (q.workerDiskGiB == null || q.workerDiskGiB === diskGiB) {
+      q.workerDiskGiB = 100;
+    }
+    if (q.diskGiB === diskGiB) {
+      q.diskGiB = 100;
+    }
+    appliedRules.push({
+      field: 'quantities.blockStorageGiB',
+      from: `diskGiB=${diskGiB}+hdd`,
+      to: String(blockStorageGiB),
+      ruleId: 'large-hdd-as-block-storage',
+    });
+  }
+
+  if (blockStorageGiB) {
+    pushUniqueRole(requiredRoles, 'block_storage');
+    removeRole(optionalRoles, 'block_storage');
+  }
+
+  if (q.publicIpCount) {
+    pushUniqueRole(requiredRoles, 'public_ip');
+    removeRole(optionalRoles, 'public_ip');
+  }
+
+  if (q.egressGiB) {
+    pushUniqueRole(requiredRoles, 'internet_egress');
+    removeRole(optionalRoles, 'internet_egress');
+  }
+
+  if (q.cdnEgressGiB) {
+    q.cdnRequested = true;
+    pushUniqueRole(requiredRoles, 'cdn_egress');
+    removeRole(optionalRoles, 'cdn_egress');
+  } else if (q.cdnRequested) {
+    // Volume unknown: optional role + clarification warning (not hard missing-role).
+    pushUniqueRole(optionalRoles, 'cdn_egress');
+    assumptions.push({
+      code: 'CDN_VOLUME_UNKNOWN',
+      message: 'CDN запрошен, но объём CDN-трафика не указан — полная оценка невозможна',
+      field: 'quantities.cdnEgressGiB',
+      impact: 'high',
+    });
+  }
+
+  if (spec.solutionType === 'kubernetes') {
+    if (q.workerCount != null && q.workerCount > 0) {
+      q.workerCountExplicit = q.workerCountExplicit !== false;
+    } else {
+      q.workerCount = undefined;
+      q.workerCountExplicit = false;
+      assumptions.push({
+        code: 'WORKER_COUNT_UNKNOWN',
+        message: 'Число worker-нод не указано — полный расчёт невозможен (preview возможен на 1 ноде)',
+        field: 'quantities.workerCount',
+        impact: 'high',
+      });
+    }
+
+    const extras = spec.extras ?? {};
+    const shapeScope = extras.workerShapeScope;
+    if (q.workerVcpu == null && spec.constraints.minVcpu != null) {
+      q.workerVcpu = spec.constraints.minVcpu;
+    }
+    if (q.workerRamGiB == null && spec.constraints.minRamGiB != null) {
+      q.workerRamGiB = spec.constraints.minRamGiB;
+    }
+    const hasShape = q.workerVcpu != null || q.workerRamGiB != null;
+    // Confirmed scopes skip the warning; field names alone are not confirmation.
+    if (hasShape && shapeScope !== 'per_worker' && shapeScope !== 'cluster') {
+      assumptions.push({
+        code: 'WORKER_SHAPE_SCOPE_AMBIGUOUS',
+        message:
+          'vCPU/RAM интерпретированы как на одну worker-ноду; уточните, если это размер всего пула',
+        field: 'quantities.workerVcpu',
+        impact: 'medium',
+      });
+      spec.extras = {...extras, workerShapeScope: 'per_worker_assumed'};
+    }
+  }
+
+  spec.requiredRoles = requiredRoles;
+  spec.optionalRoles = optionalRoles;
+  return {assumptions, appliedRules};
 }
 
 export type NormalizeRequirementsResult = {
@@ -101,11 +229,16 @@ export function normalizeRequirementSpec(input: {
       : {};
 
   if (isRequirementSpec(input.requirements)) {
-    const spec = {
+    const spec: RequirementSpec = {
       ...input.requirements,
       period: input.requirements.period ?? {hoursPerMonth: 720 as const},
       currency: 'RUB' as const,
       vatMode: 'included' as const,
+      requiredRoles: [...input.requirements.requiredRoles],
+      optionalRoles: [...(input.requirements.optionalRoles ?? [])],
+      quantities: {...input.requirements.quantities},
+      constraints: {...input.requirements.constraints},
+      extras: input.requirements.extras ? {...input.requirements.extras} : undefined,
     };
     assumptions.push({
       code: 'DEFAULT_MONTH_HOURS',
@@ -114,6 +247,9 @@ export function normalizeRequirementSpec(input: {
       value: 720,
       impact: 'low',
     });
+    const enriched = enrichSpecFromQuantities(spec);
+    assumptions.push(...enriched.assumptions);
+    appliedRules.push(...enriched.appliedRules);
     return {spec, assumptions, appliedRules};
   }
 
@@ -177,25 +313,19 @@ export function normalizeRequirementSpec(input: {
 
   const storageGiB =
     num(flat.storageGiB) ?? num(flat.objectStorageGiB) ?? num(flat.objectStorage);
-  if (storageGiB) {
-    if (!requiredRoles.includes('object_storage')) requiredRoles.push('object_storage');
-  }
   const egressGiB = num(flat.egressGiB) ?? num(flat.internetEgressGiB);
   const cdnEgressGiB = num(flat.cdnEgressGiB);
-  if (cdnEgressGiB && !optionalRoles.includes('cdn_egress')) optionalRoles.push('cdn_egress');
-  if (egressGiB && !optionalRoles.includes('internet_egress')) {
-    optionalRoles.push('internet_egress');
-  }
+  const cdnRequested =
+    flat.cdnRequested === true ||
+    flat.cdn === true ||
+    cdnEgressGiB != null ||
+    (typeof flat.rawText === 'string' && /\bcdn\b/i.test(flat.rawText));
 
   const publicIpCount =
     num(flat.publicIpCount) ??
     (solutionType === 'web_application' ? 1 : undefined);
-  if (publicIpCount && !requiredRoles.includes('public_ip') && solutionType === 'web_application') {
-    requiredRoles.push('public_ip');
-  }
 
   if (gpuTrace.normalized && !requiredRoles.includes('gpu_compute')) {
-    // GPU VM: compute host + gpu
     if (solutionType === 'virtual_machine') {
       requiredRoles.push('gpu_compute');
     }
@@ -211,8 +341,11 @@ export function normalizeRequirementSpec(input: {
     });
   }
 
-  const diskGiB = num(flat.diskGiB) ?? 100;
-  if (flat.diskGiB == null && (solutionType === 'virtual_machine' || solutionType === 'kubernetes')) {
+  const explicitDiskGiB = num(flat.diskGiB);
+  const explicitBlockStorageGiB =
+    num(flat.blockStorageGiB) ?? num(flat.blockDiskGiB) ?? num(flat.hddGiB);
+  const diskGiB = explicitDiskGiB ?? 100;
+  if (explicitDiskGiB == null && (solutionType === 'virtual_machine' || solutionType === 'kubernetes')) {
     assumptions.push({
       code: 'DEFAULT_SYSTEM_DISK',
       message: 'Системный диск по умолчанию: 100 GiB SSD',
@@ -230,17 +363,13 @@ export function normalizeRequirementSpec(input: {
     impact: 'low',
   });
 
-  const workerCount = num(flat.workerCount) ?? (solutionType === 'kubernetes' ? 3 : undefined);
-  if (solutionType === 'kubernetes' && flat.workerCount == null) {
-    assumptions.push({
-      code: 'DEFAULT_WORKER_COUNT',
-      message: 'Число worker-нод по умолчанию: 3',
-      field: 'quantities.workerCount',
-      value: 3,
-      impact: 'medium',
-    });
-  }
+  const explicitWorkerCount = num(flat.workerCount);
+  const workerCount = explicitWorkerCount;
+  const workerCountExplicit = explicitWorkerCount != null;
 
+  const workerVcpu = num(flat.workerVcpu);
+  const workerRamGiB = num(flat.workerRamGiB);
+  const workerShapeExplicit = workerVcpu != null || workerRamGiB != null;
   const resolvedRam = minRam ?? (minVcpu != null ? minVcpu * 4 : undefined);
 
   const spec: RequirementSpec = {
@@ -252,6 +381,8 @@ export function normalizeRequirementSpec(input: {
       String(budget ?? ''),
       String(workerCount ?? ''),
       String(storageGiB ?? ''),
+      String(explicitBlockStorageGiB ?? ''),
+      String(egressGiB ?? ''),
       (providers ?? []).join(','),
     ]),
     solutionType,
@@ -263,6 +394,9 @@ export function normalizeRequirementSpec(input: {
       budgetMonthlyRub: budget,
       providers,
       region,
+      availabilityZones:
+        num(flat.availabilityZones) ??
+        (flat.zones === 1 || flat.singleZone === true ? 1 : undefined),
       minVcpu,
       minRamGiB: resolvedRam,
       gpu: gpuTrace.normalized
@@ -272,7 +406,7 @@ export function normalizeRequirementSpec(input: {
           }
         : undefined,
       storage: {
-        minGiB: storageGiB,
+        minGiB: storageGiB ?? explicitBlockStorageGiB,
         media: diskPref.media,
         mediaPreference: diskPref.mediaPreference,
         class:
@@ -288,15 +422,18 @@ export function normalizeRequirementSpec(input: {
     optionalRoles,
     quantities: {
       workerCount,
+      workerCountExplicit,
       instanceCount: num(flat.instanceCount) ?? 1,
       storageGiB,
+      blockStorageGiB: explicitBlockStorageGiB,
       egressGiB,
       cdnEgressGiB,
+      cdnRequested: cdnRequested || undefined,
       publicIpCount,
       diskGiB,
-      workerVcpu: num(flat.workerVcpu) ?? minVcpu,
-      workerRamGiB: num(flat.workerRamGiB) ?? resolvedRam,
-      workerDiskGiB: num(flat.workerDiskGiB) ?? diskGiB,
+      workerVcpu,
+      workerRamGiB,
+      workerDiskGiB: num(flat.workerDiskGiB) ?? (explicitBlockStorageGiB ? 100 : diskGiB),
     },
     rawText: typeof flat.rawText === 'string' ? flat.rawText : input.rawText,
     extras: {
@@ -305,8 +442,16 @@ export function normalizeRequirementSpec(input: {
       ...(typeof flat.servicesCount === 'number' ? {servicesCount: flat.servicesCount} : {}),
       ...(typeof flat.hotPercent === 'number' ? {hotPercent: flat.hotPercent} : {}),
       managed: flat.managed === true || solutionType === 'kubernetes',
+      workerShapeExplicit,
+      ...(typeof flat.workerShapeScope === 'string'
+        ? {workerShapeScope: flat.workerShapeScope}
+        : {}),
     },
   };
+
+  const enriched = enrichSpecFromQuantities(spec);
+  assumptions.push(...enriched.assumptions);
+  appliedRules.push(...enriched.appliedRules);
 
   return {spec, assumptions, appliedRules};
 }

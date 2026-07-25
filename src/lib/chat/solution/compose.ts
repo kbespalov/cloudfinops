@@ -7,8 +7,10 @@ import {amountNumber, catalog, type PeriodMode} from '@/lib/catalog';
 import {catalogAsOfIso} from '@/lib/catalog/compare-disclaimer';
 import {
   addCdnEgressParts,
+  addInternetEgressParts,
   addPublicIpParts,
   listGpuPresets,
+  pickBlockStorageMeter,
   quotePreset,
   toViewQuote,
 } from '@/lib/calculator/quote';
@@ -74,17 +76,19 @@ function coverageOf(
   required: SolutionComponentRole[],
   optional: SolutionComponentRole[],
   components: SolutionComponent[],
+  clarificationSlots = 0,
 ): CoverageCounters {
   const have = new Set(components.map((c) => c.role));
   const requiredSatisfied = required.filter((r) => have.has(r)).length;
   const optionalSatisfied = optional.filter((r) => have.has(r)).length;
+  const requiredTotal = required.length + clarificationSlots;
   const score =
-    required.length === 0
+    requiredTotal === 0
       ? 1
-      : Math.round((requiredSatisfied / required.length) * 100) / 100;
+      : Math.round((requiredSatisfied / requiredTotal) * 100) / 100;
   return {
     requiredSatisfied,
-    requiredTotal: required.length,
+    requiredTotal,
     optionalSatisfied,
     optionalTotal: optional.length,
     score,
@@ -203,9 +207,13 @@ function sortSolutions(solutions: Solution[], strategy: ComposeStrategy): Soluti
     });
     return copy;
   }
-  copy.sort(
-    (a, b) => (a.estimatedMonthlyCostRub ?? 1e18) - (b.estimatedMonthlyCostRub ?? 1e18),
-  );
+  // Prefer higher requirement coverage, then cheaper estimate — incomplete BOMs
+  // must not win solely by omitting expensive required components (e.g. 100 ТБ HDD).
+  copy.sort((a, b) => {
+    const cov = (b.coverage.score ?? 0) - (a.coverage.score ?? 0);
+    if (Math.abs(cov) > 1e-9) return cov;
+    return (a.estimatedMonthlyCostRub ?? 1e18) - (b.estimatedMonthlyCostRub ?? 1e18);
+  });
   return copy;
 }
 
@@ -222,10 +230,16 @@ function finishSolution(input: {
   const estimate = round2(
     input.components.reduce((s, c) => s + (c.estimatedMonthlyCostRub ?? 0), 0),
   );
+  const clarificationSlots =
+    input.spec.solutionType === 'kubernetes' &&
+    input.spec.quantities.workerCountExplicit !== true
+      ? 1
+      : 0;
   const coverage = coverageOf(
     input.spec.requiredRoles,
     input.spec.optionalRoles,
     input.components,
+    clarificationSlots,
   );
   const id = solutionId(input.spec.id, input.provider, input.components);
   const blocking = input.unresolved.some((u) => u.severity === 'blocking');
@@ -379,9 +393,42 @@ function addStorageComponent(
   };
 }
 
+function addBlockStorageComponent(
+  provider: string,
+  volumeGiB: number,
+  media: 'hdd' | 'ssd' | 'nvme' | undefined,
+): SolutionComponent | null {
+  const picked = pickBlockStorageMeter(
+    provider,
+    media === 'hdd' || media === 'nvme' ? media : 'ssd',
+  );
+  if (!picked) return null;
+  const mediaLabel = media === 'hdd' ? 'HDD' : media === 'nvme' ? 'NVMe' : 'SSD';
+  return {
+    id: componentId('block_storage', provider, picked.meter.id, volumeGiB),
+    role: 'block_storage',
+    meterId: picked.meter.id,
+    productId: picked.meter.id,
+    sku: picked.meter.sku,
+    provider,
+    title: `${picked.meter.name} · ${mediaLabel} ${volumeGiB} GiB`,
+    quantity: volumeGiB,
+    unit: 'GiB-month',
+    estimatedMonthlyCostRub: round2(picked.rateMonth * volumeGiB),
+    selection: {method: 'exact_structural_match'},
+    scope: {billingScope: 'disk'},
+    synthetic: Boolean(picked.meter.synthetic),
+    configuration: {media: media ?? 'ssd', volumeGiB, diskIncluded: false},
+  };
+}
+
 function composeKubernetes(spec: RequirementSpec, baseAssumptions: Assumption[]): Solution[] {
   const tier = spec.constraints.k8sTier === 'ha' ? 'ha' : 'basic';
-  const workerCount = Math.max(1, Math.round(spec.quantities.workerCount ?? 3));
+  const workerCountExplicit = spec.quantities.workerCountExplicit === true;
+  const workerCount = Math.max(
+    1,
+    Math.round(workerCountExplicit ? (spec.quantities.workerCount as number) : 1),
+  );
   const workerVcpu = spec.quantities.workerVcpu ?? spec.constraints.minVcpu ?? 4;
   const workerRam = spec.quantities.workerRamGiB ?? spec.constraints.minRamGiB ?? workerVcpu * 4;
   const workerDisk = spec.quantities.workerDiskGiB ?? spec.quantities.diskGiB ?? 100;
@@ -402,10 +449,19 @@ function composeKubernetes(spec: RequirementSpec, baseAssumptions: Assumption[])
     },
     {
       code: 'WORKER_DISK_INCLUDED',
-      message: 'Диск worker-узлов считается включённым в выбранный preset',
+      message: 'Системный диск worker-узлов считается включённым в выбранный preset',
       impact: 'medium',
     },
   ];
+  if (!workerCountExplicit) {
+    assumptions.push({
+      code: 'PRELIMINARY_SINGLE_WORKER',
+      message: 'Предварительная оценка на 1 worker-ноде — число нод не указано',
+      field: 'quantities.workerCount',
+      value: 1,
+      impact: 'high',
+    });
+  }
 
   const workerPreset: ComputePreset = {
     id: `k8s-worker-${workerVcpu}-${workerRam}`,
@@ -470,6 +526,7 @@ function composeKubernetes(spec: RequirementSpec, baseAssumptions: Assumption[])
           diskGiB: workerDisk,
           count: workerCount,
           diskIncluded: true,
+          preliminary: !workerCountExplicit,
         },
       },
     ];
@@ -478,6 +535,32 @@ function composeKubernetes(spec: RequirementSpec, baseAssumptions: Assumption[])
     const tradeoffs: string[] = [];
     if (master.synthetic) {
       tradeoffs.push('Цена мастера synthetic/оценка Cloud FinOps');
+    }
+    if (!workerCountExplicit) {
+      unresolved.push({
+        code: 'WORKER_COUNT_UNKNOWN',
+        message: 'Число worker-нод не указано',
+        role: 'k8s_worker',
+        severity: 'blocking',
+      });
+    }
+
+    // Attached block storage (HDD/SSD) — distinct from worker boot disk
+    if (spec.quantities.blockStorageGiB) {
+      const block = addBlockStorageComponent(
+        providerId,
+        spec.quantities.blockStorageGiB,
+        spec.constraints.storage?.media,
+      );
+      if (block) components.push(block);
+      else {
+        unresolved.push({
+          code: 'BLOCK_STORAGE_UNAVAILABLE',
+          message: 'Блочное хранилище (HDD/SSD) не найдено у провайдера',
+          role: 'block_storage',
+          severity: 'blocking',
+        });
+      }
     }
 
     // object storage — only if requested
@@ -531,12 +614,58 @@ function composeKubernetes(spec: RequirementSpec, baseAssumptions: Assumption[])
           code: 'PUBLIC_IP_UNAVAILABLE',
           message: 'Публичный IP недоступен у провайдера',
           role: 'public_ip',
-          severity: 'warning',
+          severity: 'blocking',
         });
       }
     }
 
-    const cdn = spec.quantities.cdnEgressGiB ?? spec.quantities.egressGiB;
+    // Internet egress — never conflate with CDN
+    const egressGiB = spec.quantities.egressGiB;
+    if (egressGiB) {
+      const withEgress = addInternetEgressParts(
+        {
+          presetId: workerPreset.id,
+          quotes: [{...workerQ, total: 0, parts: []}],
+          alternateQuotes: [],
+          best: null,
+        },
+        egressGiB,
+        'month',
+      );
+      const egressPart = withEgress.quotes[0]?.parts.find((p) => p.id === 'egress');
+      if (egressPart) {
+        components.push({
+          id: componentId('internet_egress', providerId, undefined, egressGiB),
+          role: 'internet_egress',
+          provider: providerId,
+          title: egressPart.label,
+          quantity: egressGiB,
+          unit: 'GiB-month',
+          estimatedMonthlyCostRub: round2(egressPart.amount),
+          selection: {method: 'nearest_match'},
+          scope: {billingScope: 'traffic'},
+        });
+      } else {
+        unresolved.push({
+          code: 'INTERNET_EGRESS_UNAVAILABLE',
+          message: 'Internet egress не найден у провайдера',
+          role: 'internet_egress',
+          severity: 'blocking',
+        });
+      }
+    } else if (
+      KUBERNETES_RECIPE_POLICY.egress === 'price_if_volume_known_otherwise_unresolved' &&
+      !spec.quantities.cdnEgressGiB
+    ) {
+      unresolved.push({
+        code: 'EGRESS_VOLUME_UNKNOWN',
+        message: 'Исходящий интернет-трафик не включён — объём не указан',
+        role: 'internet_egress',
+        severity: 'warning',
+      });
+    }
+
+    const cdn = spec.quantities.cdnEgressGiB;
     if (cdn) {
       const withCdn = addCdnEgressParts(
         {
@@ -569,11 +698,11 @@ function composeKubernetes(spec: RequirementSpec, baseAssumptions: Assumption[])
           severity: 'warning',
         });
       }
-    } else if (KUBERNETES_RECIPE_POLICY.egress === 'price_if_volume_known_otherwise_unresolved') {
+    } else if (spec.quantities.cdnRequested) {
       unresolved.push({
-        code: 'EGRESS_VOLUME_UNKNOWN',
-        message: 'Исходящий трафик не включён — объём не указан',
-        role: 'internet_egress',
+        code: 'CDN_VOLUME_UNKNOWN',
+        message: 'CDN запрошен, но объём трафика не указан — не оценён',
+        role: 'cdn_egress',
         severity: 'warning',
       });
     }
@@ -818,6 +947,39 @@ export function composeSolution(input: ComposeInput): ComposeResult {
       }
       if (r.action === 'add_component' && r.role === 'public_ip') {
         spec.quantities.publicIpCount = Math.max(1, spec.quantities.publicIpCount ?? 1);
+        if (!spec.requiredRoles.includes('public_ip')) {
+          spec.requiredRoles.push('public_ip');
+        }
+      }
+      if (r.action === 'add_component' && r.role === 'block_storage') {
+        const giB =
+          num(r.constraints?.blockStorageGiB) ??
+          num(r.constraints?.volumeGiB) ??
+          spec.quantities.blockStorageGiB ??
+          1024;
+        spec.quantities.blockStorageGiB = giB;
+        if (!spec.requiredRoles.includes('block_storage')) {
+          spec.requiredRoles.push('block_storage');
+        }
+      }
+      if (r.action === 'add_component' && r.role === 'internet_egress') {
+        const giB =
+          num(r.constraints?.egressGiB) ??
+          num(r.constraints?.volumeGiB) ??
+          spec.quantities.egressGiB ??
+          1024;
+        spec.quantities.egressGiB = giB;
+        if (!spec.requiredRoles.includes('internet_egress')) {
+          spec.requiredRoles.push('internet_egress');
+        }
+      }
+      if (r.action === 'add_component' && r.role === 'cdn_egress') {
+        const giB =
+          num(r.constraints?.cdnEgressGiB) ??
+          num(r.constraints?.volumeGiB) ??
+          spec.quantities.cdnEgressGiB;
+        if (giB) spec.quantities.cdnEgressGiB = giB;
+        spec.quantities.cdnRequested = true;
       }
     }
   }

@@ -1295,15 +1295,45 @@ export function formatFastPathAnswer(
     })}${assumptionBlock}${note}`;
   }
 
-  if (primary.name === 'validate_solution' && Array.isArray(data.checks)) {
-    type Check = {code: string; status: string; message?: string};
-    const checks = data.checks as Check[];
-    const rows = checks
+  if (primary.name === 'validate_solution') {
+    type Issue = {code?: string; severity?: string; message?: string};
+    const issues = Array.isArray(data.issues) ? (data.issues as Issue[]) : [];
+    const checksObj = data.checks && typeof data.checks === 'object' ? data.checks : null;
+    const rowsFromIssues = issues
       .slice(0, 12)
-      .map((c) => `| ${c.code} | ${c.status} | ${c.message ?? '—'} |`)
+      .map(
+        (c) =>
+          `| ${c.code ?? '—'} | ${c.severity ?? '—'} | ${c.message ?? '—'} |`,
+      )
       .join('\n');
+    const legacyChecks = Array.isArray(data.checks) ? (data.checks as Issue[]) : [];
+    const rowsFromLegacy = legacyChecks
+      .slice(0, 12)
+      .map(
+        (c) =>
+          `| ${(c as {code?: string}).code ?? '—'} | ${(c as {status?: string}).status ?? (c as {severity?: string}).severity ?? '—'} | ${c.message ?? '—'} |`,
+      )
+      .join('\n');
+    const rows =
+      rowsFromIssues ||
+      rowsFromLegacy ||
+      (checksObj
+        ? Object.entries(checksObj as Record<string, unknown>)
+            .map(([k, v]) => `| ${k} | ${v === true ? 'ok' : 'fail'} | — |`)
+            .join('\n')
+        : '| — | — | нет деталей |');
+    const status =
+      typeof data.status === 'string' ? data.status : data.valid === true ? 'valid' : 'invalid';
     const valid = data.valid === true ? 'да' : 'нет';
-    return `**Проверка решения:** valid=${valid}, coverage=${data.coverage ?? '—'}\n\n| Код | Статус | Комментарий |\n|---|---|---|\n${rows}`;
+    const cov =
+      typeof data.coverage === 'number'
+        ? `${Math.round(data.coverage * 100)}%`
+        : String(data.coverage ?? '—');
+    const gate =
+      status === 'needs_clarification' || status === 'invalid'
+        ? '\n\n_Требуется уточнение или repair — не финализируй расчёт и не объявляй покрытие 100%._'
+        : '';
+    return `**Проверка решения:** status=${status}, valid=${valid}, coverage=${cov}\n\n| Код | Статус | Комментарий |\n|---|---|---|\n${rows}${gate}`;
   }
 
   if (primary.name === 'compare_solutions' && Array.isArray(data.comparison)) {

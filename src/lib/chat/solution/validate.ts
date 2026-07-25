@@ -4,6 +4,7 @@
  */
 
 import {catalog} from '@/lib/catalog';
+import {enrichSpecFromQuantities, normalizeRequirementSpec} from './normalize';
 import type {
   RequirementSpec,
   RepairSuggestion,
@@ -12,7 +13,15 @@ import type {
   ValidationIssue,
   ValidationReport,
 } from './types';
-import {normalizeRequirementSpec} from './normalize';
+
+/** Hard errors that mean incomplete user input / repairable BOM gaps — not catalog bugs. */
+const CLARIFICATION_ERROR_CODES = new Set([
+  'WORKER_COUNT_UNKNOWN',
+  'MISSING_REQUIRED_ROLE',
+  'BLOCK_STORAGE_UNAVAILABLE',
+  'PUBLIC_IP_UNAVAILABLE',
+  'INTERNET_EGRESS_UNAVAILABLE',
+]);
 
 function num(v: unknown): number | undefined {
   const n = typeof v === 'number' ? v : Number(v);
@@ -53,13 +62,17 @@ function asSolution(raw: Record<string, unknown> | Solution): Solution {
 export function validateSolution(input: ValidateInput): ValidationReport {
   const level = input.validationLevel ?? 'full';
   const solution = asSolution(input.solution as Solution);
-  const {spec} = normalizeRequirementSpec({
+
+  // Always re-normalize + enrich so incomplete LLM requiredRoles cannot fake 100% coverage.
+  const {spec, assumptions: normAssumptions} = normalizeRequirementSpec({
     solutionType: solution.solutionType,
     requirements: input.requirements ?? {
       solutionType: solution.solutionType,
       providers: solution.provider ? [solution.provider] : undefined,
     },
   });
+  // Extra safety if caller passed an already-normalized envelope that skipped enrich somehow.
+  enrichSpecFromQuantities(spec);
 
   const issues: ValidationIssue[] = [];
   const repairs: RepairSuggestion[] = [];
@@ -73,6 +86,16 @@ export function validateSolution(input: ValidateInput): ValidationReport {
         role,
         reasonCode: 'MISSING_REQUIRED_ROLE',
         message: `Добавь обязательный компонент ${role}`,
+        constraints:
+          role === 'block_storage' && spec.quantities.blockStorageGiB
+            ? {blockStorageGiB: spec.quantities.blockStorageGiB}
+            : role === 'internet_egress' && spec.quantities.egressGiB
+              ? {egressGiB: spec.quantities.egressGiB}
+              : role === 'public_ip' && spec.quantities.publicIpCount
+                ? {publicIpCount: spec.quantities.publicIpCount}
+                : role === 'cdn_egress' && spec.quantities.cdnEgressGiB
+                  ? {cdnEgressGiB: spec.quantities.cdnEgressGiB}
+                  : undefined,
       };
       repairs.push(repair);
       issues.push({
@@ -86,15 +109,119 @@ export function validateSolution(input: ValidateInput): ValidationReport {
     }
   }
 
+  // Quantity-driven hard checks (independent of LLM requiredRoles omissions)
+  if (spec.solutionType === 'kubernetes' && spec.quantities.workerCountExplicit !== true) {
+    issues.push({
+      code: 'WORKER_COUNT_UNKNOWN',
+      severity: 'error',
+      category: 'requirements',
+      requirementPath: 'quantities.workerCount',
+      message: 'Количество worker-нод не определено',
+    });
+  }
+
+  if (spec.quantities.blockStorageGiB && !hasRole(components, 'block_storage')) {
+    if (!issues.some((i) => i.code === 'MISSING_REQUIRED_ROLE' && i.requirementPath?.includes('block_storage'))) {
+      const repair: RepairSuggestion = {
+        action: 'add_component',
+        role: 'block_storage',
+        reasonCode: 'MISSING_BLOCK_STORAGE',
+        constraints: {blockStorageGiB: spec.quantities.blockStorageGiB},
+        message: `Добавь блочный диск ${spec.quantities.blockStorageGiB} GiB`,
+      };
+      repairs.push(repair);
+      issues.push({
+        code: 'MISSING_REQUIRED_ROLE',
+        severity: 'error',
+        category: 'requirements',
+        requirementPath: 'quantities.blockStorageGiB',
+        required: spec.quantities.blockStorageGiB,
+        message: `Не найден или не добавлен блочный диск ${spec.quantities.blockStorageGiB} GiB`,
+        repair,
+      });
+    }
+  }
+
+  if (spec.quantities.publicIpCount && !hasRole(components, 'public_ip')) {
+    if (!issues.some((i) => i.requirementPath?.includes('public_ip'))) {
+      const repair: RepairSuggestion = {
+        action: 'add_component',
+        role: 'public_ip',
+        reasonCode: 'MISSING_PUBLIC_IP',
+        constraints: {publicIpCount: spec.quantities.publicIpCount},
+      };
+      repairs.push(repair);
+      issues.push({
+        code: 'MISSING_REQUIRED_ROLE',
+        severity: 'error',
+        category: 'requirements',
+        requirementPath: 'quantities.publicIpCount',
+        message: 'Отсутствует публичный IPv4',
+        repair,
+      });
+    }
+  }
+
+  if (spec.quantities.egressGiB && !hasRole(components, 'internet_egress')) {
+    if (!issues.some((i) => i.requirementPath?.includes('internet_egress'))) {
+      const repair: RepairSuggestion = {
+        action: 'add_component',
+        role: 'internet_egress',
+        reasonCode: 'MISSING_INTERNET_EGRESS',
+        constraints: {egressGiB: spec.quantities.egressGiB},
+      };
+      repairs.push(repair);
+      issues.push({
+        code: 'MISSING_REQUIRED_ROLE',
+        severity: 'error',
+        category: 'requirements',
+        requirementPath: 'quantities.egressGiB',
+        message: `Отсутствует internet egress ${spec.quantities.egressGiB} GiB`,
+        repair,
+      });
+    }
+  }
+
+  if (spec.quantities.cdnRequested && !spec.quantities.cdnEgressGiB) {
+    issues.push({
+      code: 'CDN_VOLUME_UNKNOWN',
+      severity: 'warning',
+      category: 'requirements',
+      requirementPath: 'quantities.cdnEgressGiB',
+      message: 'Объём CDN-трафика не указан — CDN невозможно полностью оценить',
+    });
+  }
+
+  if (
+    normAssumptions.some((a) => a.code === 'WORKER_SHAPE_SCOPE_AMBIGUOUS') ||
+    (solution.assumptions ?? []).some(
+      (a) => typeof a !== 'string' && a.code === 'WORKER_SHAPE_SCOPE_AMBIGUOUS',
+    )
+  ) {
+    issues.push({
+      code: 'WORKER_SHAPE_SCOPE_AMBIGUOUS',
+      severity: 'warning',
+      category: 'requirements',
+      requirementPath: 'quantities.workerVcpu',
+      message:
+        'Требуется уточнить: vCPU/RAM — на одну worker-ноду или на весь кластер (принято на ноду)',
+    });
+  }
+
   const worker = components.find((c) => c.role === 'k8s_worker');
   const compute = components.find((c) => c.role === 'compute' || c.role === 'gpu_compute');
   const vcpuNeed = spec.constraints.minVcpu;
-  if (vcpuNeed != null) {
+  if (vcpuNeed != null && spec.quantities.workerCountExplicit) {
     const actual =
       worker && num(worker.configuration?.vcpu) != null && num(worker.quantity) != null
         ? (worker.configuration!.vcpu as number) * worker.quantity
         : num(compute?.configuration?.vcpu) ?? num(worker?.configuration?.vcpu);
-    if (actual != null && actual < vcpuNeed) {
+    // Only enforce cluster-total vCPU when shape is confirmed as cluster pool.
+    if (
+      spec.extras?.workerShapeScope === 'cluster' &&
+      actual != null &&
+      actual < vcpuNeed
+    ) {
       const repair: RepairSuggestion | undefined = worker
         ? {
             action: 'raise_quantity',
@@ -152,6 +279,15 @@ export function validateSolution(input: ValidateInput): ValidationReport {
       });
       continue;
     }
+    // Avoid duplicating quantity hard-checks already emitted above.
+    if (
+      (u.code === 'WORKER_COUNT_UNKNOWN' &&
+        issues.some((i) => i.code === 'WORKER_COUNT_UNKNOWN')) ||
+      (u.code === 'CDN_VOLUME_UNKNOWN' &&
+        issues.some((i) => i.code === 'CDN_VOLUME_UNKNOWN'))
+    ) {
+      continue;
+    }
     issues.push({
       code: u.code,
       severity: u.severity === 'blocking' ? 'error' : 'warning',
@@ -161,7 +297,7 @@ export function validateSolution(input: ValidateInput): ValidationReport {
         ? {action: 'add_component', role: u.role, reasonCode: u.code}
         : undefined,
     });
-    if (u.role && u.severity === 'blocking') {
+    if (u.role && u.severity === 'blocking' && u.role !== 'k8s_worker') {
       repairs.push({action: 'add_component', role: u.role, reasonCode: u.code});
     }
   }
@@ -178,7 +314,6 @@ export function validateSolution(input: ValidateInput): ValidationReport {
       });
     }
 
-    const scopes = new Set(components.map((c) => c.scope?.billingScope).filter(Boolean));
     const hasGpuOnly = components.some((c) => c.scope?.billingScope === 'gpu');
     const hasWhole = components.some((c) => c.scope?.billingScope === 'whole_instance');
     const hasCpuRam = components.some(
@@ -215,14 +350,20 @@ export function validateSolution(input: ValidateInput): ValidationReport {
       }
     }
 
+    // Only warn when attached block looks like a duplicate of the included boot disk.
     const disks = components.filter((c) => c.role === 'block_storage');
     const workerWithDisk = components.find(
       (c) =>
         (c.role === 'k8s_worker' || c.role === 'compute') &&
         c.configuration?.diskIncluded === true,
     );
+    const bootGiB = num(workerWithDisk?.configuration?.diskGiB) ?? 100;
     if (disks.length && workerWithDisk) {
       for (const d of disks) {
+        const vol = num(d.configuration?.volumeGiB) ?? d.quantity;
+        const looksLikeBootDuplicate =
+          vol != null && vol <= bootGiB * 1.5 && d.configuration?.diskIncluded !== false;
+        if (!looksLikeBootDuplicate) continue;
         const repair: RepairSuggestion = {
           action: 'remove_component',
           componentId: d.id,
@@ -240,7 +381,6 @@ export function validateSolution(input: ValidateInput): ValidationReport {
       }
     }
 
-    // Master fee must not be multiplied as worker
     const masterAsWorker = components.find(
       (c) =>
         c.role === 'k8s_worker' &&
@@ -255,14 +395,11 @@ export function validateSolution(input: ValidateInput): ValidationReport {
         message: 'K8s master meter использован как worker',
       });
     }
-    void scopes;
   }
 
   // --- Pricing ---
   if (level === 'pricing' || level === 'full' || level === 'basic') {
-    const required = components.filter((c) =>
-      spec.requiredRoles.includes(c.role),
-    );
+    const required = components.filter((c) => spec.requiredRoles.includes(c.role));
     const unpriced = required.filter(
       (c) => c.estimatedMonthlyCostRub == null || !Number.isFinite(c.estimatedMonthlyCostRub),
     );
@@ -340,9 +477,22 @@ export function validateSolution(input: ValidateInput): ValidationReport {
     (i) => i.category === 'provenance' && i.severity === 'error',
   );
 
-  const status =
+  // Role coverage + open clarification slots (e.g. unknown workerCount) so 100% is impossible.
+  const roleSatisfied = spec.requiredRoles.filter((r) => hasRole(components, r)).length;
+  const clarificationSlots =
+    spec.solutionType === 'kubernetes' && spec.quantities.workerCountExplicit !== true ? 1 : 0;
+  const coverageTotal = spec.requiredRoles.length + clarificationSlots;
+  const coverage =
+    coverageTotal === 0
+      ? 1
+      : Math.round((roleSatisfied / coverageTotal) * 100) / 100;
+
+  const hardErrors = issues.filter((i) => i.severity === 'error');
+  const status: ValidationReport['status'] =
     hardFailureCount > 0
-      ? 'invalid'
+      ? hardErrors.every((i) => CLARIFICATION_ERROR_CODES.has(i.code))
+        ? 'needs_clarification'
+        : 'invalid'
       : warningCount > 0
         ? 'valid_with_warnings'
         : 'valid';
@@ -354,8 +504,8 @@ export function validateSolution(input: ValidateInput): ValidationReport {
   return {
     solutionId: solution.id,
     status,
-    valid: status !== 'invalid',
-    coverage: solution.coverage?.score ?? 0,
+    valid: status === 'valid' || status === 'valid_with_warnings',
+    coverage,
     issues,
     hardFailureCount,
     warningCount,

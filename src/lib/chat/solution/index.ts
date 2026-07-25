@@ -3,7 +3,7 @@ export {composeSolution, buildPresetFromRequirements, KUBERNETES_RECIPE_POLICY} 
 export {validateSolution} from './validate';
 export {priceSolution} from './price';
 export {compareSolutions} from './compare';
-export {normalizeRequirementSpec} from './normalize';
+export {normalizeRequirementSpec, enrichSpecFromQuantities} from './normalize';
 export {
   searchCatalog,
   searchCatalogAsync,

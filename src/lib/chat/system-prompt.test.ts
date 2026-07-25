@@ -98,6 +98,24 @@ describe('matchPlanningDomains', () => {
     );
     assert.match(prompt, /compose_solution/);
   });
+
+  it('workload infra ask routes to stack+gpu, not token-only ai card', () => {
+    const d = matchPlanningDomains('Подбери инфраструктуру для GLM 5.2');
+    assert.ok(d.includes('stack'));
+    assert.ok(d.includes('gpu'));
+    assert.ok(!d.includes('ai'), `token card should not replace infra: ${d.join(',')}`);
+    const prompt = buildSystemPrompt('Подбери инфраструктуру для GLM 5.2');
+    assert.match(prompt, /recommend_inference_infra|INTENT/);
+    assert.match(prompt, /assumptions|допущен/i);
+  });
+
+  it('core encodes intent-first modes and clarification rules', () => {
+    assert.match(SYSTEM_PROMPT_CORE, /INTENT/);
+    assert.match(SYSTEM_PROMPT_CORE, /Отдельная цена/);
+    assert.match(SYSTEM_PROMPT_CORE, /Workload без ТЗ/);
+    assert.match(SYSTEM_PROMPT_CORE, /покрытие ≠ 100%|needs_clarification/);
+    assert.match(SYSTEM_PROMPT_CORE, /ашка/);
+  });
 });
 
 describe('buildSystemPrompt size', () => {

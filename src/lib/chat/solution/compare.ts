@@ -81,6 +81,7 @@ export function compareSolutions(input: CompareInput): ComparisonMatrix {
     const unresolvedCount = Array.isArray(s.unresolved) ? s.unresolved.length : 0;
     const eligible =
       validationStatus !== 'invalid' &&
+      validationStatus !== 'needs_clarification' &&
       coverage >= minCoverage &&
       completeness >= minCompleteness &&
       monthly != null;

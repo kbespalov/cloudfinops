@@ -994,6 +994,96 @@ export function addPublicIpParts(
   };
 }
 
+/**
+ * Cheapest on-demand block storage capacity for a provider (₽/GiB·month).
+ * HDD requests never fall back to SSD.
+ */
+export function pickBlockStorageMeter(
+  provider: string,
+  diskMedia: 'ssd' | 'hdd' | 'nvme' = 'ssd',
+): {meter: CatalogMeter; rateMonth: number} | null {
+  const disks = pricedList(provider, 'storage.block.capacity', 'month', (m) => isOnDemand(m));
+  let chosen: PricedMeter | null = null;
+  if (diskMedia === 'hdd') {
+    chosen = disks.find((d) => isHdd(d.m)) ?? null;
+  } else if (diskMedia === 'nvme') {
+    chosen =
+      disks.find((d) => isSsd(d.m) && isNvme(d.m)) ??
+      disks.find((d) => isSsd(d.m)) ??
+      null;
+  } else {
+    chosen =
+      disks.find((d) => isSsd(d.m) && isStandardNetworkSsd(d.m)) ??
+      disks.find((d) => isSsd(d.m) && !isNvme(d.m)) ??
+      disks.find((d) => isSsd(d.m)) ??
+      null;
+  }
+  if (!chosen) return null;
+  const rateMonth = amountNumber(chosen.m, 'month');
+  if (rateMonth == null || !Number.isFinite(rateMonth) || rateMonth <= 0) return null;
+  return {meter: chosen.m, rateMonth};
+}
+
+/** Cheapest internet egress rate (₽/GiB), never CDN. */
+function pickInternetEgressRate(provider: string): {meter: CatalogMeter; rateMonth: number} | null {
+  const meters = (getMeterIndex().byKey.get(`${provider}|network.traffic.egress`) ?? []).filter(
+    (m) => m.status === 'available' && isConfirmedAvailable(m),
+  );
+  let best: {meter: CatalogMeter; rateMonth: number} | null = null;
+  for (const m of meters) {
+    const blob = `${m.sku} ${m.name} ${m.meter}`.toLowerCase();
+    if (/cdn|вход|ingress|request|запрос/.test(blob)) continue;
+    const rate = amountNumber(m, 'month');
+    if (rate == null || !Number.isFinite(rate) || rate <= 0) continue;
+    if (!best || rate < best.rateMonth) best = {meter: m, rateMonth: rate};
+  }
+  return best;
+}
+
+/**
+ * Add internet egress volume (GiB/month) — separate from CDN egress.
+ */
+export function addInternetEgressParts(
+  view: ViewPresetQuote,
+  volumeGiB: number,
+  period: PeriodMode,
+): ViewPresetQuote {
+  if (!Number.isFinite(volumeGiB) || volumeGiB <= 0) return view;
+
+  const volLabel =
+    volumeGiB >= 1024
+      ? `${Math.round((volumeGiB / 1024) * 10) / 10} ТиБ`
+      : `${Math.round(volumeGiB)} GiB`;
+
+  const enrich = (q: ViewProviderQuote): ViewProviderQuote => {
+    const without = {
+      ...q,
+      total: q.parts.filter((p) => p.id !== 'egress').reduce((s, p) => s + p.amount, 0),
+      parts: q.parts.filter((p) => p.id !== 'egress'),
+    };
+    const picked = pickInternetEgressRate(q.provider);
+    if (!picked) return without;
+    const amount = scaleMonthUsageAmount(picked.rateMonth * volumeGiB, period);
+    return {
+      ...without,
+      total: without.total + amount,
+      parts: [
+        ...without.parts,
+        {id: 'egress', label: `Internet egress: ${volLabel}`, amount},
+      ],
+    };
+  };
+
+  const quotes = view.quotes.map(enrich).sort((a, b) => a.total - b.total);
+  const alternateQuotes = view.alternateQuotes.map(enrich).sort((a, b) => a.total - b.total);
+  return {
+    ...view,
+    quotes,
+    alternateQuotes,
+    best: quotes[0] ?? null,
+  };
+}
+
 /** Cheapest billable CDN traffic rate (₽/GiB) — egress or bidirectional, never free ingress. */
 function pickCdnTrafficRate(provider: string): number | null {
   const meters = [

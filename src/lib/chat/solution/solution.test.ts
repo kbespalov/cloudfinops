@@ -39,7 +39,59 @@ describe('synonyms + normalize', () => {
     assert.ok(spec.requiredRoles.includes('k8s_worker'));
     assert.ok(spec.requiredRoles.includes('object_storage'));
     assert.equal(spec.constraints.budgetMonthlyRub, 100_000);
+    assert.equal(spec.quantities.workerCountExplicit, true);
     assert.ok(assumptions.some((a) => a.code === 'DEFAULT_MONTH_HOURS'));
+  });
+
+  it('does not invent workerCount=3 and promotes HDD/IP/egress to requiredRoles', () => {
+    const {spec, assumptions} = normalizeRequirementSpec({
+      solutionType: 'kubernetes',
+      requirements: {
+        workerVcpu: 16,
+        workerRamGiB: 32,
+        blockStorageGiB: 102400,
+        diskMedia: 'hdd',
+        publicIpCount: 1,
+        egressGiB: 1024,
+        cdnRequested: true,
+        k8sTier: 'basic',
+      },
+    });
+    assert.equal(spec.quantities.workerCount, undefined);
+    assert.equal(spec.quantities.workerCountExplicit, false);
+    assert.ok(assumptions.some((a) => a.code === 'WORKER_COUNT_UNKNOWN'));
+    assert.ok(spec.requiredRoles.includes('block_storage'));
+    assert.ok(spec.requiredRoles.includes('public_ip'));
+    assert.ok(spec.requiredRoles.includes('internet_egress'));
+    assert.ok(assumptions.some((a) => a.code === 'CDN_VOLUME_UNKNOWN'));
+  });
+
+  it('enriches incomplete LLM RequirementSpec envelopes from quantities', () => {
+    const {spec} = normalizeRequirementSpec({
+      requirements: {
+        id: 'req_llm_incomplete',
+        solutionType: 'kubernetes',
+        strategy: 'cheapest',
+        period: {hoursPerMonth: 720},
+        currency: 'RUB',
+        vatMode: 'included',
+        constraints: {storage: {media: 'hdd'}, k8sTier: 'basic'},
+        requiredRoles: ['k8s_master', 'k8s_worker'],
+        optionalRoles: [],
+        quantities: {
+          workerVcpu: 16,
+          workerRamGiB: 32,
+          blockStorageGiB: 102400,
+          publicIpCount: 1,
+          egressGiB: 1024,
+          cdnRequested: true,
+        },
+      },
+    });
+    assert.ok(spec.requiredRoles.includes('block_storage'));
+    assert.ok(spec.requiredRoles.includes('public_ip'));
+    assert.ok(spec.requiredRoles.includes('internet_egress'));
+    assert.equal(spec.quantities.workerCountExplicit, false);
   });
 });
 
@@ -112,6 +164,53 @@ describe('compose_solution', () => {
       result.solutions.every((s) => !s.components.some((c) => c.role === 'object_storage')),
     );
   });
+
+  it('k8s stack: preview 1 worker; block HDD + IP + internet egress; CDN not invented', () => {
+    const result = composeSolution({
+      solutionType: 'kubernetes',
+      requirements: {
+        workerVcpu: 16,
+        workerRamGiB: 32,
+        blockStorageGiB: 102400,
+        diskMedia: 'hdd',
+        publicIpCount: 1,
+        egressGiB: 1024,
+        cdnRequested: true,
+        k8sTier: 'basic',
+      },
+      maxSolutions: 6,
+    });
+    assert.ok(result.solutions.length >= 1);
+    assert.equal(result.requirementSpec.quantities.workerCountExplicit, false);
+    assert.ok(
+      result.solutions.some((s) => s.components.some((c) => c.role === 'block_storage')),
+      'at least one provider must price HDD block storage',
+    );
+    for (const sol of result.solutions) {
+      const worker = sol.components.find((c) => c.role === 'k8s_worker');
+      assert.ok(worker);
+      assert.equal(worker!.quantity, 1);
+      const hasBlock = sol.components.some((c) => c.role === 'block_storage');
+      const blockUnresolved = sol.unresolved.some(
+        (u) => typeof u !== 'string' && u.code === 'BLOCK_STORAGE_UNAVAILABLE',
+      );
+      assert.ok(hasBlock || blockUnresolved);
+      assert.ok(sol.components.some((c) => c.role === 'public_ip'));
+      assert.ok(sol.components.some((c) => c.role === 'internet_egress'));
+      assert.ok(!sol.components.some((c) => c.role === 'cdn_egress'));
+      assert.ok(
+        sol.unresolved.some(
+          (u) => typeof u !== 'string' && u.code === 'WORKER_COUNT_UNKNOWN',
+        ),
+      );
+      assert.ok(
+        sol.unresolved.some((u) => typeof u !== 'string' && u.code === 'CDN_VOLUME_UNKNOWN'),
+      );
+      assert.ok((sol.coverage?.score ?? 1) < 1);
+    }
+    // Ranking must not put incomplete (no HDD) BOM first when others cover block_storage.
+    assert.ok(result.solutions[0]!.components.some((c) => c.role === 'block_storage'));
+  });
 });
 
 describe('validate_solution', () => {
@@ -164,6 +263,136 @@ describe('validate_solution', () => {
     });
     assert.ok(report.issues.some((i) => i.code === 'DUPLICATE_BILLING_SCOPE'));
     assert.ok(report.repairSuggestions.some((r) => r.action === 'remove_component'));
+  });
+
+  it('golden: incomplete k8s stack → needs_clarification, coverage < 1, no fake 100%', () => {
+    const composed = composeSolution({
+      solutionType: 'kubernetes',
+      requirements: {
+        workerVcpu: 16,
+        workerRamGiB: 32,
+        blockStorageGiB: 102400,
+        diskMedia: 'hdd',
+        publicIpCount: 1,
+        egressGiB: 1024,
+        cdnRequested: true,
+        k8sTier: 'basic',
+      },
+      maxSolutions: 1,
+    });
+    const sol =
+      composed.solutions.find((s) => s.components.some((c) => c.role === 'block_storage')) ??
+      composed.solutions[0];
+    assert.ok(sol);
+    const report = validateSolution({
+      solution: sol,
+      requirements: composed.requirementSpec,
+      validationLevel: 'full',
+    });
+    assert.equal(report.status, 'needs_clarification');
+    assert.equal(report.valid, false);
+    assert.ok(report.coverage < 1);
+    assert.ok(report.issues.some((i) => i.code === 'WORKER_COUNT_UNKNOWN' && i.severity === 'error'));
+    assert.ok(report.issues.some((i) => i.code === 'CDN_VOLUME_UNKNOWN' && i.severity === 'warning'));
+    assert.ok(
+      report.issues.some((i) => i.code === 'WORKER_SHAPE_SCOPE_AMBIGUOUS' && i.severity === 'warning'),
+    );
+    // Components present for priced roles — gaps are clarification, not silent drop.
+    assert.ok(sol.components.some((c) => c.role === 'block_storage'));
+    assert.ok(sol.components.some((c) => c.role === 'public_ip'));
+    assert.ok(sol.components.some((c) => c.role === 'internet_egress'));
+  });
+
+  it('rejects LLM-only k8s_master+k8s_worker BOM when quantities require more', () => {
+    const thin = {
+      id: 'sol_thin',
+      requirementSpecId: 'req_thin',
+      provider: 'yandex',
+      providerName: 'Yandex Cloud',
+      solutionType: 'kubernetes' as const,
+      strategy: 'cheapest' as const,
+      components: [
+        {
+          id: 'm',
+          role: 'k8s_master' as const,
+          provider: 'yandex',
+          title: 'master',
+          quantity: 1,
+          estimatedMonthlyCostRub: 1000,
+          selection: {method: 'synthetic' as const},
+          scope: {billingScope: 'service_fee' as const},
+        },
+        {
+          id: 'w',
+          role: 'k8s_worker' as const,
+          provider: 'yandex',
+          title: '3× worker',
+          quantity: 3,
+          estimatedMonthlyCostRub: 9000,
+          selection: {method: 'nearest_match' as const},
+          scope: {billingScope: 'whole_instance' as const},
+          configuration: {vcpu: 16, ramGiB: 32},
+        },
+      ],
+      assumptions: [],
+      unresolved: [],
+      tradeoffs: [],
+      coverage: {
+        requiredSatisfied: 2,
+        requiredTotal: 2,
+        optionalSatisfied: 0,
+        optionalTotal: 0,
+        score: 1,
+      },
+      estimatedMonthlyCostRub: 10000,
+      requirementsCoverage: 1,
+      provenance: {recipeVersion: 'test', generatedAt: new Date().toISOString()},
+    };
+    const report = validateSolution({
+      solution: thin,
+      requirements: {
+        id: 'req_thin',
+        solutionType: 'kubernetes',
+        strategy: 'cheapest',
+        period: {hoursPerMonth: 720},
+        currency: 'RUB',
+        vatMode: 'included',
+        constraints: {storage: {media: 'hdd'}, minVcpu: 16, minRamGiB: 32},
+        requiredRoles: ['k8s_master', 'k8s_worker'],
+        optionalRoles: [],
+        quantities: {
+          blockStorageGiB: 102400,
+          publicIpCount: 1,
+          egressGiB: 1024,
+          workerVcpu: 16,
+          workerRamGiB: 32,
+        },
+      },
+    });
+    assert.equal(report.valid, false);
+    assert.ok(report.coverage < 1);
+    assert.ok(report.issues.some((i) => i.code === 'WORKER_COUNT_UNKNOWN'));
+    assert.ok(
+      report.issues.some(
+        (i) =>
+          i.code === 'MISSING_REQUIRED_ROLE' &&
+          (i.message.includes('block_storage') || i.requirementPath?.includes('block')),
+      ),
+    );
+    assert.ok(
+      report.issues.some(
+        (i) =>
+          i.code === 'MISSING_REQUIRED_ROLE' &&
+          (i.message.includes('public_ip') || i.requirementPath?.includes('public')),
+      ),
+    );
+    assert.ok(
+      report.issues.some(
+        (i) =>
+          i.code === 'MISSING_REQUIRED_ROLE' &&
+          (i.message.includes('internet_egress') || i.requirementPath?.includes('egress')),
+      ),
+    );
   });
 });
 
@@ -333,7 +562,11 @@ describe('tool dispatch', () => {
       valid?: boolean;
       issues?: unknown[];
     };
-    assert.ok(['valid', 'valid_with_warnings', 'invalid'].includes(validated.status ?? ''));
+    assert.ok(
+      ['valid', 'valid_with_warnings', 'invalid', 'needs_clarification'].includes(
+        validated.status ?? '',
+      ),
+    );
 
     const pricedRaw = runToolSync(
       'price_solution',
