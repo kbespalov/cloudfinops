@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-07-26
+
+### ИИ-ассистент / сравнение GPU по классу карт
+
+Кнопка «Сравнить» у GPU SKU больше не подставляет самый дешёвый NVIDIA из каталога (например GTX 1080 к B300). Поиск и fast path выбирают **ближайший datacenter-peer** того же класса.
+
+- Peer-группы для training/HGX: B300 ↔ B200 / H200 / H100; учёт числа карт (×8), dedicated/HGX; consumer/entry (GTX, RTX 20xx, T4, L4) отсекаются.
+- `search_prices`: флаг `nearestAnalog`; SKU-compare fast path передаёт `gpuModel` + `nearestAnalog` и берёт nearest-per-provider, не absolute cheapest.
+- Промпт сравнения GPU и domain-card: аналоги по поколению/VRAM/числу карт; нет близкого SKU — сказать прямо, не паддить дешёвым мусором.
+- Soft eval `ux-221` (B300×8 HGX → H200/H100 ×8, forbid GTX 1080); unit-тесты на search / fast-path / prompt.
+
 ## 2026-07-25
 
 ### ИИ-ассистент / solution tool chain

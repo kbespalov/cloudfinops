@@ -322,6 +322,60 @@ describe('searchPricesDetailed GPU', () => {
     });
     assert.ok(r.rows.some((row) => /GB-GPU|1\s*GB\s*GPU/i.test(`${row.unit} ${row.name}`)));
   });
+
+  it('B300 ×8 SKU compare picks datacenter peers, not GTX 1080 / L4 / T4', () => {
+    const prompt =
+      'Сравни с другими провайдерами: «NVIDIA B300 288 ГБ · ×8» (selectel.dedicated.hgx-b300-8) у Selectel. Категория: GPU.';
+    const r = searchPricesDetailed({
+      query: prompt,
+      category: 'gpu',
+      gpuModel: 'B300',
+      nearestAnalog: true,
+      limit: 20,
+    });
+    assert.ok(r.providers.length >= 3, `expected cross-provider peers, got ${r.providers.length}`);
+    const selectel = r.providers.find((p) => p.provider === 'selectel');
+    assert.ok(selectel);
+    assert.match(selectel!.cheapest.name, /B300/i);
+    assert.match(selectel!.cheapest.sku, /hgx-b300-8/);
+    for (const p of r.providers) {
+      assert.doesNotMatch(
+        p.cheapest.name,
+        /GTX\s*1080|RTX\s*2080|A2000|\bT4\b|\bL4\b|A5000/i,
+        `${p.provider} must not surface consumer/entry GPU as B300 analog`,
+      );
+      assert.match(
+        p.cheapest.name,
+        /B300|H200|H100/i,
+        `${p.provider} peer should be flagship training GPU, got ${p.cheapest.name}`,
+      );
+    }
+    assert.ok(
+      r.providers.some((p) => p.provider !== 'selectel' && /H200|H100/i.test(p.cheapest.name)),
+      'expected H200/H100 ×N peer outside Selectel',
+    );
+  });
+
+  it('focused B300 dedicated query (fast-path args) still peers to H200/H100 ×8', () => {
+    const r = searchPricesDetailed({
+      query: 'NVIDIA B300 288 ГБ · ×8 selectel.dedicated.hgx-b300-8',
+      category: 'gpu',
+      gpuModel: 'B300',
+      nearestAnalog: true,
+      limit: 20,
+    });
+    const byProvider = Object.fromEntries(r.providers.map((p) => [p.provider, p.cheapest]));
+    assert.match(byProvider.selectel?.name ?? '', /B300/i);
+    assert.ok(
+      byProvider['vk-cloud'] && /H200/i.test(byProvider['vk-cloud'].name),
+      `VK peer: ${byProvider['vk-cloud']?.name}`,
+    );
+    assert.ok(
+      byProvider['cloud-ru'] && /H100/i.test(byProvider['cloud-ru'].name),
+      `Cloud.ru peer: ${byProvider['cloud-ru']?.name}`,
+    );
+    assert.doesNotMatch(byProvider.selectel?.name ?? '', /GTX|1080/i);
+  });
 });
 
 describe('searchPricesDetailed CDN volume', () => {

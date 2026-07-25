@@ -12,6 +12,7 @@ import {
   paramsLabel,
   billingUnitLabel,
   amountNumber,
+  extractGpuCount,
   extractGpuModel,
   extractAiModelFamily,
   extractAiModelKey,
@@ -23,6 +24,7 @@ import {
   type CatalogMeter,
   type CategoryKey,
 } from '@/lib/catalog';
+import {gpuFamilyToken} from '@/lib/calculator/gpu-shapes';
 import {
   cosineSimilarity,
   embedQueryCached,
@@ -62,6 +64,11 @@ export type SearchParams = {
   provider?: string;
   gpuModel?: string;
   aiModel?: string;
+  /**
+   * Product-page / «ближайшие аналоги» compare: pick nearest peer per provider
+   * (GPU generation + card count), not the absolute cheapest NVIDIA SKU.
+   */
+  nearestAnalog?: boolean;
   /** Hard filter by object-storage class: standard | warm | cold | ice | … */
   storageClass?: string;
   /**
@@ -457,6 +464,96 @@ function wantsGpuGbShare(query: string | undefined): boolean {
 }
 
 /**
+ * Datacenter training / HGX-class peers. B300 must compare to H200/H100 nodes,
+ * never to consumer GTX/RTX from the same vendor token («NVIDIA»).
+ */
+const GPU_PEER_GROUPS: Record<string, readonly string[]> = {
+  B300: ['B300', 'B200', 'H200', 'H100'],
+  B200: ['B200', 'B300', 'H200', 'H100'],
+  H200: ['H200', 'B300', 'B200', 'H100'],
+  H100: ['H100', 'H200', 'B200', 'B300'],
+};
+
+/** Tokens that hit almost every NVIDIA GPU — ignore in peer/nearest scoring. */
+const GENERIC_GPU_TOKENS = new Set([
+  'nvidia',
+  'gpu',
+  'гб',
+  'gb',
+  'gib',
+  'vram',
+  'card',
+  'карта',
+  'видеокарта',
+]);
+
+/** Family needle from free text or gpuModel param (B300, H200, …). */
+export function detectGpuFamilyNeedle(
+  query: string | undefined,
+  gpuModel?: string | null,
+): string | null {
+  return gpuFamilyToken(`${gpuModel ?? ''} ${query ?? ''}`.trim());
+}
+
+/** Card count from «×8», «8×», or SKU suffix like hgx-b300-8. */
+export function detectGpuCountNeedle(query: string | undefined): number | null {
+  if (!query) return null;
+  const m =
+    query.match(/[×xх]\s*(\d{1,2})\b/i) ||
+    query.match(/\b(\d{1,2})\s*[×xх]/i) ||
+    query.match(/(?:hgx|gpu|dedicated)[-a-z0-9]*-(\d{1,2})\b/i);
+  if (!m) return null;
+  const n = Number(m[1]);
+  return Number.isFinite(n) && n >= 1 && n <= 16 ? n : null;
+}
+
+/**
+ * Family from identity fields only — not notes/hay (Yandex Platform V4 notes
+ * mention «H200» as a hint but must not enter H200/B300 peer sets).
+ */
+function meterGpuFamily(meter: CatalogMeter): string | null {
+  return (
+    gpuFamilyToken(extractGpuModel(meter) ?? '') ||
+    gpuFamilyToken(displayMeterName(meter)) ||
+    gpuFamilyToken(meter.name) ||
+    gpuFamilyToken(meter.sku)
+  );
+}
+
+/**
+ * Score how close a GPU meter is to the asked family/count.
+ * Positive → keep; strongly negative → drop in peer mode.
+ */
+function gpuPeerLexicalBoost(
+  queryFamily: string,
+  queryCount: number | null,
+  meter: CatalogMeter,
+  hay: string,
+  query: string,
+): number {
+  const family = meterGpuFamily(meter);
+  if (!family) return -6;
+  const peers = GPU_PEER_GROUPS[queryFamily];
+  let score = 0;
+  if (family === queryFamily) score += 5;
+  else if (peers?.includes(family)) score += 2.5;
+  else return -8;
+
+  const count = extractGpuCount(meter) ?? 1;
+  if (queryCount != null) {
+    if (count === queryCount) score += 2;
+    else if (queryCount >= 4 && count === 1) score -= 1.5;
+    else if (Math.abs(count - queryCount) <= 2 && count >= 4) score += 0.5;
+  }
+
+  const q = query.toLowerCase();
+  if (/dedicated|hgx|dgx/.test(q) && /dedicated|hgx|dgx/.test(hay)) score += 1.2;
+  if (/preemptible|прерываем/.test(hay) && !/preemptible|прерываем/.test(q)) score -= 0.4;
+  if (meter.synthetic) score -= 0.25;
+  return score;
+}
+
+/**
  * Unit vCPU / platform / preemptible SKU compare — not disks, images, or RAM.
  * Without this, «Ice Lake preemptible vCPU» ranks cheap NVMe/IOPS as cheapest.
  */
@@ -651,6 +748,24 @@ function collectCandidates(params: SearchParams): FilterContext {
   const aiModel =
     params.aiModel?.trim().toLowerCase() || detectAiModelNeedle(effectiveQuery) || null;
   const vcpuUnitOnly = looksLikeVcpuUnitQuery(effectiveQuery, searchTokens);
+  const queryGpuFamily = detectGpuFamilyNeedle(effectiveQuery, params.gpuModel);
+  const queryGpuCount = detectGpuCountNeedle(effectiveQuery);
+  const wantsMultiGpuNode =
+    (queryGpuCount != null && queryGpuCount >= 4) ||
+    /dedicated|hgx|dgx|nvlink/i.test(effectiveQuery ?? '');
+  const nearestAnalogAsk =
+    Boolean(params.nearestAnalog) ||
+    crossProviderCompare ||
+    /ближайш\w*\s+аналог|аналог\w*\s+у\s+других/i.test(params.query ?? '');
+  /** Expand B300 → H200/H100 peers; never let «NVIDIA» crown GTX 1080. */
+  const gpuPeerMode = Boolean(
+    queryGpuFamily &&
+      GPU_PEER_GROUPS[queryGpuFamily] &&
+      (nearestAnalogAsk || wantsMultiGpuNode),
+  );
+  const gpuNearestPerProvider = Boolean(
+    queryGpuFamily && (category === 'gpu' || nearestAnalogAsk || gpuPeerMode),
+  );
   let storageClass =
     params.storageClass?.trim().toLowerCase() || detectStorageClass(effectiveQuery);
   // Model often sets storageClass=ice from «Ice Lake» / ice-lake SKU — drop for CPU unit asks.
@@ -685,11 +800,15 @@ function collectCandidates(params: SearchParams): FilterContext {
   const k8sTier = k8sContext ? detectKubernetesTier(effectiveQuery) : null;
   const k8sComparableOnly = Boolean(k8sContext && k8sTier && !wantsK8sUnitComponents(effectiveQuery));
   const candidates: Candidate[] = [];
+  const peerFamilies = queryGpuFamily ? GPU_PEER_GROUPS[queryGpuFamily] : undefined;
 
   for (const {meter, hay} of entries) {
     if (category && meter.categoryKey !== category) continue;
     if (providerFilter && meter.provider !== providerFilter) continue;
-    if (gpuModel) {
+    if (gpuPeerMode && peerFamilies && queryGpuFamily) {
+      const family = meterGpuFamily(meter);
+      if (!family || !peerFamilies.includes(family)) continue;
+    } else if (gpuModel) {
       const gm = (extractGpuModel(meter) ?? '').toLowerCase();
       if (!gm.includes(gpuModel) && !hay.includes(gpuModel)) continue;
     }
@@ -698,6 +817,7 @@ function collectCandidates(params: SearchParams): FilterContext {
     const queryLooksLikeGpuCard =
       Boolean(gpuModel) ||
       category === 'gpu' ||
+      Boolean(queryGpuFamily) ||
       /\b(h100|h200|a100|a10|l40s?|l4|b300|v100|t4|rtx)\b/i.test(params.query ?? '');
     if (isGpuGbShareMeter(meter) && !wantsGpuGbShare(params.query) && queryLooksLikeGpuCard) {
       continue;
@@ -718,6 +838,7 @@ function collectCandidates(params: SearchParams): FilterContext {
 
     let lexical = 0;
     for (const tok of searchTokens) {
+      if (gpuPeerMode && GENERIC_GPU_TOKENS.has(tok)) continue;
       if (hay.includes(tok)) lexical += 1;
     }
     // Synthetic GPU/other demotion; for k8s the 2/4 bundles ARE the comparable masters.
@@ -737,6 +858,21 @@ function collectCandidates(params: SearchParams): FilterContext {
         lexical += 1;
       }
     }
+    if (gpuPeerMode && queryGpuFamily) {
+      lexical += gpuPeerLexicalBoost(
+        queryGpuFamily,
+        queryGpuCount,
+        meter,
+        hay,
+        effectiveQuery ?? '',
+      );
+    } else if (gpuNearestPerProvider && queryGpuFamily) {
+      const family = meterGpuFamily(meter);
+      if (family === queryGpuFamily) lexical += 3;
+      if (queryGpuCount != null && (extractGpuCount(meter) ?? 1) === queryGpuCount) {
+        lexical += 1.5;
+      }
+    }
 
     candidates.push({
       meter,
@@ -754,7 +890,7 @@ function collectCandidates(params: SearchParams): FilterContext {
     meterKind,
     preferCapacity,
     k8sTier,
-    nearestMatchPerProvider: vcpuUnitOnly,
+    nearestMatchPerProvider: vcpuUnitOnly || gpuNearestPerProvider,
   };
 }
 

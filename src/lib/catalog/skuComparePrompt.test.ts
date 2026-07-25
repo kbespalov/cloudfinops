@@ -133,6 +133,19 @@ describe('buildSkuComparePrompt', () => {
     assert.equal(q, prompt);
     assert.match(q, new RegExp(meter.sku.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   });
+
+  it('GPU dedicated B300 prompt asks for same-class peers, not any NVIDIA', () => {
+    const meter = catalog.meters.find((m) => m.sku === 'selectel.dedicated.hgx-b300-8');
+    assert.ok(meter, 'B300 SKU must exist in catalog');
+    const prompt = buildSkuComparePrompt(meter!, 'month');
+
+    assert.match(prompt, /Категория: GPU/);
+    assert.match(prompt, /B300/);
+    assert.match(prompt, /hgx-b300-8/);
+    assert.match(prompt, /datacenter GPU|H200\/H100|тому же классу/i);
+    assert.match(prompt, /GTX|consumer|мусор/i);
+    assert.doesNotMatch(prompt, /доля ядра/);
+  });
 });
 
 describe('buildSkuSelfHostPrompt', () => {

@@ -337,6 +337,11 @@ export const CHAT_TOOLS = [
             type: 'string',
             description: 'Фильтр по модели GPU, например H100, A100, B300, L40S, V100.',
           },
+          nearestAnalog: {
+            type: 'boolean',
+            description:
+              'true для «сравни SKU / ближайшие аналоги»: на GPU берёт peer того же класса (B300↔H200/H100, ×N), не самый дешёвый NVIDIA; на vCPU — ближайшая платформа/доля.',
+          },
           aiModel: {
             type: 'string',
             description:
@@ -588,6 +593,7 @@ async function runSearch(args: Record<string, unknown>): Promise<unknown> {
       : undefined,
     provider: typeof args.provider === 'string' ? args.provider : undefined,
     gpuModel: typeof args.gpuModel === 'string' ? args.gpuModel : undefined,
+    nearestAnalog: args.nearestAnalog === true,
     aiModel: typeof args.aiModel === 'string' ? args.aiModel : undefined,
     storageClass: STORAGE_CLASSES.includes(storageClassRaw as (typeof STORAGE_CLASSES)[number])
       ? storageClassRaw
@@ -1016,6 +1022,7 @@ export function runToolSync(name: string, rawArgs: string): string {
           : undefined,
         provider: typeof args.provider === 'string' ? args.provider : undefined,
         gpuModel: typeof args.gpuModel === 'string' ? args.gpuModel : undefined,
+        nearestAnalog: args.nearestAnalog === true,
         aiModel: typeof args.aiModel === 'string' ? args.aiModel : undefined,
         storageClass: STORAGE_CLASSES.includes(storageClassRaw as (typeof STORAGE_CLASSES)[number])
           ? storageClassRaw

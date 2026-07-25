@@ -583,6 +583,14 @@ function matchSkuComparePlan(userText: string): FastPathPlan | null {
                 : catRaw === 'kubernetes'
                   ? 'kubernetes'
                   : undefined;
+  // Soft family hint for GPU (B300 → peer H200/H100 via nearestAnalog); not a hard-only filter.
+  const gpuModelMatch =
+    category === 'gpu'
+      ? query.match(
+          /\b(B300|B200|H200|H100|A100|L40S|L40|L4|A30|A10|V100|T4|RTX\s*6000(?:\s*Pro|\s*Ada)?|RTX\s*4090|GTX\s*1080)\b/i,
+        )
+      : null;
+  const gpuModel = gpuModelMatch?.[1]?.replace(/\s+/g, ' ').trim();
   return {
     id: 'sku-compare',
     tools: [
@@ -591,6 +599,8 @@ function matchSkuComparePlan(userText: string): FastPathPlan | null {
         args: {
           query,
           ...(category ? {category} : {}),
+          ...(gpuModel ? {gpuModel} : {}),
+          nearestAnalog: true,
           limit: 20,
         },
       },
@@ -2287,6 +2297,29 @@ export function formatFastPathAnswer(
       const incompleteNote =
         planId === 'sku-compare' || planId === 'compute-compare'
           ? (() => {
+              const looksGpuPeer = rowsData.some((r) =>
+                /\b(B300|H200|H100|A100|L40S?|L4|T4|GTX|RTX)\b/i.test(`${r.name} ${r.config}`),
+              );
+              if (looksGpuPeer) {
+                const families = new Set(
+                  rowsData
+                    .map((r) => {
+                      const m = `${r.name} ${r.config}`.match(
+                        /\b(B300|B200|H200|H100|A100|L40S|L40|L4|T4)\b/i,
+                      );
+                      return m?.[1]?.toUpperCase();
+                    })
+                    .filter(Boolean),
+                );
+                if (families.size > 1) {
+                  return (
+                    `\n\nНеполные аналоги: точного того же поколения GPU нет у всех провайдеров — в таблице ближайший datacenter-класс (${[...families].join(
+                      '/',
+                    )}). Отличия по VRAM, числу карт и форме (dedicated HGX vs flavor) смотри в колонке «Конфигурация»; consumer/entry GPU сюда не попадают.`
+                  );
+                }
+                return '';
+              }
               const preempt = rowsData.filter((r) =>
                 /preemptible|прерыв/i.test(`${r.name} ${r.config}`),
               );

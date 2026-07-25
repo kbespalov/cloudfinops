@@ -76,7 +76,7 @@ function sc(
 }
 
 /** Expected corpus size — bump when appending cases. */
-export const SOFT_SCENARIO_COUNT = 220;
+export const SOFT_SCENARIO_COUNT = 221;
 
 /** Build the full soft UX corpus. */
 export function buildUserScenarios(): SoftScenario[] {
@@ -2680,6 +2680,30 @@ export function buildUserScenarios(): SoftScenario[] {
         answerIncludes: ['Selectel', 'Cascade', 'Ice Lake', 'preemptible', 'прерыв'],
       },
       'Selectel preemptible is cheaper but Cascade Lake — call out platform delta.',
+    ),
+    sc(
+      221,
+      'sku-compare',
+      'Сравни с другими провайдерами: «NVIDIA B300 288 ГБ · ×8» (selectel.dedicated.hgx-b300-8) у Selectel. Категория: GPU. Конфигурация: 128 vCPU · 2048 GiB RAM · 8 GPU · NVIDIA B300. Цена сейчас: 8 000 000,00 ₽ конфигурация целиком (GPU+хост) · в месяц. Найди ближайшие аналоги у других провайдеров (если точного SKU нет — ближайшее по смыслу: тот же класс datacenter GPU и сопоставимое число карт) и сравни цены в одной таблице. Отметь отличия, если аналоги неполные.',
+      ['price', 'compare', 'gpu'],
+      'hard',
+      {
+        toolsAny: ['search_prices', 'get_quote', 'search_catalog'],
+        toolsAvoid: ['compose_solution'],
+        catalogAnchor: 'search',
+        anchorParams: {
+          query: 'NVIDIA B300 288 ГБ · ×8 selectel.dedicated.hgx-b300-8',
+          category: 'gpu',
+          gpuModel: 'B300',
+          nearestAnalog: true,
+          limit: 20,
+        },
+        mustShowBreakdown: true,
+        mustExposeAssumptions: true,
+        answerIncludes: ['B300', 'H200', 'H100', 'Selectel'],
+        forbiddenExtras: ['GTX 1080', 'GTX1080', 'RTX 2080', 'A2000'],
+      },
+      'Product CTA B300×8 HGX: peers are 8×H200/H100 datacenter nodes — never cheapest NVIDIA (GTX 1080). No same-gen SKU → say incomplete, do not pad with T4/L4.',
     ),
     sc(
       209,

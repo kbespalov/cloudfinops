@@ -96,6 +96,21 @@ describe('matchFastPath', () => {
     assert.equal(plan.tools[0]?.args.category, 'compute');
     assert.match(String(plan.tools[0]?.args.query), /Ice Lake.*preemptible|preemptible.*Ice Lake/i);
     assert.doesNotMatch(String(plan.tools[0]?.args.query), /Сравни с другими/);
+    assert.equal(plan.tools[0]?.args.nearestAnalog, true);
+  });
+
+  it('matches product-page B300 SKU compare with gpuModel + nearestAnalog', () => {
+    const prompt =
+      'Сравни с другими провайдерами: «NVIDIA B300 288 ГБ · ×8» (selectel.dedicated.hgx-b300-8) у Selectel. Категория: GPU. Конфигурация: 128 vCPU · 2048 GiB RAM · 8 GPU · NVIDIA B300. Цена сейчас: 8 000 000,00 ₽ конфигурация целиком (GPU+хост) · в месяц. Найди ближайшие аналоги у других провайдеров';
+    const plan = matchFastPath(prompt);
+    assert.ok(plan);
+    assert.equal(plan.id, 'sku-compare');
+    assert.equal(plan.tools[0]?.name, 'search_prices');
+    assert.equal(plan.tools[0]?.args.category, 'gpu');
+    assert.equal(plan.tools[0]?.args.gpuModel, 'B300');
+    assert.equal(plan.tools[0]?.args.nearestAnalog, true);
+    assert.match(String(plan.tools[0]?.args.query), /B300/i);
+    assert.match(String(plan.tools[0]?.args.query), /hgx-b300-8/);
   });
 
   it('rewrites GPU search chips to get_quote on the calculator surface', () => {
