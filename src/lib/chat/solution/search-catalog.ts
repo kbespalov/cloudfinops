@@ -127,32 +127,64 @@ function buildMatch(
   rankScore: number,
   filterNotes: string[],
 ): MatchInfo {
+  const exact: string[] = [];
   const matched: string[] = [];
   const unmatched: string[] = [];
+  const conflicting: string[] = [];
   const violations: string[] = [];
   const warnings: string[] = [];
+  let structural = 0;
 
-  if (params.category && meter.categoryKey === params.category) matched.push('category');
-  else if (params.category) unmatched.push('category');
+  if (params.category && meter.categoryKey === params.category) {
+    exact.push('category');
+    matched.push('category');
+    structural += 1;
+  } else if (params.category) {
+    unmatched.push('category');
+    if (
+      (params.category === 'kubernetes' && meter.categoryKey === 'compute') ||
+      (params.category === 'gpu' && meter.categoryKey !== 'gpu')
+    ) {
+      conflicting.push('category');
+    }
+  }
 
   if (params.provider) {
-    if (meter.provider === params.provider) matched.push('provider');
-    else violations.push('provider');
+    if (meter.provider === params.provider) {
+      exact.push('provider');
+      matched.push('provider');
+    } else violations.push('provider');
   }
 
   if (params.gpuModel) {
     const gm = (extractGpuModel(meter) ?? '').toLowerCase();
-    if (gm.includes(params.gpuModel.toLowerCase())) matched.push('gpuModel');
-    else unmatched.push('gpuModel');
+    const want = params.gpuModel.toLowerCase();
+    if (gm === want || gm.includes(want)) {
+      exact.push('gpuModel');
+      matched.push('gpuModel');
+      structural += 1;
+    } else if (gm && /h100|h200|a100|l40|l4|v100|t4|b200|b300/.test(gm)) {
+      conflicting.push('gpuModel');
+      unmatched.push('gpuModel');
+    } else unmatched.push('gpuModel');
   }
 
   if (params.storageClass) {
     const cls = (extractStorageClass(meter) ?? '').toLowerCase();
-    if (cls === params.storageClass.toLowerCase()) matched.push('storageClass');
-    else unmatched.push('storageClass');
+    if (cls === params.storageClass.toLowerCase()) {
+      exact.push('storageClass');
+      matched.push('storageClass');
+      structural += 1;
+    } else if (cls) {
+      conflicting.push('storageClass');
+      unmatched.push('storageClass');
+    } else unmatched.push('storageClass');
   }
 
-  if (params.meterKind && row.meterKind === params.meterKind) matched.push('meterKind');
+  if (params.meterKind && row.meterKind === params.meterKind) {
+    exact.push('meterKind');
+    matched.push('meterKind');
+  }
 
   const vcpu = numDim(meter, 'vcpu', 'vCPU');
   const ram = numDim(meter, 'ramGiB', 'ramGb');
@@ -165,8 +197,12 @@ function buildMatch(
 
   return {
     score: Math.round(rankScore * 1000) / 1000,
+    lexicalScore: rankScore,
+    structuralScore: structural,
+    exactFields: [...new Set(exact)],
     matchedFields: [...new Set(matched)],
     unmatchedFields: [...new Set(unmatched)],
+    conflictingFields: [...new Set(conflicting)],
     hardConstraintViolations: violations,
     warnings,
   };
@@ -194,6 +230,8 @@ function toCandidate(
     entityType: entityTypeFor(meter),
     title: row.name,
     sku: meter.sku,
+    category: meter.categoryKey,
+    meterKind: row.meterKind ?? null,
     attributes: {
       category: meter.categoryKey,
       meter: meter.meter,
@@ -220,6 +258,7 @@ function toCandidate(
     source: {
       url,
       priceUpdatedAt: catalogAsOfIso(),
+      catalogAsOf: catalogAsOfIso(),
     },
   };
 }

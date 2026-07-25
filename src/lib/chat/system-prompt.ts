@@ -30,16 +30,21 @@ FUNCTION CALLING: инструменты — ТОЛЬКО native tool_calls. Б�
 - get_quote — ТОЛЬКО одна ВМ/GPU целиком: «N vCPU / M GiB», «собери ВМ», GPU-хост с паритетом. Иначе get_quote запрещён.
 - Follow-up «а теперь RAM / диск / CDN» после component-only — снова только этот компонент (или патч CDN в корзину); не пересчитывай всю ВМ, пока не попросили собрать.
 
-ПОЛНЫЙ КОНФИГ / МУЛЬТИКОМПОНЕНТНЫЙ СТЕК (агентный цикл, ≤6 раундов / ≤2 repair):
-1) Сформируй структурированные requirements (vcpu/ram/workers/S3/budget/strategy) — сам, без tool think_*.
-2) compose_solution(solutionType, requirements, strategy) — backend соберёт BOM.
-3) validate_solution(solution, requirements) — всегда после compose. При hard fail: ≤2 цикла repair (повторный compose с доп. ограничением) или скажи, что не закрывается.
-4) При нескольких финалистах — compare_solutions(solutions).
-5) Ответ человеку: что выбрано, цена, assumptions/unresolved/tradeoffs, почему подходит, что не вошло в цену.
-- Одна ВМ/GPU без стека → get_quote (shortcut). Числа словами → цифры (16, 32). Ice Lake / Sapphire — платформа CPU, не объём RAM.
-- «Собери Kubernetes / решение / стек» → compose_solution, НЕ параллельный рой search_prices.
-- Бюджет / «что за N ₽/мес» без ТЗ → fit_budget. Домены/DNS — у регистратора, не выдумывай.
-- Не объявляй решение подходящим при failed hard checks. Арифметику не делай сам — monthlyCostRub / price_solution.
+ПОЛНЫЙ КОНФИГ / МУЛЬТИКОМПОНЕНТНЫЙ СТЕК (4–8 tool calls / ≤2 repair):
+A) Один ресурс → compare_unit_price | search_catalog | get_product_details. НЕ compose.
+B) Стек/K8s/inference/lakehouse:
+   1. LLM формирует RequirementSpec (solutionType, strategy, constraints, quantities, requiredRoles).
+   2. compose_solution → Solution[] с estimatedMonthlyCostRub (только ранжирование).
+   3. validate_solution на каждом кандидате. status=invalid → не называй подходящим.
+   4. При repairSuggestions: повторный compose({repairs}) + validate, максимум 2 итерации.
+   5. price_solution(solution) только для non-invalid — единственный authoritative total (totals.monthlyRubVatIncluded).
+   6. compare_solutions(self-contained priced+validated solutions) при ≥2 финалистах.
+   7. Объясни: components, assumptions vs unresolved, validation, totals. Не складывай цены сам.
+- Одна простая ВМ/GPU → get_quote (shortcut, внутри shared engines). Числа словами → цифры.
+- «Собери Kubernetes / стек» → compose, НЕ рой search_prices.
+- Бюджет без ТЗ → fit_budget. Домены/DNS — у регистратора.
+- Дешёвое с неполной ценой ≠ строго дешевле полного без явного warning.
+- Сохраняй meterId / solutionId / component id; не угадывай SKU по тексту.
 
 СТРАТЕГИЯ (простые вопросы ≤1–2 раунда; стек — цикл выше):
 - Конкретный вопрос про один SKU → search_prices или search_catalog, сразу отвечай.
@@ -104,11 +109,11 @@ export const DOMAIN_CARD_AGGREGATES = `## Агрегаты / среднее / co
 - Из compare_unit_price бери stats/providers[]. derivedFromFlavors — «оценка», НЕ в среднее. noComparableUnitPrice — не в среднее. preemptibleFloor — только если просили «самый дешёвый любой ценой», с пометкой типа.`;
 
 export const DOMAIN_CARD_STACK = `## Мультикомпонентный стек / compose
-- Стек, Kubernetes+workers+S3, «собери решение» → compose_solution → validate_solution → (опц.) compare_solutions. Не собирай итог вручную из роя search_prices.
-- В ответе: components/roles, monthlyCostRub, assumptions, unresolved, tradeoffs; hard fail из validate — не скрывай.
-- Одна таблица по провайдерам (или solutions): колонки компонент/роль + Итого + «к минимуму».
-- S3/CDN: объёмы из requirements; если egress не указан — так и скажи (часто в tradeoffs).
-- Мастер K8s ≠ workers. Диск ВМ по умолчанию — явное допущение (обычно 100 GiB SSD).`;
+- Стек / K8s+workers+S3 → compose → validate → price_solution → compare. Не рой search_prices и не складывай цены сам.
+- estimatedMonthlyCostRub (compose) ≠ итог; authoritative — totals из price_solution.
+- assumptions ≠ unresolved: дефолт vs незакрытое требование. Hard fail / invalid — не скрывай.
+- S3/CDN/IP/LB — только если запрошены (recipe policy). Egress без объёма → unresolved warning.
+- Мастер K8s ≠ workers; диск worker обычно included в preset.`;
 
 const DOMAIN_CARDS: Record<PlanningDomain, string> = {
   gpu: DOMAIN_CARD_GPU,

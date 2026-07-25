@@ -1,16 +1,18 @@
 /**
- * Structured validation of a composed solution against requirements.
- * Deterministic checks — no LLM reasoning tool.
+ * Structured validation — requirements / compatibility / pricing / provenance.
+ * valid is computed by backend, never by the LLM.
  */
 
+import {catalog} from '@/lib/catalog';
 import type {
   RequirementSpec,
+  RepairSuggestion,
   Solution,
   SolutionComponent,
-  ValidationCheck,
+  ValidationIssue,
   ValidationReport,
-  RepairSuggestion,
 } from './types';
+import {normalizeRequirementSpec} from './normalize';
 
 function num(v: unknown): number | undefined {
   const n = typeof v === 'number' ? v : Number(v);
@@ -21,241 +23,348 @@ function hasRole(components: SolutionComponent[], role: string): boolean {
   return components.some((c) => c.role === role);
 }
 
-function sumMonthly(components: SolutionComponent[]): number | null {
-  let total = 0;
-  let any = false;
-  for (const c of components) {
-    if (c.monthlyCostRub == null || !Number.isFinite(c.monthlyCostRub)) continue;
-    total += c.monthlyCostRub;
-    any = true;
-  }
-  return any ? Math.round(total * 100) / 100 : null;
-}
-
 export type ValidateInput = {
-  solution: Solution | {
-    components: SolutionComponent[];
-    provider?: string;
-    monthlyCostRub?: number | null;
-    unresolved?: string[];
-    requirementsCoverage?: number;
-  };
-  requirements?: RequirementSpec;
-  validationLevel?: 'basic' | 'pricing' | 'compatibility' | 'full';
+  solution: Solution | Record<string, unknown>;
+  requirements?: RequirementSpec | Record<string, unknown>;
+  validationLevel?: 'basic' | 'pricing' | 'compatibility' | 'provenance' | 'full';
 };
+
+function asSolution(raw: Record<string, unknown> | Solution): Solution {
+  const s = raw as Solution;
+  return {
+    ...s,
+    id: typeof s.id === 'string' ? s.id : 'unknown',
+    components: Array.isArray(s.components) ? s.components : [],
+    unresolved: Array.isArray(s.unresolved) ? s.unresolved : [],
+    assumptions: Array.isArray(s.assumptions) ? s.assumptions : [],
+    coverage: s.coverage ?? {
+      requiredSatisfied: 0,
+      requiredTotal: 0,
+      optionalSatisfied: 0,
+      optionalTotal: 0,
+      score: typeof s.requirementsCoverage === 'number' ? s.requirementsCoverage : 0,
+    },
+    estimatedMonthlyCostRub:
+      s.estimatedMonthlyCostRub ??
+      (typeof s.monthlyCostRub === 'number' ? s.monthlyCostRub : null),
+  };
+}
 
 export function validateSolution(input: ValidateInput): ValidationReport {
   const level = input.validationLevel ?? 'full';
-  const req = input.requirements ?? {};
-  const components = input.solution.components ?? [];
-  const unresolved = 'unresolved' in input.solution ? (input.solution.unresolved ?? []) : [];
-  const provider =
-    'provider' in input.solution ? input.solution.provider : undefined;
-  const checks: ValidationCheck[] = [];
+  const solution = asSolution(input.solution as Solution);
+  const {spec} = normalizeRequirementSpec({
+    solutionType: solution.solutionType,
+    requirements: input.requirements ?? {
+      solutionType: solution.solutionType,
+      providers: solution.provider ? [solution.provider] : undefined,
+    },
+  });
+
+  const issues: ValidationIssue[] = [];
   const repairs: RepairSuggestion[] = [];
+  const components = solution.components;
 
-  const total =
-    input.solution.monthlyCostRub != null
-      ? input.solution.monthlyCostRub
-      : sumMonthly(components);
+  // --- Requirements ---
+  for (const role of spec.requiredRoles) {
+    if (!hasRole(components, role)) {
+      const repair: RepairSuggestion = {
+        action: 'add_component',
+        role,
+        reasonCode: 'MISSING_REQUIRED_ROLE',
+        message: `Добавь обязательный компонент ${role}`,
+      };
+      repairs.push(repair);
+      issues.push({
+        code: 'MISSING_REQUIRED_ROLE',
+        severity: 'error',
+        category: 'requirements',
+        requirementPath: `requiredRoles.${role}`,
+        message: `Отсутствует обязательная роль: ${role}`,
+        repair,
+      });
+    }
+  }
 
-  // --- Requirement coverage ---
-  const vcpuNeed = num(req.vcpu) ?? num(req.vcpuMin);
-  const workerCfg = components.find((c) => c.role === 'worker_nodes')?.configuration;
-  const computeCfg = components.find((c) => c.role === 'compute' || c.role === 'vcpu')
-    ?.configuration;
-  const actualVcpu =
-    num(workerCfg?.vcpu) != null && num(workerCfg?.count) != null
-      ? (workerCfg!.vcpu as number) * (workerCfg!.count as number)
-      : num(computeCfg?.vcpu) ?? num(workerCfg?.vcpu);
-
+  const worker = components.find((c) => c.role === 'k8s_worker');
+  const compute = components.find((c) => c.role === 'compute' || c.role === 'gpu_compute');
+  const vcpuNeed = spec.constraints.minVcpu;
   if (vcpuNeed != null) {
-    const ok = actualVcpu != null && actualVcpu >= vcpuNeed;
-    checks.push({
-      code: 'VCPU_REQUIREMENT',
-      status: ok ? 'passed' : actualVcpu == null ? 'warning' : 'failed',
-      required: vcpuNeed,
-      actual: actualVcpu ?? null,
-      message: ok
-        ? undefined
-        : actualVcpu == null
-          ? 'Не удалось проверить vCPU по компонентам'
-          : `Фактически ${actualVcpu} vCPU < требуемых ${vcpuNeed}`,
-    });
-    if (!ok && actualVcpu != null) {
-      repairs.push({
-        action: 'raise_quantity',
-        role: 'worker_nodes',
-        message: `Увеличь worker vCPU/count до покрытия ${vcpuNeed}`,
+    const actual =
+      worker && num(worker.configuration?.vcpu) != null && num(worker.quantity) != null
+        ? (worker.configuration!.vcpu as number) * worker.quantity
+        : num(compute?.configuration?.vcpu) ?? num(worker?.configuration?.vcpu);
+    if (actual != null && actual < vcpuNeed) {
+      const repair: RepairSuggestion | undefined = worker
+        ? {
+            action: 'raise_quantity',
+            componentId: worker.id,
+            minimumQuantity: Math.ceil(vcpuNeed / Math.max(1, Number(worker.configuration?.vcpu) || 1)),
+            reasonCode: 'VCPU_REQUIREMENT',
+          }
+        : undefined;
+      if (repair) repairs.push(repair);
+      issues.push({
+        code: 'VCPU_REQUIREMENT',
+        severity: 'error',
+        category: 'requirements',
+        required: vcpuNeed,
+        actual,
+        message: `Фактически ${actual} vCPU < требуемых ${vcpuNeed}`,
+        repair,
       });
     }
   }
 
-  const ramNeed = num(req.ramGiB) ?? num(req.ramGiBMin);
-  const actualRam =
-    num(workerCfg?.ramGiB) != null && num(workerCfg?.count) != null
-      ? (workerCfg!.ramGiB as number) * (workerCfg!.count as number)
-      : num(computeCfg?.ramGiB) ?? num(workerCfg?.ramGiB);
-  if (ramNeed != null) {
-    const ok = actualRam != null && actualRam >= ramNeed;
-    checks.push({
-      code: 'RAM_REQUIREMENT',
-      status: ok ? 'passed' : actualRam == null ? 'warning' : 'failed',
-      required: ramNeed,
-      actual: actualRam ?? null,
-    });
-  }
-
-  if (req.managed === true || req.workload === 'kubernetes') {
-    const ok = hasRole(components, 'control_plane');
-    checks.push({
-      code: 'MANAGED_K8S',
-      status: ok ? 'passed' : 'failed',
-      message: ok ? undefined : 'Нет control_plane (Managed Kubernetes master)',
-    });
-    if (!ok) {
-      repairs.push({
-        action: 'add_component',
-        role: 'control_plane',
-        requiredCapabilities: ['managed_kubernetes'],
+  if (spec.constraints.providers?.length && solution.provider) {
+    if (!spec.constraints.providers.includes(solution.provider)) {
+      issues.push({
+        code: 'PROVIDER_ALLOWLIST',
+        severity: 'error',
+        category: 'requirements',
+        required: spec.constraints.providers,
+        actual: solution.provider,
+        message: `Провайдер ${solution.provider} вне allowlist`,
       });
     }
   }
 
-  const storageNeed = num(req.objectStorageGiB);
-  if (storageNeed != null) {
-    const ok = hasRole(components, 'object_storage');
-    checks.push({
-      code: 'OBJECT_STORAGE',
-      status: ok ? 'passed' : 'failed',
-      required: storageNeed,
-      message: ok ? undefined : 'Object storage не включён в решение',
+  const budget = spec.constraints.budgetMonthlyRub;
+  const total = solution.estimatedMonthlyCostRub;
+  if (budget != null && total != null && total > budget) {
+    issues.push({
+      code: 'BUDGET',
+      severity: 'error',
+      category: 'requirements',
+      required: budget,
+      actual: total,
+      message: `Оценка ${total} ₽ > бюджета ${budget} ₽ (оценка compose; перепроверь через price_solution)`,
     });
-    if (!ok) {
-      repairs.push({
-        action: 'add_component',
-        role: 'object_storage',
-        requiredCapabilities: [`capacityGiB:${storageNeed}`],
+  }
+
+  for (const u of solution.unresolved ?? []) {
+    if (typeof u === 'string') {
+      issues.push({
+        code: 'UNRESOLVED',
+        severity: 'warning',
+        category: 'requirements',
+        message: u,
       });
+      continue;
+    }
+    issues.push({
+      code: u.code,
+      severity: u.severity === 'blocking' ? 'error' : 'warning',
+      category: 'requirements',
+      message: u.message,
+      repair: u.role
+        ? {action: 'add_component', role: u.role, reasonCode: u.code}
+        : undefined,
+    });
+    if (u.role && u.severity === 'blocking') {
+      repairs.push({action: 'add_component', role: u.role, reasonCode: u.code});
     }
   }
 
-  if (req.providers?.length && provider) {
-    const ok = req.providers.includes(provider);
-    checks.push({
-      code: 'PROVIDER_ALLOWLIST',
-      status: ok ? 'passed' : 'failed',
-      required: req.providers,
-      actual: provider,
-      message: ok ? undefined : `Провайдер ${provider} вне allowlist`,
-    });
+  // --- Compatibility ---
+  if (level === 'compatibility' || level === 'full') {
+    const providers = new Set(components.map((c) => c.provider).filter(Boolean));
+    if (providers.size > 1) {
+      issues.push({
+        code: 'CROSS_PROVIDER_COMPONENTS',
+        severity: 'error',
+        category: 'compatibility',
+        message: `Компоненты от разных провайдеров: ${[...providers].join(', ')}`,
+      });
+    }
+
+    const scopes = new Set(components.map((c) => c.scope?.billingScope).filter(Boolean));
+    const hasGpuOnly = components.some((c) => c.scope?.billingScope === 'gpu');
+    const hasWhole = components.some((c) => c.scope?.billingScope === 'whole_instance');
+    const hasCpuRam = components.some(
+      (c) => c.scope?.billingScope === 'cpu' || c.scope?.billingScope === 'ram',
+    );
+    if (hasGpuOnly && hasWhole) {
+      issues.push({
+        code: 'GPU_SCOPE_MIX',
+        severity: 'warning',
+        category: 'compatibility',
+        message: 'Смешаны GPU-only и whole-instance scope — несравнимо без пометки',
+      });
+    }
+    if (hasWhole && hasCpuRam) {
+      const cpuRam = components.filter(
+        (c) => c.scope?.billingScope === 'cpu' || c.scope?.billingScope === 'ram',
+      );
+      for (const c of cpuRam) {
+        const repair: RepairSuggestion = {
+          action: 'remove_component',
+          componentId: c.id,
+          reasonCode: 'DUPLICATE_BILLING_SCOPE',
+          message: 'Убери CPU/RAM unit — whole_instance уже включает их',
+        };
+        repairs.push(repair);
+        issues.push({
+          code: 'DUPLICATE_BILLING_SCOPE',
+          severity: 'error',
+          category: 'compatibility',
+          componentId: c.id,
+          message: 'Whole-instance + отдельный CPU/RAM — двойной учёт',
+          repair,
+        });
+      }
+    }
+
+    const disks = components.filter((c) => c.role === 'block_storage');
+    const workerWithDisk = components.find(
+      (c) =>
+        (c.role === 'k8s_worker' || c.role === 'compute') &&
+        c.configuration?.diskIncluded === true,
+    );
+    if (disks.length && workerWithDisk) {
+      for (const d of disks) {
+        const repair: RepairSuggestion = {
+          action: 'remove_component',
+          componentId: d.id,
+          reasonCode: 'DISK_ALREADY_INCLUDED',
+        };
+        repairs.push(repair);
+        issues.push({
+          code: 'DISK_ALREADY_INCLUDED',
+          severity: 'warning',
+          category: 'compatibility',
+          componentId: d.id,
+          message: 'Диск уже включён в preset worker/VM',
+          repair,
+        });
+      }
+    }
+
+    // Master fee must not be multiplied as worker
+    const masterAsWorker = components.find(
+      (c) =>
+        c.role === 'k8s_worker' &&
+        (c.scope?.billingScope === 'service_fee' || /master|control.?plane/i.test(c.title)),
+    );
+    if (masterAsWorker) {
+      issues.push({
+        code: 'MASTER_USED_AS_WORKER',
+        severity: 'error',
+        category: 'compatibility',
+        componentId: masterAsWorker.id,
+        message: 'K8s master meter использован как worker',
+      });
+    }
+    void scopes;
   }
 
   // --- Pricing ---
   if (level === 'pricing' || level === 'full' || level === 'basic') {
-    const budget = num(req.budgetMonthRub);
-    if (budget != null && total != null) {
-      const ok = total <= budget;
-      checks.push({
-        code: 'BUDGET',
-        status: ok ? 'passed' : 'failed',
-        required: budget,
-        actual: total,
-        message: ok ? undefined : `Итого ${total} ₽ > бюджета ${budget} ₽`,
-      });
-    }
-
-    const missingPrice = components.filter(
-      (c) => c.monthlyCostRub == null || !Number.isFinite(c.monthlyCostRub),
+    const required = components.filter((c) =>
+      spec.requiredRoles.includes(c.role),
     );
-    checks.push({
-      code: 'PRICE_COMPLETENESS',
-      status: missingPrice.length ? 'warning' : 'passed',
-      actual: 1 - missingPrice.length / Math.max(1, components.length),
-      message: missingPrice.length
-        ? `Нет цены у ролей: ${missingPrice.map((c) => c.role).join(', ')}`
-        : undefined,
-    });
-
-    if (unresolved.includes('cdn_egress') || unresolved.includes('network_egress')) {
-      checks.push({
-        code: 'EGRESS_NOT_PRICED',
-        status: 'warning',
-        message: 'Стоимость исходящего трафика отсутствует или не рассчитана',
-      });
-      repairs.push({
-        action: 'add_component',
-        role: 'cdn_egress',
-        message: 'Укажи объём egress/CDN в requirements и пересобери',
+    const unpriced = required.filter(
+      (c) => c.estimatedMonthlyCostRub == null || !Number.isFinite(c.estimatedMonthlyCostRub),
+    );
+    if (unpriced.length) {
+      issues.push({
+        code: 'PRICE_INCOMPLETE',
+        severity: 'warning',
+        category: 'pricing',
+        message: `Нет оценки цены у: ${unpriced.map((c) => c.role).join(', ')}`,
       });
     }
-
-    if (
-      num(req.egressGiB) == null &&
-      num(req.cdnEgressGiB) == null &&
-      !hasRole(components, 'cdn_egress')
-    ) {
-      checks.push({
-        code: 'EGRESS_ASSUMED_ABSENT',
-        status: 'warning',
-        message: 'Исходящий трафик не запрашивался — в цене не учтён',
-      });
-    }
-  }
-
-  // --- Compatibility / quality ---
-  if (level === 'compatibility' || level === 'full') {
-    const synthetic = components.filter((c) => c.synthetic);
+    const synthetic = components.filter((c) => c.synthetic || c.selection?.method === 'synthetic');
     if (synthetic.length) {
-      checks.push({
+      issues.push({
         code: 'SYNTHETIC_COMPONENTS',
-        status: 'warning',
+        severity: 'warning',
+        category: 'pricing',
         message: `Synthetic/оценка: ${synthetic.map((c) => c.role).join(', ')}`,
       });
     }
-
-    const gpuOnly = components.some((c) => c.scope === 'gpu-only');
-    const hasHost = components.some((c) =>
-      ['compute', 'vcpu', 'ram', 'worker_nodes'].includes(c.role),
+    const usageWithoutVolume = components.filter(
+      (c) =>
+        (c.role === 'cdn_egress' || c.role === 'internet_egress' || c.role === 'object_storage') &&
+        (c.quantity == null || c.quantity <= 0),
     );
-    if (gpuOnly && !hasHost) {
-      checks.push({
-        code: 'GPU_SCOPE_MIX',
-        status: 'warning',
-        message: 'Есть gpu-only без хоста — несравнимо с полной конфигурацией',
+    for (const c of usageWithoutVolume) {
+      issues.push({
+        code: 'USAGE_VOLUME_MISSING',
+        severity: 'warning',
+        category: 'pricing',
+        componentId: c.id,
+        message: `Usage-based ${c.role} без объёма`,
       });
-      repairs.push({
-        action: 'add_component',
-        role: 'compute',
-        requiredCapabilities: ['vcpu', 'ramGiB'],
-      });
-    }
-
-    for (const role of unresolved) {
-      checks.push({
-        code: 'UNRESOLVED_COMPONENT',
-        status: 'failed',
-        message: `Не удалось подобрать компонент: ${role}`,
-      });
-      repairs.push({action: 'add_component', role});
     }
   }
 
-  const failed = checks.filter((c) => c.status === 'failed');
-  const passedHard = checks.filter((c) => c.status === 'passed').length;
-  const relevant = checks.filter((c) => c.status !== 'warning');
-  const coverage =
-    'requirementsCoverage' in input.solution &&
-    typeof input.solution.requirementsCoverage === 'number'
-      ? input.solution.requirementsCoverage
-      : relevant.length
-        ? Math.round((passedHard / relevant.length) * 100) / 100
-        : 1;
+  // --- Provenance ---
+  if (level === 'provenance' || level === 'full') {
+    for (const c of components) {
+      if (c.meterId) {
+        const exists = catalog.meters.some((m) => m.id === c.meterId);
+        if (!exists) {
+          issues.push({
+            code: 'METER_NOT_IN_CATALOG',
+            severity: 'error',
+            category: 'provenance',
+            componentId: c.id,
+            message: `meterId ${c.meterId} отсутствует в текущем каталоге`,
+          });
+        }
+      } else if (spec.requiredRoles.includes(c.role) && c.selection?.method !== 'nearest_match') {
+        issues.push({
+          code: 'METER_ID_MISSING',
+          severity: 'info',
+          category: 'provenance',
+          componentId: c.id,
+          message: `Нет meterId у ${c.role} (shape-resolve)`,
+        });
+      }
+    }
+  }
+
+  const hardFailureCount = issues.filter((i) => i.severity === 'error').length;
+  const warningCount = issues.filter((i) => i.severity === 'warning').length;
+  const requirementsSatisfied = !issues.some(
+    (i) => i.category === 'requirements' && i.severity === 'error',
+  );
+  const scopeConsistent = !issues.some(
+    (i) => i.category === 'compatibility' && i.severity === 'error',
+  );
+  const priceComplete = !issues.some(
+    (i) => i.code === 'PRICE_INCOMPLETE' || i.code === 'USAGE_VOLUME_MISSING',
+  );
+  const provenanceComplete = !issues.some(
+    (i) => i.category === 'provenance' && i.severity === 'error',
+  );
+
+  const status =
+    hardFailureCount > 0
+      ? 'invalid'
+      : warningCount > 0
+        ? 'valid_with_warnings'
+        : 'valid';
+
+  // Deduplicate repairs
+  const repairKey = (r: RepairSuggestion) => JSON.stringify(r);
+  const uniqueRepairs = [...new Map(repairs.map((r) => [repairKey(r), r])).values()];
 
   return {
-    valid: failed.length === 0,
-    coverage,
-    checks,
-    repairSuggestions: repairs,
+    solutionId: solution.id,
+    status,
+    valid: status !== 'invalid',
+    coverage: solution.coverage?.score ?? 0,
+    issues,
+    hardFailureCount,
+    warningCount,
+    checks: {
+      requirementsSatisfied,
+      scopeConsistent,
+      priceComplete,
+      provenanceComplete,
+    },
+    repairSuggestions: uniqueRepairs,
   };
 }

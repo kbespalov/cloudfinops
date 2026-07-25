@@ -2,6 +2,16 @@
 
 ## 2026-07-25
 
+### ИИ-ассистент / solution tool chain
+
+Усилили агентный цикл сборки решений: LLM выбирает intent и стратегию, backend ищет, собирает, проверяет и считает.
+
+- Новые primitives: `search_catalog`, `get_product_details`, `compose_solution`, `validate_solution`, `price_solution`, `compare_solutions`. Shortcuts (`get_quote`, `search_prices`, …) сохранены.
+- Стабильный `RequirementSpec`; compose возвращает только estimate; authoritative totals — только из `price_solution` (`strict_pinned` по умолчанию).
+- Validation по классам (requirements / compatibility / pricing / provenance), `billingScope`, assumptions ≠ unresolved, K8s recipe policy (S3/IP/egress только по запросу).
+- Compare: Pareto с порогами coverage/completeness; неполное дешёвое не бьёт полное. Self-contained payload между tool calls.
+- Eval smoke 28/28; chat unit 172/172.
+
 ### Каталог / CDN
 
 Новая категория **CDN** в каталоге и прайсах (Yandex, VK, Cloud.ru, Selectel, MWS, T1): исходящий трафик, ресурс/месяц, запросы и платные опции где есть в публичных тарифах.

@@ -1,11 +1,9 @@
 /**
- * Alias dictionaries for catalog search / compose normalization.
- * Used inside engines — not exposed as a separate resolve_requirements tool.
+ * Alias dictionaries + traced normalization for catalog search / compose.
  */
 
-import type {CatalogEntityType} from './types';
+import type {CatalogEntityType, NormalizationResult, NormalizationRule} from './types';
 
-/** Free-text GPU nicknames → catalog model tokens. */
 const GPU_ALIASES: Record<string, string> = {
   ашка: 'H100',
   ашка100: 'H100',
@@ -23,35 +21,6 @@ const GPU_ALIASES: Record<string, string> = {
   h200: 'H200',
 };
 
-/** Disk media phrases → ssd | nvme | hdd. */
-const DISK_ALIASES: Array<{re: RegExp; media: 'ssd' | 'nvme' | 'hdd'}> = [
-  {re: /быстр\w*\s+диск|nvme|нвме/i, media: 'nvme'},
-  {re: /\bssd\b|ссд/i, media: 'ssd'},
-  {re: /\bhdd\b|хдд|медленн\w*\s+диск/i, media: 'hdd'},
-];
-
-/** Object-storage class phrases. */
-const STORAGE_CLASS_ALIASES: Array<{
-  re: RegExp;
-  cls: 'standard' | 'warm' | 'cold' | 'ice';
-}> = [
-  {re: /холодн\w*\s*s3|cold\s*box|coldbox|\bcold\b/i, cls: 'cold'},
-  {re: /ледян|icebox|\bice\b(?!\s*lake)/i, cls: 'ice'},
-  {re: /\bwarm\b|тепл/i, cls: 'warm'},
-  {re: /hotbox|стандарт|\bstandard\b/i, cls: 'standard'},
-];
-
-/** Region phrases → soft region token (catalog regions vary by provider). */
-const REGION_ALIASES: Record<string, string> = {
-  москва: 'ru-central',
-  moscow: 'ru-central',
-  'ru-central': 'ru-central',
-  питер: 'ru-nw',
-  спб: 'ru-nw',
-  'санкт-петербург': 'ru-nw',
-};
-
-/** Provider free-text → catalog provider id. */
 export const PROVIDER_ALIASES: Record<string, string> = {
   яндекс: 'yandex-cloud',
   yandex: 'yandex-cloud',
@@ -70,6 +39,15 @@ export const PROVIDER_ALIASES: Record<string, string> = {
   t1: 't1-cloud',
 };
 
+const REGION_ALIASES: Record<string, string> = {
+  москва: 'ru-central',
+  moscow: 'ru-central',
+  'ru-central': 'ru-central',
+  питер: 'ru-nw',
+  спб: 'ru-nw',
+  'санкт-петербург': 'ru-nw',
+};
+
 const ENTITY_TO_CATEGORY: Partial<Record<CatalogEntityType, string>> = {
   instance_type: 'compute',
   gpu_node: 'gpu',
@@ -80,31 +58,99 @@ const ENTITY_TO_CATEGORY: Partial<Record<CatalogEntityType, string>> = {
   service: 'compute',
 };
 
-export function normalizeGpuModel(raw: string | undefined | null): string | undefined {
-  if (!raw?.trim()) return undefined;
-  const key = raw.trim().toLowerCase().replace(/\s+/g, ' ');
-  if (GPU_ALIASES[key]) return GPU_ALIASES[key];
-  for (const [alias, model] of Object.entries(GPU_ALIASES)) {
-    if (key.includes(alias)) return model;
+export function normalizeGpuModelTraced(
+  raw: string | undefined | null,
+): NormalizationResult<string | undefined> {
+  const original = raw?.trim() || undefined;
+  if (!original) return {original: undefined, normalized: undefined, appliedRules: []};
+  const key = original.toLowerCase().replace(/\s+/g, ' ');
+  if (GPU_ALIASES[key]) {
+    return {
+      original,
+      normalized: GPU_ALIASES[key],
+      appliedRules: [
+        {field: 'gpu.model', from: original, to: GPU_ALIASES[key]!, ruleId: 'gpu-alias-exact'},
+      ],
+    };
   }
-  return raw.trim();
+  for (const [alias, model] of Object.entries(GPU_ALIASES)) {
+    if (key.includes(alias)) {
+      return {
+        original,
+        normalized: model,
+        appliedRules: [
+          {field: 'gpu.model', from: original, to: model, ruleId: 'gpu-alias-contains'},
+        ],
+      };
+    }
+  }
+  return {original, normalized: original, appliedRules: []};
+}
+
+export function normalizeGpuModel(raw: string | undefined | null): string | undefined {
+  return normalizeGpuModelTraced(raw).normalized;
+}
+
+/**
+ * «быстрый диск» → soft preference nvme+ssd (not a hard NVMe constraint).
+ */
+export function detectDiskMediaPreference(text: string | undefined): {
+  media?: 'ssd' | 'nvme' | 'hdd';
+  mediaPreference?: Array<'hdd' | 'ssd' | 'nvme'>;
+  hardConstraint: boolean;
+  rules: NormalizationRule[];
+} {
+  if (!text) return {hardConstraint: false, rules: []};
+  if (/\bnvme\b|нвме/i.test(text)) {
+    return {
+      media: 'nvme',
+      hardConstraint: true,
+      rules: [{field: 'storage.media', from: text, to: 'nvme', ruleId: 'disk-nvme-hard'}],
+    };
+  }
+  if (/быстр[а-яёa-z]*\s+диск/i.test(text)) {
+    return {
+      mediaPreference: ['nvme', 'ssd'],
+      hardConstraint: false,
+      rules: [
+        {
+          field: 'storage.mediaPreference',
+          from: 'быстрый диск',
+          to: 'nvme|ssd',
+          ruleId: 'disk-fast-soft',
+        },
+      ],
+    };
+  }
+  if (/\bssd\b|ссд/i.test(text)) {
+    return {
+      media: 'ssd',
+      hardConstraint: true,
+      rules: [{field: 'storage.media', from: text, to: 'ssd', ruleId: 'disk-ssd-hard'}],
+    };
+  }
+  if (/\bhdd\b|хдд/i.test(text)) {
+    return {
+      media: 'hdd',
+      hardConstraint: true,
+      rules: [{field: 'storage.media', from: text, to: 'hdd', ruleId: 'disk-hdd-hard'}],
+    };
+  }
+  return {hardConstraint: false, rules: []};
 }
 
 export function detectDiskMedia(text: string | undefined): 'ssd' | 'nvme' | 'hdd' | undefined {
-  if (!text) return undefined;
-  for (const {re, media} of DISK_ALIASES) {
-    if (re.test(text)) return media;
-  }
-  return undefined;
+  return detectDiskMediaPreference(text).media;
 }
 
 export function detectStorageClassAlias(
   text: string | undefined,
 ): 'standard' | 'warm' | 'cold' | 'ice' | undefined {
   if (!text) return undefined;
-  for (const {re, cls} of STORAGE_CLASS_ALIASES) {
-    if (re.test(text)) return cls;
-  }
+  if (/холодн\w*\s*s3|cold\s*box|coldbox|\bcold\b/i.test(text)) return 'cold';
+  if (/ледян|icebox|\bice\b(?!\s*lake)/i.test(text)) return 'ice';
+  if (/\bwarm\b|тепл/i.test(text)) return 'warm';
+  if (/hotbox|стандарт|\bstandard\b/i.test(text)) return 'standard';
   return undefined;
 }
 
@@ -125,7 +171,6 @@ export function normalizeProviderIds(raw: string[] | undefined): string[] | unde
   return out.length ? out : undefined;
 }
 
-/** Expand entityTypes into a primary catalog category when unambiguous. */
 export function categoryFromEntityTypes(
   entityTypes: CatalogEntityType[] | undefined,
 ): string | undefined {
@@ -140,16 +185,13 @@ export function categoryFromEntityTypes(
   return undefined;
 }
 
-/** Rewrite free-text query tokens through GPU / disk / storage aliases. */
 export function expandQueryText(text: string | undefined): string {
   if (!text?.trim()) return '';
   let q = text.trim();
-  const gpu = normalizeGpuModel(q);
-  if (gpu && gpu !== q && /ашка|а100|h100|l40|l4\b|v100|t4\b/i.test(q)) {
-    q = `${q} ${gpu}`;
-  }
-  const disk = detectDiskMedia(q);
-  if (disk === 'nvme' && !/\bnvme\b/i.test(q)) q = `${q} nvme`;
+  const gpu = normalizeGpuModelTraced(q);
+  if (gpu.normalized && gpu.appliedRules.length) q = `${q} ${gpu.normalized}`;
+  const disk = detectDiskMediaPreference(q);
+  if (disk.media === 'nvme' && !/\bnvme\b/i.test(q)) q = `${q} nvme`;
   const storage = detectStorageClassAlias(q);
   if (storage && !new RegExp(storage, 'i').test(q)) q = `${q} ${storage}`;
   return q;

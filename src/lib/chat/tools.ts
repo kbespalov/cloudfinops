@@ -33,9 +33,11 @@ import {
   searchCatalogAsync,
   validateSolution,
   type CatalogFilter,
+  type PricedSolution,
   type RequirementSpec,
   type Solution,
   type SolutionType,
+  type ValidationReport,
 } from './solution';
 
 export type ChatToolCall = {
@@ -109,7 +111,7 @@ export const CHAT_TOOLS = [
     function: {
       name: 'search_catalog',
       description:
-        'Универсальный поиск кандидатов в каталоге с match-метаданными (matchedFields/unmatchedFields/score). Для исследования SKU перед сборкой решения. Для простого вопроса про одну услугу можно search_prices (shortcut).',
+        'Ищи отдельные облачные продукты/SKU/GPU/S3/CDN/IP с match-метаданными (exactFields/conflictingFields). НЕ для окончательной сборки многокомпонентного решения — там compose_solution. Для unit CPU/RAM/SSD — compare_unit_price.',
       parameters: {
         type: 'object',
         properties: {
@@ -194,7 +196,7 @@ export const CHAT_TOOLS = [
     function: {
       name: 'compose_solution',
       description:
-        'Собрать многокомпонентное решение (BOM) по типу: virtual_machine, kubernetes, web_application, custom, lakehouse, inference. Backend подбирает компоненты и цены. После вызова ОБЯЗАТЕЛЬНО validate_solution. Для одной ВМ/GPU можно shortcut get_quote.',
+        'Собери ВМ/Kubernetes/web/inference/lakehouse/custom BOM. Возвращает Solution[] с estimatedMonthlyCostRub (только ранжирование). После — validate_solution; totals — только price_solution. НЕ для одного CPU/RAM/SSD. Одна простая ВМ — можно get_quote.',
       parameters: {
         type: 'object',
         properties: {
@@ -221,7 +223,7 @@ export const CHAT_TOOLS = [
     function: {
       name: 'validate_solution',
       description:
-        'Проверить решение из compose_solution: hard/soft constraints, полнота цены, synthetic, budget. Не объявляй решение подходящим при failed checks.',
+        'Проверь solution после compose: requirements/compatibility/pricing/provenance. Не объявляй решение корректным без этого вызова. При invalid — применяй repairSuggestions через повторный compose (≤2).',
       parameters: {
         type: 'object',
         properties: {
@@ -244,7 +246,7 @@ export const CHAT_TOOLS = [
     function: {
       name: 'price_solution',
       description:
-        'Пересчитать BOM по pinned meterId×quantity (или shape-resolve через solutionType). Арифметика только здесь, не в модели.',
+        'Authoritative totals для BOM. По умолчанию strict_pinned (не подменяет отсутствующий meterId). Не считай итог сам — бери totals.monthlyRubVatIncluded. Вызывай только для non-invalid решений.',
       parameters: {
         type: 'object',
         properties: {
@@ -274,7 +276,7 @@ export const CHAT_TOOLS = [
     function: {
       name: 'compare_solutions',
       description:
-        'Сравнить финалистов compose_solution: матрица цена/coverage/completeness + paretoOptimalSolutionIds. Передай массив solutions из compose.',
+        'Сравни только validated+priced solutions (self-contained payload). Неполное дешёвое не бьёт полное. Pareto + recommendedSolutionId по strategy.',
       parameters: {
         type: 'object',
         properties: {
@@ -631,7 +633,7 @@ export type AssumedHost = {vcpu: number; ramGiB: number; diskGiB: number; source
 function runQuote(args: Record<string, unknown>): unknown {
   const period: PeriodMode =
     args.period === 'unit' || args.period === 'year' ? args.period : 'month';
-  const req: RequirementSpec = {
+  const req: Record<string, unknown> = {
     vcpu: num(args.vcpu),
     ramGiB: num(args.ramGiB),
     diskGiB: num(args.diskGiB),
@@ -733,9 +735,9 @@ function runCompareUnitPrice(args: Record<string, unknown>): unknown {
   return compareUnitPrice(component, diskMedia ? {diskMedia} : undefined);
 }
 
-function asRequirementSpec(raw: unknown): RequirementSpec {
+function asRequirementSpec(raw: unknown): RequirementSpec | Record<string, unknown> {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
-  return raw as RequirementSpec;
+  return raw as RequirementSpec | Record<string, unknown>;
 }
 
 function runSearchCatalog(args: Record<string, unknown>, sync: boolean): unknown | Promise<unknown> {
@@ -821,6 +823,14 @@ function runValidateSolution(args: Record<string, unknown>): unknown {
 }
 
 function runPriceSolution(args: Record<string, unknown>): unknown {
+  const mode =
+    args.resolutionMode === 'allow_shape_resolution' ? 'allow_shape_resolution' : 'strict_pinned';
+  if (args.solution && typeof args.solution === 'object') {
+    return priceSolution({
+      solution: args.solution as Solution,
+      resolutionMode: mode,
+    });
+  }
   const components = Array.isArray(args.components)
     ? args.components.filter(
         (c): c is Record<string, unknown> => !!c && typeof c === 'object' && !Array.isArray(c),
@@ -832,33 +842,41 @@ function runPriceSolution(args: Record<string, unknown>): unknown {
     : undefined;
   return priceSolution({
     components: components.map((c) => ({
+      id: typeof c.id === 'string' ? c.id : undefined,
       meterId: typeof c.meterId === 'string' ? c.meterId : undefined,
       productId: typeof c.productId === 'string' ? c.productId : undefined,
       quantity: num(c.quantity) ?? 1,
       role: typeof c.role === 'string' ? c.role : undefined,
+      estimatedMonthlyCostRub:
+        typeof c.estimatedMonthlyCostRub === 'number' ? c.estimatedMonthlyCostRub : undefined,
     })),
     solutionType,
     requirements: asRequirementSpec(args.requirements),
     provider: typeof args.provider === 'string' ? args.provider : undefined,
+    resolutionMode: mode,
   });
 }
 
 function runCompareSolutions(args: Record<string, unknown>): unknown {
   const solutions = Array.isArray(args.solutions)
-    ? (args.solutions.filter((s) => s && typeof s === 'object') as Solution[])
+    ? (args.solutions.filter((s) => s && typeof s === 'object') as Array<
+        Solution & {priced?: PricedSolution; validation?: ValidationReport}
+      >)
     : [];
   if (!solutions.length) {
-    return {error: 'Передай solutions[] из compose_solution.'};
+    return {error: 'Передай self-contained solutions[] (после validate/price).'};
   }
   const solutionIds = Array.isArray(args.solutionIds)
     ? args.solutionIds.filter((id): id is string => typeof id === 'string')
     : undefined;
-  const dimensions = Array.isArray(args.dimensions)
-    ? (args.dimensions.filter((d): d is string => typeof d === 'string') as Array<
-        'price' | 'performance' | 'availability' | 'vendor_lock_in' | 'operational_complexity'
-      >)
-    : undefined;
-  return compareSolutions({solutions, solutionIds, dimensions});
+  const strategy =
+    args.strategy === 'balanced' ||
+    args.strategy === 'performance' ||
+    args.strategy === 'availability' ||
+    args.strategy === 'cheapest'
+      ? args.strategy
+      : undefined;
+  return compareSolutions({solutions, solutionIds, strategy});
 }
 
 function runGetProductDetails(args: Record<string, unknown>): unknown {

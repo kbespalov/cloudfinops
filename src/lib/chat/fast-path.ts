@@ -1275,14 +1275,24 @@ export function formatFastPathAnswer(
         return `| ${name} | ${roles || '—'} | ${formatRub(s.monthlyCostRub as number)} | ${cov} | ${pctVsBest(s.monthlyCostRub as number, best)} |`;
       })
       .join('\n');
-    const assumptions = (data.assumptions as string[] | undefined)?.slice(0, 4) ?? [];
+    const rawAssumptions = data.assumptions as unknown;
+    const assumptions = Array.isArray(rawAssumptions)
+      ? rawAssumptions
+          .map((a) => (typeof a === 'string' ? a : (a as {message?: string})?.message))
+          .filter((m): m is string => typeof m === 'string' && Boolean(m))
+          .slice(0, 4)
+      : [];
     const assumptionBlock = assumptions.length
       ? `\n\nДопущения: ${assumptions.join('; ')}.`
       : '';
-    return `**Сравнение решений (${solutionType}) за месяц** (НДС вкл., 720 ч)\n\n| Провайдер | Компоненты | Итого / мес | Покрытие | к минимуму |\n|---|---|---:|---:|---|\n${rows}\n\n${cheapestInCatalogLine({
+    const note =
+      typeof data.note === 'string' && /price_solution|estimated/i.test(data.note)
+        ? '\n\n_Оценка compose; итоговые totals — через price_solution._'
+        : '';
+    return `**Сравнение решений (${solutionType}) за месяц** (НДС вкл., 720 ч; оценка compose)\n\n| Провайдер | Компоненты | Итого / мес | Покрытие | к минимуму |\n|---|---|---:|---:|---|\n${rows}\n\n${cheapestInCatalogLine({
       provider: solutions[0].providerName || solutions[0].provider || '—',
       priceText: `${formatRub(best)}/мес`,
-    })}${assumptionBlock}`;
+    })}${assumptionBlock}${note}`;
   }
 
   if (primary.name === 'validate_solution' && Array.isArray(data.checks)) {
