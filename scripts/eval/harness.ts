@@ -37,6 +37,10 @@ import {
   LAKEHOUSE_SYSTEM_ADDENDUM,
   matchLakehouseIntent,
 } from '../../src/lib/chat/lakehouse-intent';
+import {
+  SYSTEM_PROMPT,
+  buildSystemPrompt,
+} from '../../src/lib/chat/system-prompt';
 import {CHAT_LIMITS} from '../../src/lib/chat/limits';
 import {sanitizeUserFacingAnswer} from '../../src/lib/chat/tool-call-recovery';
 import {runToolLoop} from '../../src/lib/chat/tool-loop';
@@ -81,14 +85,16 @@ export async function runChat(
 
   const t0 = Date.now();
   const model = getChatModel();
-  // Keep in sync with src/app/api/chat/route.ts intent gating.
+  // Keep in sync with src/app/api/chat/route.ts: live SYSTEM_PROMPT → intent-gated builder.
+  const baseSystem =
+    systemPrompt === SYSTEM_PROMPT ? buildSystemPrompt(question) : systemPrompt;
   const inferenceIntent = matchInferenceIntent(question);
   const lakehouseIntent = matchLakehouseIntent(question);
   const effectiveSystem = inferenceIntent.matched
-    ? `${systemPrompt}\n\n${INFERENCE_SYSTEM_ADDENDUM}`
+    ? `${baseSystem}\n\n${INFERENCE_SYSTEM_ADDENDUM}`
     : lakehouseIntent.matched
-      ? `${systemPrompt}\n\n${LAKEHOUSE_SYSTEM_ADDENDUM}`
-      : systemPrompt;
+      ? `${baseSystem}\n\n${LAKEHOUSE_SYSTEM_ADDENDUM}`
+      : baseSystem;
   const planningTools = inferenceIntent.matched
     ? CHAT_TOOLS_WITH_INFERENCE
     : lakehouseIntent.matched
@@ -193,7 +199,7 @@ export async function runChat(
         });
       }
       const final = await chatCompletion(
-        [{role: 'system', content: systemPrompt}, ...finalMessages],
+        [{role: 'system', content: baseSystem}, ...finalMessages],
         undefined,
       );
       answer = sanitizeUserFacingAnswer(final.content ?? '');

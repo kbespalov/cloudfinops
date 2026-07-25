@@ -42,7 +42,7 @@ export type FastPathResult = {
   fastPathId: string;
 };
 
-/** Compact final prompt — full SYSTEM_PROMPT is ~16k chars and slows every RTT. */
+/** Compact final prompt — planning uses intent-gated SYSTEM_PROMPT_CORE + domain cards. */
 export const FAST_PATH_FINAL_SYSTEM = `Ты — AI-ассистент Cloud FinOps (cloudfinops.ru). Ответь на русском по данным инструментов в истории.
 
 Правила:

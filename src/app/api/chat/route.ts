@@ -12,7 +12,7 @@ import {
   reserveTokensForRequest,
 } from '@/lib/chat/limits';
 import {chatLog, clientIp} from '@/lib/chat/log';
-import {SYSTEM_PROMPT} from '@/lib/chat/system-prompt';
+import {buildSystemPrompt} from '@/lib/chat/system-prompt';
 import {
   extractAllToolPayloads,
   extractLastToolPayloads,
@@ -129,6 +129,11 @@ export async function POST(req: Request) {
 
   const history = sanitized.messages;
   const userText = lastUserText(history);
+  const recentUserText = history
+    .filter((m) => m.role === 'user' && typeof m.content === 'string')
+    .slice(-4)
+    .map((m) => m.content as string)
+    .join('\n');
   const inferenceIntent = matchInferenceIntent(userText);
   const lakehouseIntent = matchLakehouseIntent(userText);
   // Inference wins if both match (rare); otherwise lakehouse persona + tool.
@@ -136,12 +141,13 @@ export async function POST(req: Request) {
     surface === 'calculator'
       ? '\n\nКонтекст: пользователь в калькуляторе «AI конфигурация» (корзина справа). Для описания ВМ/GPU почти всегда вызывай get_quote (vcpu/ramGiB/diskGiB или gpuModel; если RAM не назвали — 4×vCPU). Для lakehouse — get_lakehouse_quote. Follow-up «докинь / докинем / добавь / добавим / плюс CDN [N ТБ|TB]» — это ДОБАВЛЕНИЕ в корзину: вызывай search_prices query «исходящий трафик CDN», category=cdn, volumeGiB (1 ТБ → 1024); НЕ Object Storage, НЕ network ingress/межзональный трафик, НЕ пересчитывай ВМ заново через get_quote. Не устраивай длинный опросник — сразу считай разумную конфигурацию.'
       : '';
+  const planningPrompt = buildSystemPrompt(userText, {historyText: recentUserText});
   const systemContent =
     (inferenceIntent.matched
-      ? `${SYSTEM_PROMPT}\n\n${INFERENCE_SYSTEM_ADDENDUM}`
+      ? `${planningPrompt}\n\n${INFERENCE_SYSTEM_ADDENDUM}`
       : lakehouseIntent.matched
-        ? `${SYSTEM_PROMPT}\n\n${LAKEHOUSE_SYSTEM_ADDENDUM}`
-        : SYSTEM_PROMPT) + calculatorAddendum;
+        ? `${planningPrompt}\n\n${LAKEHOUSE_SYSTEM_ADDENDUM}`
+        : planningPrompt) + calculatorAddendum;
   const planningTools = inferenceIntent.matched
     ? CHAT_TOOLS_WITH_INFERENCE
     : lakehouseIntent.matched
