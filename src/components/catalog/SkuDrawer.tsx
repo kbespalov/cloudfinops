@@ -240,7 +240,21 @@ export function SkuDrawer({
               <>
                 <Divider />
                 <div className={styles.section}>
-                  <Alert theme="info" view="outlined" title="Пояснение" message={meter.notes} />
+                  <Alert
+                    theme={
+                      meter.dimensions.comparabilityClass === 'bidirectional' ||
+                      meter.dimensions.comparabilityClass === 'egress-network-alt'
+                        ? 'warning'
+                        : 'info'
+                    }
+                    view="outlined"
+                    title={
+                      meter.dimensions.comparabilityClass === 'bidirectional'
+                        ? 'Не сравнивайте ₽/GiB вслепую'
+                        : 'Пояснение'
+                    }
+                    message={meter.notes}
+                  />
                 </div>
               </>
             ) : null}

@@ -28,6 +28,21 @@ const TOOL_NAME_USER_LABEL: Record<ChatToolName, string> = {
   get_lakehouse_quote: 'калькулятора lakehouse',
 };
 
+/** Reverse map: model sometimes leaks `name: "прайс-листа"` instead of English ids. */
+const TOOL_LABEL_TO_NAME = new Map<string, ChatToolName>(
+  (Object.entries(TOOL_NAME_USER_LABEL) as [ChatToolName, string][]).map(([name, label]) => [
+    label.toLowerCase(),
+    name,
+  ]),
+);
+
+function resolveToolNameToken(raw: unknown): ChatToolName | null {
+  if (typeof raw !== 'string') return null;
+  const trimmed = raw.trim();
+  if (TOOL_NAME_SET.has(trimmed)) return trimmed as ChatToolName;
+  return TOOL_LABEL_TO_NAME.get(trimmed.toLowerCase()) ?? null;
+}
+
 /**
  * Strip / rewrite leaked tool names in user-facing answers (footnotes like
  * «из `get_quote`»). Keeps the answer readable without exposing internals.
@@ -197,9 +212,21 @@ export function looksLikeToolCallLeak(content: string | null | undefined): boole
   if (text.length < 24) return false;
 
   const mentionsTool = CHAT_TOOL_NAMES.some((name) => text.includes(name));
+  const mentionsRuLabel = [...TOOL_LABEL_TO_NAME.keys()].some((label) =>
+    text.toLowerCase().includes(label),
+  );
   const leakHits = LEAK_PATTERNS.reduce((n, re) => n + (re.test(text) ? 1 : 0), 0);
 
-  if (mentionsTool && leakHits >= 1) return true;
+  // OpenAI-style dump with Russian or English tool names in content (no native tool_calls).
+  if (
+    /"tool_calls"\s*:/.test(text) &&
+    /"arguments"\s*:/.test(text) &&
+    (mentionsTool || mentionsRuLabel)
+  ) {
+    return true;
+  }
+
+  if ((mentionsTool || mentionsRuLabel) && leakHits >= 1) return true;
   if (leakHits >= 2) return true;
 
   // JSON-ish args dump + tool name, even without classic English phrases.
@@ -294,27 +321,46 @@ function pickKeys(record: Record<string, unknown>, allowed: Set<string>): Record
   return out;
 }
 
+function argsRecordForInfer(record: Record<string, unknown>): Record<string, unknown> {
+  const nested = asRecord(record.arguments);
+  if (nested) return nested;
+  const fn = asRecord(record.function);
+  if (fn) {
+    if (typeof fn.arguments === 'string') {
+      try {
+        const parsed = JSON.parse(fn.arguments);
+        const asObj = asRecord(parsed);
+        if (asObj) return asObj;
+      } catch {
+        // ignore
+      }
+    } else {
+      const asObj = asRecord(fn.arguments);
+      if (asObj) return asObj;
+    }
+  }
+  return record;
+}
+
 function inferToolName(
   record: Record<string, unknown>,
   content: string,
   mentioned: ChatToolName[],
 ): ChatToolName | null {
-  const direct =
-    (typeof record.name === 'string' && TOOL_NAME_SET.has(record.name) && record.name) ||
-    (typeof record.tool === 'string' && TOOL_NAME_SET.has(record.tool) && record.tool) ||
-    null;
-  if (direct) return direct as ChatToolName;
+  // Arg shape wins over labels: models often put «прайс-листа» on get_quote args.
+  const args = argsRecordForInfer(record);
+  if ('budgetMonthRub' in args) return 'fit_budget';
+  if ('component' in args) return 'compare_unit_price';
+  if ('vcpu' in args || 'ramGiB' in args || 'presetId' in args) return 'get_quote';
+  if ('gpuModel' in args && !('query' in args) && !('category' in args)) return 'get_quote';
+  if ('query' in args || 'storageClass' in args || 'category' in args) return 'search_prices';
+
+  const fromName = resolveToolNameToken(record.name) || resolveToolNameToken(record.tool);
+  if (fromName) return fromName;
 
   const fn = asRecord(record.function);
-  if (fn && typeof fn.name === 'string' && TOOL_NAME_SET.has(fn.name)) {
-    return fn.name as ChatToolName;
-  }
-
-  if ('budgetMonthRub' in record) return 'fit_budget';
-  if ('query' in record) return 'search_prices';
-  if ('component' in record) return 'compare_unit_price';
-  if ('vcpu' in record || 'ramGiB' in record || 'presetId' in record) return 'get_quote';
-  if ('gpuModel' in record && !('query' in record)) return 'get_quote';
+  const fromFn = fn ? resolveToolNameToken(fn.name) : null;
+  if (fromFn) return fromFn;
 
   const callMention = content.match(
     /\b(?:call|calling|invoke|use)\s+`?(search_prices|get_quote|compare_unit_price|fit_budget)`?/i,
@@ -322,6 +368,18 @@ function inferToolName(
   if (callMention) return callMention[1] as ChatToolName;
 
   if (mentioned.length === 1) return mentioned[0];
+  return null;
+}
+
+function defaultSearchQuery(args: Record<string, unknown>): string | null {
+  const category = typeof args.category === 'string' ? args.category : '';
+  if (category === 'storage') return 'объектное хранилище';
+  if (category === 'network') return 'публичный IP';
+  if (category === 'kubernetes') return 'Managed Kubernetes';
+  if (category === 'cdn') return 'исходящий трафик CDN';
+  if (category === 'gpu' && typeof args.gpuModel === 'string') return String(args.gpuModel);
+  if (typeof args.gpuModel === 'string' && args.gpuModel.trim()) return String(args.gpuModel).trim();
+  if (typeof args.aiModel === 'string' && args.aiModel.trim()) return String(args.aiModel).trim();
   return null;
 }
 
@@ -362,8 +420,13 @@ function sanitizeArgs(
   const cleaned = stripNulls(source);
   if (name === 'search_prices') {
     const args = pickKeys(cleaned, SEARCH_KEYS);
-    if (typeof args.query !== 'string' || !args.query.trim()) return null;
-    args.query = String(args.query).trim();
+    if (typeof args.query !== 'string' || !args.query.trim()) {
+      const fallback = defaultSearchQuery(args);
+      if (!fallback) return null;
+      args.query = fallback;
+    } else {
+      args.query = String(args.query).trim();
+    }
     return args;
   }
   if (name === 'get_quote') {
@@ -396,6 +459,40 @@ function mentionedTools(content: string): ChatToolName[] {
 /**
  * Best-effort: turn leaked planning prose + JSON dumps into OpenAI-style tool_calls.
  */
+function flattenRecoverableRecords(objects: unknown[]): Record<string, unknown>[] {
+  const out: Record<string, unknown>[] = [];
+  for (const obj of objects) {
+    const record = asRecord(obj);
+    if (!record) continue;
+    // Unwrap `{ "tool_calls": [ { name, arguments }, … ] }` dumps.
+    if (Array.isArray(record.tool_calls)) {
+      for (const tc of record.tool_calls) {
+        const item = asRecord(tc);
+        if (item) out.push(item);
+      }
+      continue;
+    }
+    out.push(record);
+  }
+  return out;
+}
+
+function pushRecoveredCall(
+  calls: RecoveredToolCall[],
+  seen: Set<string>,
+  name: ChatToolName,
+  args: Record<string, unknown>,
+): void {
+  const key = `${name}:${JSON.stringify(args)}`;
+  if (seen.has(key)) return;
+  seen.add(key);
+  calls.push({
+    id: `recovered_${calls.length}_${Math.random().toString(36).slice(2, 8)}`,
+    type: 'function',
+    function: {name, arguments: JSON.stringify(args)},
+  });
+}
+
 export function recoverToolCallsFromContent(content: string): RecoveredToolCall[] {
   const text = content.trim();
   if (!text) return [];
@@ -405,24 +502,12 @@ export function recoverToolCallsFromContent(content: string): RecoveredToolCall[
   const calls: RecoveredToolCall[] = [];
   const seen = new Set<string>();
 
-  for (const obj of objects) {
-    const record = asRecord(obj);
-    if (!record) continue;
-
+  for (const record of flattenRecoverableRecords(objects)) {
     const name = inferToolName(record, text, mentioned);
     if (!name) continue;
     const args = sanitizeArgs(name, record);
     if (!args) continue;
-
-    const key = `${name}:${JSON.stringify(args)}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-
-    calls.push({
-      id: `recovered_${calls.length}_${Math.random().toString(36).slice(2, 8)}`,
-      type: 'function',
-      function: {name, arguments: JSON.stringify(args)},
-    });
+    pushRecoveredCall(calls, seen, name, args);
   }
 
   if (!calls.length) {

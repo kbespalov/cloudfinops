@@ -110,3 +110,22 @@ spec:
     - compute.gpu
     - compute.vcpu
     - compute.ram
+  - id: selectel.cdn
+    title: CDN Selectel
+    url: https://selectel.ru/services/additional/cdn/
+    type: html
+    access: public
+    priority: 1
+    covers:
+    - cdn.resource
+    - cdn.traffic.egress
+  - id: selectel.cdn-payment
+    title: Модель оплаты и цены CDN
+    url: https://docs.selectel.ru/cdn/about/payment/
+    type: html
+    access: public
+    priority: 1
+    covers:
+    - cdn.resource
+    - cdn.traffic.egress
+    - cdn.traffic.ingress

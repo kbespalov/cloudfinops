@@ -158,6 +158,16 @@ const SUITE: SmokeCase[] = [
     expectAnswerMatch: /kubernetes|k8s|мастер|IP|object|хранилищ/i,
   },
   {
+    id: 'stack-vm-ip-s3-cdn-k8s',
+    q: 'Собери решение на месяц по провайдерам: ВМ 16 vCPU / 32 GiB / 100 GiB SSD, 1 публичный IP, Object Storage Standard 100 ТБ, исходящий трафик CDN 100 ТБ, 1 зональный мастер Managed Kubernetes. Итоговая таблица с колонками по каждому компоненту, Итого и к минимуму.',
+    expectTools: true,
+    expectToolMatch: /get_quote|search_prices|cdn|kubernetes|storage/i,
+    expectPriceSignal: true,
+    expectBestOfferPct: true,
+    expectAnswerMatch: /cdn|kubernetes|k8s|IP|хранилищ|S3|объект/i,
+    maxDurationMs: 45_000,
+  },
+  {
     id: 'fit-budget-100k',
     q: 'Бюджет примерно 100 тысяч рублей в месяц — какую инфраструктуру я могу себе позволить? Подбери, не устраивай длинный опрос.',
     expectTools: true,

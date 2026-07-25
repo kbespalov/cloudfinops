@@ -2,10 +2,68 @@ import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import {
   adaptFastPathForSurface,
+  extractAllToolPayloads,
   formatFastPathAnswer,
+  formatStackFastPathAnswer,
   matchFastPath,
+  shouldUseFastPath,
   tryFormatAgentToolAnswer,
 } from './fast-path';
+import type {ChatMessage} from './gigachat';
+import {runTool} from './tools';
+
+describe('shouldUseFastPath', () => {
+  it('is always on for calculator surface', () => {
+    assert.equal(shouldUseFastPath({surface: 'calculator', probability: 0, random: () => 0.99}), true);
+  });
+
+  it('respects probability 0 / 1 on chat', () => {
+    assert.equal(shouldUseFastPath({surface: 'chat', probability: 0, random: () => 0}), false);
+    assert.equal(shouldUseFastPath({surface: 'chat', probability: 1, random: () => 0.99}), true);
+  });
+
+  it('coin-flips at 0.5 using injected RNG', () => {
+    assert.equal(shouldUseFastPath({surface: 'chat', probability: 0.5, random: () => 0.49}), true);
+    assert.equal(shouldUseFastPath({surface: 'chat', probability: 0.5, random: () => 0.5}), false);
+  });
+});
+
+describe('extractAllToolPayloads', () => {
+  it('scopes to tools after the latest user turn', () => {
+    const messages: ChatMessage[] = [
+      {role: 'user', content: 'старый вопрос про S3'},
+      {
+        role: 'assistant',
+        content: null,
+        tool_calls: [
+          {
+            id: 'old-1',
+            type: 'function',
+            function: {name: 'search_prices', arguments: '{"query":"S3"}'},
+          },
+        ],
+      },
+      {role: 'tool', tool_call_id: 'old-1', name: 'search_prices', content: '{"rows":[{"sku":"old"}]}'},
+      {role: 'user', content: 'новый стек ВМ+IP'},
+      {
+        role: 'assistant',
+        content: null,
+        tool_calls: [
+          {
+            id: 'new-1',
+            type: 'function',
+            function: {name: 'get_quote', arguments: '{"vcpu":8}'},
+          },
+        ],
+      },
+      {role: 'tool', tool_call_id: 'new-1', name: 'get_quote', content: '{"quotes":[{"provider":"Yandex"}]}'},
+    ];
+    const payloads = extractAllToolPayloads(messages);
+    assert.equal(payloads.length, 1);
+    assert.equal(payloads[0]?.name, 'get_quote');
+    assert.match(payloads[0]!.content, /Yandex/);
+  });
+});
 
 describe('matchFastPath', () => {
   it('matches exact homepage chip prompts', () => {
@@ -86,6 +144,28 @@ describe('matchFastPath', () => {
     assert.equal(plan.tools[0]?.args.storageClass, 'standard');
     assert.equal(plan.tools[0]?.args.meterKind, 'capacity');
     assert.equal(plan.tools[0]?.args.volumeGiB, 55 * 1024);
+  });
+
+  it('does not collapse VM+IP+S3+CDN stack into S3-only fast path (agent handles it)', () => {
+    assert.equal(
+      matchFastPath(
+        'Виртуалка тридцать два гига шестнадцать память, шестнадцать ядер. public address. + 100 ТБ S3 + 100 ТБ в месяц трафика CDN собери решение',
+      ),
+      null,
+    );
+    assert.equal(
+      matchFastPath(
+        'Собери решение на месяц: ВМ 16 vCPU / 32 GiB / 100 GiB SSD, 1 публичный IP, Object Storage Standard 100 ТБ, исходящий трафик CDN 100 ТБ, 1 зональный мастер Managed Kubernetes.',
+      ),
+      null,
+    );
+  });
+
+  it('does not collapse S3+CDN volume ask into S3-only fast path', () => {
+    assert.equal(
+      matchFastPath('Сравни 100 ТБ S3 Standard и 100 ТБ трафика CDN по провайдерам'),
+      null,
+    );
   });
 
   it('matches budget paraphrases to fit_budget without planning LLM', () => {
@@ -392,7 +472,7 @@ describe('matchFastPath', () => {
     assert.match(quote, /MWS Cloud/);
   });
 
-  it('does not short-circuit multi-tool agent turns', () => {
+  it('does not short-circuit multi-tool agent turns with empty payloads', () => {
     assert.equal(
       tryFormatAgentToolAnswer({
         userText: 'Сравни ВМ и IP',
@@ -403,5 +483,51 @@ describe('matchFastPath', () => {
       }),
       null,
     );
+  });
+
+  it('stack compose helper builds parity table (last-resort only, not matchFastPath)', async () => {
+    const tools = [
+      {name: 'get_quote', args: {vcpu: 16, ramGiB: 32, diskGiB: 100, period: 'month'}},
+      {name: 'search_prices', args: {query: 'публичный IP', category: 'network', limit: 12}},
+      {
+        name: 'search_prices',
+        args: {
+          query: 'объектное хранилище',
+          category: 'storage',
+          storageClass: 'standard',
+          meterKind: 'capacity',
+          volumeGiB: 100 * 1024,
+          limit: 12,
+        },
+      },
+      {
+        name: 'search_prices',
+        args: {query: 'исходящий трафик CDN', category: 'cdn', volumeGiB: 100 * 1024, limit: 12},
+      },
+      {
+        name: 'search_prices',
+        args: {query: 'Managed Kubernetes', category: 'kubernetes', limit: 12},
+      },
+    ];
+    const payloads = [];
+    for (const t of tools) {
+      payloads.push({
+        name: t.name,
+        content: await runTool(t.name, JSON.stringify(t.args)),
+        arguments: JSON.stringify(t.args),
+      });
+    }
+    assert.equal(
+      tryFormatAgentToolAnswer({
+        userText: 'Собери стек ВМ+IP+S3+CDN+K8s',
+        toolPayloads: payloads,
+      }),
+      null,
+    );
+    const table = formatStackFastPathAnswer(payloads);
+    assert.ok(table);
+    assert.match(table!, /Итого/);
+    assert.match(table!, /CDN/);
+    assert.match(table!, /к минимуму/);
   });
 });

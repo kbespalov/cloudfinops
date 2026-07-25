@@ -37,6 +37,8 @@ export function catalogEmptyIllustration(
       return Bucket;
     case 'network':
       return Network;
+    case 'cdn':
+      return Network;
     case 'kubernetes':
       return Project;
     case 'ai':

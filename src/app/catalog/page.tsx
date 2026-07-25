@@ -5,7 +5,7 @@ import {CatalogPage} from '@/components/catalog/CatalogPage';
 export const metadata: Metadata = {
   title: 'Каталог SKU — цены облаков РФ',
   description:
-    'Каталог SKU облаков России: compute, GPU, диски, S3, сеть, Kubernetes и AI inference. Open-weight модели — кнопка «Развернуть» для расчёта GPU под self-host. Yandex Cloud, VK Cloud, Selectel, Cloud.ru, MWS, T1.',
+    'Каталог SKU облаков России: compute, GPU, диски, S3, сеть, CDN, Kubernetes и AI inference. Open-weight модели — кнопка «Развернуть» для расчёта GPU под self-host. Yandex Cloud, VK Cloud, Selectel, Cloud.ru, MWS, T1.',
   keywords: [
     'каталог SKU',
     'SKU облако',
@@ -14,6 +14,8 @@ export const metadata: Metadata = {
     'сравнение облаков',
     'стоимость vCPU',
     'цена GPU облако',
+    'цена CDN',
+    'CDN тарифы',
     'цена токенов LLM',
     'AI inference',
     'open-source LLM каталог',
@@ -28,7 +30,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Каталог SKU — цены облаков РФ · Cloud FinOps',
     description:
-      'Сравнение публичных цен облаков России по единой таксономии SKU: compute, storage, GPU, network, AI.',
+      'Сравнение публичных цен облаков России по единой таксономии SKU: compute, storage, GPU, network, CDN, AI.',
     url: '/catalog',
   },
 };

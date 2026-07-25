@@ -54,6 +54,7 @@ export const FAST_PATH_FINAL_SYSTEM = `Ты — AI-ассистент Cloud FinO
 - Для compare_unit_price(ssd) при запросе объёма умножь ₽/GiB·мес на объём (55 ТБ → 56320 GiB) и покажи итог. Учитывай diskMedia: NVMe ≠ SSD; в таблице указывай name/sku диска.
 - Для S3 volumeEstimates класс бери из applied.storageClass / volumeEstimates[].storageClass — не называй Ice «Standard».
 - Для AI — input и output отдельно (₽/1M токенов), если оба есть.
+- МУЛЬТИКОМПОНЕНТНЫЙ СТЕК (несколько tool results): одна таблица по провайдерам с колонкой на каждый запрошенный компонент (ВМ, IP, S3, CDN, K8s…) плюс «Итого» и «к минимуму» по итогу. S3/CDN итоги — из volumeEstimates. Не выкидывай компоненты.
 - Без вызова инструментов, без английского плана, без пустого ответа.`;
 
 function normalizeQuery(text: string): string {
@@ -385,9 +386,56 @@ const HOME_EXACT: {id: string; prompt: string; tools: FastPathTool[]}[] = [
   },
 ];
 
+/**
+ * VM + IP + S3 + CDN (etc.) must not collapse into a single-SKU volume plan.
+ * Used before dynamic S3/SSD/budget/alias matchers.
+ */
+export function looksMultiComponentStack(userText: string): boolean {
+  const t = userText;
+  // «это не S3 / не объектка» в SSD-запросах не считаем за компонент стека.
+  const tSku = t.replace(/(?:это\s+)?не\s+(?:s3|объект\w*|object\s*storage)/gi, ' ');
+  const hasVm =
+    /виртуал|\bвм\b|\bvm\b|flavor|инстанс/i.test(t) ||
+    /\d+\s*(?:ядер|vcpu)/i.test(t) ||
+    /(?:ядер|vcpu).{0,20}\d+/i.test(t) ||
+    /\d+\s*(?:GiB|ГиБ|гиби|гб)\b.{0,24}(?:RAM|ОЗУ|памят)/i.test(t) ||
+    /(?:памят|озу).{0,30}(?:GiB|ГиБ|гиби|гб|\d+)/i.test(t);
+  const hasIp =
+    /public\s*address|публичн(?:ый|ого)?\s*(?:ip|адрес)|бел(?:ый|ого)\s*ip|внешн(?:ий|его)\s*ip|\bip\s*адрес/i.test(
+      t,
+    );
+  const hasS3 = /(?:\bs3\b|объектн|object\s*storage)/i.test(tSku);
+  const hasCdn = /\bcdn\b/i.test(t);
+  const hasK8s =
+    /kubernetes|\bk8s\b|managed\s+кубер|мастер.{0,20}(?:k8s|kubernetes|кубер)/i.test(t);
+  const hasBlockDisk =
+    /(?:ssd|nvme|блочн).{0,40}\d+\s*тб|\d+\s*тб.{0,40}(?:ssd|nvme|блочн)/i.test(t);
+  const hasEgress = /(?:egress|исходящ(?:ий)?\s*трафик)/i.test(t) && !hasCdn;
+
+  const flags = [hasVm, hasIp, hasS3, hasCdn, hasK8s, hasBlockDisk, hasEgress].filter(
+    Boolean,
+  ).length;
+  if (flags >= 2) return true;
+
+  // Two named SKU families without a third signal still need the agent.
+  if (hasS3 && hasCdn) return true;
+  if (hasS3 && hasIp) return true;
+  if (hasVm && (hasS3 || hasCdn || hasIp || hasK8s)) return true;
+
+  if (
+    /собери\s+решени|собери\s+конфиг|стек\s+из|в\s+одной\s+таблиц/i.test(t) &&
+    flags >= 2
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 /** Block SSD/NVMe «N ТБ» → compare_unit_price; volume + media encoded in plan id. */
 function matchSsdVolumePlan(userText: string): FastPathPlan | null {
   const t = userText.trim();
+  if (looksMultiComponentStack(t)) return null;
   if (!/(?:ssd|nvme|блочн)/i.test(t)) return null;
   // Object storage phrasing without «блочн» must not steal into SSD unit path.
   if (/(?:s3|объектн|object\s*storage)/i.test(t) && !/блочн/i.test(t)) return null;
@@ -408,6 +456,7 @@ function matchSsdVolumePlan(userText: string): FastPathPlan | null {
 /** Object storage «N ТБ» → search_prices capacity; default class Standard (not Ice). */
 function matchObjectVolumePlan(userText: string): FastPathPlan | null {
   const t = userText.trim();
+  if (looksMultiComponentStack(t)) return null;
   if (!/(?:s3|объектн|object\s*storage)/i.test(t)) return null;
   if (/блочн/i.test(t)) return null;
   const m = t.match(/(\d+(?:[.,]\d+)?)\s*тб/i);
@@ -477,6 +526,9 @@ export function matchFastPath(userText: string): FastPathPlan | null {
       return {id: example.id, tools: example.tools};
     }
   }
+
+  // Multi-SKU stacks (VM+IP+S3+CDN+K8s…) → agent tool-loop + LLM, never a chip plan.
+  if (looksMultiComponentStack(userText)) return null;
 
   // Dynamic volume / budget before static aliases (captures 10ТБ SSD, 55ТБ NVMe, 50 тыс, …).
   const ssdVol = matchSsdVolumePlan(userText);
@@ -549,10 +601,22 @@ function shrinkToolPayload(content: string): string {
   if (content.length < 4000) return content;
   try {
     const parsed = JSON.parse(content) as Record<string, unknown>;
-    if (Array.isArray(parsed.rows)) parsed.rows = parsed.rows.slice(0, 8);
-    if (Array.isArray(parsed.quotes)) parsed.quotes = parsed.quotes.slice(0, 8);
-    if (typeof parsed.note === 'string' && parsed.note.length > 240) {
-      parsed.note = `${parsed.note.slice(0, 240)}…`;
+    // Prefer compact money fields the final LLM needs for stack tables.
+    if (Array.isArray(parsed.volumeEstimates)) {
+      parsed.volumeEstimates = (parsed.volumeEstimates as unknown[]).slice(0, 8);
+      delete parsed.rows;
+      delete parsed.providersMatched;
+    } else if (Array.isArray(parsed.quotes)) {
+      parsed.quotes = (parsed.quotes as unknown[]).slice(0, 8);
+      delete parsed.note;
+    } else if (Array.isArray(parsed.rows)) {
+      parsed.rows = (parsed.rows as unknown[]).slice(0, 8);
+    }
+    if (Array.isArray(parsed.providersMatched)) {
+      parsed.providersMatched = (parsed.providersMatched as unknown[]).slice(0, 8);
+    }
+    if (typeof parsed.note === 'string' && parsed.note.length > 160) {
+      parsed.note = `${parsed.note.slice(0, 160)}…`;
     }
     return JSON.stringify(parsed);
   } catch {
@@ -598,6 +662,49 @@ export function extractLastToolPayloads(
   return [];
 }
 
+/**
+ * Tool results after the latest user turn (serialized multi-round stacks).
+ * Ignores earlier turns so follow-ups do not merge stale SKUs into a new stack.
+ */
+export function extractAllToolPayloads(
+  messages: ChatMessage[],
+): {name: string; content: string; arguments?: string}[] {
+  let lastUserIdx = -1;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    if (messages[i]?.role === 'user') {
+      lastUserIdx = i;
+      break;
+    }
+  }
+  const slice = lastUserIdx >= 0 ? messages.slice(lastUserIdx + 1) : messages;
+
+  const payloads: {name: string; content: string; arguments?: string}[] = [];
+  const byCallId = new Map<string, {name: string; arguments?: string}>();
+  for (const m of slice) {
+    if (m.role === 'assistant' && m.tool_calls?.length) {
+      for (const call of m.tool_calls) {
+        byCallId.set(call.id, {
+          name: call.function.name,
+          arguments: call.function.arguments,
+        });
+      }
+    }
+    if (m.role === 'tool' && typeof m.content === 'string' && m.tool_call_id) {
+      const meta = byCallId.get(m.tool_call_id);
+      if (meta) {
+        payloads.push({
+          name: meta.name,
+          content: m.content,
+          arguments: meta.arguments,
+        });
+      } else if (m.name) {
+        payloads.push({name: m.name, content: m.content});
+      }
+    }
+  }
+  return payloads;
+}
+
 export function lastUserQuestion(messages: ChatMessage[]): string {
   return lastUserText(messages);
 }
@@ -623,14 +730,304 @@ function parseJson(content: string): Record<string, unknown> | null {
   }
 }
 
+type StackComponentKind = 'vm' | 'ip' | 's3' | 'cdn' | 'k8s' | 'other';
+
+function classifyStackPayload(
+  name: string,
+  data: Record<string, unknown>,
+  argsJson?: string,
+): StackComponentKind {
+  if (name === 'get_quote' && Array.isArray(data.quotes)) return 'vm';
+  let args: Record<string, unknown> = {};
+  if (argsJson) {
+    try {
+      const parsed = JSON.parse(argsJson) as unknown;
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        args = parsed as Record<string, unknown>;
+      }
+    } catch {
+      // ignore
+    }
+  }
+  const category = typeof args.category === 'string' ? args.category : '';
+  if (category === 'network') return 'ip';
+  if (category === 'storage') return 's3';
+  if (category === 'cdn') return 'cdn';
+  if (category === 'kubernetes') return 'k8s';
+
+  if (Array.isArray(data.volumeEstimates) && data.volumeEstimates.length) {
+    const first = data.volumeEstimates[0] as {name?: string};
+    if (/cdn/i.test(first?.name ?? '')) return 'cdn';
+    return 's3';
+  }
+
+  const rows = Array.isArray(data.rows) ? (data.rows as {name?: string; category?: string}[]) : [];
+  const blob = rows
+    .slice(0, 4)
+    .map((r) => `${r.category ?? ''} ${r.name ?? ''}`)
+    .join(' ');
+  if (/cdn/i.test(blob)) return 'cdn';
+  if (/kubernetes|мастер|k8s/i.test(blob)) return 'k8s';
+  if (/ip|адрес/i.test(blob)) return 'ip';
+  if (/объект|object\s*storage|s3/i.test(blob)) return 's3';
+  return 'other';
+}
+
+function providerMapFromVolumes(
+  volumes: {providerName: string; totalMonth: number}[],
+): Map<string, number> {
+  const map = new Map<string, number>();
+  for (const v of volumes) {
+    if (!(v.totalMonth >= 0) || !v.providerName) continue;
+    const prev = map.get(v.providerName);
+    if (prev == null || v.totalMonth < prev) map.set(v.providerName, v.totalMonth);
+  }
+  return map;
+}
+
+function providerMapFromRows(
+  rows: {provider: string; name: string; config?: string; month: number | null}[],
+  kind: StackComponentKind,
+): Map<string, number> {
+  const map = new Map<string, number>();
+  for (const r of rows) {
+    if (typeof r.month !== 'number' || !(r.month > 0) || !r.provider) continue;
+    const blob = `${r.name} ${r.config ?? ''}`;
+    if (kind === 'ip') {
+      if (
+        !/ip|ipv4|адрес|elastic|floating/i.test(blob) ||
+        /входящ|ingress|трафик|traffic|гигабайт|gi\b|cdn/i.test(blob)
+      ) {
+        continue;
+      }
+    } else if (kind === 'k8s') {
+      if (/региональн|отказоустойчив|\bha\b/i.test(blob)) continue;
+      if (!/мастер|master|кластер|kubernetes|k8s|базов/i.test(blob)) continue;
+    } else if (kind === 'cdn') {
+      if (/ресурс|запрос|shielding|лог|dedicated|ресурс/i.test(blob)) continue;
+      if (!/cdn|трафик/i.test(blob)) continue;
+    }
+    const prev = map.get(r.provider);
+    if (prev == null || r.month < prev) map.set(r.provider, r.month);
+  }
+  return map;
+}
+
+type StackComp = {
+  kind: StackComponentKind;
+  label: string;
+  byProvider: Map<string, number>;
+  note?: string;
+};
+
+function collectStackComponents(
+  toolPayloads: {name: string; content: string; arguments?: string}[],
+): {comps: StackComp[]; vmTitle: string; catalogAsOf: string | null} {
+  const comps: StackComp[] = [];
+  let vmTitle = 'ВМ';
+  let catalogAsOf: string | null = null;
+
+  for (const payload of toolPayloads) {
+    const data = parseJson(payload.content);
+    if (!data || data.error) continue;
+    if (typeof data.catalogAsOf === 'string' && data.catalogAsOf) {
+      catalogAsOf = data.catalogAsOf;
+    }
+    const kind = classifyStackPayload(payload.name, data, payload.arguments);
+    if (kind === 'vm') {
+      type Q = {provider: string; total: number | null};
+      const quotes = (data.quotes as Q[] | undefined) ?? [];
+      const byProvider = new Map<string, number>();
+      for (const q of quotes) {
+        if (q.provider && typeof q.total === 'number') byProvider.set(q.provider, q.total);
+      }
+      if (!byProvider.size) continue;
+      const req = (data.request ?? {}) as {vcpu?: number; ramGiB?: number; diskGiB?: number};
+      vmTitle = `ВМ ${req.vcpu ?? '—'} / ${req.ramGiB ?? '—'} / ${req.diskGiB ?? '—'} GiB`;
+      comps.push({kind, label: 'ВМ', byProvider});
+      continue;
+    }
+
+    if (kind === 's3' || kind === 'cdn') {
+      const volumes = data.volumeEstimates as
+        | {providerName: string; totalMonth: number; volumeGiB?: number; name?: string}[]
+        | undefined;
+      if (Array.isArray(volumes) && volumes.length) {
+        const vol = volumes[0].volumeGiB;
+        const label =
+          kind === 'cdn'
+            ? `CDN${vol ? ` ${Math.round(vol / 1024)} ТБ` : ''}`
+            : `S3${vol ? ` ${Math.round(vol / 1024)} ТБ` : ''}`;
+        const note =
+          kind === 'cdn' && volumes.some((v) => /вход и выход|bidirectional/i.test(v.name ?? ''))
+            ? 'VK CDN — вход+выход в одной ставке'
+            : undefined;
+        comps.push({kind, label, byProvider: providerMapFromVolumes(volumes), note});
+        continue;
+      }
+      const applied = data.applied as {volumeGiB?: number} | undefined;
+      const volumeGiB = applied?.volumeGiB;
+      const rows = Array.isArray(data.rows)
+        ? (data.rows as {provider: string; name: string; config?: string; month: number | null}[])
+        : [];
+      const rates = providerMapFromRows(rows, kind);
+      if (volumeGiB && rates.size) {
+        const totals = new Map<string, number>();
+        for (const [p, rate] of rates) {
+          totals.set(p, Math.round(rate * volumeGiB * 100) / 100);
+        }
+        comps.push({
+          kind,
+          label: `${kind === 'cdn' ? 'CDN' : 'S3'} ${Math.round(volumeGiB / 1024)} ТБ`,
+          byProvider: totals,
+        });
+      }
+      continue;
+    }
+
+    if (kind === 'ip' || kind === 'k8s') {
+      const rows = Array.isArray(data.rows)
+        ? (data.rows as {provider: string; name: string; config?: string; month: number | null}[])
+        : [];
+      const byProvider = providerMapFromRows(rows, kind);
+      if (!byProvider.size) continue;
+      comps.push({
+        kind,
+        label: kind === 'ip' ? 'IP' : 'K8s master',
+        byProvider,
+      });
+    }
+  }
+
+  return {comps, vmTitle, catalogAsOf};
+}
+
+/**
+ * Compact per-provider totals for the final LLM (avoids stuffing 5× full tool JSON).
+ */
+export function buildStackDigestForFinal(
+  toolPayloads: {name: string; content: string; arguments?: string}[],
+): string | null {
+  const {comps, vmTitle, catalogAsOf} = collectStackComponents(toolPayloads);
+  if (comps.length < 2) return null;
+
+  const providers = new Set<string>();
+  for (const c of comps) for (const p of c.byProvider.keys()) providers.add(p);
+
+  const lines: string[] = [
+    `Компоненты: ${comps.map((c) => (c.kind === 'vm' ? vmTitle : c.label)).join(' + ')}`,
+    catalogAsOf ? `catalogAsOf: ${catalogAsOf}` : '',
+    'Цифры ₽/мес (НДС вкл.) по провайдерам:',
+  ].filter(Boolean);
+
+  for (const provider of [...providers].sort()) {
+    const parts = comps.map((c) => {
+      const v = c.byProvider.get(provider);
+      return `${c.label}=${v != null ? Math.round(v * 100) / 100 : 'н/д'}`;
+    });
+    const known = comps.every((c) => c.byProvider.has(provider));
+    if (!known) continue;
+    const total = comps.reduce((s, c) => s + (c.byProvider.get(provider) as number), 0);
+    lines.push(`- ${provider}: ${parts.join('; ')}; Итого=${Math.round(total * 100) / 100}`);
+  }
+
+  const notes = comps.map((c) => c.note).filter(Boolean);
+  if (notes.length) lines.push(`Заметки: ${notes.join('; ')}`);
+  return lines.join('\n');
+}
+
+/** Short final-turn messages: digest instead of raw tool dumps. */
+export function messagesForStackFinal(options: {
+  userText: string;
+  toolPayloads: {name: string; content: string; arguments?: string}[];
+}): ChatMessage[] | null {
+  const digest = buildStackDigestForFinal(options.toolPayloads);
+  if (!digest) return null;
+  return [
+    {role: 'system', content: FAST_PATH_FINAL_SYSTEM},
+    {
+      role: 'user',
+      content:
+        `${options.userText.trim()}\n\n---\nДанные инструментов (уже собраны):\n${digest}\n---\n` +
+        'Собери одну markdown-таблицу по провайдерам: колонка на каждый компонент + Итого + к минимуму. ' +
+        'Сортировка по Итого. Цены только из блока выше. Краткий вывод про минимум в каталоге. Без tool calls.',
+    },
+  ];
+}
+
+/**
+ * Compose one cross-provider table from multi-tool stack payloads.
+ * Returns null when fewer than two priced components resolved.
+ */
+export function formatStackFastPathAnswer(
+  toolPayloads: {name: string; content: string; arguments?: string}[],
+): string | null {
+  const {comps, vmTitle} = collectStackComponents(toolPayloads);
+  if (comps.length < 2) return null;
+
+  const providers = new Set<string>();
+  for (const c of comps) for (const p of c.byProvider.keys()) providers.add(p);
+
+  type Row = {provider: string; parts: number[]; total: number; missing: boolean};
+  const rows: Row[] = [];
+  for (const provider of providers) {
+    const parts: number[] = [];
+    let total = 0;
+    let missing = false;
+    for (const c of comps) {
+      const v = c.byProvider.get(provider);
+      if (v == null) {
+        parts.push(Number.NaN);
+        missing = true;
+      } else {
+        parts.push(v);
+        total += v;
+      }
+    }
+    if (missing) continue; // only fully-covered providers in the parity table
+    rows.push({provider, parts, total});
+  }
+  if (!rows.length) return null;
+  rows.sort((a, b) => a.total - b.total);
+  const best = rows[0]!.total;
+
+  const header = `| Провайдер | ${comps.map((c) => c.label).join(' | ')} | Итого | к минимуму |`;
+  const sep = `|---|${comps.map(() => '---:').join('|')}|---:|---|`;
+  const body = rows
+    .map((r) => {
+      const cells = r.parts.map((n) => formatRub(n)).join(' | ');
+      return `| ${r.provider} | ${cells} | ${formatRub(r.total)} | ${pctVsBest(r.total, best)} |`;
+    })
+    .join('\n');
+
+  const notes = comps
+    .map((c) => c.note)
+    .filter(Boolean)
+    .join('; ');
+  const titleParts = comps.map((c) =>
+    c.kind === 'vm' ? vmTitle : c.label,
+  );
+  const title = `Стек: ${titleParts.join(' + ')}`;
+
+  return `**${title}** (НДС вкл., месяц = 720 ч)\n\n${header}\n${sep}\n${body}\n\n${cheapestInCatalogLine({
+    provider: rows[0]!.provider,
+    priceText: `${formatRub(best)}/мес`,
+  })}${notes ? ` ${notes}.` : ''} Операции S3 и лишний egress не включены, если не запрошены.`;
+}
+
 /**
  * Deterministic markdown for chip tools — avoids the 5–15s final LLM RTT.
  * Returns null when the payload shape is unexpected (then we fall back to LLM).
  */
 export function formatFastPathAnswer(
   planId: string,
-  toolPayloads: {name: string; content: string}[],
+  toolPayloads: {name: string; content: string; arguments?: string}[],
 ): string | null {
+  // Multi-SKU stacks: composed table (never render only the first tool).
+  if (planId.startsWith('stack-') || toolPayloads.length > 1) {
+    return formatStackFastPathAnswer(toolPayloads);
+  }
+
   const primary = toolPayloads[0];
   if (!primary) return null;
   const data = parseJson(primary.content);
@@ -1298,9 +1695,20 @@ export function formatFastPathAnswer(
 export function tryFormatAgentToolAnswer(options: {
   userText: string;
   toolPayloads: {name: string; content: string; arguments?: string}[];
+  /**
+   * Multi-tool stacks normally need the final LLM. Pass true only as a last
+   * resort when the model returned empty after tools.
+   */
+  allowStackCompose?: boolean;
 }): string | null {
   const payloads = options.toolPayloads;
+  if (payloads.length > 1) {
+    if (!options.allowStackCompose) return null;
+    return formatStackFastPathAnswer(payloads);
+  }
   if (payloads.length !== 1) return null;
+  // One tool cannot answer a multi-SKU stack — keep the final LLM (or more rounds).
+  if (looksMultiComponentStack(options.userText)) return null;
   const primary = payloads[0]!;
   const planId = inferPlanIdFromAgentTool(
     primary.name,
@@ -1417,8 +1825,36 @@ function inferPlanIdFromAgentTool(
 }
 
 /**
+ * Chat fast-path sampling rate. Default 0.5 (coin flip).
+ * Override with CHAT_FAST_PATH_PROBABILITY=0|1|0.25 for eval/tests.
+ * Calculator surface always keeps fast-path (sidebar needs get_quote).
+ */
+export function fastPathProbabilityFromEnv(): number {
+  const raw = process.env.CHAT_FAST_PATH_PROBABILITY;
+  if (raw == null || raw === '') return 0.5;
+  const n = Number(raw);
+  if (!Number.isFinite(n)) return 0.5;
+  return Math.min(1, Math.max(0, n));
+}
+
+/** Whether to take the deterministic chip path this turn. */
+export function shouldUseFastPath(options?: {
+  surface?: 'chat' | 'calculator';
+  probability?: number;
+  /** Injected RNG for tests; defaults to Math.random. */
+  random?: () => number;
+}): boolean {
+  if (options?.surface === 'calculator') return true;
+  const p = options?.probability ?? fastPathProbabilityFromEnv();
+  if (p <= 0) return false;
+  if (p >= 1) return true;
+  return (options?.random ?? Math.random)() < p;
+}
+
+/**
  * If this is a first-turn chip/alias query, run tools locally and one short final LLM call.
  * Returns null when the query should use the normal tool loop.
+ * Chat surface: sampled at ~50% (see CHAT_FAST_PATH_PROBABILITY).
  */
 export async function tryRunFastPath(options: {
   messages: ChatMessage[];
@@ -1432,11 +1868,11 @@ export async function tryRunFastPath(options: {
   const userText = lastUserText(options.messages);
   const matched = matchFastPath(userText);
   if (!matched) return null;
-  const plan = adaptFastPathForSurface(
-    matched,
-    options.surface === 'calculator' ? 'calculator' : 'chat',
-    userText,
-  );
+
+  const surface = options.surface === 'calculator' ? 'calculator' : 'chat';
+  if (!shouldUseFastPath({surface})) return null;
+
+  const plan = adaptFastPathForSurface(matched, surface, userText);
 
   const messages = options.messages;
   const toolCalls = plan.tools.map((t, i) => ({
@@ -1479,7 +1915,11 @@ export async function tryRunFastPath(options: {
   // Prefer deterministic tables for chips — final LLM alone is often 5–15s.
   const rendered = formatFastPathAnswer(
     plan.id,
-    results.map(({call, result}) => ({name: call.function.name, content: result})),
+    results.map(({call, result}) => ({
+      name: call.function.name,
+      content: result,
+      arguments: call.function.arguments,
+    })),
   );
   if (rendered) {
     return {

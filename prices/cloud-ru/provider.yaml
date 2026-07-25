@@ -133,3 +133,30 @@ spec:
     - ai.ml.requests
     - ai.ml.gpu.gb
     - compute.flavor
+  - id: cloudru.cdn
+    title: Описание услуги Cloud.ru CDN
+    url: https://cloud.ru/documents/contracts/terms-of-service/crs/cdn/description-cdn
+    type: html
+    access: public
+    priority: 1
+    covers:
+    - cdn.traffic.egress
+    - cdn.origin.shielding
+  - id: cloudru.cdn-tariffs
+    title: Тарифы на кроссплатформенные услуги (CDN, CRS.1)
+    url: https://cdn.cloud.ru/backend/docs/contracts/prilozheniye_7A.CRS.1.pdf
+    type: pdf
+    access: public
+    priority: 1
+    documentVersion: '240621'
+    covers:
+    - cdn.traffic.egress
+    - cdn.origin.shielding
+  - id: cloudru.cdn-tariffs-pril7
+    title: Тарифы на Услуги — CDN (приложение 7)
+    url: https://cdn.cloud.ru/backend/docs/contracts/Prilozheniye_7_Tarrifs.pdf
+    type: pdf
+    access: public
+    priority: 2
+    covers:
+    - cdn.traffic.egress

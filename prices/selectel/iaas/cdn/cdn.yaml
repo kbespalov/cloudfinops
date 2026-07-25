@@ -1,0 +1,120 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: selectel
+  layer: iaas
+  service: cdn
+  category: iaas.cdn
+  title: CDN
+spec:
+  meters:
+  - sku: selectel.cdn.resource
+    name: CDN-ресурс
+    meter: cdn.resource
+    status: available
+    pricingMode: fixed
+    region: Все регионы
+    effectiveFrom: null
+    checkedAt: '2026-07-25'
+    sourceRefs: [selectel.cdn-payment, selectel.cdn]
+    dimensions:
+      includedOriginGiBMonth: 100
+      includedEgressGiBMonth: 800
+      includedTrafficScope: account-shared
+      networkProvider: selectel
+      nativeName: Тарифный план CDN (500 ₽ / ресурс)
+      nativeUnit: ресурс × месяц
+      nativeAmountIncluded: '500'
+      comparabilityClass: monthly-resource
+      sourceVat: included
+    pricing:
+      rate:
+        amount: '500'
+        currency: RUB
+        unit: {quantity: resource, period: month}
+        vat: included
+        byteBasis: not-applicable
+    notes: >
+      500 ₽/мес за каждый ACTIVE CDN-ресурс (docs.selectel.ru/cdn/about/payment
+      и about-cdn). Пакет на аккаунт: 100 ГБ трафика источника + 800 ГБ внешнего
+      трафика. Первый платёж — 1-го числа следующего месяца. TCO = ресурсы ×
+      500 ₽ + перерасход (SKU «сверх пакета»). Источники: модель оплаты CDN и
+      продуктовая страница.
+
+  - sku: selectel.cdn.traffic.egress
+    name: Исходящий трафик CDN · сверх пакета
+    meter: cdn.traffic.egress
+    status: available
+    pricingMode: unit
+    region: Все регионы
+    effectiveFrom: null
+    checkedAt: '2026-07-25'
+    sourceRefs: [selectel.calculator, selectel.cdn-payment]
+    priceProvenance: selectel-calculator-internal-x100
+    dimensions:
+      networkProvider: selectel
+      trafficScope: cdn-to-client
+      includedEgressGiBMonth: 800
+      includedEgressScope: account-shared-with-plan
+      volumeBand: up-to-10-tb
+      nativeResource: gcore-traffic-mb
+      nativeName: CDN Selectel (до 10 ТБ)
+      nativeUnit: ГБ
+      nativeCalculatorValue: '65.99566336'
+      nativeCalculatorScale: 100
+      nativeAmountIncluded: '0.6599566336'
+      comparabilityClass: egress-overage
+      sourceVat: included
+    pricing:
+      # Calculator stores price×100 (same pattern as S3 egress 137.7 → 1.377).
+      rate:
+        amount: '0.6599566336'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: included
+        byteBasis: binary
+    notes: >
+      Перерасход внешнего трафика сверх 800 ГБ пакета, ступень «до 10 ТБ».
+      Сумма 0,6599566336 ₽/GiB получена из калькулятора Selectel
+      (gcore-traffic-mb = 65,99566336 при внутреннем ×100; проверка паттерна —
+      S3 Standard egress 137,7 → 1,377 ₽ в каталоге). Docs оплаты подтверждают
+      PAYG сверх пакета и снижение цены на больших объёмах, но точную ставку
+      «до 10 ТБ» публикуют в калькуляторе/панели, не в тексте payment-статьи.
+      Без активного плана «800 ГБ бесплатно» не действует. Источники:
+      calculator + docs/cdn/about/payment.
+
+  - sku: selectel.cdn.traffic.egress.akamai
+    name: Исходящий трафик CDN · Akamai
+    meter: cdn.traffic.egress
+    status: available
+    pricingMode: unit
+    region: Все регионы
+    effectiveFrom: null
+    checkedAt: '2026-07-25'
+    sourceRefs: [selectel.calculator, selectel.cdn]
+    priceProvenance: selectel-calculator-internal-x100
+    dimensions:
+      networkProvider: akamai
+      trafficScope: cdn-to-client
+      volumeBand: up-to-10-tb
+      nativeResource: akamai-traffic-mb
+      nativeName: CDN Akamai (до 10 ТБ)
+      nativeUnit: ГБ
+      nativeCalculatorValue: '251.3671875'
+      nativeCalculatorScale: 100
+      nativeAmountIncluded: '2.513671875'
+      comparabilityClass: egress-network-alt
+      sourceVat: included
+    pricing:
+      rate:
+        amount: '2.513671875'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: included
+        byteBasis: binary
+    notes: >
+      Сеть Akamai в Selectel, ступень «до 10 ТБ»: 2,513671875 ₽/GiB из
+      калькулятора (251,3671875 / 100). Не базовая сеть Selectel/G-Core.
+      Связь с пакетом 800 ГБ абонплаты в публичной доке слабее — не утверждаем,
+      что включённый пакет автоматически покрывает Akamai. Источники:
+      calculator + страница CDN.

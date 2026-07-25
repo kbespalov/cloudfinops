@@ -221,3 +221,24 @@ describe('searchPricesDetailed kubernetes masters', () => {
     assert.ok(r.providers.every((p) => p.cheapest.k8sTier === 'ha'));
   });
 });
+
+describe('searchPricesDetailed CDN volume', () => {
+  it('volumeEstimates use egress traffic, not free ingress or request meters', () => {
+    const r = searchPricesDetailed({
+      query: 'исходящий трафик CDN',
+      category: 'cdn',
+      volumeGiB: 100 * 1024,
+      limit: 30,
+    });
+    assert.ok((r.volumeEstimates?.length ?? 0) >= 4);
+    for (const v of r.volumeEstimates!) {
+      assert.ok(v.rateGiBMonth > 0, `${v.providerName} rate must be > 0`);
+      assert.ok(v.totalMonth > 1000, `${v.providerName} total must reflect 100 ТБ`);
+      assert.doesNotMatch(v.name, /входящ/i);
+      assert.doesNotMatch(v.name, /запрос/i);
+    }
+    const yandex = r.volumeEstimates!.find((v) => v.provider === 'yandex-cloud');
+    assert.ok(yandex);
+    assert.ok((yandex!.rateGiBMonth ?? 0) >= 1);
+  });
+});

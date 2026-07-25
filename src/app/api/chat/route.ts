@@ -14,9 +14,12 @@ import {
 import {chatLog, clientIp} from '@/lib/chat/log';
 import {SYSTEM_PROMPT} from '@/lib/chat/system-prompt';
 import {
+  extractAllToolPayloads,
   extractLastToolPayloads,
   lastUserQuestion,
+  looksMultiComponentStack,
   messagesForShortFinal,
+  messagesForStackFinal,
   tryFormatAgentToolAnswer,
   tryRunFastPath,
 } from '@/lib/chat/fast-path';
@@ -295,16 +298,18 @@ export async function POST(req: Request) {
           surface,
         });
 
+        const userQuestion = lastUserQuestion(messages);
+        const multiStack = looksMultiComponentStack(userQuestion);
         const loop =
           fast ??
           (await runToolLoop({
             messages,
             tools: planningTools,
-            // First user turn: prefer 1–2 tool rounds, not long retry chains.
+            // Simple first-turn asks: 1–2 rounds. Multi-SKU stacks need full headroom.
             maxRounds:
-              history.length <= 1
-                ? Math.min(CHAT_LIMITS.maxToolRounds, 2)
-                : CHAT_LIMITS.maxToolRounds,
+              multiStack || history.length > 1
+                ? CHAT_LIMITS.maxToolRounds
+                : Math.min(CHAT_LIMITS.maxToolRounds, 2),
             signal: abort.signal,
             onEvent: onToolEvent,
           }));
@@ -319,9 +324,13 @@ export async function POST(req: Request) {
 
         if (!finalText && loop.toolCallsTotal > 0) {
           // Same short-circuit as tool-loop (covers stream path when loop left final null).
+          // Multi-tool compose only as last resort — stacks should get an LLM answer first.
           const formatted = tryFormatAgentToolAnswer({
-            userText: lastUserQuestion(messages),
-            toolPayloads: extractLastToolPayloads(messages),
+            userText: userQuestion,
+            toolPayloads: multiStack
+              ? extractAllToolPayloads(messages)
+              : extractLastToolPayloads(messages),
+            allowStackCompose: multiStack,
           });
           if (formatted) finalText = formatted;
         }
@@ -329,24 +338,35 @@ export async function POST(req: Request) {
         if (!finalText) {
           // Prefer live token flush for the post-tools answer. Hold back a short
           // tail while sanitizing so tool names cannot flash mid-chunk.
+          // Multi-SKU stacks: compact digest (messagesForStackFinal), not raw history.
           // Fall back to non-stream if the SSE body has no content deltas.
-          const alreadyNudged = messages.some(
-            (m) =>
-              m.role === 'user' &&
-              typeof m.content === 'string' &&
-              m.content.includes('Данные инструментов уже в истории'),
-          );
-          if (!alreadyNudged && loop.toolCallsTotal > 0) {
-            messages.push({
-              role: 'user',
-              content:
-                'Данные инструментов уже в истории. Дай пользователю полный ответ на русском: markdown-таблица и вывод. Без вызова инструментов и без пустого ответа.',
-            });
+          const stackPayloads =
+            multiStack && loop.toolCallsTotal > 0 ? extractAllToolPayloads(messages) : [];
+          const stackFinal =
+            stackPayloads.length >= 2
+              ? messagesForStackFinal({userText: userQuestion, toolPayloads: stackPayloads})
+              : null;
+
+          if (!stackFinal) {
+            const alreadyNudged = messages.some(
+              (m) =>
+                m.role === 'user' &&
+                typeof m.content === 'string' &&
+                m.content.includes('Данные инструментов уже в истории'),
+            );
+            if (!alreadyNudged && loop.toolCallsTotal > 0) {
+              messages.push({
+                role: 'user',
+                content:
+                  'Данные инструментов уже в истории. Дай пользователю полный ответ на русском: markdown-таблица и вывод. Без вызова инструментов и без пустого ответа.',
+              });
+            }
           }
+
           send({type: 'status', text: CHAT_STATUS_COMPOSING});
           composingAnnounced = true;
 
-          const finalMessages = messagesForShortFinal(messages);
+          const finalMessages = stackFinal ?? messagesForShortFinal(messages);
           let rawStreamed = '';
           const sanitizer = createAnswerStreamSanitizer();
           try {

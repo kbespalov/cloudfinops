@@ -22,6 +22,10 @@ spec:
     - network.ipv4.attached
     - network.ipv4.reserved
     - network.traffic.egress
+    - cdn.traffic.egress
+    - cdn.requests
+    - cdn.origin.shielding
+    - cdn.logs
     - storage.block.capacity
     - storage.image.capacity
     - storage.snapshot.capacity
@@ -41,10 +45,25 @@ spec:
     - network.ipv4.attached
     - network.ipv4.reserved
     - network.traffic.egress
+    - cdn.traffic.egress
+    - cdn.requests
+    - cdn.origin.shielding
+    - cdn.logs
     - storage.block.capacity
     - storage.image.capacity
     - storage.snapshot.capacity
     - storage.object.capacity
+  - id: t1.cdn
+    title: Cloud CDN
+    url: https://t1-cloud.ru/service/cdn
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - cdn.traffic.egress
+    - cdn.requests
+    - cdn.origin.shielding
+    - cdn.logs
   - id: t1.calculator
     title: Калькулятор ресурсов
     url: https://t1-cloud.ru/calculator

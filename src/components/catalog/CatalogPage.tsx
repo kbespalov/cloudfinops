@@ -26,6 +26,7 @@ import {
   TextInput,
 } from '@gravity-ui/uikit';
 import {
+  AntennaSignal,
   ArrowDownToLine,
   ArrowUpFromLine,
   Copy,
@@ -71,6 +72,7 @@ import {
   meterMatchesAiFacet,
   meterMatchesAiFamilyFacet,
   meterMatchesCategory,
+  meterMatchesCdnFacet,
   meterMatchesComputeFacet,
   meterMatchesDiskFacet,
   meterMatchesGpuFacet,
@@ -90,6 +92,7 @@ import {
   type AiFamilyFacet,
   type CatalogMeter,
   type CategoryFilter,
+  type CdnFacet,
   type ComputeFacet,
   type DiskFacet,
   type GpuFacet,
@@ -134,6 +137,7 @@ const CATEGORY_FILTERS: {id: CategoryFilter; title: string}[] = [
   {id: 'gpu', title: 'GPU'},
   {id: 'storage', title: 'Storage'},
   {id: 'network', title: 'Network'},
+  {id: 'cdn', title: 'CDN'},
   {id: 'kubernetes', title: 'Kubernetes'},
   {id: 'ai', title: 'AI'},
 ];
@@ -194,6 +198,14 @@ const NETWORK_FACET_OPTIONS: {value: NetworkFacet; title: string}[] = [
   {value: 'all', title: 'Все'},
   {value: 'public-ip', title: 'Публичный IP'},
   {value: 'egress', title: 'Исходящий трафик'},
+];
+
+const CDN_FACET_OPTIONS: {value: CdnFacet; title: string}[] = [
+  {value: 'all', title: 'Все'},
+  {value: 'traffic', title: 'Трафик'},
+  {value: 'resource', title: 'Ресурс'},
+  {value: 'requests', title: 'Запросы'},
+  {value: 'options', title: 'Опции'},
 ];
 
 const KUBERNETES_AVAILABILITY_OPTIONS: {
@@ -288,6 +300,13 @@ function parseNetworkFacet(v: string | null): NetworkFacet {
   return 'all';
 }
 
+function parseCdnFacet(v: string | null): CdnFacet {
+  if (v === 'traffic' || v === 'resource' || v === 'requests' || v === 'options' || v === 'all') {
+    return v;
+  }
+  return 'all';
+}
+
 function parseKubernetesAvailabilityFacet(v: string | null): KubernetesAvailabilityFacet {
   if (v === 'zonal' || v === 'regional' || v === 'all') return v;
   return 'all';
@@ -379,6 +398,9 @@ export function CatalogPage() {
   const [networkFacet, setNetworkFacet] = useState<NetworkFacet>(() =>
     parseNetworkFacet(searchParams.get('net')),
   );
+  const [cdnFacet, setCdnFacet] = useState<CdnFacet>(() =>
+    parseCdnFacet(searchParams.get('cdn')),
+  );
   const [kubernetesAvailabilityFacet, setKubernetesAvailabilityFacet] =
     useState<KubernetesAvailabilityFacet>(() =>
       parseKubernetesAvailabilityFacet(searchParams.get('k8s')),
@@ -424,6 +446,7 @@ export function CatalogPage() {
       if (category === 'storage' && storageFacet !== 'all') params.set('storage', storageFacet);
       if (category === 'storage' && storageKindFacet !== 'all') params.set('kind', storageKindFacet);
       if (category === 'network' && networkFacet !== 'all') params.set('net', networkFacet);
+      if (category === 'cdn' && cdnFacet !== 'all') params.set('cdn', cdnFacet);
       if (category === 'kubernetes' && kubernetesAvailabilityFacet !== 'all') {
         params.set('k8s', kubernetesAvailabilityFacet);
       }
@@ -448,6 +471,7 @@ export function CatalogPage() {
     storageFacet,
     storageKindFacet,
     networkFacet,
+    cdnFacet,
     kubernetesAvailabilityFacet,
     aiFacet,
     aiFamilyFacet,
@@ -521,6 +545,7 @@ export function CatalogPage() {
       gpu: 0,
       storage: 0,
       network: 0,
+      cdn: 0,
       kubernetes: 0,
       ai: 0,
     };
@@ -586,6 +611,22 @@ export function CatalogPage() {
       egress: networkMeters.filter((m) => meterMatchesNetworkFacet(m, 'egress')).length,
     }),
     [networkMeters],
+  );
+
+  const cdnMeters = useMemo(
+    () => baseMeters.filter((m) => m.categoryKey === 'cdn'),
+    [baseMeters],
+  );
+
+  const cdnFacetCounts = useMemo(
+    () => ({
+      all: cdnMeters.length,
+      traffic: cdnMeters.filter((m) => meterMatchesCdnFacet(m, 'traffic')).length,
+      resource: cdnMeters.filter((m) => meterMatchesCdnFacet(m, 'resource')).length,
+      requests: cdnMeters.filter((m) => meterMatchesCdnFacet(m, 'requests')).length,
+      options: cdnMeters.filter((m) => meterMatchesCdnFacet(m, 'options')).length,
+    }),
+    [cdnMeters],
   );
 
   const kubernetesMeters = useMemo(
@@ -749,6 +790,7 @@ export function CatalogPage() {
       }
       if (category === 'storage' && !meterMatchesStorageFacet(m, storageFacet)) return false;
       if (category === 'network' && !meterMatchesNetworkFacet(m, networkFacet)) return false;
+      if (category === 'cdn' && !meterMatchesCdnFacet(m, cdnFacet)) return false;
       if (
         category === 'kubernetes' &&
         !meterMatchesKubernetesAvailabilityFacet(m, kubernetesAvailabilityFacet)
@@ -774,6 +816,7 @@ export function CatalogPage() {
     storageFacet,
     storageKindFacet,
     networkFacet,
+    cdnFacet,
     kubernetesAvailabilityFacet,
     aiFacet,
     aiFamilyFacet,
@@ -803,6 +846,7 @@ export function CatalogPage() {
     storageFacet,
     storageKindFacet,
     networkFacet,
+    cdnFacet,
     kubernetesAvailabilityFacet,
     aiFacet,
     aiFamilyFacet,
@@ -1015,6 +1059,7 @@ export function CatalogPage() {
       setStorageFacet('all');
       setStorageKindFacet('all');
       setNetworkFacet('all');
+      setCdnFacet('all');
       setKubernetesAvailabilityFacet('all');
       setAiFacet('all');
       setAiFamilyFacet('all');
@@ -1035,6 +1080,7 @@ export function CatalogPage() {
     storageFacet !== 'all' ||
     storageKindFacet !== 'all' ||
     networkFacet !== 'all' ||
+    cdnFacet !== 'all' ||
     kubernetesAvailabilityFacet !== 'all' ||
     aiFacet !== 'all' ||
     aiFamilyFacet !== 'all' ||
@@ -1097,6 +1143,7 @@ export function CatalogPage() {
                   setStorageKindFacet('all');
                 }
                 if (next !== 'network') setNetworkFacet('all');
+                if (next !== 'cdn') setCdnFacet('all');
                 if (next !== 'kubernetes') setKubernetesAvailabilityFacet('all');
                 if (next !== 'ai') {
                   setAiFacet('all');
@@ -1457,6 +1504,37 @@ export function CatalogPage() {
                           )}
                           <span>
                             {o.title} {networkFacetCounts[o.value]}
+                          </span>
+                        </span>
+                      </SegmentedRadioGroup.Option>
+                    ))}
+                  </SegmentedRadioGroup>
+                </div>
+              ) : null}
+
+              {category === 'cdn' ? (
+                <div
+                  className={styles.facetControl}
+                  title="Трафик ₽/GiB, абонплата за ресурс, запросы и платные опции — разные модели, не смешивайте при сравнении"
+                >
+                  <Text variant="caption-2" color="complementary" className={styles.facetLabel}>
+                    Тип
+                  </Text>
+                  <SegmentedRadioGroup
+                    size="m"
+                    value={cdnFacet}
+                    onUpdate={(v) => setCdnFacet(v as CdnFacet)}
+                  >
+                    {CDN_FACET_OPTIONS.map((o) => (
+                      <SegmentedRadioGroup.Option key={o.value} value={o.value}>
+                        <span className={styles.facetOption}>
+                          {o.value === 'all' ? (
+                            <Icon data={Layers3Diagonal} size={14} />
+                          ) : (
+                            <Icon data={AntennaSignal} size={14} />
+                          )}
+                          <span>
+                            {o.title} {cdnFacetCounts[o.value]}
                           </span>
                         </span>
                       </SegmentedRadioGroup.Option>

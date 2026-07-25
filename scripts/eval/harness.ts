@@ -22,7 +22,13 @@ import {
   withChatModel,
   type ChatMessage,
 } from '../../src/lib/chat/gigachat';
-import {tryRunFastPath} from '../../src/lib/chat/fast-path';
+import {
+  extractAllToolPayloads,
+  looksMultiComponentStack,
+  messagesForStackFinal,
+  tryFormatAgentToolAnswer,
+  tryRunFastPath,
+} from '../../src/lib/chat/fast-path';
 import {
   INFERENCE_SYSTEM_ADDENDUM,
   matchInferenceIntent,
@@ -123,7 +129,8 @@ export async function runChat(
       (await runToolLoop({
         messages,
         tools: planningTools,
-        maxRounds: Math.min(MAX_TOOL_ROUNDS, 2),
+        // Eval needs the same headroom as production multi-stack (not a 2-round cap).
+        maxRounds: MAX_TOOL_ROUNDS,
         onEvent: (event) => {
           if (event.type === 'tool_call') onToolCall(event.name, event.arguments);
         },
@@ -151,23 +158,48 @@ export async function runChat(
     }
 
     // Force a final answer after exhausting tool rounds / post-tools path.
-    const finalMessages = messages.filter((m) => m.role !== 'system');
-    const alreadyNudged = finalMessages.some(
-      (m) => m.role === 'user' && typeof m.content === 'string' && m.content.includes('Данные инструментов уже в истории'),
-    );
-    if (!alreadyNudged && toolCalls.length > 0) {
-      finalMessages.push({
-        role: 'user',
-        content:
-          'Данные инструментов уже в истории. Дай пользователю полный ответ на русском: markdown-таблица и вывод. Без вызова инструментов и без пустого ответа.',
+    const multiStack = looksMultiComponentStack(question);
+    let answer = '';
+    if (multiStack && toolCalls.length > 0) {
+      const stackMessages = messagesForStackFinal({
+        userText: question,
+        toolPayloads: extractAllToolPayloads(loop.messages),
       });
+      if (stackMessages) {
+        const final = await chatCompletion(stackMessages, undefined);
+        answer = sanitizeUserFacingAnswer(final.content ?? '');
+      }
+      if (!answer.trim()) {
+        answer =
+          tryFormatAgentToolAnswer({
+            userText: question,
+            toolPayloads: extractAllToolPayloads(loop.messages),
+            allowStackCompose: true,
+          }) ?? '';
+      }
+    } else {
+      const finalMessages = messages.filter((m) => m.role !== 'system');
+      const alreadyNudged = finalMessages.some(
+        (m) =>
+          m.role === 'user' &&
+          typeof m.content === 'string' &&
+          m.content.includes('Данные инструментов уже в истории'),
+      );
+      if (!alreadyNudged && toolCalls.length > 0) {
+        finalMessages.push({
+          role: 'user',
+          content:
+            'Данные инструментов уже в истории. Дай пользователю полный ответ на русском: markdown-таблица и вывод. Без вызова инструментов и без пустого ответа.',
+        });
+      }
+      const final = await chatCompletion(
+        [{role: 'system', content: systemPrompt}, ...finalMessages],
+        undefined,
+      );
+      answer = sanitizeUserFacingAnswer(final.content ?? '');
     }
-    const final = await chatCompletion(
-      [{role: 'system', content: systemPrompt}, ...finalMessages],
-      undefined,
-    );
     return {
-      answer: sanitizeUserFacingAnswer(final.content ?? ''),
+      answer,
       toolCalls,
       toolResults,
       ...meta,

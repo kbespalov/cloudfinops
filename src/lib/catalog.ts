@@ -50,6 +50,9 @@ export type StorageKindFacet = 'all' | 'capacity' | 'operations';
 /** Network kind — public IP vs egress (ingress/NAT stay under «Все»). */
 export type NetworkFacet = 'all' | 'public-ip' | 'egress';
 
+/** CDN kind — traffic vs monthly resource vs requests vs paid add-ons. */
+export type CdnFacet = 'all' | 'traffic' | 'resource' | 'requests' | 'options';
+
 /** Kubernetes master topology — zonal (not HA) vs regional (fault-tolerant). */
 export type KubernetesAvailabilityFacet = 'all' | 'zonal' | 'regional';
 
@@ -93,6 +96,7 @@ export const CATEGORY_ORDER: Exclude<CategoryKey, 'other'>[] = [
   'gpu',
   'storage',
   'network',
+  'cdn',
   'kubernetes',
   'ai',
 ];
@@ -102,6 +106,7 @@ export const CATEGORY_TITLE: Record<CategoryKey, string> = {
   gpu: 'GPU',
   storage: 'Storage',
   network: 'Network',
+  cdn: 'CDN',
   kubernetes: 'Kubernetes',
   ai: 'AI',
   other: 'Other',
@@ -142,6 +147,8 @@ export function isUsageMeter(meter: CatalogMeter): boolean {
     meter.unitPeriod === 'usage' ||
     meter.normalizedPeriod === 'usage' ||
     meter.meter.startsWith('network.traffic.') ||
+    meter.meter.startsWith('cdn.traffic.') ||
+    meter.meter === 'cdn.requests' ||
     meter.meter.startsWith('ai.inference.') ||
     meter.meter.startsWith('ai.embeddings.')
   );
@@ -223,6 +230,8 @@ export function meterPriceLabel(meter: CatalogMeter, period: PeriodMode): string
     const q = meter.unitQuantity;
     if (q === 'GiB' || q === 'GB') return 'за GiB';
     if (q === '1M-token') return 'за 1M токенов';
+    if (q === '100k-request') return 'за 100 тыс. запросов';
+    if (q === '10k-request') return 'за 10 тыс. запросов';
     if (q) return `за ${q}`;
     return 'за единицу';
   }
@@ -329,6 +338,8 @@ export function billingUnitLabel(meter: CatalogMeter): string {
     const q = meter.unitQuantity;
     if (q === 'GiB' || q === 'GB') return 'GiB';
     if (q === '1M-token') return '1M ток.';
+    if (q === '100k-request') return '100 тыс. запросов';
+    if (q === '10k-request') return '10 тыс. запросов';
     if (q) return q;
     return '—';
   }
@@ -354,7 +365,11 @@ export function billingUnitLabel(meter: CatalogMeter): string {
       ? 'IP'
       : q === 'gateway' || isGatewayMeter(meter)
         ? 'шлюз'
-        : q;
+        : q === 'resource'
+          ? 'ресурс'
+          : q === 'account'
+            ? 'аккаунт'
+            : q;
 
   if (quantityRu && periodRu) return `${quantityRu} · ${periodRu}`;
   if (quantityRu) return quantityRu;
@@ -1000,6 +1015,29 @@ export function meterMatchesNetworkFacet(meter: CatalogMeter, facet: NetworkFace
   return extractNetworkKind(meter) === facet;
 }
 
+export function extractCdnKind(
+  meter: CatalogMeter,
+): Exclude<CdnFacet, 'all'> | null {
+  if (meter.categoryKey !== 'cdn') return null;
+  if (meter.meter.startsWith('cdn.traffic.')) return 'traffic';
+  if (meter.meter === 'cdn.resource') return 'resource';
+  if (meter.meter === 'cdn.requests') return 'requests';
+  if (
+    meter.meter === 'cdn.origin.shielding' ||
+    meter.meter === 'cdn.logs' ||
+    meter.meter === 'cdn.dedicated-ip'
+  ) {
+    return 'options';
+  }
+  return null;
+}
+
+export function meterMatchesCdnFacet(meter: CatalogMeter, facet: CdnFacet): boolean {
+  if (facet === 'all') return true;
+  if (meter.categoryKey !== 'cdn') return false;
+  return extractCdnKind(meter) === facet;
+}
+
 /** Zonal = single-zone / not HA; regional = multi-zone / fault-tolerant. */
 export function extractKubernetesAvailability(
   meter: CatalogMeter,
@@ -1103,12 +1141,25 @@ export function paramsLabel(meter: CatalogMeter): string {
     if (unit && unit !== '—') parts.push(unit);
   } else if (
     meter.categoryKey === 'network' ||
+    meter.categoryKey === 'cdn' ||
     isAddressMeter(meter) ||
     isGatewayMeter(meter) ||
     isUsageMeter(meter)
   ) {
     const unit = billingUnitLabel(meter);
     if (unit && unit !== '—') parts.push(unit);
+    if (meter.categoryKey === 'cdn') {
+      const cls = meter.dimensions.comparabilityClass;
+      if (cls === 'bidirectional') parts.push('вход+выход');
+      if (cls === 'egress-overage') parts.push('сверх пакета');
+      if (cls === 'egress-regional' || cls === 'egress-coverage-addon') {
+        if (meter.region && meter.region !== '—') parts.push(meter.region);
+      }
+      if (cls === 'egress-network-alt' && typeof meter.dimensions.networkProvider === 'string') {
+        const net = String(meter.dimensions.networkProvider);
+        parts.push(net === 'akamai' ? 'Akamai' : net);
+      }
+    }
   } else if (meter.pricingMode === 'bundle' || meter.unitQuantity === 'flavor') {
     if (typeof dims.vcpu === 'number') parts.push(`${dims.vcpu} vCPU`);
     const ram = typeof dims.ramGiB === 'number' ? dims.ramGiB : dims.ramGb;

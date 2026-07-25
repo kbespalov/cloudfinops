@@ -1,0 +1,310 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: t1-cloud
+  layer: iaas
+  service: cdn
+  category: iaas.cdn
+  title: Cloud CDN
+spec:
+  meters:
+  - sku: t1.cdn.traffic.egress
+    name: Исходящий трафик CDN
+    meter: cdn.traffic.egress
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-25'
+    sourceRefs: [t1.rates-pdf-2026-07-13, t1.rates, t1.cdn]
+    dimensions:
+      coverage: default
+      trafficScope: cdn-to-client
+      nativeName: CDN трафик
+      nativeUnit: ГБ
+      nativeAmountExcluded: '1.00'
+      vatRatePercent: 22
+      nativeVat: excluded
+      comparabilityClass: egress-payg
+      sourceDocument: Prilozhenie_1_Tarifnoe_prilozhenie_08_07_2026
+    pricing:
+      rate:
+        amount: '1.00'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '1.22'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: usage
+        formula: 1.00 × 1.22 VAT
+        vat: included
+    notes: >
+      В тарифном приложении T1 (08.07.2026, с 13.07.2026) — 1,00 ₽/ГБ без НДС.
+      В каталоге для сравнения показаны 1,22 ₽/GiB с НДС 22% (норма каталога
+      prices/index.yaml). Подключение сервиса и создание ресурсов бесплатны.
+      Платите за исходящий трафик. Региональные ставки — отдельные SKU.
+      Источники: PDF тарифного приложения, страница rates, страница CDN.
+
+  - sku: t1.cdn.traffic.egress.europe
+    name: Исходящий трафик CDN · Европа
+    meter: cdn.traffic.egress
+    status: available
+    pricingMode: unit
+    region: Европа
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-25'
+    sourceRefs: [t1.rates-pdf-2026-07-13, t1.cdn]
+    dimensions:
+      coverage: europe
+      trafficScope: cdn-to-client
+      nativeName: CDN трафик, регион Европа
+      nativeUnit: ГБ
+      nativeAmountExcluded: '1.42'
+      vatRatePercent: 22
+      nativeVat: excluded
+      comparabilityClass: egress-regional
+      sourceDocument: Prilozhenie_1_Tarifnoe_prilozhenie_08_07_2026
+    pricing:
+      rate:
+        amount: '1.42'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '1.7324'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: usage
+        formula: 1.42 × 1.22 VAT
+        vat: included
+    notes: >
+      1,42 ₽/ГБ без НДС → 1,7324 ₽/GiB с НДС 22%. Не базовая ставка РФ.
+      Источник: тарифное приложение PDF + страница CDN.
+
+  - sku: t1.cdn.traffic.egress.latam
+    name: Исходящий трафик CDN · Латинская Америка
+    meter: cdn.traffic.egress
+    status: available
+    pricingMode: unit
+    region: Латинская Америка
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-25'
+    sourceRefs: [t1.rates-pdf-2026-07-13, t1.cdn]
+    dimensions:
+      coverage: latam
+      trafficScope: cdn-to-client
+      nativeName: CDN трафик, регион Латинская Америка
+      nativeUnit: ГБ
+      nativeAmountExcluded: '2.58'
+      vatRatePercent: 22
+      nativeVat: excluded
+      comparabilityClass: egress-regional
+      sourceDocument: Prilozhenie_1_Tarifnoe_prilozhenie_08_07_2026
+    pricing:
+      rate:
+        amount: '2.58'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '3.1476'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: usage
+        formula: 2.58 × 1.22 VAT
+        vat: included
+    notes: >
+      2,58 ₽/ГБ без НДС → 3,1476 ₽/GiB с НДС 22%. Источник: PDF + CDN.
+
+  - sku: t1.cdn.traffic.egress.na
+    name: Исходящий трафик CDN · Северная Америка
+    meter: cdn.traffic.egress
+    status: available
+    pricingMode: unit
+    region: Северная Америка
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-25'
+    sourceRefs: [t1.rates-pdf-2026-07-13, t1.cdn]
+    dimensions:
+      coverage: north-america
+      trafficScope: cdn-to-client
+      nativeName: CDN трафик, регион Северная Америка
+      nativeUnit: ГБ
+      nativeAmountExcluded: '2.58'
+      vatRatePercent: 22
+      nativeVat: excluded
+      comparabilityClass: egress-regional
+      sourceDocument: Prilozhenie_1_Tarifnoe_prilozhenie_08_07_2026
+    pricing:
+      rate:
+        amount: '2.58'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '3.1476'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: usage
+        formula: 2.58 × 1.22 VAT
+        vat: included
+    notes: >
+      2,58 ₽/ГБ без НДС → 3,1476 ₽/GiB с НДС 22%. Источник: PDF + CDN.
+
+  - sku: t1.cdn.traffic.egress.asia
+    name: Исходящий трафик CDN · Азия
+    meter: cdn.traffic.egress
+    status: available
+    pricingMode: unit
+    region: Азия
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-25'
+    sourceRefs: [t1.rates-pdf-2026-07-13, t1.cdn]
+    dimensions:
+      coverage: asia
+      trafficScope: cdn-to-client
+      nativeName: CDN трафик, регион Азия
+      nativeUnit: ГБ
+      nativeAmountExcluded: '2.58'
+      vatRatePercent: 22
+      nativeVat: excluded
+      comparabilityClass: egress-regional
+      sourceDocument: Prilozhenie_1_Tarifnoe_prilozhenie_08_07_2026
+    pricing:
+      rate:
+        amount: '2.58'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '3.1476'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: usage
+        formula: 2.58 × 1.22 VAT
+        vat: included
+    notes: >
+      2,58 ₽/ГБ без НДС → 3,1476 ₽/GiB с НДС 22%. Источник: PDF + CDN.
+
+  - sku: t1.cdn.requests
+    name: Запросы CDN
+    meter: cdn.requests
+    status: available
+    pricingMode: unit
+    region: —
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-25'
+    sourceRefs: [t1.rates-pdf-2026-07-13, t1.cdn]
+    dimensions:
+      freeTierRequestsMonth: 100000000
+      billablePackRequests: 10000
+      nativeName: CDN запросы (более 100 млн)
+      nativeUnit: 10000 шт
+      nativeAmountExcluded: '0.67'
+      vatRatePercent: 22
+      nativeVat: excluded
+      comparabilityClass: requests-overage
+      sourceDocument: Prilozhenie_1_Tarifnoe_prilozhenie_08_07_2026
+    pricing:
+      rate:
+        amount: '0.67'
+        currency: RUB
+        unit: {quantity: 10k-request, period: usage}
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.8174'
+        unit:
+          currency: RUB
+          quantity: 10k-request
+          period: usage
+        formula: 0.67 × 1.22 VAT
+        vat: included
+    notes: >
+      Сверх 100 млн запросов/мес: 0,67 ₽ без НДС за 10 000 шт → 0,8174 ₽ с НДС
+      22% за те же 10 тыс. У Yandex пакет 100 тыс. / 1 ₽ с НДС — не сравнивайте
+      «0,82» и «1» без пересчёта пакета. Источник: PDF + CDN.
+
+  - sku: t1.cdn.origin.shielding
+    name: Экранирование источников CDN
+    meter: cdn.origin.shielding
+    status: available
+    pricingMode: fixed
+    region: —
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-25'
+    sourceRefs: [t1.rates-pdf-2026-07-13, t1.cdn]
+    dimensions:
+      nativeName: CDN. Экранирование (шилдинг)
+      nativeUnit: шт / месяц
+      nativeAmountExcluded: '2916.67'
+      vatRatePercent: 22
+      nativeVat: excluded
+      comparabilityClass: optional-addon
+      sourceDocument: Prilozhenie_1_Tarifnoe_prilozhenie_08_07_2026
+    pricing:
+      rate:
+        amount: '2916.67'
+        currency: RUB
+        unit: {quantity: resource, period: month}
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '3558.3374'
+        unit:
+          currency: RUB
+          quantity: resource
+          period: month
+        formula: 2916.67 × 1.22 VAT
+        vat: included
+    notes: >
+      2 916,67 ₽/мес без НДС → ≈3 558,34 ₽ с НДС 22%. В первый/последний месяц
+      возможна пропорция по дням (сноска в приложении). Источник: PDF + CDN.
+
+  - sku: t1.cdn.logs
+    name: Выгрузка логов CDN
+    meter: cdn.logs
+    status: available
+    pricingMode: fixed
+    region: —
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-25'
+    sourceRefs: [t1.rates-pdf-2026-07-13, t1.cdn]
+    dimensions:
+      nativeName: CDN. Сырые логи
+      nativeUnit: шт / месяц
+      nativeAmountExcluded: '4000'
+      vatRatePercent: 22
+      nativeVat: excluded
+      comparabilityClass: optional-addon
+      sourceDocument: Prilozhenie_1_Tarifnoe_prilozhenie_08_07_2026
+    pricing:
+      rate:
+        amount: '4000'
+        currency: RUB
+        unit: {quantity: resource, period: month}
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '4880'
+        unit:
+          currency: RUB
+          quantity: resource
+          period: month
+        formula: 4000 × 1.22 VAT
+        vat: included
+    notes: >
+      4 000 ₽/мес без НДС → 4 880 ₽ с НДС 22%. Опция; возможна пропорция по
+      дням. Источник: PDF + CDN.

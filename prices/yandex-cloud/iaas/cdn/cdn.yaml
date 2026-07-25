@@ -1,0 +1,280 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: yandex-cloud
+  layer: iaas
+  service: cdn
+  category: iaas.cdn
+  title: Cloud CDN
+spec:
+  meters:
+  - sku: yc.cdn.resource
+    name: CDN-ресурс
+    meter: cdn.resource
+    status: available
+    pricingMode: fixed
+    region: Россия
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-25'
+    sourceRefs: [yc.cdn-price-list, yc.cdn]
+    dimensions:
+      includedEgressGiBMonth: 150
+      includedEgressScope: per-resource
+      serviceId: dn2rse5n40m8h0bu8jqa
+      nativeName: Cloud CDN - Включенный пакет исходящего трафика, ГБ
+      nativeUnit: Ресурс × месяц
+      nativeAmountIncluded: '150'
+      comparabilityClass: monthly-resource
+      sourceVat: included
+    pricing:
+      rate:
+        amount: '150'
+        currency: RUB
+        unit: {quantity: resource, period: month}
+        vat: included
+        byteBasis: not-applicable
+    notes: >
+      150 ₽/мес с НДС за каждый CDN-ресурс (прайс-лист / docs, действует с
+      30.06.2026). В плату входит 150 ГБ исходящего трафика на ресурс в месяц;
+      остаток при удалении сгорает, перенос между ресурсами невозможен. Это не
+      ₽/GiB — сравнивайте с абонплатой (Selectel 500 ₽/ресурс), трафик — со SKU
+      «сверх пакета». Источники: прайс-лист Cloud CDN и правила тарификации.
+
+  - sku: yc.cdn.traffic.egress
+    name: Исходящий трафик CDN · сверх пакета
+    meter: cdn.traffic.egress
+    status: available
+    pricingMode: tiered
+    region: Россия
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-25'
+    sourceRefs: [yc.cdn-price-list, yc.cdn]
+    dimensions:
+      freeTierGiBMonth: 150
+      freeTierScope: per-resource
+      freeTierPaidVia: yc.cdn.resource
+      trafficScope: cdn-to-client
+      serviceId: dn2rse5n40m8h0bu8jqa
+      nativeName: Cloud CDN. Исходящий трафик, тарифицируемый объем
+      nativeUnit: ГБ
+      nativeAmountIncluded: '1.054'
+      comparabilityClass: egress-overage
+      sourceVat: included
+    pricing:
+      rate:
+        amount: '1.054'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: included
+        byteBasis: binary
+      tiers:
+      - from: '0'
+        to: '150'
+        rate:
+          amount: '0'
+          currency: RUB
+          unit: {quantity: GiB, period: usage}
+          vat: included
+          byteBasis: binary
+      - from: '150'
+        to: null
+        rate:
+          amount: '1.054'
+          currency: RUB
+          unit: {quantity: GiB, period: usage}
+          vat: included
+          byteBasis: binary
+    notes: >
+      List rate 1,054 ₽/ГБ с НДС — тарифицируемый исходящий сверх включённых
+      150 ГБ/ресурс/мес (входят в плату за CDN-ресурс, не «бесплатный бонус»).
+      Считается трафик с CDN к клиентам, в т.ч. к ВМ Yandex Cloud. Входящий на
+      CDN — 0 ₽. Единица в прайсе — «ГБ»; в каталоге GiB (binary), как у прочих
+      Yandex traffic SKU. TCO = ресурс + сверхпакетовый трафик + опции.
+      Источники: прайс-лист и docs/cdn/pricing.
+
+  - sku: yc.cdn.traffic.ingress
+    name: Входящий трафик CDN
+    meter: cdn.traffic.ingress
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-25'
+    sourceRefs: [yc.cdn, yc.cdn-price-list]
+    dimensions:
+      trafficScope: origin-and-internet-to-cdn
+      serviceId: dn2rse5n40m8h0bu8jqa
+      nativeName: Входящий трафик на CDN-серверы (не тарифицируется)
+      nativeUnit: ГБ
+      nativeAmountIncluded: '0'
+      comparabilityClass: ingress-free
+      sourceVat: included
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: included
+        byteBasis: binary
+    notes: >
+      0 ₽ по правилам тарификации Cloud CDN: входящий на CDN (из интернета и от
+      источников) не тарифицируется. Object Storage → CDN на стороне Object
+      Storage тоже 0 ₽. Источник: docs/cdn/pricing (блок про модель с 01.07.2026).
+
+  - sku: yc.cdn.requests
+    name: Запросы CDN
+    meter: cdn.requests
+    status: available
+    pricingMode: tiered
+    region: Россия
+    effectiveFrom: '2026-07-01'
+    checkedAt: '2026-07-25'
+    sourceRefs: [yc.cdn-price-list, yc.cdn]
+    dimensions:
+      freeTierRequestsMonth: 100000000
+      billablePackRequests: 100000
+      serviceId: dn2rse5n40m8h0bu8jqa
+      nativeName: Cloud CDN - Запросы к CDN ресурсу, тарифицируемый объем
+      nativeUnit: 100 тыс. операций
+      nativeAmountIncluded: '1'
+      comparabilityClass: requests-overage
+      sourceVat: included
+    pricing:
+      rate:
+        amount: '1'
+        currency: RUB
+        unit: {quantity: 100k-request, period: usage}
+        vat: included
+        byteBasis: not-applicable
+      tiers:
+      - from: '0'
+        to: '100000000'
+        rate:
+          amount: '0'
+          currency: RUB
+          unit: {quantity: request, period: usage}
+          vat: included
+          byteBasis: not-applicable
+      - from: '100000000'
+        to: null
+        rate:
+          amount: '1'
+          currency: RUB
+          unit: {quantity: 100k-request, period: usage}
+          vat: included
+          byteBasis: not-applicable
+    notes: >
+      Сверх 100 млн запросов/мес — 1 ₽ за каждые 100 тыс. запросов (с НДС).
+      Первые 100 млн не тарифицируются. У T1 пакет другой (10 тыс.) — не
+      сравнивайте числа без пересчёта. Источники: прайс-лист и docs.
+
+  - sku: yc.cdn.origin.shielding
+    name: Экранирование источников CDN
+    meter: cdn.origin.shielding
+    status: available
+    pricingMode: fixed
+    region: Россия
+    effectiveFrom: '2025-12-31'
+    checkedAt: '2026-07-25'
+    sourceRefs: [yc.cdn-price-list, yc.cdn]
+    dimensions:
+      serviceId: dn2rse5n40m8h0bu8jqa
+      nativeName: Cloud CDN. Экранирование источников
+      nativeUnit: Ресурс × месяц
+      nativeAmountIncluded: '3843'
+      comparabilityClass: optional-addon
+      sourceVat: included
+    pricing:
+      rate:
+        amount: '3843'
+        currency: RUB
+        unit: {quantity: resource, period: month}
+        vat: included
+        byteBasis: not-applicable
+    notes: >
+      3 843 ₽/ресурс/мес с НДС. В день включения — полный месяц, далее 1-го
+      числа. Опция, не входит в базовый трафик. Источники: прайс-лист и docs.
+
+  - sku: yc.cdn.logs
+    name: Выгрузка логов CDN
+    meter: cdn.logs
+    status: available
+    pricingMode: fixed
+    region: Россия
+    effectiveFrom: '2025-12-31'
+    checkedAt: '2026-07-25'
+    sourceRefs: [yc.cdn-price-list, yc.cdn]
+    dimensions:
+      serviceId: dn2rse5n40m8h0bu8jqa
+      nativeName: Cloud CDN. Выгрузка логов
+      nativeUnit: Ресурс × месяц
+      nativeAmountIncluded: '5490'
+      comparabilityClass: optional-addon
+      sourceVat: included
+    pricing:
+      rate:
+        amount: '5490'
+        currency: RUB
+        unit: {quantity: resource, period: month}
+        vat: included
+        byteBasis: not-applicable
+    notes: >
+      5 490 ₽/ресурс/мес с НДС. В день включения — полный месяц, далее
+      ежемесячно. Опция. Источники: прайс-лист и docs.
+
+  - sku: yc.cdn.dedicated-ip.resource
+    name: Выделенный IP CDN · за ресурс
+    meter: cdn.dedicated-ip
+    status: available
+    pricingMode: fixed
+    region: Россия
+    effectiveFrom: '2026-05-06'
+    checkedAt: '2026-07-25'
+    sourceRefs: [yc.cdn-price-list, yc.cdn]
+    dimensions:
+      billingScope: per-resource
+      serviceId: dn2rse5n40m8h0bu8jqa
+      nativeName: Cloud CDN. Выделенная IP-адресация для одного CDN-ресурса
+      nativeUnit: Ресурс × месяц
+      nativeAmountIncluded: '5000'
+      comparabilityClass: optional-addon
+      sourceVat: included
+    pricing:
+      rate:
+        amount: '5000'
+        currency: RUB
+        unit: {quantity: resource, period: month}
+        vat: included
+        byteBasis: not-applicable
+    notes: >
+      5 000 ₽/ресурс/мес с НДС. Опция на каталог целиком: при этой схеме плата
+      за все CDN-ресурсы каталога. Альтернатива — 40 000 ₽/мес на аккаунт.
+      Источники: прайс-лист и docs (блок про схемы оплаты).
+
+  - sku: yc.cdn.dedicated-ip.account
+    name: Выделенный IP CDN · на аккаунт
+    meter: cdn.dedicated-ip
+    status: available
+    pricingMode: fixed
+    region: Россия
+    effectiveFrom: '2026-01-31'
+    checkedAt: '2026-07-25'
+    sourceRefs: [yc.cdn-price-list, yc.cdn]
+    dimensions:
+      billingScope: billing-account
+      serviceId: dn2rse5n40m8h0bu8jqa
+      nativeName: Cloud CDN. Выделенная IP-адресация для всех CDN-ресурсов платежного аккаунта
+      nativeUnit: Месяц
+      nativeAmountIncluded: '40000'
+      comparabilityClass: optional-addon
+      sourceVat: included
+    pricing:
+      rate:
+        amount: '40000'
+        currency: RUB
+        unit: {quantity: account, period: month}
+        vat: included
+        byteBasis: not-applicable
+    notes: >
+      40 000 ₽/мес с НДС на весь платёжный аккаунт, независимо от числа
+      ресурсов. Источники: прайс-лист и docs.

@@ -1,0 +1,42 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: vk-cloud
+  layer: iaas
+  service: cdn
+  category: iaas.cdn
+  title: CDN
+spec:
+  meters:
+  - sku: vk.cdn.traffic.bidirectional
+    name: Трафик CDN · вход и выход
+    meter: cdn.traffic.bidirectional
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-25'
+    sourceRefs: [vk.pricelist, vk.cdn, vk.cdn-rules]
+    dimensions:
+      trafficScope: cdn-cache-servers
+      directions: ingress-and-egress
+      nativeName: Общий трафик
+      nativeUnit: 1 ГБ
+      nativeAmountIncluded: '0.66'
+      comparabilityClass: bidirectional
+      sourceVat: included
+      pricelistSection: cdn
+    pricing:
+      rate:
+        amount: '0.66'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: included
+        byteBasis: binary
+    notes: >
+      Прайс-лист VK Cloud, секция CDN: «Общий трафик» — 0,66 ₽ / 1 ГБ (в т.ч.
+      НДС). По docs тарифицируются входящий и исходящий трафик на кеширующие
+      CDN-серверы — поэтому SKU назван «вход и выход», а не «исходящий».
+      Сравнение ₽/GiB с egress-only провайдерами не 1:1. Абонплаты за ресурс в
+      публичном прайсе нет. Единица в прайсе «1 ГБ»; в каталоге GiB. Источники:
+      pricelist, страница CDN, docs/tariffication.

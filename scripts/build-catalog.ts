@@ -41,6 +41,7 @@ export type CategoryKey =
   | 'gpu'
   | 'storage'
   | 'network'
+  | 'cdn'
   | 'kubernetes'
   | 'ai'
   | 'other';
@@ -86,6 +87,7 @@ function categoryKey(category: string, meter: string, service: string): Category
   if (service === 'compute' && (meter.startsWith('compute.gpu') || category.endsWith('.gpu'))) return 'gpu';
   if (category.includes('kubernetes') || meter.includes('kubernetes')) return 'kubernetes';
   if (service === 'ai' || category.includes('.ai.') || meter.startsWith('ai.')) return 'ai';
+  if (service === 'cdn' || category.includes('.cdn') || meter.startsWith('cdn.')) return 'cdn';
   // Block disks, VM images and disk snapshots live with Compute; object storage stays Storage
   if (
     meter.startsWith('storage.block') ||
@@ -107,6 +109,9 @@ function categoryFromFile(filePath: string, meta: Record<string, string>, meter:
   }
   if (filePath.includes('/ai/') || meta.service === 'ai' || meta.category?.includes('.ai.')) {
     return 'ai';
+  }
+  if (filePath.includes('/cdn/') || meta.service === 'cdn' || meta.category?.includes('.cdn')) {
+    return 'cdn';
   }
   if (filePath.includes('/storage/') || meta.service === 'storage') {
     if (
@@ -287,6 +292,7 @@ function main() {
     gpu: 'GPU',
     storage: 'Storage',
     network: 'Network',
+    cdn: 'CDN',
     kubernetes: 'Kubernetes',
     ai: 'AI',
     other: 'Other',
@@ -301,7 +307,7 @@ function main() {
       .map(([id, count]) => ({id, name: PROVIDER_NAMES[id] || id, count}))
       .sort((a, b) => a.name.localeCompare(b.name, 'ru')),
     categories: (
-      ['compute', 'gpu', 'storage', 'network', 'kubernetes', 'ai', 'other'] as CategoryKey[]
+      ['compute', 'gpu', 'storage', 'network', 'cdn', 'kubernetes', 'ai', 'other'] as CategoryKey[]
     )
       .filter((key) => (categoryCounts.get(key) || 0) > 0)
       .map((key) => ({key, title: categoryTitles[key], count: categoryCounts.get(key) || 0})),

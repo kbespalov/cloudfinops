@@ -1,0 +1,153 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: cloud-ru
+  layer: iaas
+  service: cdn
+  category: iaas.cdn
+  title: Cloud.ru CDN
+spec:
+  meters:
+  - sku: cloudru.cdn.traffic.egress
+    name: Исходящий трафик CDN
+    meter: cdn.traffic.egress
+    status: available
+    pricingMode: tiered
+    region: Базовая сеть
+    effectiveFrom: null
+    checkedAt: '2026-07-25'
+    sourceRefs: [cloudru.cdn-tariffs, cloudru.cdn]
+    dimensions:
+      trafficScope: cdn-to-client
+      coverage: base
+      nativeName: Размещение информации на сети CDN, с исходящим трафиком до/более 100 ТБ
+      nativeUnit: Гб
+      comparabilityClass: egress-payg
+      contractByteUnit: decimal-GB
+      sourceVatRatePercent: 20
+      sourceDocument: prilozheniye_7A.CRS.1
+      sourceDocumentVersion: '240621'
+    pricing:
+      # List rate = first PAYG band (до 100 ТБ). Amounts = «Цена с НДС» from CRS.1.
+      # Catalog UI uses GiB like other providers; contract unit is decimal Гб (see notes).
+      rate:
+        amount: '1.08'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: included
+        byteBasis: decimal
+      tiers:
+      # Contract band «100 ТБ» = 100 000 десятичных Гб.
+      - from: '0'
+        to: '100000'
+        rate:
+          amount: '1.08'
+          currency: RUB
+          unit: {quantity: GiB, period: usage}
+          vat: included
+          byteBasis: decimal
+      - from: '100000'
+        to: null
+        rate:
+          amount: '0.84'
+          currency: RUB
+          unit: {quantity: GiB, period: usage}
+          vat: included
+          byteBasis: decimal
+    notes: >
+      PAYG по приложению 7A.CRS.1 (версия 240621): только исходящий трафик с узлов
+      CDN к пользователям; внутри CDN не тарифицируется. В договоре единица —
+      «Гб» (десятичные GB). В таблице каталога для единообразия показан GiB и
+      ставка 1,08 / 0,84 ₽ как в колонке «Цена с НДС» без пересчёта GB→GiB
+      (~7,4% на точном TCO). НДС в PDF — 20%. Абонплаты за ресурс нет. Источник:
+      CRS.1 PDF + описание услуги CDN.
+
+  - sku: cloudru.cdn.traffic.egress.apac
+    name: Исходящий трафик CDN · APAC
+    meter: cdn.traffic.egress
+    status: available
+    pricingMode: unit
+    region: APAC
+    effectiveFrom: null
+    checkedAt: '2026-07-25'
+    sourceRefs: [cloudru.cdn-tariffs-pril7, cloudru.cdn]
+    dimensions:
+      trafficScope: cdn-to-client
+      coverage: apac
+      nativeName: Размещение информации на сети CDN с улучшенным покрытием в регионах APAC
+      nativeUnit: Гб
+      comparabilityClass: egress-coverage-addon
+      contractByteUnit: decimal-GB
+      sourceVatRatePercent: 20
+      sourceDocument: Prilozheniye_7_Tarrifs
+    pricing:
+      rate:
+        amount: '1.68'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: included
+        byteBasis: decimal
+    notes: >
+      Улучшенное покрытие APAC — 1,68 ₽ с НДС за договорной Гб (приложение 7:
+      1,40 без НДС + 0,28 НДС 20%). В таблице — GiB для единообразия, без
+      пересчёта GB→GiB. В CRS.1 строки нет — источник Prilozheniye_7. Не замена
+      1:1 базовой ставке «Исходящий трафик CDN».
+
+  - sku: cloudru.cdn.traffic.egress.na-eu
+    name: Исходящий трафик CDN · NA/EU
+    meter: cdn.traffic.egress
+    status: available
+    pricingMode: unit
+    region: NA/EU
+    effectiveFrom: null
+    checkedAt: '2026-07-25'
+    sourceRefs: [cloudru.cdn-tariffs-pril7, cloudru.cdn]
+    dimensions:
+      trafficScope: cdn-to-client
+      coverage: na-eu
+      nativeName: Размещение информации на сети CDN с улучшенным покрытием в регионах NA/EU
+      nativeUnit: Гб
+      comparabilityClass: egress-coverage-addon
+      contractByteUnit: decimal-GB
+      sourceVatRatePercent: 20
+      sourceDocument: Prilozheniye_7_Tarrifs
+    pricing:
+      rate:
+        amount: '1.32'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: included
+        byteBasis: decimal
+    notes: >
+      Улучшенное покрытие NA/EU — 1,32 ₽ с НДС за договорной Гб (приложение 7:
+      1,10 без НДС + 0,22 НДС 20%). В таблице — GiB для единообразия, без
+      пересчёта GB→GiB. Источник Prilozheniye_7_Tarrifs.pdf. Отдельный режим
+      покрытия, не базовая ставка.
+
+  - sku: cloudru.cdn.origin.shielding
+    name: Экранирование источников CDN
+    meter: cdn.origin.shielding
+    status: available
+    pricingMode: fixed
+    region: —
+    effectiveFrom: null
+    checkedAt: '2026-07-25'
+    sourceRefs: [cloudru.cdn-tariffs, cloudru.cdn]
+    dimensions:
+      nativeName: Origin shield
+      nativeUnit: шт
+      comparabilityClass: optional-addon
+      sourceVatRatePercent: 20
+      sourceDocument: prilozheniye_7A.CRS.1
+      sourceDocumentVersion: '240621'
+    pricing:
+      rate:
+        amount: '6420'
+        currency: RUB
+        unit: {quantity: resource, period: month}
+        vat: included
+        byteBasis: not-applicable
+    notes: >
+      Origin shield — 6 420 ₽/мес с НДС (CRS.1: 5 350 без НДС + 1 070 НДС 20%).
+      Опция, не часть PAYG-трафика. Сравнивайте с экранированием Yandex/T1 как
+      с аддоном. Источник: приложение 7A.CRS.1.

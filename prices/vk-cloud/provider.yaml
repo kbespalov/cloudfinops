@@ -26,6 +26,7 @@ spec:
     - network.ipv4.reserved
     - network.traffic.ingress
     - network.traffic.egress
+    - cdn.traffic.bidirectional
     - storage.block.capacity
     - storage.image.capacity
     - storage.snapshot.capacity
@@ -78,3 +79,19 @@ spec:
     - network.ipv4.reserved
     - network.traffic.ingress
     - network.traffic.egress
+  - id: vk.cdn
+    title: CDN VK Cloud
+    url: https://cloud.vk.com/cdn/
+    type: html
+    access: public
+    priority: 1
+    covers:
+    - cdn.traffic.bidirectional
+  - id: vk.cdn-rules
+    title: Тарификация CDN
+    url: https://cloud.vk.com/docs/ru/networks/cdn/tariffication
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - cdn.traffic.bidirectional

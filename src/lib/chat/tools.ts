@@ -35,6 +35,7 @@ const CATEGORIES: CategoryKey[] = [
   'gpu',
   'storage',
   'network',
+  'cdn',
   'kubernetes',
   'ai',
   'other',
@@ -85,19 +86,20 @@ export const CHAT_TOOLS = [
     function: {
       name: 'search_prices',
       description:
-        'Найти позиции прайс-листа российских облаков (Yandex Cloud, VK Cloud, Cloud.ru, T1 Cloud, Selectel, MWS) по ключевым словам и фильтрам. Hybrid-поиск (lexical + embeddings). Возвращает список SKU с ценами (₽ с НДС) за час/месяц/год. Используй для вопросов о ценах конкретных услуг, GPU, AI-моделей, дисков, трафика, S3 и т.п.',
+        'Найти позиции прайс-листа российских облаков (Yandex Cloud, VK Cloud, Cloud.ru, T1 Cloud, Selectel, MWS) по ключевым словам и фильтрам. Hybrid-поиск (lexical + embeddings). Возвращает список SKU с ценами (₽ с НДС) за час/месяц/год. Используй для вопросов о ценах конкретных услуг, GPU, AI-моделей, дисков, трафика, CDN, S3 и т.п.',
       parameters: {
         type: 'object',
         properties: {
           query: {
             type: 'string',
             description:
-              'Поисковый запрос на русском или английском: название услуги, модель GPU/AI, класс диска и т.д. Например: «H100», «GLM 5.2», «объектное хранилище», «egress трафик».',
+              'Поисковый запрос на русском или английском: название услуги, модель GPU/AI, класс диска и т.д. Например: «H100», «GLM 5.2», «объектное хранилище», «исходящий трафик CDN», «публичный IP».',
           },
           category: {
             type: 'string',
             enum: CATEGORIES,
-            description: 'Ограничить категорией: compute, gpu, storage, network, kubernetes, ai.',
+            description:
+              'Ограничить категорией: compute, gpu, storage, network, kubernetes, ai, cdn. Для CDN-трафика всегда category=cdn (не network).',
           },
           provider: {
             type: 'string',
@@ -128,7 +130,7 @@ export const CHAT_TOOLS = [
           volumeGiB: {
             type: 'number',
             description:
-              'Объём данных в GiB (двоичные: 1 ТиБ = 1024 GiB). Если задан — вернётся volumeEstimates: ставка × объём за месяц по каждому провайдеру. Для «50 ТБ» передай 51200.',
+              'Объём в GiB (двоичные: 1 ТиБ = 1024 GiB). Если задан — вернётся volumeEstimates: ставка × объём за месяц по каждому провайдеру (S3 capacity и CDN egress). Для «50 ТБ» → 51200, для «100 ТБ» → 102400.',
           },
           limit: {
             type: 'integer',

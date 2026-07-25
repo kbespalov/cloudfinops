@@ -20,6 +20,8 @@ export function categoryLabelTheme(category: CategoryKey): LabelTheme {
       return 'success';
     case 'network':
       return 'utility';
+    case 'cdn':
+      return 'utility';
     case 'kubernetes':
       return 'utility';
     case 'ai':

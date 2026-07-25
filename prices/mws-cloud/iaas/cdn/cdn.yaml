@@ -1,0 +1,70 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: mws-cloud
+  layer: iaas
+  service: cdn
+  category: iaas.cdn
+  title: Content Delivery Network
+spec:
+  meters:
+  - sku: mws.cdn.traffic.egress
+    name: Исходящий трафик CDN
+    meter: cdn.traffic.egress
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-25'
+    sourceRefs: [mws.cdn, mws.all-prices]
+    dimensions:
+      trafficScope: cdn-to-client
+      nativeName: Исходящий трафик с серверов CDN
+      nativeUnit: ГБ
+      nativeAmountIncluded: '0.732'
+      sourceVatRatePercent: 22
+      sourceVat: included
+      upcomingAmountFrom: '2026-08-01'
+      upcomingAmount: '0.8418'
+      upcomingVat: included
+      comparabilityClass: egress-payg
+    pricing:
+      rate:
+        amount: '0.732'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: included
+        byteBasis: binary
+    notes: >
+      0,732 ₽/ГБ с НДС 22% — исходящий трафик с CDN к клиентам (docs MWS CDN и
+      сводная страница тарифов Cloud Platform). Входящий — 0 ₽. Абонплаты за
+      ресурс в публичном прайсе нет. С 01.08.2026 ставка 0,8418 ₽/ГБ с НДС;
+      в каталоге пока текущая. Списания ежечасно. Источники: pricing CDN +
+      mws-cloud-platform-pricing.
+
+  - sku: mws.cdn.traffic.ingress
+    name: Входящий трафик CDN
+    meter: cdn.traffic.ingress
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: null
+    checkedAt: '2026-07-25'
+    sourceRefs: [mws.cdn, mws.cdn-overview]
+    dimensions:
+      trafficScope: origin-and-internet-to-cdn
+      nativeName: Входящий трафик на CDN-серверы (не тарифицируется)
+      nativeUnit: ГБ
+      nativeAmountIncluded: '0'
+      sourceVat: included
+      comparabilityClass: ingress-free
+    pricing:
+      rate:
+        amount: '0'
+        currency: RUB
+        unit: {quantity: GiB, period: usage}
+        vat: included
+        byteBasis: binary
+    notes: >
+      0 ₽: входящий на CDN не тарифицируется (whatis/pricing CDN). Не путать с
+      VK, где вход платный. Источники: docs CDN.

@@ -8,14 +8,32 @@
  */
 
 import {
+  extractAllToolPayloads,
   extractLastToolPayloads,
   lastUserQuestion,
+  looksMultiComponentStack,
   messagesForShortFinal,
+  messagesForStackFinal,
   tryFormatAgentToolAnswer,
 } from './fast-path';
 import {chatCompletion, type ChatMessage} from './gigachat';
 import {resolveToolCalls, sanitizeUserFacingAnswer} from './tool-call-recovery';
 import {CHAT_TOOLS, runTool} from './tools';
+
+async function finalizeStackWithLlm(
+  messages: ChatMessage[],
+  signal?: AbortSignal,
+): Promise<string | null> {
+  const userQ = lastUserQuestion(messages);
+  if (!looksMultiComponentStack(userQ)) return null;
+  const payloads = extractAllToolPayloads(messages);
+  if (payloads.length < 2) return null;
+  const stackMessages = messagesForStackFinal({userText: userQ, toolPayloads: payloads});
+  if (!stackMessages) return null;
+  const forced = await chatCompletion(stackMessages, undefined, {signal});
+  const text = (forced.content ?? '').trim();
+  return text ? sanitizeUserFacingAnswer(text) : null;
+}
 
 export type ChatToolsParam = typeof CHAT_TOOLS | readonly unknown[];
 
@@ -40,11 +58,23 @@ const REQUIRED_RETRY_NUDGE =
 const EMPTY_AFTER_TOOLS_NUDGE =
   'Данные инструментов уже в истории. Дай пользователю полный ответ на русском: markdown-таблица и вывод. Без вызова инструментов и без пустого ответа.';
 
-function tryDeterministicAfterTools(messages: ChatMessage[]): string | null {
-  if (messages.filter((m) => m.role === 'tool').length !== 1) return null;
+const EMPTY_AFTER_STACK_NUDGE =
+  'Данные инструментов уже в истории. Собери ОДНУ итоговую таблицу по провайдерам: отдельная колонка на каждый запрошенный компонент (ВМ, IP, S3/Object Storage, CDN, K8s…) плюс «Итого» и «к минимуму» по сумме. Цифры только из tool results (quotes / volumeEstimates / rows). НДС вкл., месяц=720ч. Без новых tool calls и без пустого ответа.';
+
+function tryDeterministicAfterTools(
+  messages: ChatMessage[],
+  opts?: {allowStackCompose?: boolean},
+): string | null {
+  const toolCount = messages.filter((m) => m.role === 'tool').length;
+  if (toolCount < 1) return null;
+  if (toolCount !== 1 && !opts?.allowStackCompose) return null;
+  const payloads = opts?.allowStackCompose
+    ? extractAllToolPayloads(messages)
+    : extractLastToolPayloads(messages);
   return tryFormatAgentToolAnswer({
     userText: lastUserQuestion(messages),
-    toolPayloads: extractLastToolPayloads(messages),
+    toolPayloads: payloads,
+    allowStackCompose: opts?.allowStackCompose,
   });
 }
 
@@ -109,7 +139,7 @@ export async function runToolLoop(options: {
         finalText = sanitizeUserFacingAnswer(text);
         break;
       }
-      // Empty content after tools — prefer table short-circuit, then short final LLM.
+      // Empty content after tools — single-SKU table short-circuit, else LLM (+ stack digest).
       if (toolCallsTotal > 0 && !emptyAfterToolsNudgeUsed) {
         const formatted = tryDeterministicAfterTools(messages);
         if (formatted) {
@@ -117,6 +147,15 @@ export async function runToolLoop(options: {
           break;
         }
         emptyAfterToolsNudgeUsed = true;
+        const userQ = lastUserQuestion(messages);
+        if (looksMultiComponentStack(userQ)) {
+          finalText = await finalizeStackWithLlm(messages, options.signal);
+          if (!finalText) {
+            const rescue = tryDeterministicAfterTools(messages, {allowStackCompose: true});
+            if (rescue) finalText = sanitizeUserFacingAnswer(rescue);
+          }
+          break;
+        }
         messages.push({role: 'assistant', content: ''});
         messages.push({role: 'user', content: EMPTY_AFTER_TOOLS_NUDGE});
         const forced = await chatCompletion(messagesForShortFinal(messages), undefined, {
@@ -177,6 +216,7 @@ export async function runToolLoop(options: {
     }
 
     // One complete structured tool → skip planning another round + final LLM.
+    // Multi-SKU stacks never short-circuit here (looksMultiComponentStack → null).
     if (toolCalls.length === 1) {
       const formatted = tryFormatAgentToolAnswer({
         userText: lastUserQuestion(messages),
@@ -191,13 +231,32 @@ export async function runToolLoop(options: {
         break;
       }
     }
+
+    // Parallel multi-tool round on a stack → ask LLM on a compact digest (not raw JSON).
+    if (
+      toolCalls.length >= 3 &&
+      looksMultiComponentStack(lastUserQuestion(messages)) &&
+      extractAllToolPayloads(messages).length >= 3
+    ) {
+      const stackAnswer = await finalizeStackWithLlm(messages, options.signal);
+      if (stackAnswer) {
+        finalText = stackAnswer;
+        break;
+      }
+    }
   }
 
-  // Exhausted rounds with tool data but no prose — last-chance table, then short LLM.
+  // Exhausted rounds with tool data but no prose — stack digest LLM, then last-chance compose.
   if (!finalText && toolCallsTotal > 0 && !emptyAfterToolsNudgeUsed) {
     const formatted = tryDeterministicAfterTools(messages);
     if (formatted) {
       finalText = sanitizeUserFacingAnswer(formatted);
+    } else if (looksMultiComponentStack(lastUserQuestion(messages))) {
+      finalText = await finalizeStackWithLlm(messages, options.signal);
+      if (!finalText) {
+        const rescue = tryDeterministicAfterTools(messages, {allowStackCompose: true});
+        if (rescue) finalText = sanitizeUserFacingAnswer(rescue);
+      }
     } else {
       messages.push({role: 'user', content: EMPTY_AFTER_TOOLS_NUDGE});
       const forced = await chatCompletion(messagesForShortFinal(messages), undefined, {

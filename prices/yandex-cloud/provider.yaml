@@ -85,3 +85,30 @@ spec:
     - network.ipv4.reserved
     - network.traffic.ingress
     - network.traffic.egress
+  - id: yc.cdn
+    title: Правила тарификации Yandex Cloud CDN
+    url: https://yandex.cloud/ru/docs/cdn/pricing
+    type: html
+    access: public
+    priority: 1
+    covers:
+    - cdn.resource
+    - cdn.traffic.egress
+    - cdn.traffic.ingress
+    - cdn.requests
+    - cdn.origin.shielding
+    - cdn.logs
+    - cdn.dedicated-ip
+  - id: yc.cdn-price-list
+    title: Прайс-лист Cloud CDN
+    url: https://yandex.cloud/ru/price-list?services=dn2rse5n40m8h0bu8jqa
+    type: html
+    access: public
+    priority: 1
+    covers:
+    - cdn.resource
+    - cdn.traffic.egress
+    - cdn.requests
+    - cdn.origin.shielding
+    - cdn.logs
+    - cdn.dedicated-ip

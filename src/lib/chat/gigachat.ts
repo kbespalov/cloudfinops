@@ -4,7 +4,7 @@
  */
 
 const BASE_URL = process.env.CLOUDRU_FM_BASE_URL || 'https://foundation-models.api.cloud.ru/v1';
-const DEFAULT_MODEL = 'openai/gpt-oss-120b';
+const DEFAULT_MODEL = 'google/gemini-3.1-flash-lite';
 
 /** Resolved at call time so eval can switch models via CLOUDRU_FM_MODEL / withChatModel. */
 export function getChatModel(): string {
@@ -75,6 +75,17 @@ const FINAL_MAX_TOKENS = 1200;
  * seconds on English CoT in `content` before emitting tool_calls.
  */
 const TOOL_LOOP_MAX_TOKENS = 384;
+/**
+ * Gemini (Cloud.ru) attaches a large `extra_content.google.thought_signature`
+ * on the first tool call — 384 tokens often truncates a 5-call parallel batch.
+ */
+const TOOL_LOOP_MAX_TOKENS_GEMINI = 2500;
+
+function toolLoopMaxTokens(): number {
+  const model = getChatModel().toLowerCase();
+  if (model.includes('gemini')) return TOOL_LOOP_MAX_TOKENS_GEMINI;
+  return TOOL_LOOP_MAX_TOKENS;
+}
 
 export type ToolChoice = 'auto' | 'required' | 'none';
 
@@ -104,7 +115,7 @@ export async function chatCompletion(
     },
     body: JSON.stringify({
       ...commonParams(),
-      max_tokens: withTools ? TOOL_LOOP_MAX_TOKENS : FINAL_MAX_TOKENS,
+      max_tokens: withTools ? toolLoopMaxTokens() : FINAL_MAX_TOKENS,
       // Cooler while planning tools — gpt-oss otherwise narrates English CoT into content.
       temperature: withTools ? 0.1 : 0.5,
       messages,

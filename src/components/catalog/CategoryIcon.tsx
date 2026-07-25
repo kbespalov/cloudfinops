@@ -2,6 +2,7 @@
 
 import {Icon} from '@gravity-ui/uikit';
 import {
+  AntennaSignal,
   Cpu,
   Cube,
   Database,
@@ -19,6 +20,7 @@ const CATEGORY_ICONS: Record<CategoryKey, typeof Cpu> = {
   gpu: Gpu,
   storage: Database,
   network: Globe,
+  cdn: AntennaSignal,
   kubernetes: NodesRight,
   ai: FaceRobot,
   other: Cube,
@@ -30,6 +32,7 @@ const FILTER_ICONS: Record<CategoryFilter, typeof Cpu> = {
   gpu: Gpu,
   storage: Database,
   network: Globe,
+  cdn: AntennaSignal,
   kubernetes: NodesRight,
   ai: FaceRobot,
 };
@@ -39,6 +42,7 @@ export const CATEGORY_TONE: Record<CategoryKey, string> = {
   gpu: 'warning',
   storage: 'success',
   network: 'utility',
+  cdn: 'utility',
   kubernetes: 'misc',
   ai: 'misc',
   other: 'unknown',
@@ -50,6 +54,7 @@ export const FILTER_TONE: Record<CategoryFilter, string> = {
   gpu: 'warning',
   storage: 'success',
   network: 'utility',
+  cdn: 'utility',
   kubernetes: 'misc',
   ai: 'misc',
 };

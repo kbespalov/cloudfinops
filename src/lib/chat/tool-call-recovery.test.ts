@@ -117,6 +117,58 @@ describe('tool-call-recovery', () => {
     }
   });
 
+  it('recovers Russian-labeled multi tool_calls dump from content', () => {
+    const leak = JSON.stringify({
+      tool_calls: [
+        {
+          name: 'калькулятора конфигурации',
+          arguments: {vcpu: 16, ramGiB: 32, diskGiB: 100},
+        },
+        {name: 'прайс-листа', arguments: {query: 'public IP'}},
+        {
+          name: 'прайс-листа',
+          arguments: {
+            category: 'storage',
+            storageClass: 'standard',
+            volumeGiB: 102400,
+          },
+        },
+        {
+          name: 'прайс-листа',
+          arguments: {category: 'cdn', volumeGiB: 102400},
+        },
+        {name: 'прайс-листа', arguments: {category: 'kubernetes'}},
+      ],
+    });
+    assert.equal(looksLikeToolCallLeak(leak), true);
+    const recovered = recoverToolCallsFromContent(leak);
+    assert.equal(recovered.length, 5);
+    assert.equal(recovered[0]?.function.name, 'get_quote');
+    assert.deepEqual(JSON.parse(recovered[0]!.function.arguments), {
+      vcpu: 16,
+      ramGiB: 32,
+      diskGiB: 100,
+    });
+    assert.equal(recovered[2]?.function.name, 'search_prices');
+    assert.equal(JSON.parse(recovered[2]!.function.arguments).query, 'объектное хранилище');
+    assert.equal(JSON.parse(recovered[3]!.function.arguments).query, 'исходящий трафик CDN');
+    assert.equal(JSON.parse(recovered[4]!.function.arguments).query, 'Managed Kubernetes');
+  });
+
+  it('prefers get_quote when прайс-листа label wraps vcpu/ram args', () => {
+    const leak = JSON.stringify({
+      tool_calls: [{name: 'прайс-листа', arguments: {vcpu: 8, ramGiB: 16, diskGiB: 50}}],
+    });
+    const recovered = recoverToolCallsFromContent(leak);
+    assert.equal(recovered.length, 1);
+    assert.equal(recovered[0]?.function.name, 'get_quote');
+    assert.deepEqual(JSON.parse(recovered[0]!.function.arguments), {
+      vcpu: 8,
+      ramGiB: 16,
+      diskGiB: 50,
+    });
+  });
+
   it('resolveToolCalls marks unrecoverable leak', () => {
     const resolved = resolveToolCalls({
       role: 'assistant',

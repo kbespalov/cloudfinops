@@ -62,6 +62,23 @@ export function buildSkuComparePrompt(meter: CatalogMeter, period: PeriodMode): 
     `Категория: ${CATEGORY_TITLE[meter.categoryKey]}.`,
   ];
 
+  if (meter.categoryKey === 'cdn') {
+    lines.push(
+      'CDN: разделяй модели — абонплата за ресурс, PAYG ₽/GiB, пакеты, только egress vs вход+выход, региональное покрытие и платные опции. Не сравнивай ₽/GiB вслепую и не выдавай list rate за полную TCO.',
+    );
+    const cls = meter.dimensions.comparabilityClass;
+    if (cls === 'bidirectional') {
+      lines.push(
+        'Этот SKU тарифицирует и вход, и выход одной ставкой — аналоги «только исходящий» не 1:1.',
+      );
+    }
+    if (cls === 'egress-overage') {
+      lines.push(
+        'Это ставка сверх включённого пакета: в TCO обязательно учти абонплату за CDN-ресурс.',
+      );
+    }
+  }
+
   const params = paramsLabel(meter);
   if (params && params !== '—') {
     lines.push(`Конфигурация: ${params}.`);

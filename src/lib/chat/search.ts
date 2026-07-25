@@ -487,6 +487,21 @@ function rankPrice(row: PriceRow, preferCapacity: boolean): number {
   return primary;
 }
 
+/** CDN meters safe to × volumeGiB (egress / bidirectional), not free ingress or requests. */
+function isCdnVolumeTrafficRow(row: PriceRow): boolean {
+  if (row.category !== 'cdn') return false;
+  const blob = `${row.sku} ${row.name}`.toLowerCase();
+  if (/request|запрос|ресурс|shielding|лог|dedicated/.test(blob)) return false;
+  if (/cdn\.traffic\.ingress|(^|[^а-яё])входящ/.test(blob) && !/bidirectional|вход и выход/.test(blob)) {
+    return false;
+  }
+  return (
+    /cdn\.traffic\.(egress|bidirectional)/.test(blob) ||
+    /исходящий трафик cdn|трафик cdn · вход и выход|трафик cdn · сверх/.test(blob) ||
+    (/трафик cdn|cdn\.traffic/.test(blob) && !/ingress|входящ/.test(blob))
+  );
+}
+
 function isK8sComparableRow(row: PriceRow, tier: 'basic' | 'ha'): boolean {
   if (row.category !== 'kubernetes') return false;
   if (row.k8sTier === 'fixed-component') return false;
@@ -738,19 +753,32 @@ function buildResult(
 
   let volumeEstimates: VolumeEstimate[] | undefined;
   if (volumeGiB != null) {
-    volumeEstimates = providers
-      .filter((p) => p.cheapest.meterKind === 'capacity' && p.cheapest.month != null)
-      .map((p) => {
-        const rate = p.cheapest.month as number;
+    // Pick a billable GiB-rate row per provider — not free CDN ingress / request meters.
+    const volumeRowByProvider = new Map<string, PriceRow>();
+    for (const {row} of scored) {
+      if (row.month == null || !Number.isFinite(row.month)) continue;
+      const okCapacity = row.meterKind === 'capacity';
+      const okCdnTraffic = isCdnVolumeTrafficRow(row);
+      if (!okCapacity && !okCdnTraffic) continue;
+      // 0 ₽/GiB CDN ingress must not win a 100 ТБ egress estimate.
+      if (okCdnTraffic && row.month <= 0) continue;
+      const prev = volumeRowByProvider.get(row.provider);
+      if (!prev || (row.month as number) < (prev.month as number)) {
+        volumeRowByProvider.set(row.provider, row);
+      }
+    }
+    volumeEstimates = [...volumeRowByProvider.values()]
+      .map((row) => {
+        const rate = row.month as number;
         return {
-          provider: p.provider,
-          providerName: p.providerName,
-          storageClass: p.cheapest.storageClass ?? null,
+          provider: row.provider,
+          providerName: row.providerName,
+          storageClass: row.storageClass ?? null,
           rateGiBMonth: Math.round(rate * 1e6) / 1e6,
           volumeGiB,
           totalMonth: Math.round(rate * volumeGiB * 100) / 100,
-          sku: p.cheapest.sku,
-          name: p.cheapest.name,
+          sku: row.sku,
+          name: row.name,
         };
       })
       .sort((a, b) => a.totalMonth - b.totalMonth);

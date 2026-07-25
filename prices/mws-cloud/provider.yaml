@@ -22,6 +22,7 @@ spec:
     - network.ipv4.reserved
     - network.traffic.ingress
     - network.traffic.egress
+    - cdn.traffic.egress
     - storage.snapshot.capacity
     - storage.block.capacity
     - storage.block.iops
@@ -30,6 +31,24 @@ spec:
     - storage.object.requests
     - ai.inference.tokens.input
     - ai.inference.tokens.output
+  - id: mws.cdn
+    title: Тарификация Content Delivery Network
+    url: https://mws.ru/docs/cloud-platform/cdn/general/pricing.html
+    type: html
+    access: public
+    priority: 1
+    covers:
+    - cdn.traffic.egress
+    - cdn.traffic.ingress
+  - id: mws.cdn-overview
+    title: Обзор сервиса CDN
+    url: https://mws.ru/docs/cloud-platform/cdn/general/whatis-cdn.html
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - cdn.traffic.egress
+    - cdn.traffic.ingress
   - id: mws.compute
     title: Тарификация Compute
     url: https://mws.ru/docs/cloud-platform/compute/general/pricing.html
