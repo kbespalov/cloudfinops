@@ -13,7 +13,11 @@ describe('AI openWeights dimension', () => {
     const modelTokens = catalog.meters.filter(
       (m) => m.categoryKey === 'ai' && isAiTokenMeter(m) && m.dimensions.modelId,
     );
-    assert.ok(modelTokens.length >= 70);
+    // Floor after MWS GPT Model Hub trim (removed gemma-3 / qwen3-32b / glm-4.6 / kimi-k2-instruct).
+    assert.ok(
+      modelTokens.length >= 60,
+      `expected ≥60 AI model-token SKUs, got ${modelTokens.length}`,
+    );
     const missing = modelTokens.filter((m) => extractOpenWeights(m) == null);
     assert.deepEqual(
       missing.map((m) => m.sku),
