@@ -59,7 +59,10 @@ function modelJsonLd(def: GpuLandingDef) {
   const url = `${SITE_URL}/gpu/${def.slug}`;
   const stats = buildGpuLandingStats(def);
   const catalogUrl = `${SITE_URL}${catalogHrefForLanding(def)}`;
-  const lowOffer = stats.cheapestSingle ?? stats.cheapestNode;
+  const lowOffer =
+    stats.narrowEmpty || stats.offerCount === 0
+      ? null
+      : stats.cheapestSingle ?? stats.cheapestNode;
   const offers =
     lowOffer != null
       ? {

@@ -5,8 +5,10 @@ import {
   buildGpuLandingStats,
   formatGpuUiAmount,
   hubGpuStats,
+  matchesCatalogQuery,
   showcaseModelsForLanding,
 } from '@/lib/gpu-landing';
+import {catalog} from '@/lib/catalog';
 
 describe('gpu landings', () => {
   it('builds catalog deep-links with gpu facet', () => {
@@ -104,5 +106,20 @@ describe('gpu landings', () => {
     assert.ok(h200.keywords.some((k) => /GPU сервер/i.test(k)));
     assert.ok(h100.keywords.some((k) => /H100 цена|стоимость H100/i.test(k)));
     assert.ok(h200.seoPriority >= 0.8 && h200.seoPriority <= 1);
+  });
+
+  it('does not treat NVLink as NVL and falls back when NVL slice is empty', () => {
+    const nvlink = catalog.meters.find((m) => /nvlink/i.test(m.name));
+    assert.ok(nvlink);
+    assert.equal(matchesCatalogQuery(nvlink, 'NVL'), false);
+
+    const nvl = getGpuLanding('h200-nvl');
+    assert.ok(nvl);
+    const stats = buildGpuLandingStats(nvl);
+    assert.equal(stats.offerCount, 0);
+    assert.equal(stats.narrowEmpty, true);
+    assert.ok(stats.familyOfferCount > 0);
+    assert.match(stats.catalogHref, /gpu=h200/);
+    assert.doesNotMatch(stats.catalogHref, /q=NVL/);
   });
 });

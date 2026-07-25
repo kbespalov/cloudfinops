@@ -44,7 +44,15 @@ export type CatalogTeaserBucket = {
 export type GpuLandingStats = {
   asOfLabel: string;
   updatedLabel: string;
+  /** Offers matching facet + optional catalogQuery. */
   offerCount: number;
+  /** Offers for the GPU facet without narrow q (e.g. all H200 when NVL slice is empty). */
+  familyOfferCount: number;
+  /**
+   * True when catalogQuery is set but matched 0 rows — CTA should open the family facet
+   * instead of a dead `q=` filter.
+   */
+  narrowEmpty: boolean;
   providerCount: number;
   /** Cheapest card-only / unit GPU (hourly). */
   cheapestSingle: GpuOfferSummary | null;
@@ -64,10 +72,15 @@ function gpuMetersForFacet(facet: Exclude<GpuFacet, 'all'>): CatalogMeter[] {
   );
 }
 
-function matchesQuery(meter: CatalogMeter, q: string | undefined): boolean {
+/** Word-boundary match so `NVL` does not hit `NVLink`. */
+export function matchesCatalogQuery(meter: CatalogMeter, q: string | undefined): boolean {
   if (!q?.trim()) return true;
   const needle = q.trim().toLowerCase();
   const hay = `${meter.name} ${meter.sku} ${meter.dimensions.gpuModel ?? ''}`.toLowerCase();
+  if (needle.length <= 4) {
+    const re = new RegExp(`(?:^|[^a-z0-9])${needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:[^a-z0-9]|$)`, 'i');
+    return re.test(hay);
+  }
   return hay.includes(needle);
 }
 
@@ -221,10 +234,14 @@ function buildTeaserBuckets(
 
 export function buildGpuLandingStats(def: GpuLandingDef): GpuLandingStats {
   const facet = def.gpuFacet;
-  const pool = facet
-    ? gpuMetersForFacet(facet).filter((m) => matchesQuery(m, def.catalogQuery))
+  const familyPool = facet
+    ? gpuMetersForFacet(facet)
     : catalog.meters.filter((m) => m.categoryKey === 'gpu');
+  const pool = familyPool.filter((m) => matchesCatalogQuery(m, def.catalogQuery));
+  const narrowEmpty = Boolean(def.catalogQuery?.trim()) && pool.length === 0;
 
+  // Keep price teasers tied to the matched slice only — do not advertise family
+  // H200 prices as if they were NVL SKUs when the NVL filter is empty.
   const providers = new Set(pool.map((m) => m.provider));
   const gpuOnly = pool.filter(isGpuOnly);
   const gpuHost = pool.filter(isGpuHost);
@@ -241,6 +258,8 @@ export function buildGpuLandingStats(def: GpuLandingDef): GpuLandingStats {
     asOfLabel: formatAsOf(catalog.asOf),
     updatedLabel: formatUpdatedRu(catalog.asOf),
     offerCount: pool.length,
+    familyOfferCount: familyPool.length,
+    narrowEmpty,
     providerCount: providers.size,
     cheapestSingle,
     cheapestHost,
@@ -254,7 +273,9 @@ export function buildGpuLandingStats(def: GpuLandingDef): GpuLandingStats {
       cheapestHost,
       cheapestNode,
     ),
-    catalogHref: catalogHrefForLanding(def),
+    catalogHref: narrowEmpty
+      ? catalogHrefForLanding({gpuFacet: def.gpuFacet})
+      : catalogHrefForLanding(def),
     scopeHint: catalogCompareScopeHint(),
   };
 }

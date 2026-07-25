@@ -19,7 +19,13 @@ export function GpuModelPage({def}: {def: GpuLandingDef}) {
     .map((slug) => getGpuLanding(slug))
     .filter((x): x is GpuLandingDef => x != null && x.slug !== def.slug);
 
-  const primaryCta = `Смотреть ${stats.offerCount} предложений`;
+  const familyLabel = def.shortTitle.replace(/\s*NVL$/i, '').trim() || def.shortTitle;
+  const primaryCta = stats.narrowEmpty
+    ? `Смотреть ${stats.familyOfferCount} предложений ${familyLabel}`
+    : `Смотреть ${stats.offerCount} предложений`;
+  const metaLine = stats.narrowEmpty
+    ? `Отдельных строк ${def.catalogQuery} в срезе нет · ${stats.familyOfferCount} предложений семейства ${familyLabel} · обновлено ${stats.updatedLabel}`
+    : `${stats.offerCount} предложений · обновлено ${stats.updatedLabel} · цены с НДС`;
 
   return (
     <div className={styles.page}>
@@ -57,9 +63,7 @@ export function GpuModelPage({def}: {def: GpuLandingDef}) {
               Подобрать конфигурацию
             </Button>
           </div>
-          <p className={styles.metaLine}>
-            {stats.offerCount} предложений · обновлено {stats.updatedLabel} · цены с НДС
-          </p>
+          <p className={styles.metaLine}>{metaLine}</p>
         </header>
 
         <section className={styles.modelBand} aria-labelledby="gpu-about-title">
