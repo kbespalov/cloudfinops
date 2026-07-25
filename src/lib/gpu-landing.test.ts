@@ -92,4 +92,17 @@ describe('gpu landings', () => {
       assert.equal(faq[0]?.question.includes('NVIDIA'), true);
     }
   });
+
+  it('exposes Wordstat-oriented SEO fields without changing visible H1', () => {
+    const h200 = getGpuLanding('h200');
+    const h100 = getGpuLanding('h100');
+    assert.ok(h200 && h100);
+    assert.match(h200.seoTitle, /аренда/i);
+    assert.match(h200.seoTitle, /H200/i);
+    assert.notEqual(h200.seoTitle, h200.title);
+    assert.ok(h200.keywords.some((k) => /аренда H200/i.test(k)));
+    assert.ok(h200.keywords.some((k) => /GPU сервер/i.test(k)));
+    assert.ok(h100.keywords.some((k) => /H100 цена|стоимость H100/i.test(k)));
+    assert.ok(h200.seoPriority >= 0.8 && h200.seoPriority <= 1);
+  });
 });

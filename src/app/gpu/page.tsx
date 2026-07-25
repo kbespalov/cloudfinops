@@ -1,21 +1,31 @@
 import type {Metadata} from 'next';
 import {GpuHubPage} from '@/components/gpu/GpuHubPage';
+import {featuredGpuLandings} from '@/data/gpu-landings';
 
 const SITE_URL = 'https://cloudfinops.ru';
 
 export const metadata: Metadata = {
-  title: 'Аренда GPU в облаке России — H100, H200, A100, B300',
+  title: {absolute: 'Аренда GPU в облаке России — H100, H200, A100 · Cloud FinOps'},
   description:
-    'Сравнение аренды GPU в облаках России: NVIDIA H100, H200, A100, B300, L4 и HGX. Публичные тарифы в каталоге Cloud FinOps — ₽ с НДС, без промо.',
+    'Аренда GPU сервера в облаке России: сравнение публичных тарифов NVIDIA H100, H200, A100, B300, L40S и L4. Цена ₽/час и ₽/мес с НДС — каталог Cloud FinOps, без промо.',
   keywords: [
     'аренда GPU',
     'GPU сервер',
+    'аренда сервера с GPU',
+    'аренда GPU в облаке',
+    'облако GPU',
     'аренда H100',
     'аренда H200',
+    'аренда A100',
     'NVIDIA H100',
     'NVIDIA H200',
-    'HGX',
-    'облако GPU Россия',
+    'HGX H200',
+    'GPU для LLM',
+    'GPU для ИИ',
+    'почасовая аренда GPU',
+    'выделенный сервер GPU',
+    'dedicated GPU',
+    'VPS с GPU',
     'цены GPU облако',
     'Cloud FinOps',
   ],
@@ -25,9 +35,9 @@ export const metadata: Metadata = {
     locale: 'ru_RU',
     url: '/gpu',
     siteName: 'Cloud FinOps',
-    title: 'Аренда GPU в облаке России — Cloud FinOps',
+    title: 'Аренда GPU в облаке России — H100, H200, A100',
     description:
-      'Каталог и карточки моделей: H100, H200, A100, B300, L4. Сравнение публичных тарифов шести облаков РФ.',
+      'Сравнение аренды GPU в российских облаках: H100, H200, A100, B300, L4 и HGX. Публичные тарифы в одном каталоге.',
   },
   twitter: {
     card: 'summary_large_image',
@@ -43,6 +53,7 @@ export const metadata: Metadata = {
 };
 
 function gpuHubJsonLd() {
+  const featured = featuredGpuLandings();
   return {
     '@context': 'https://schema.org',
     '@graph': [
@@ -52,11 +63,25 @@ function gpuHubJsonLd() {
         url: `${SITE_URL}/gpu`,
         name: 'Аренда GPU в облаке России',
         description:
-          'Сравнение публичных тарифов на GPU NVIDIA у облаков России: H100, H200, A100, B300, L4.',
+          'Сравнение публичных тарифов на аренду GPU NVIDIA у облаков России: H100, H200, A100, B300, L4, HGX.',
+        keywords:
+          'аренда GPU, GPU сервер, аренда H100, аренда H200, NVIDIA H100, NVIDIA H200, облако GPU',
+        inLanguage: 'ru-RU',
         isPartOf: {'@id': `${SITE_URL}/#website`},
         about: {
           '@type': 'Thing',
-          name: 'Cloud GPU rental pricing in Russia',
+          name: 'Аренда GPU в облаке России',
+        },
+        mainEntity: {
+          '@type': 'ItemList',
+          itemListOrder: 'https://schema.org/ItemListOrderAscending',
+          numberOfItems: featured.length,
+          itemListElement: featured.map((def, index) => ({
+            '@type': 'ListItem',
+            position: index + 1,
+            name: def.shortTitle,
+            url: `${SITE_URL}/gpu/${def.slug}`,
+          })),
         },
       },
       {

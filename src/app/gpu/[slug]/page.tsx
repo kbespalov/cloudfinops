@@ -3,10 +3,13 @@ import {notFound} from 'next/navigation';
 import {GpuModelPage} from '@/components/gpu/GpuModelPage';
 import {
   allGpuLandingSlugs,
+  catalogHrefForLanding,
   faqForLanding,
   getGpuLanding,
   type GpuLandingDef,
 } from '@/data/gpu-landings';
+import {buildGpuLandingStats} from '@/lib/gpu-landing';
+
 const SITE_URL = 'https://cloudfinops.ru';
 
 export const dynamic = 'force-static';
@@ -24,8 +27,9 @@ export async function generateMetadata({params}: Params): Promise<Metadata> {
   if (!def) return {title: 'GPU не найден'};
 
   const url = `/gpu/${def.slug}`;
+  const docTitle = def.seoTitle;
   return {
-    title: def.title,
+    title: {absolute: `${docTitle} · Cloud FinOps`},
     description: def.description,
     keywords: def.keywords,
     alternates: {canonical: url},
@@ -34,12 +38,12 @@ export async function generateMetadata({params}: Params): Promise<Metadata> {
       locale: 'ru_RU',
       url,
       siteName: 'Cloud FinOps',
-      title: def.title,
+      title: docTitle,
       description: def.description,
     },
     twitter: {
       card: 'summary_large_image',
-      title: def.title,
+      title: docTitle,
       description: def.description,
     },
     robots: {
@@ -53,6 +57,25 @@ export async function generateMetadata({params}: Params): Promise<Metadata> {
 
 function modelJsonLd(def: GpuLandingDef) {
   const url = `${SITE_URL}/gpu/${def.slug}`;
+  const stats = buildGpuLandingStats(def);
+  const catalogUrl = `${SITE_URL}${catalogHrefForLanding(def)}`;
+  const lowOffer = stats.cheapestSingle ?? stats.cheapestNode;
+  const offers =
+    lowOffer != null
+      ? {
+          '@type': 'AggregateOffer',
+          priceCurrency: 'RUB',
+          lowPrice: Math.round(lowOffer.amount * 100) / 100,
+          offerCount: stats.offerCount,
+          availability: 'https://schema.org/InStock',
+          url: catalogUrl,
+        }
+      : {
+          '@type': 'Offer',
+          url: catalogUrl,
+          availability: 'https://schema.org/InStock',
+          priceCurrency: 'RUB',
+        };
 
   return {
     '@context': 'https://schema.org',
@@ -61,9 +84,21 @@ function modelJsonLd(def: GpuLandingDef) {
         '@type': 'WebPage',
         '@id': `${url}#page`,
         url,
-        name: def.title,
+        name: def.seoTitle,
+        headline: def.title,
         description: def.description,
+        keywords: def.keywords.join(', '),
+        inLanguage: 'ru-RU',
         isPartOf: {'@id': `${SITE_URL}/#website`},
+        about: {
+          '@type': 'Product',
+          '@id': `${url}#product`,
+          name: `NVIDIA ${def.shortTitle}`,
+          description: def.description,
+          brand: {'@type': 'Brand', name: 'NVIDIA'},
+          category: 'Cloud GPU rental',
+          offers,
+        },
       },
       {
         '@type': 'BreadcrumbList',

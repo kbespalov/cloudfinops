@@ -1,13 +1,14 @@
 import type {MetadataRoute} from 'next';
 import {blogPosts} from '@/data/blog';
 import {CALCULATOR_PROVIDER_SEO} from '@/data/calculator-providers-seo';
-import {allGpuLandingSlugs} from '@/data/gpu-landings';
+import {GPU_LANDINGS, allGpuLandingSlugs} from '@/data/gpu-landings';
 import {newsItems} from '@/data/news';
 
 const SITE_URL = 'https://cloudfinops.ru';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();
+  const gpuPriority = new Map(GPU_LANDINGS.map((d) => [d.slug, d.seoPriority]));
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {
@@ -26,13 +27,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
       url: `${SITE_URL}/gpu`,
       lastModified,
       changeFrequency: 'daily',
-      priority: 0.9,
+      priority: 0.95,
     },
     ...allGpuLandingSlugs().map((slug) => ({
       url: `${SITE_URL}/gpu/${slug}`,
       lastModified,
       changeFrequency: 'daily' as const,
-      priority: 0.85,
+      priority: gpuPriority.get(slug) ?? 0.85,
     })),
     {
       url: `${SITE_URL}/calculator`,

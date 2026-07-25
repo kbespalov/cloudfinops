@@ -25,6 +25,8 @@ export type GpuOfferSummary = {
   provider: string;
   providerName: string;
   name: string;
+  /** Raw RUB amount for the chosen period (SEO / JSON-LD). */
+  amount: number;
   amountLabel: string;
   period: PeriodMode;
   gpuCount: number | null;
@@ -124,6 +126,7 @@ function toSummary(meter: CatalogMeter, period: PeriodMode): GpuOfferSummary | n
     provider: meter.provider,
     providerName: meter.providerName,
     name: meter.name,
+    amount,
     amountLabel: formatGpuUiAmount(amount, period),
     period,
     gpuCount: extractGpuCount(meter),

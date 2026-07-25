@@ -15,9 +15,14 @@ export type GpuLandingDef = {
   slug: GpuLandingSlug;
   /** Short label for cards / nav chips. */
   shortTitle: string;
-  /** H1 without brand suffix. */
+  /** Visible H1 — keep human, do not stuff with keywords. */
   title: string;
-  /** Meta + OG description. */
+  /**
+   * Document `<title>` / Open Graph title (Wordstat commercial phrasing).
+   * Not shown as H1 — SEO only.
+   */
+  seoTitle: string;
+  /** Meta + OG description (commercial intents; not rendered in hero). */
   description: string;
   /** Hero lead under H1. */
   lead: string;
@@ -27,8 +32,13 @@ export type GpuLandingDef = {
   catalogQuery?: string;
   /** Prefer 8× / dedicated node pricing on the page. */
   preferNode?: boolean;
-  /** SEO keywords. */
+  /**
+   * Meta keywords + JSON-LD hints from Wordstat commercial clusters
+   * (аренда / GPU сервер / цена / HGX / облако). Not rendered in UI.
+   */
   keywords: string[];
+  /** Sitemap priority hint 0–1 (demand-weighted). */
+  seoPriority: number;
   /** Related landing slugs. */
   related: GpuLandingSlug[];
   /** Bullet highlights (honest, non-promotional). */
@@ -90,19 +100,28 @@ export const GPU_LANDINGS: GpuLandingDef[] = [
     slug: 'h200',
     shortTitle: 'H200',
     title: 'Аренда NVIDIA H200 в облаке России',
+    seoTitle: 'Аренда NVIDIA H200 — цена GPU сервера в облаке РФ',
     description:
-      'Сравнение публичных тарифов на NVIDIA H200 141GB у облаков РФ: Selectel, Cloud.ru, T1, VK Cloud и другие. Цены в ₽ с НДС, без промо — откройте в каталоге Cloud FinOps.',
+      'Аренда NVIDIA H200 141GB в облаках России: сравнение публичных тарифов Selectel, Cloud.ru, T1, VK Cloud. Цена H200 ₽/час и ₽/мес с НДС — каталог Cloud FinOps, без промо.',
     lead: 'H200 141GB — актуальная полка под длинный контекст и крупные open-weight модели. Смотрите предложения 1× и 8× в каталоге и сравните ₽/час.',
     gpuFacet: 'h200',
     keywords: [
       'аренда H200',
       'NVIDIA H200',
-      'H200 141GB',
       'H200 цена',
+      'H200 141GB',
       'аренда GPU',
       'GPU сервер',
-      'облако GPU Россия',
+      'аренда сервера с GPU',
+      'аренда GPU в облаке',
+      'облако GPU',
+      'GPU для LLM',
+      'GPU для ИИ',
+      'почасовая аренда GPU',
+      'Selectel GPU',
+      'Cloud.ru GPU',
     ],
+    seoPriority: 0.92,
     related: ['h200-nvl', 'hgx-h200', 'h100', 'b300'],
     highlights: [
       'Фильтр каталога по семейству H200 — без ручного поиска по прайсам',
@@ -140,12 +159,24 @@ export const GPU_LANDINGS: GpuLandingDef[] = [
     slug: 'h200-nvl',
     shortTitle: 'H200 NVL',
     title: 'NVIDIA H200 NVL — цены в облаках РФ',
+    seoTitle: 'Аренда NVIDIA H200 NVL — цена и конфигурации в облаке РФ',
     description:
-      'Публичные предложения NVIDIA H200 NVL в каталоге Cloud FinOps: сравнение тарифов облаков России в рублях с НДС.',
+      'Аренда NVIDIA H200 NVL 141GB: публичные тарифы облаков России в ₽ с НДС. Сравнение NVL с H200 SXM/PCIe в каталоге Cloud FinOps — без промо и индивидуальных скидок.',
     lead: 'H200 NVL часто ищут отдельно от SXM/PCIe. Мы открываем каталог с фильтром H200 и поиском NVL — дальше можно сузить провайдера.',
     gpuFacet: 'h200',
     catalogQuery: 'NVL',
-    keywords: ['H200 NVL', 'NVIDIA H200 NVL', 'H200 NVL цена', 'аренда H200 NVL', 'GPU облако'],
+    keywords: [
+      'H200 NVL',
+      'NVIDIA H200 NVL',
+      'аренда H200 NVL',
+      'H200 NVL цена',
+      'NVIDIA H200',
+      'аренда H200',
+      'GPU сервер',
+      'аренда GPU',
+      'облако GPU',
+    ],
+    seoPriority: 0.88,
     related: ['h200', 'hgx-h200', 'h100'],
     highlights: [
       'Узкий вход: H200 + запрос NVL в каталоге',
@@ -171,18 +202,30 @@ export const GPU_LANDINGS: GpuLandingDef[] = [
     slug: 'h100',
     shortTitle: 'H100',
     title: 'Аренда NVIDIA H100 в облаке России',
+    seoTitle: 'Аренда NVIDIA H100 80GB — цена GPU сервера в облаке РФ',
     description:
-      'Сравнение аренды NVIDIA H100 80GB (PCIe / NVLink / SXM) у облаков РФ по публичным тарифам. Каталог Cloud FinOps — ₽ с НДС, без промо.',
+      'Аренда NVIDIA H100 80GB в облаках России: сравнение публичных тарифов ₽/час и ₽/мес (PCIe, SXM, multi-GPU). Стоимость H100 с НДС в каталоге Cloud FinOps — без промо.',
     lead: 'H100 80GB — самая частая «рабочая» карта для обучения и инференса. Сравните 1× GPU и многокартовые flavor в одном каталоге.',
     gpuFacet: 'h100',
     keywords: [
       'аренда H100',
       'NVIDIA H100',
-      'H100 80GB',
       'H100 цена',
+      'стоимость H100',
+      'H100 80GB',
       'аренда GPU H100',
       'GPU сервер H100',
+      'аренда сервера H100',
+      'аренда GPU',
+      'GPU сервер',
+      'аренда сервера с GPU',
+      'GPU для LLM',
+      'GPU для ИИ',
+      'почасовая аренда GPU',
+      'облако GPU',
+      'HGX H100',
     ],
+    seoPriority: 0.93,
     related: ['h200', 'a100', 'hgx-h200', 'l4'],
     highlights: [
       'Facet gpu=h100 отсекает соседние семейства',
@@ -215,11 +258,26 @@ export const GPU_LANDINGS: GpuLandingDef[] = [
     slug: 'a100',
     shortTitle: 'A100',
     title: 'Аренда NVIDIA A100 в облаке России',
+    seoTitle: 'Аренда NVIDIA A100 40/80GB — цена GPU в облаке России',
     description:
-      'Публичные тарифы NVIDIA A100 40/80GB у облаков России. Сравнение в каталоге Cloud FinOps — независимо, в ₽ с НДС.',
+      'Аренда NVIDIA A100 (Tesla A100 40GB и 80GB) в облаках РФ: сравнение публичных тарифов ₽ с НДС. GPU сервер A100 в каталоге Cloud FinOps — без промо и индивидуальных скидок.',
     lead: 'A100 остаётся массовой картой для inference и обучения, когда H100/H200 избыточны по бюджету. Сравните 40GB и 80GB в каталоге.',
     gpuFacet: 'a100',
-    keywords: ['аренда A100', 'NVIDIA A100', 'A100 80GB', 'Tesla A100', 'GPU сервер A100'],
+    keywords: [
+      'аренда A100',
+      'NVIDIA A100',
+      'Tesla A100',
+      'A100 80GB',
+      'A100 40GB',
+      'аренда Tesla A100',
+      'GPU сервер A100',
+      'аренда GPU',
+      'GPU сервер',
+      'облако GPU',
+      'GPU для ИИ',
+      'аренда сервера с GPU',
+    ],
+    seoPriority: 0.9,
     related: ['h100', 'l4', 'h200'],
     highlights: [
       'Много предложений 1× и multi-GPU',
@@ -251,12 +309,26 @@ export const GPU_LANDINGS: GpuLandingDef[] = [
     slug: 'b300',
     shortTitle: 'B300',
     title: 'NVIDIA B300 / HGX — цены в каталоге РФ',
+    seoTitle: 'Аренда NVIDIA B300 HGX — выделенный GPU сервер в облаке РФ',
     description:
-      'Публичный тариф на выделенный NVIDIA B300 HGX (8×GPU) в каталоге Cloud FinOps. Сравнение dedicated GPU-узлов облаков России.',
+      'Выделенный сервер NVIDIA B300 / HGX (8×GPU) в облаках России: публичные тарифы dedicated GPU в ₽ с НДС. Сравнение в каталоге Cloud FinOps — не card-only on-demand.',
     lead: 'B300 в каталоге — прежде всего выделенный HGX-узел (не обычная облачная GPU-ВМ). Откройте facet B300 и смотрите условия провайдера.',
     gpuFacet: 'b300',
     preferNode: true,
-    keywords: ['B300', 'NVIDIA B300', 'HGX B300', 'аренда B300', 'GPU HGX', 'Selectel B300'],
+    keywords: [
+      'NVIDIA B300',
+      'аренда B300',
+      'HGX B300',
+      'B300',
+      'выделенный сервер GPU',
+      'dedicated GPU',
+      'GPU HGX',
+      'сервер 8 GPU',
+      'GPU сервер',
+      'аренда GPU',
+      'Selectel B300',
+    ],
+    seoPriority: 0.86,
     related: ['hgx-b300', 'hgx-h200', 'h200'],
     highlights: [
       'Фокус на 8× / dedicated, не на card-only',
@@ -288,19 +360,26 @@ export const GPU_LANDINGS: GpuLandingDef[] = [
     slug: 'hgx-h200',
     shortTitle: 'HGX H200',
     title: 'Сервер HGX H200 8×GPU — цены в облаках РФ',
+    seoTitle: 'Аренда сервера HGX H200 8×GPU — цена выделенной полки в РФ',
     description:
-      'Сравнение публичных тарифов на 8× NVIDIA H200 / HGX-полки у облаков России. Каталог Cloud FinOps — ₽ с НДС.',
+      'Аренда сервера HGX H200 (8× NVIDIA H200): сравнение публичных тарифов выделенных GPU-полок в облаках России. ₽ с НДС в каталоге Cloud FinOps — без промо.',
     lead: 'Запрос «HGX H200» обычно означает полку 8×GPU. Мы ведём в каталог H200 и подсвечиваем многокартовые / node-конфигурации.',
     gpuFacet: 'h200',
     preferNode: true,
     keywords: [
       'HGX H200',
       'NVIDIA HGX H200',
+      'аренда HGX H200',
       'сервер 8 GPU',
       '8x H200',
-      'аренда HGX',
+      '8 GPU H200',
+      'аренда сервера H200',
+      'выделенный сервер GPU',
       'GPU сервер H200',
+      'аренда H200',
+      'dedicated GPU',
     ],
+    seoPriority: 0.89,
     related: ['h200', 'hgx-b300', 'h100'],
     highlights: [
       'Ищите строки ×8 / SXM / flavor на 8 GPU',
@@ -332,13 +411,25 @@ export const GPU_LANDINGS: GpuLandingDef[] = [
     slug: 'hgx-b300',
     shortTitle: 'HGX B300',
     title: 'HGX B300 — выделенный 8×GPU в каталоге',
+    seoTitle: 'Аренда HGX B300 8×GPU — выделенный GPU сервер в облаке РФ',
     description:
-      'Публичные предложения NVIDIA HGX B300 (8×GPU) в облаках России. Независимый каталог Cloud FinOps.',
+      'Аренда выделенного сервера NVIDIA HGX B300 (8×GPU) в облаках России: публичные dedicated-тарифы в ₽ с НДС. Каталог Cloud FinOps — сравнение без промо.',
     lead: 'HGX B300 — запрос про выделенную полку нового поколения. Откройте B300 в каталоге и проверьте актуальный публичный тариф.',
     gpuFacet: 'b300',
     catalogQuery: 'HGX',
     preferNode: true,
-    keywords: ['HGX B300', 'NVIDIA HGX B300', 'B300 8 GPU', 'dedicated GPU', 'аренда HGX B300'],
+    keywords: [
+      'HGX B300',
+      'NVIDIA HGX B300',
+      'аренда HGX B300',
+      'B300 8 GPU',
+      'сервер 8 GPU',
+      'выделенный сервер GPU',
+      'dedicated GPU',
+      'NVIDIA B300',
+      'аренда B300',
+    ],
+    seoPriority: 0.84,
     related: ['b300', 'hgx-h200', 'h200'],
     highlights: ['Прямой переход в каталог: gpu=b300&q=HGX', 'Оговорка: dedicated ≠ on-demand VM'],
     faq: [
@@ -367,18 +458,25 @@ export const GPU_LANDINGS: GpuLandingDef[] = [
     slug: 'l40s',
     shortTitle: 'L40S',
     title: 'Аренда NVIDIA L40S в облаке России',
+    seoTitle: 'Аренда NVIDIA L40S — цена GPU 48GB в облаке России',
     description:
-      'Сравнение публичных тарифов NVIDIA L40S у облаков РФ. Каталог Cloud FinOps — ₽ с НДС, без промо; отдельно от L4.',
+      'Аренда NVIDIA L40S 48GB в облаках РФ: сравнение публичных тарифов ₽/час с НДС. GPU для inference и mid-size LLM — каталог Cloud FinOps, отдельно от L4.',
     lead: 'L40S — Ada Lovelace для inference и графики в датацентре: больше VRAM и пропускной способности, чем у L4. Сравните предложения в каталоге по facet L40S.',
     gpuFacet: 'l40s',
     keywords: [
-      'NVIDIA L40S',
       'аренда L40S',
+      'NVIDIA L40S',
       'L40S цена',
       'GPU L40S',
       'аренда GPU L40S',
       'облако L40S',
+      'аренда GPU',
+      'GPU сервер',
+      'GPU для ИИ',
+      'инференс GPU',
+      'VPS с GPU',
     ],
+    seoPriority: 0.82,
     related: ['l4', 'a100', 'h100'],
     highlights: [
       'Отдельный facet gpu=l40s — не смешивается с L4',
@@ -416,11 +514,25 @@ export const GPU_LANDINGS: GpuLandingDef[] = [
     slug: 'l4',
     shortTitle: 'L4',
     title: 'Аренда NVIDIA L4 в облаке России',
+    seoTitle: 'Аренда NVIDIA L4 — цена GPU / vGPU в облаке России',
     description:
-      'Публичные тарифы NVIDIA L4 / vGPU L4 у облаков РФ. Сравнение в каталоге Cloud FinOps для экономичного inference.',
+      'Аренда NVIDIA L4 и vGPU L4 в облаках России: сравнение публичных тарифов для embedding и лёгкого inference. ₽ с НДС в каталоге Cloud FinOps — отдельно от L40S.',
     lead: 'L4 — частый выбор для embedding и лёгкого inference, когда H100 избыточен. Сравните flavor и vGPU-доли в каталоге.',
     gpuFacet: 'l4',
-    keywords: ['NVIDIA L4', 'аренда L4', 'GPU L4', 'vGPU L4', 'inference GPU'],
+    keywords: [
+      'аренда L4',
+      'NVIDIA L4',
+      'vGPU L4',
+      'GPU L4',
+      'аренда GPU',
+      'VPS с GPU',
+      'GPU сервер',
+      'GPU для ИИ',
+      'инференс GPU',
+      'почасовая аренда GPU',
+      'облако GPU',
+    ],
+    seoPriority: 0.82,
     related: ['l40s', 'a100', 'h100'],
     highlights: ['Дешевле H100/H200 на подходящих задачах', 'В каталоге отдельно от L40S'],
     faq: [
