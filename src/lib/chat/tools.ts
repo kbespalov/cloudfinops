@@ -244,7 +244,7 @@ export const GET_LAKEHOUSE_QUOTE_TOOL = {
         hotPercent: {
           type: 'integer',
           description:
-            'Доля активных (hot/standard) данных 0–100; остальное — cold, если есть у провайдера.',
+            'Доля горячих (hot/standard) данных 0–100; остальное — cold (raw-слой, история), если есть у провайдера.',
         },
         k8sTier: {
           type: 'string',

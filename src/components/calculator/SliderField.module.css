@@ -112,10 +112,33 @@
   width: 100%;
   min-width: 0;
   max-width: 360px;
+  /* One track thickness for every calculator / breakpoint. */
+  --slider-track-thickness: 4px;
   /* Calm track — less visual weight than default brand fill. */
   --g-slider-color-track: var(--g-color-base-generic);
   --g-slider-color-range: color-mix(in srgb, var(--g-color-base-brand) 45%, transparent);
   --g-slider-color-thumb: color-mix(in srgb, var(--g-color-base-brand) 88%, #fff);
+}
+
+/* Shared rail/track — do not redeclare height in stacked breakpoints. */
+.slider :global(.g-base-slider__rail),
+.slider :global(.g-base-slider__track) {
+  height: var(--slider-track-thickness);
+  border-radius: 999px;
+}
+
+.slider :global(.g-base-slider__rail) {
+  background-color: var(--g-color-base-generic);
+}
+
+.slider :global(.g-base-slider__track) {
+  background-color: color-mix(in srgb, var(--g-color-base-brand) 45%, transparent);
+}
+
+.slider :global(.g-base-slider__track)::before {
+  height: var(--slider-track-thickness);
+  width: 10px;
+  background-color: color-mix(in srgb, var(--g-color-base-brand) 45%, transparent);
 }
 
 .slider :global(.g-slider__thumb:focus-visible),
@@ -214,7 +237,7 @@
   .slider {
     width: 100%;
     max-width: none;
-    /* Slim iOS-like track; keep a usable touch band via padding. */
+    /* Keep a usable touch band; track thickness stays on .slider. */
     padding-block: 8px;
   }
 
@@ -222,21 +245,6 @@
     padding-block: 10px;
     height: 20px;
     margin-inline: 10px;
-  }
-
-  .slider :global(.g-base-slider__rail),
-  .slider :global(.g-base-slider__track) {
-    height: 4px;
-    border-radius: 999px;
-  }
-
-  .slider :global(.g-base-slider__rail) {
-    background-color: var(--g-color-base-generic);
-  }
-
-  .slider :global(.g-base-slider__track)::before {
-    height: 4px;
-    width: 10px;
   }
 
   /* Filled thumb — closer to iOS than ringed Gravity default. */
@@ -330,21 +338,6 @@
     padding-block: 10px;
     height: 20px;
     margin-inline: 10px;
-  }
-
-  .slider :global(.g-base-slider__rail),
-  .slider :global(.g-base-slider__track) {
-    height: 4px;
-    border-radius: 999px;
-  }
-
-  .slider :global(.g-base-slider__rail) {
-    background-color: var(--g-color-base-generic);
-  }
-
-  .slider :global(.g-base-slider__track)::before {
-    height: 4px;
-    width: 10px;
   }
 
   .slider :global(.g-base-slider__handle) {

@@ -14,7 +14,7 @@ export function lakehouseChatPrompt(args: {
 }): string {
   const parts = [
     'Оцени стоимость open lakehouse (DIY: Object Storage + Managed Kubernetes + worker ВМ) в облаках РФ.',
-    `Пресет ${args.presetId}: озеро ${args.lakeTiB} TiB, активные данные (hot) ${args.hotPercent}%, K8s ${args.k8sTier}, ETL ${args.etlHoursPerDay} ч/день, SQL ${args.queryHoursPerDay} ч/день.`,
+    `Пресет ${args.presetId}: озеро ${args.lakeTiB} TiB, горячие данные (hot) ${args.hotPercent}%, K8s ${args.k8sTier}, ETL ${args.etlHoursPerDay} ч/день, SQL ${args.queryHoursPerDay} ч/день.`,
     `Период: ${args.period}.`,
   ];
   if (args.providerName && args.totalRub != null) {

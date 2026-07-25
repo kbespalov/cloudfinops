@@ -47,6 +47,13 @@ const LAKE_STEPS = [5, 10, 25, 50, 75, 100, 150, 250, 500, 750, 1000];
 const HOT_STEPS = [20, 30, 40, 50, 60, 70, 80, 90, 100];
 const HOUR_STEPS = [2, 4, 6, 8, 10, 12, 16, 20, 24];
 
+/** How much text fits on a Hot/Cold segment at the given share. */
+function splitLabelMode(percent: number): 'full' | 'short' | 'hidden' {
+  if (percent >= 22) return 'full';
+  if (percent >= 10) return 'short';
+  return 'hidden';
+}
+
 function nearestIn(options: number[], value: number): number {
   let best = options[0]!;
   let bestDist = Math.abs(best - value);
@@ -139,10 +146,6 @@ export function LakehouseCalculatorPanel({period}: {period: PeriodMode}) {
     <>
       <div className={`${panelStyles.formColumn} ${styles.configCard}`}>
         <div className={styles.configInner}>
-          <Text as="h2" className={styles.formTitle}>
-            Параметры
-          </Text>
-
           <section className={styles.fieldGroup} aria-label="Размер Lakehouse">
             <div className={styles.groupHead}>
               <Text as="h3" className={styles.groupTitle}>
@@ -191,10 +194,10 @@ export function LakehouseCalculatorPanel({period}: {period: PeriodMode}) {
                 Object Storage
               </Text>
               <HelpMark aria-label="Про hot и cold" iconSize="s">
-                Рабочий набор Iceberg (по нему ходят Trino/Spark) всегда держат в
-                hot-классе (standard). Cold — lifecycle для редко читаемых данных:
-                сырьё, история, старые снапшоты. У cold выше задержка и цена
-                извлечения — активные таблицы туда не кладут.
+                Горячие (hot/standard) — рабочий набор Iceberg, по которому ходят
+                Trino/Spark. Cold — lifecycle для редко читаемых данных: raw-слой
+                (сырые данные из источников), история и старые снапшоты. У cold
+                выше задержка и цена извлечения — горячие таблицы туда не кладут.
               </HelpMark>
             </div>
             <div className={styles.controlsStack}>
@@ -213,43 +216,47 @@ export function LakehouseCalculatorPanel({period}: {period: PeriodMode}) {
               <SliderField
                 align="form"
                 icon={Archive}
-                label="Активные данные (hot)"
+                label="Горячие данные (hot)"
                 value={hotPercent}
                 options={HOT_STEPS}
                 unit="%"
                 hint={
                   coldPercent > 0
-                    ? `Остальные ${coldPercent}% — архив (cold): сырьё, история, снапшоты`
+                    ? `Остальные ${coldPercent}% — cold: raw-слой, история, снапшоты`
                     : 'Всё озеро в hot-классе (standard)'
                 }
                 compactStepper
                 onUpdate={setHotPercent}
-                aria-label="Доля активных данных в hot-классе"
+                aria-label="Доля горячих данных в hot-классе"
               />
               <div className={styles.splitBlock}>
                 <div
                   className={styles.splitBar}
                   role="img"
-                  aria-label={`Активные ${hotPercent}%, архив ${coldPercent}%`}
+                  aria-label={`Hot ${formatGiBCapacity(hotGiB)} · ${hotPercent}%, Cold ${formatGiBCapacity(coldGiB)} · ${coldPercent}%`}
                 >
-                  <span className={styles.splitHot} style={{flexGrow: hotPercent || 0.01}} />
-                  {coldPercent > 0 ? (
-                    <span className={styles.splitCold} style={{flexGrow: coldPercent}} />
-                  ) : null}
-                </div>
-                <div className={styles.splitLegend}>
-                  <span className={styles.splitLegendItem}>
-                    <span className={styles.splitSwatch} data-kind="hot" />
-                    <span className={styles.splitLegendText}>
-                      Hot · {formatGiBCapacity(hotGiB)} · {hotPercent}%
+                  <span
+                    className={styles.splitSeg}
+                    data-kind="hot"
+                    data-label={splitLabelMode(hotPercent)}
+                    style={{flexGrow: hotPercent || 0.01}}
+                  >
+                    <span className={styles.splitLabelFull}>
+                      Hot · {formatGiBCapacity(hotGiB)}
                     </span>
+                    <span className={styles.splitLabelShort}>{hotPercent}%</span>
                   </span>
-                  {coldGiB > 0 ? (
-                    <span className={styles.splitLegendItem}>
-                      <span className={styles.splitSwatch} data-kind="cold" />
-                      <span className={styles.splitLegendText}>
-                        Cold · {formatGiBCapacity(coldGiB)} · {coldPercent}%
+                  {coldPercent > 0 ? (
+                    <span
+                      className={styles.splitSeg}
+                      data-kind="cold"
+                      data-label={splitLabelMode(coldPercent)}
+                      style={{flexGrow: coldPercent}}
+                    >
+                      <span className={styles.splitLabelFull}>
+                        Cold · {formatGiBCapacity(coldGiB)}
                       </span>
+                      <span className={styles.splitLabelShort}>{coldPercent}%</span>
                     </span>
                   ) : null}
                 </div>
