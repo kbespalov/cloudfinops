@@ -17,6 +17,7 @@
 - Fast path в чате **выключен по умолчанию** (`CHAT_FAST_PATH_PROBABILITY=0`, agent-first); калькулятор — всегда on для сайдбара. Для latency A/B: `CHAT_FAST_PATH_PROBABILITY=1`. Одиночный S3/volume fast path больше не «съедает» стековые вопросы.
 - Recovery: русские лейблы tool (`прайс-листа` и т.п.) → правильный tool по форме args; финальный ответ по стеку — digest LLM / compose, без слияния tool results из прошлых ходов.
 - Калькулятор «AI-конфигурация»: follow-up «докинь / докинем CDN» → `category=cdn`, **мерж в корзину** (CDN egress), не Object Storage / network ingress. `get_quote` без RAM → 4×vCPU (как сайдбар).
+- Пошаговая сборка в чате/калькуляторе: CPU / RAM / диск / IP / CDN / S3 по одному → `compare_unit_price` или `search_prices`; `get_quote` только для полной ВМ. «Ice Lake» не путается с S3 Ice.
 
 ### Каталог / MWS GPT Model Hub
 

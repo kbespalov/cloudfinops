@@ -139,7 +139,7 @@ export async function POST(req: Request) {
   // Inference wins if both match (rare); otherwise lakehouse persona + tool.
   const calculatorAddendum =
     surface === 'calculator'
-      ? '\n\nКонтекст: пользователь в калькуляторе «AI конфигурация» (корзина справа). Для описания ВМ/GPU почти всегда вызывай get_quote (vcpu/ramGiB/diskGiB или gpuModel; если RAM не назвали — 4×vCPU). Для lakehouse — get_lakehouse_quote. Follow-up «докинь / докинем / добавь / добавим / плюс CDN [N ТБ|TB]» — это ДОБАВЛЕНИЕ в корзину: вызывай search_prices query «исходящий трафик CDN», category=cdn, volumeGiB (1 ТБ → 1024); НЕ Object Storage, НЕ network ingress/межзональный трафик, НЕ пересчитывай ВМ заново через get_quote. Не устраивай длинный опросник — сразу считай разумную конфигурацию.'
+      ? '\n\nКонтекст: калькулятор «AI конфигурация» (корзина справа). ПОШАГОВО: «начнём с CPU/RAM/диска/IP/CDN/S3» или один компонент → только этот ресурс (compare_unit_price для vcpu|ram|ssd; search_prices для IP/CDN/S3/HDD/K8s/AI). НЕ get_quote и НЕ додумывай остальную ВМ «чтобы заполнить корзину». Корзину через get_quote обновляй только когда явно собрали конфигурацию («N vCPU / M GiB», «собери ВМ», gpuModel; RAM по умолчанию 4×vCPU). Lakehouse → get_lakehouse_quote. Follow-up «докинь CDN [N ТБ]» → search_prices category=cdn, volumeGiB (1 ТБ→1024), патч корзины; НЕ S3/network ingress, НЕ пересчёт всей ВМ. Без опросника.'
       : '';
   const planningPrompt = buildSystemPrompt(userText, {historyText: recentUserText});
   const systemContent =

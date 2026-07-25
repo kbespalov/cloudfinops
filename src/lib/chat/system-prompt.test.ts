@@ -54,6 +54,38 @@ describe('matchPlanningDomains', () => {
     );
     assert.ok(d.includes('compute'));
   });
+
+  it('CPU-only / Ice Lake ask is compute+aggregates, not S3 Ice or stack', () => {
+    const d = matchPlanningDomains(
+      'Давай начнем с CPU - хочу 32 ядра или Ice lake или Saphire',
+    );
+    assert.ok(d.includes('compute'));
+    assert.ok(d.includes('aggregates'));
+    assert.ok(!d.includes('s3'), `unexpected s3 from Ice Lake: ${d.join(',')}`);
+    assert.ok(!d.includes('stack'), `unexpected stack: ${d.join(',')}`);
+    const prompt = buildSystemPrompt(
+      'Давай начнем с CPU - хочу 32 ядра или Ice lake или Saphire',
+    );
+    assert.match(prompt, /ПОШАГОВАЯ СБОРКА/);
+    assert.match(prompt, /compare_unit_price\(vcpu\)/);
+  });
+
+  it('RAM-only and disk-only asks stay component-scoped (no stack)', () => {
+    const ram = matchPlanningDomains('Давай начнём с RAM — сколько стоит 1 GiB памяти');
+    assert.ok(ram.includes('compute'));
+    assert.ok(ram.includes('aggregates'));
+    assert.ok(!ram.includes('stack'));
+
+    const disk = matchPlanningDomains('Сравни цену 1 GiB NVMe по провайдерам');
+    assert.ok(disk.includes('compute'));
+    assert.ok(disk.includes('aggregates'));
+    assert.ok(!disk.includes('s3'));
+    assert.ok(!disk.includes('stack'));
+
+    const prompt = buildSystemPrompt('начнём с диска SSD');
+    assert.match(prompt, /compare_unit_price\(ssd\)|diskMedia/);
+    assert.match(prompt, /get_quote — ТОЛЬКО когда явно просят конфигурацию целиком/);
+  });
 });
 
 describe('buildSystemPrompt size', () => {
