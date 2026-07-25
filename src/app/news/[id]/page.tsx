@@ -26,7 +26,9 @@ export async function generateMetadata({params}: Params): Promise<Metadata> {
   if (!item) return {title: 'Новость не найдена'};
 
   const url = `/news/${item.id}`;
-  const title = `${item.title} — ${item.providerName}`;
+  // Site title template already appends " · Cloud FinOps" — don't double the brand.
+  const title =
+    item.providerName === 'Cloud FinOps' ? item.title : `${item.title} — ${item.providerName}`;
   const description = item.summary.length > 300 ? `${item.summary.slice(0, 297)}…` : item.summary;
   const keywords = [
     item.providerName,

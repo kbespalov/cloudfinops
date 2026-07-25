@@ -58,6 +58,19 @@ export const NEWS_TAG_TITLE: Record<NewsTag, string> = {
 
 /** Curated industry feature news — start: June 2026. */
 export const newsItems: NewsItem[] = [
+  // ——— Cloud FinOps (hub → blog / tools) ———
+  {
+    id: 'cloudfinops-2026-07-focus-detailing',
+    date: '2026-07-25',
+    provider: 'market',
+    providerName: 'Cloud FinOps',
+    title: 'FOCUS и детализация биллинга: почему облачный счёт нельзя просто сложить',
+    summary:
+      'Вышла статья серии Cloud FinOps Focus: почему с биллинговой выгрузкой всё равно нельзя сказать, сколько стоил продукт вчера. Разбираем cost & usage, нужные поля данных, стандарт FOCUS (FinOps Open Cost and Usage Specification) и чек-лист зрелости выгрузки — для chargeback и оптимизации расходов.',
+    tags: ['finops'],
+    sourceUrl: 'https://cloudfinops.ru/blog/focus-cloud-detailing',
+    sourceLabel: 'Cloud FinOps · блог',
+  },
   // ——— Yandex Cloud ———
   {
     id: 'yc-2026-06-intelligent-tiering',

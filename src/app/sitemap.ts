@@ -1,4 +1,5 @@
 import type {MetadataRoute} from 'next';
+import {blogPosts} from '@/data/blog';
 import {CALCULATOR_PROVIDER_SEO} from '@/data/calculator-providers-seo';
 import {newsItems} from '@/data/news';
 
@@ -75,6 +76,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.8,
     },
     {
+      url: `${SITE_URL}/blog`,
+      lastModified,
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
+    {
       url: `${SITE_URL}/about`,
       lastModified,
       changeFrequency: 'monthly',
@@ -89,5 +96,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...staticRoutes, ...newsRoutes];
+  const blogRoutes: MetadataRoute.Sitemap = blogPosts.map((post) => ({
+    url: `${SITE_URL}/blog/${post.slug}`,
+    lastModified: new Date(`${post.date}T00:00:00Z`),
+    changeFrequency: 'monthly',
+    priority: 0.65,
+  }));
+
+  return [...staticRoutes, ...newsRoutes, ...blogRoutes];
 }
