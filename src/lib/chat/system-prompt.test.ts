@@ -70,6 +70,15 @@ describe('matchPlanningDomains', () => {
     assert.match(prompt, /compare_unit_price\(vcpu\)/);
   });
 
+  it('ice-lake SKU compare is compute-only (not S3 Ice / stack)', () => {
+    const d = matchPlanningDomains(
+      'Сравни с другими провайдерами: «Intel Ice Lake, 100% preemptible vCPU» (yc.compute.ice-lake-100.preemptible-vcpu) у Yandex Cloud. Категория: Compute. Найди ближайшие аналоги и сравни цены в одной таблице.',
+    );
+    assert.ok(d.includes('compute'));
+    assert.ok(!d.includes('s3'), `unexpected s3 from ice-lake SKU: ${d.join(',')}`);
+    assert.ok(!d.includes('stack'), `unexpected stack: ${d.join(',')}`);
+  });
+
   it('RAM-only and disk-only asks stay component-scoped (no stack)', () => {
     const ram = matchPlanningDomains('Давай начнём с RAM — сколько стоит 1 GiB памяти');
     assert.ok(ram.includes('compute'));

@@ -35,6 +35,78 @@ describe('detectStorageClass', () => {
   it('returns null when several classes are positively mentioned', () => {
     assert.equal(detectStorageClass('Сравни Standard и Ice по цене'), null);
   });
+
+  it('does not treat CPU Ice Lake as S3 Ice storage class', () => {
+    assert.equal(detectStorageClass('Intel Ice Lake, 100% preemptible vCPU'), null);
+    assert.equal(detectStorageClass('Сравни Ice Lake preemptible vCPU'), null);
+    assert.equal(detectStorageClass('yc.compute.ice-lake-100.preemptible-vcpu'), null);
+    // Real S3 Ice still detected.
+    assert.equal(detectStorageClass('объектное хранилище класс Ice'), 'ice');
+  });
+});
+
+describe('searchPricesDetailed compute platforms', () => {
+  it('finds Ice Lake preemptible vCPU without collapsing to S3 Ice', () => {
+    const r = searchPricesDetailed({
+      query: 'Intel Ice Lake, 100% preemptible vCPU',
+      category: 'compute',
+      limit: 20,
+    });
+    assert.ok(r.totalMatches > 0, 'expected compute Ice Lake hits');
+    assert.ok(r.providers.length >= 1);
+    assert.ok(
+      r.rows.some((row) => /ice\s*lake/i.test(row.name) && /preemptible|прерыв/i.test(`${row.name} ${row.config}`)),
+    );
+    assert.ok(!r.rows.every((row) => /объектн|object\s*storage|s3/i.test(row.name)));
+    // Cheapest-per-provider must stay on vCPU unit meters, not disks/images/RAM.
+    for (const p of r.providers) {
+      assert.match(
+        `${p.cheapest.name} ${p.cheapest.config} ${p.cheapest.unit}`,
+        /vcpu|ядро|preemptible/i,
+      );
+      assert.doesNotMatch(p.cheapest.name, /образ|диск|nvme|ram/i);
+    }
+    const yandex = r.providers.find((p) => p.provider === 'yandex-cloud');
+    assert.ok(yandex);
+    assert.match(yandex!.cheapest.name, /Ice Lake/i);
+    assert.ok((yandex!.cheapest.month ?? 0) > 200); // 100% Ice Lake preemptible ≈ 244.8, not 5% Cascade
+  });
+
+  it('SKU compare prompt stays cross-provider (ignores «у Yandex» and storageClass=ice)', () => {
+    const prompt =
+      'Сравни с другими провайдерами: «Intel Ice Lake, 100% preemptible vCPU» (yc.compute.ice-lake-100.preemptible-vcpu) у Yandex Cloud. Категория: Compute. Конфигурация: vCPU · 100% · Intel Ice Lake · preemptible.';
+    const r = searchPricesDetailed({
+      query: prompt,
+      category: 'compute',
+      storageClass: 'ice',
+      limit: 20,
+    });
+    assert.ok(r.providers.length >= 3, `expected analogs, got ${r.providers.length}`);
+    assert.equal(r.applied.storageClass, null);
+    const yandex = r.providers.find((p) => p.provider === 'yandex-cloud');
+    assert.ok(yandex);
+    assert.match(yandex!.cheapest.name, /Ice Lake/i);
+    assert.ok(r.providers.some((p) => p.provider !== 'yandex-cloud'));
+  });
+
+  it('short «Intel Ice Lake, 100%» stays on vCPU meters (not disks/images/RAM)', () => {
+    const r = searchPricesDetailed({
+      query: 'Intel Ice Lake, 100%',
+      category: 'compute',
+      limit: 20,
+    });
+    assert.ok(r.providers.length >= 2);
+    for (const p of r.providers) {
+      assert.match(
+        `${p.cheapest.name} ${p.cheapest.config} ${p.cheapest.unit}`,
+        /vcpu|ядро|preemptible/i,
+      );
+      assert.doesNotMatch(p.cheapest.name, /образ|диск|nvme/i);
+    }
+    const yandex = r.providers.find((p) => p.provider === 'yandex-cloud');
+    assert.ok(yandex);
+    assert.match(yandex!.cheapest.name, /Ice Lake/i);
+  });
 });
 
 describe('searchPricesDetailed object storage', () => {

@@ -86,6 +86,18 @@ describe('matchFastPath', () => {
     assert.equal(plan.tools[0]?.args.gpuModel, 'H100');
   });
 
+  it('matches product-page Ice Lake SKU compare to focused compute search', () => {
+    const prompt =
+      'Сравни с другими провайдерами: «Intel Ice Lake, 100% preemptible vCPU» (yc.compute.ice-lake-100.preemptible-vcpu) у Yandex Cloud. Категория: Compute. Конфигурация: vCPU · 100% · Intel Ice Lake · preemptible. Платформа: Intel Ice Lake. Цена сейчас: 244,80 ₽ за vCPU · в месяц. Найди ближайшие аналоги у других провайдеров';
+    const plan = matchFastPath(prompt);
+    assert.ok(plan);
+    assert.equal(plan.id, 'sku-compare');
+    assert.equal(plan.tools[0]?.name, 'search_prices');
+    assert.equal(plan.tools[0]?.args.category, 'compute');
+    assert.match(String(plan.tools[0]?.args.query), /Ice Lake.*preemptible|preemptible.*Ice Lake/i);
+    assert.doesNotMatch(String(plan.tools[0]?.args.query), /Сравни с другими/);
+  });
+
   it('rewrites GPU search chips to get_quote on the calculator surface', () => {
     const plan = matchFastPath('Сколько стоит 1x H100 в месяц?');
     assert.ok(plan);
@@ -404,6 +416,35 @@ describe('matchFastPath', () => {
     assert.match(md, /Basic/);
     // 10 × 1024 × 8 = 81920
     assert.match(md, /81[\s\u00a0]?920/);
+  });
+
+  it('includes Cloud.ru derivedFromFlavors (*) in vCPU unit table', () => {
+    const md = formatFastPathAnswer('vcpu-unit', [
+      {
+        name: 'compare_unit_price',
+        content: JSON.stringify({
+          component: 'vcpu',
+          providers: [
+            {providerName: 'Selectel', priceMonth: 725.11},
+            {providerName: 'Yandex Cloud', priceMonth: 892.8},
+          ],
+          derivedFromFlavors: [
+            {
+              provider: 'cloud-ru',
+              providerName: 'Cloud.ru',
+              hour: 0.976,
+              month: 702.72,
+              method: 'оценка (*) по типичным готовым ВМ',
+            },
+          ],
+        }),
+      },
+    ]);
+    assert.ok(md);
+    assert.match(md, /Cloud\.ru\s*\*/);
+    assert.match(md, /702[,.]72/);
+    assert.match(md, /оценка|flavor/i);
+    assert.doesNotMatch(md, /не\s+представлен|нет\s+в\s+каталоге/i);
   });
 
   it('formats NVMe volume without calling it plain SSD', () => {

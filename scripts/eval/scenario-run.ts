@@ -1,5 +1,5 @@
 /**
- * Soft UX scenario runner (200 natural prompts).
+ * Soft UX scenario runner (natural prompts from user-scenarios.ts).
  *
  * Not CI unit tests — writes JSON + Markdown for agent/human review and
  * cross-validation (--compare).
@@ -21,6 +21,7 @@ import {
   buildUserScenarios,
   filterScenarios,
   type SoftScenario,
+  SOFT_SCENARIO_COUNT,
 } from './user-scenarios';
 
 function arg(name: string): string | undefined {
@@ -268,7 +269,7 @@ async function main() {
   const systemPrompt = SYSTEM_PROMPT;
 
   console.log(
-    `[scenarios] label=${label} n=${scenarios.length}/200 model=${model} concurrency=${concurrency} fastPath=${disableFastPath ? 'OFF' : 'ON'}`,
+    `[scenarios] label=${label} n=${scenarios.length}/${SOFT_SCENARIO_COUNT} model=${model} concurrency=${concurrency} fastPath=${disableFastPath ? 'OFF' : 'ON'}`,
   );
 
   let done = 0;

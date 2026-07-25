@@ -46,7 +46,8 @@ export type FastPathResult = {
 export const FAST_PATH_FINAL_SYSTEM = `Ты — AI-ассистент Cloud FinOps (cloudfinops.ru). Ответь на русском по данным инструментов в истории.
 
 Правила:
-- Цены и провайдеров бери ТОЛЬКО из tool results (providersMatched / quotes / volumeEstimates / stats). Не выдумывай.
+- Цены и провайдеров бери ТОЛЬКО из tool results (providersMatched / quotes / volumeEstimates / stats / providers / derivedFromFlavors). Не выдумывай.
+- Для compare_unit_price: в таблицу включай и providers[], и derivedFromFlavors[] (Cloud.ru и др.) с пометкой «*» / «оценка»; не пиши «Cloud.ru нет в каталоге», если derivedFromFlavors непустой.
 - Markdown-таблица, сортировка по возрастанию цены / итога. Колонка «к минимуму»: у победителя «min», у остальных «+N%».
 - НДС включён, месяц = 720 ч, валюта ₽. Минимальную цену называй как «минимальная цена в каталоге Cloud FinOps на {catalogAsOf}» (поле catalogAsOf / asOf в tool result), среди публичных тарифов в выборке, без промо.
 - Если у победителя synthetic=true или derived — явно пометь «оценка Cloud FinOps, не строка прайса».
@@ -554,6 +555,49 @@ function ssdVolumeGiBFromPlanId(planId: string): number | null {
   return tb > 0 ? tb * 1024 : null;
 }
 
+/** Product-page CTA «Сравни с другими провайдерами» → focused search_prices. */
+function matchSkuComparePlan(userText: string): FastPathPlan | null {
+  if (!/Сравни с другими провайдерами\s*:/i.test(userText)) return null;
+  const quoted = userText.match(/[«"]([^»"]{3,120})[»"]/);
+  const sku = userText.match(/\(([a-z][a-z0-9._-]{6,})\)/i);
+  const name = quoted?.[1]?.trim();
+  if (!name && !sku?.[1]) return null;
+  const query = [name, sku?.[1]].filter(Boolean).join(' ');
+  const categoryMatch = userText.match(
+    /Категория:\s*(Compute|Storage|GPU|Network|CDN|AI|Kubernetes)/i,
+  );
+  const catRaw = categoryMatch?.[1]?.toLowerCase() ?? '';
+  const category =
+    catRaw === 'compute'
+      ? 'compute'
+      : catRaw === 'storage'
+        ? 'storage'
+        : catRaw === 'gpu'
+          ? 'gpu'
+          : catRaw === 'network'
+            ? 'network'
+            : catRaw === 'cdn'
+              ? 'cdn'
+              : catRaw === 'ai'
+                ? 'ai'
+                : catRaw === 'kubernetes'
+                  ? 'kubernetes'
+                  : undefined;
+  return {
+    id: 'sku-compare',
+    tools: [
+      {
+        name: 'search_prices',
+        args: {
+          query,
+          ...(category ? {category} : {}),
+          limit: 20,
+        },
+      },
+    ],
+  };
+}
+
 export function matchFastPath(userText: string): FastPathPlan | null {
   const norm = normalizeQuery(userText);
   if (!norm) return null;
@@ -563,6 +607,10 @@ export function matchFastPath(userText: string): FastPathPlan | null {
       return {id: example.id, tools: example.tools};
     }
   }
+
+  // Product SKU compare before stack detection (prompt mentions source provider / Ice Lake).
+  const skuCompare = matchSkuComparePlan(userText);
+  if (skuCompare) return skuCompare;
 
   // Multi-SKU stacks (VM+IP+S3+CDN+K8s…) → agent tool-loop + LLM, never a chip plan.
   if (looksMultiComponentStack(userText)) return null;
@@ -1828,26 +1876,52 @@ export function formatFastPathAnswer(
     }
 
     if (component === 'ram' || component === 'vcpu') {
+      type Ranked = {name: string; month: number; derived?: boolean};
       const monthOf = (p: P) =>
         typeof p.priceMonth === 'number'
           ? (p.priceMonth as number)
           : typeof p.priceHour === 'number'
             ? (p.priceHour as number) * 720
             : null;
-      const ranked = providers
+      const ranked: Ranked[] = providers
         .map((p) => ({name: p.providerName, month: monthOf(p)}))
-        .filter((p): p is {name: string; month: number} => p.month != null)
-        .sort((a, b) => a.month - b.month);
+        .filter((p): p is Ranked => p.month != null);
+      // Cloud.ru etc.: flavor-only → derivedFromFlavors (show with *, keep out of stats mean).
+      type Derived = {
+        providerName?: string;
+        month?: number | null;
+        hour?: number | null;
+      };
+      for (const d of (data.derivedFromFlavors as Derived[] | undefined) ?? []) {
+        if (!d.providerName) continue;
+        const month =
+          typeof d.month === 'number'
+            ? d.month
+            : typeof d.hour === 'number'
+              ? d.hour * 720
+              : null;
+        if (month == null || month <= 0) continue;
+        if (ranked.some((r) => r.name === d.providerName)) continue;
+        ranked.push({name: d.providerName, month, derived: true});
+      }
+      ranked.sort((a, b) => a.month - b.month);
       if (!ranked.length) return null;
       const best = ranked[0].month;
       const label = component === 'ram' ? '1 GiB RAM' : '1 vCPU (on-demand 100%)';
       const rows = ranked
-        .map((p) => `| ${p.name} | ${formatRub(p.month)} | ${pctVsBest(p.month, best)} |`)
+        .map((p) => {
+          const mark = p.derived ? ' *' : '';
+          return `| ${p.name}${mark} | ${formatRub(p.month)} | ${pctVsBest(p.month, best)} |`;
+        })
         .join('\n');
+      const derivedNote = ranked.some((r) => r.derived)
+        ? '\n\nСтроки с «*» — оценка Cloud FinOps по flavor-тарифам (не отдельная строка прайса); в среднее/медиану не входит.'
+        : '';
       return `**Минимальная цена ${label} в месяц** (НДС вкл., 720 ч)\n\n| Провайдер | ₽/мес | к минимуму |\n|---|---:|---|\n${rows}\n\n${cheapestInCatalogLine({
-        provider: ranked[0].name,
+        provider: ranked[0].name + (ranked[0].derived ? ' *' : ''),
         priceText: `${formatRub(best)}/мес`,
-      })}`;
+        derived: Boolean(ranked[0].derived),
+      })}${derivedNote}`;
     }
   }
 
@@ -2145,26 +2219,29 @@ export function formatFastPathAnswer(
         .sort((a, b) => a.month - b.month);
       const best = rowsData[0].month;
       const rows = rowsData
-        .map(
-          (r) =>
-            `| ${r.provider} | ${r.name}${r.synthetic ? ' *' : ''} | ${r.config} | ${formatRub(r.month)} | ${pctVsBest(r.month, best)} |`,
-        )
+        .map((r) => {
+          const mark = r.synthetic && !/\*\s*$/.test(r.name) ? ' *' : '';
+          return `| ${r.provider} | ${r.name}${mark} | ${r.config} | ${formatRub(r.month)} | ${pctVsBest(r.month, best)} |`;
+        })
         .join('\n');
-      const heading = planId.includes('h100')
-        ? 'Аренда GPU H100 в месяц'
-        : planId.includes('h200')
-          ? 'Аренда GPU H200 в месяц'
-          : planId.includes('l40s')
-            ? 'Аренда GPU L40S'
-            : planId.includes('selectel')
-              ? 'GPU в каталоге Selectel'
-              : planId.includes('k8s')
-                ? 'Managed Kubernetes (мастер) в месяц'
-                : planId.includes('public-ip') || planId.includes('ip')
-                  ? 'Публичный IP в месяц'
-                  : planId.includes('egress')
-                    ? 'Исходящий трафик (egress)'
-                    : 'Сравнение цен по провайдерам';
+      const heading =
+        planId === 'sku-compare' || planId === 'compute-compare'
+          ? 'Сравнение с ближайшими аналогами по провайдерам'
+          : planId.includes('h100')
+            ? 'Аренда GPU H100 в месяц'
+            : planId.includes('h200')
+              ? 'Аренда GPU H200 в месяц'
+              : planId.includes('l40s')
+                ? 'Аренда GPU L40S'
+                : planId.includes('selectel')
+                  ? 'GPU в каталоге Selectel'
+                  : planId.includes('k8s')
+                    ? 'Managed Kubernetes (мастер) в месяц'
+                    : planId.includes('public-ip') || planId.includes('ip')
+                      ? 'Публичный IP в месяц'
+                      : planId.includes('egress')
+                        ? 'Исходящий трафик (egress)'
+                        : 'Сравнение цен по провайдерам';
       // Hourly GPU rows when month is missing / less meaningful.
       const useHour =
         (planId.includes('l40s') || planId.includes('hour')) &&
@@ -2194,11 +2271,32 @@ export function formatFastPathAnswer(
           derived: Boolean(hourRows[0].synthetic),
         })}`;
       }
+      const incompleteNote =
+        planId === 'sku-compare' || planId === 'compute-compare'
+          ? (() => {
+              const preempt = rowsData.filter((r) =>
+                /preemptible|прерыв/i.test(`${r.name} ${r.config}`),
+              );
+              const onDemand = rowsData.filter(
+                (r) => !/preemptible|прерыв/i.test(`${r.name} ${r.config}`),
+              );
+              if (preempt.length && onDemand.length) {
+                return (
+                  `\n\nНеполные аналоги: точный preemptible unit vCPU есть у ${preempt
+                    .map((r) => r.provider)
+                    .join(', ')}; у ${onDemand
+                    .map((r) => r.provider)
+                    .join(', ')} — ближайшее on-demand 100% vCPU (другая модель биллинга).`
+                );
+              }
+              return '';
+            })()
+          : '';
       return `**${heading}** (НДС вкл., месяц = 720 ч)\n\n| Провайдер | Позиция | Конфигурация | ₽/мес | к минимуму |\n|---|---|---|---:|---|\n${rows}\n\n${cheapestInCatalogLine({
         provider: rowsData[0].provider,
         priceText: `${formatRub(best)}/мес`,
         derived: Boolean(rowsData[0].synthetic),
-      })}`;
+      })}${incompleteNote}`;
     }
   }
 
@@ -2402,6 +2500,13 @@ function inferPlanIdFromAgentTool(
       if (a.includes('qwen')) return 'qwen-36';
       return 'ai-api-tokens';
     }
+    if (category === 'compute') {
+      return /сравни\s+с\s+другими|ice\s*lake|preemptible|sapphire|vcpu/i.test(
+        `${query} ${userText}`,
+      )
+        ? 'sku-compare'
+        : 'compute-compare';
+    }
     // Bare search without category — keep LLM (may be exploratory / multi-intent).
     return null;
   }
@@ -2455,7 +2560,8 @@ export async function tryRunFastPath(options: {
   if (!matched) return null;
 
   const surface = options.surface === 'calculator' ? 'calculator' : 'chat';
-  if (!shouldUseFastPath({surface})) return null;
+  // Product-page SKU compare must be deterministic even when chat fast-path is sampled off.
+  if (matched.id !== 'sku-compare' && !shouldUseFastPath({surface})) return null;
 
   const plan = adaptFastPathForSurface(matched, surface, userText);
 

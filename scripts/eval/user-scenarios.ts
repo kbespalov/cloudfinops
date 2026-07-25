@@ -1,8 +1,10 @@
 /**
- * Soft UX scenario corpus (200 natural user prompts).
+ * Soft UX scenario corpus (natural user prompts).
  *
  * These are NOT vitest cases and NOT grounded goldens with frozen prices.
  * Rubrics are soft signals for agent/human review + scenario-run soft-grade.
+ *
+ * Target size is enforced in buildUserScenarios() (SOFT_SCENARIO_COUNT).
  */
 export type SoftDifficulty = 'easy' | 'medium' | 'hard' | 'trap';
 
@@ -73,7 +75,10 @@ function sc(
   };
 }
 
-/** Build the full soft UX corpus (exactly 200). */
+/** Expected corpus size — bump when appending cases. */
+export const SOFT_SCENARIO_COUNT = 209;
+
+/** Build the full soft UX corpus. */
 export function buildUserScenarios(): SoftScenario[] {
   const qs: SoftScenario[] = [
     // ── 1. Unit / single-resource price ──────────────────────────────────
@@ -2517,10 +2522,185 @@ export function buildUserScenarios(): SoftScenario[] {
         mustExposeAssumptions: true,
       },
     ),
+
+    // ── 15. Platform / SKU compare (Ice Lake ≠ S3 Ice; nearest preemptible analogs) ──
+    sc(
+      201,
+      'sku-compare',
+      'Сравни с другими провайдерами: «Intel Ice Lake, 100% preemptible vCPU» (yc.compute.ice-lake-100.preemptible-vcpu) у Yandex Cloud. Категория: Compute. Конфигурация: vCPU · 100% · Intel Ice Lake · preemptible. Платформа: Intel Ice Lake. Цена сейчас: 244,80 ₽ за vCPU · в месяц. Найди ближайшие аналоги у других провайдеров (если точного SKU нет — ближайшее по смыслу: тот же тип ресурса, платформа и доля ядра где применимо) и сравни цены в одной таблице. Отметь отличия, если аналоги неполные.',
+      ['price', 'compare', 'compute'],
+      'hard',
+      {
+        toolsAny: ['search_prices', 'compare_unit_price', 'search_catalog'],
+        toolsAvoid: ['compose_solution'],
+        catalogAnchor: 'search',
+        anchorParams: {
+          query: 'Intel Ice Lake, 100% preemptible vCPU',
+          category: 'compute',
+          limit: 30,
+        },
+        mustShowBreakdown: true,
+        answerIncludes: ['Ice Lake', 'Selectel', 'Yandex', 'preemptible', 'прерыв', 'vCPU'],
+        forbiddenExtras: ['S3 Standard', 'Hotbox'],
+      },
+      'Product-page CTA: filled cross-provider vCPU table; Ice Lake ≠ S3 Ice; note incomplete on-demand analogs.',
+    ),
+    sc(
+      202,
+      'sku-compare',
+      'Intel Ice Lake, 100%',
+      ['price', 'compare', 'compute'],
+      'medium',
+      {
+        toolsAny: ['search_prices', 'compare_unit_price', 'search_catalog'],
+        toolsAvoid: ['compose_solution'],
+        catalogAnchor: 'search',
+        anchorParams: {
+          query: 'Intel Ice Lake, 100%',
+          category: 'compute',
+          limit: 30,
+        },
+        mustShowBreakdown: true,
+        answerIncludes: ['Ice Lake', 'vCPU', 'Selectel', 'Yandex'],
+      },
+      'Short chip: unit vCPU analogs, not disks/images/RAM; non-empty answer.',
+    ),
+    sc(
+      203,
+      'sku-compare',
+      'Сравни Ice Lake preemptible vCPU по провайдерам — у кого дешевле ядро?',
+      ['price', 'compare', 'compute'],
+      'medium',
+      {
+        toolsAny: ['search_prices', 'compare_unit_price'],
+        toolsAvoid: ['compose_solution'],
+        catalogAnchor: 'search',
+        anchorParams: {
+          query: 'Ice Lake preemptible vCPU',
+          category: 'compute',
+          limit: 30,
+        },
+        mustShowBreakdown: true,
+        answerIncludes: ['preemptible', 'прерыв', 'vCPU', 'Ice Lake'],
+      },
+      'Nearest preemptible/100% vCPU; do not collapse to empty «нет тарифов».',
+    ),
+    sc(
+      204,
+      'sku-compare',
+      'Сравни Sapphire Rapids 100% vCPU с аналогами у других облаков РФ.',
+      ['price', 'compare', 'compute'],
+      'medium',
+      {
+        toolsAny: ['search_prices', 'compare_unit_price', 'search_catalog'],
+        toolsAvoid: ['compose_solution'],
+        catalogAnchor: 'search',
+        anchorParams: {
+          query: 'Sapphire Rapids 100% vCPU',
+          category: 'compute',
+          limit: 30,
+        },
+        mustShowBreakdown: true,
+        answerIncludes: ['Sapphire', 'vCPU'],
+      },
+      'Platform SKU compare; nearest 100% vCPU if exact Sapphire missing.',
+    ),
+    sc(
+      205,
+      'sku-compare',
+      'yc.compute.ice-lake-100.preemptible-vcpu — есть ли такие же preemptible ядра у Selectel и VK?',
+      ['price', 'compare', 'compute'],
+      'hard',
+      {
+        toolsAny: ['search_prices', 'compare_unit_price', 'search_catalog'],
+        toolsAvoid: ['compose_solution'],
+        catalogAnchor: 'search',
+        anchorParams: {
+          query: 'Intel Ice Lake, 100% preemptible vCPU yc.compute.ice-lake-100.preemptible-vcpu',
+          category: 'compute',
+          limit: 30,
+        },
+        mustShowBreakdown: true,
+        mustExposeAssumptions: true,
+        answerIncludes: ['Selectel', 'preemptible', 'прерыв'],
+      },
+      'SKU id ask: Selectel has preemptible Cascade; VK often only on-demand — say so explicitly.',
+    ),
+    sc(
+      206,
+      'sku-compare',
+      'Не путай с объектным Ice: сравни именно Intel Ice Lake 100% preemptible vCPU по цене ядра.',
+      ['price', 'compare', 'compute'],
+      'trap',
+      {
+        toolsAny: ['search_prices', 'compare_unit_price'],
+        toolsAvoid: ['compose_solution'],
+        catalogAnchor: 'search',
+        anchorParams: {
+          query: 'Intel Ice Lake 100% preemptible vCPU',
+          category: 'compute',
+          limit: 30,
+        },
+        mustShowBreakdown: true,
+        answerIncludes: ['vCPU', 'Ice Lake', 'preemptible', 'прерыв'],
+        forbiddenExtras: ['Hotbox', 'Icebox'],
+      },
+      'Trap: CPU Ice Lake must not become S3 Ice capacity compare.',
+    ),
+    sc(
+      207,
+      'sku-compare',
+      'Сравни on-demand и preemptible цену одного Ice Lake vCPU — можно ли их усреднять?',
+      ['price', 'compare', 'compute', 'explain'],
+      'hard',
+      {
+        toolsAny: ['compare_unit_price', 'search_prices'],
+        toolsAvoid: ['compose_solution'],
+        mustExposeAssumptions: true,
+        answerIncludes: ['preemptible', 'прерыв', 'on-demand', 'on demand', 'обычн', 'нельзя', 'разн'],
+      },
+      'Must refuse averaging preemptible with on-demand; show both as separate lines.',
+    ),
+    sc(
+      208,
+      'sku-compare',
+      'У Yandex Ice Lake preemptible около 245 ₽/vCPU·мес — найди ближайший аналог у Selectel и скажи, чем он отличается.',
+      ['price', 'compare', 'compute'],
+      'medium',
+      {
+        toolsAny: ['search_prices', 'compare_unit_price', 'search_catalog'],
+        toolsAvoid: ['compose_solution'],
+        catalogAnchor: 'search',
+        anchorParams: {
+          query: '100% preemptible vCPU',
+          category: 'compute',
+          limit: 30,
+        },
+        mustShowBreakdown: true,
+        answerIncludes: ['Selectel', 'Cascade', 'Ice Lake', 'preemptible', 'прерыв'],
+      },
+      'Selectel preemptible is cheaper but Cascade Lake — call out platform delta.',
+    ),
+    sc(
+      209,
+      'unit-price',
+      '8 ядер cpu — сколько стоит одно ядро on-demand 100% у разных провайдеров? Cloud.ru тоже покажи.',
+      ['price', 'unit', 'compare', 'compute'],
+      'medium',
+      {
+        toolsAny: ['compare_unit_price', 'search_prices'],
+        toolsAvoid: ['compose_solution'],
+        catalogAnchor: 'unit',
+        anchorParams: {component: 'vcpu'},
+        mustShowBreakdown: true,
+        answerIncludes: ['Cloud.ru', 'оценк', 'vCPU', 'Selectel'],
+      },
+      'Cloud.ru must appear via derivedFromFlavors with * / оценка — not «нет в каталоге».',
+    ),
   ];
 
-  if (qs.length !== 200) {
-    throw new Error(`Expected 200 soft scenarios, got ${qs.length}`);
+  if (qs.length !== SOFT_SCENARIO_COUNT) {
+    throw new Error(`Expected ${SOFT_SCENARIO_COUNT} soft scenarios, got ${qs.length}`);
   }
   return qs;
 }

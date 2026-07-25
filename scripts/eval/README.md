@@ -3,7 +3,7 @@
 Два слоя:
 
 1. **Grounded bench** (`questions.ts` + `eval:bench`) — жёсткий gold из каталожных tools, `pass/fail` по cheapest / no-halluc.
-2. **Soft UX scenarios** (`user-scenarios.ts` + `eval:scenarios`) — 200 естественных запросов с мягкими рубриками (score/signals). **Не** vitest и **не** frozen prices.
+2. **Soft UX scenarios** (`user-scenarios.ts` + `eval:scenarios`) — корпус естественных запросов (сейчас 209) с мягкими рубриками (score/signals). **Не** vitest и **не** frozen prices.
 
 ## Файлы
 
@@ -11,7 +11,7 @@
 |------|------------|
 | `questions.ts` | Grounded датасет (`buildQuestions()`, ~135 кейсов) |
 | `ground-truth.ts` | Gold + hard grade (no hallucinated providers, cheapest, recall) |
-| `user-scenarios.ts` | Soft UX корпус (`buildUserScenarios()`, ровно 200) |
+| `user-scenarios.ts` | Soft UX корпус (`buildUserScenarios()`, `SOFT_SCENARIO_COUNT`) |
 | `soft-grade.ts` | Мягкий score 0–1 + hits/misses/warnings + optional live catalogAnchor |
 | `scenario-run.ts` | Прогон soft-корпуса → JSON/MD; `--compare` для кросс-валидации |
 | `harness.ts` | Полный chat pipeline (как `/api/chat`), support `history` для revise |
@@ -82,29 +82,30 @@ npm run eval:smoke          # homepage chips + latency budget
 npx tsx scripts/eval/smoke.ts --suite
 ```
 
-## Soft UX scenarios (200)
+## Soft UX scenarios (209)
 
 Корпус разговорных/архитектурных/конфликтных запросов. Ожидания — **сигналы** (tools, clarify, refuse/partial, breakdown, forbiddenExtras, optional live `catalogAnchor`), а не зашитая цена в датасете.
 
 ### Цель качества (agent path)
 
-- **pass@0.8** ≥ **95%** (score ≥ 0.8 ≈ «4 из 5») на полном корпусе 200 при `--no-fast-path`.
+- **pass@0.8** ≥ **95%** (score ≥ 0.8 ≈ «4 из 5») на полном корпусе при `--no-fast-path`.
 - Улучшения — через **system prompt / tool descriptions / validate / intent gating / force-tool retry / short-final nudge**, не через размножение `ALIAS_PLANS` / homepage fast-path.
 - Fast-path остаётся только для коротких homepage/alias кейсов; soft-bench всегда гоняем с `--no-fast-path`.
-- Референс-прогон: `out/ux-full-200-goal.json` (fastPath=0).
+- Референс-прогон: `out/ux-full-200-goal.json` (fastPath=0; обновить после расширения корпуса).
 
 Финальный вердикт «попал / не попал» — у агента или человека по MD-отчёту (`notesForReview`, misses, warnings). Score нужен для ранжирования и кросс-валидации стабильности, не как CI gate.
 
 ```bash
 # Размер корпуса
-npx tsx -e "import {buildUserScenarios} from './scripts/eval/user-scenarios.ts'; console.log(buildUserScenarios().length)"
+npx tsx -e "import {buildUserScenarios, SOFT_SCENARIO_COUNT} from './scripts/eval/user-scenarios.ts'; console.log(buildUserScenarios().length, SOFT_SCENARIO_COUNT)"
 
 # Короткий live-прогон
 npm run eval:scenarios -- --limit 5 --no-fast-path --label smoke-ux
 
 # Секция / выбранные id
 npm run eval:scenarios -- --section kubernetes --no-fast-path --label ux-k8s
-npm run eval:scenarios -- --ids ux-001,ux-050,ux-171 --no-fast-path
+npm run eval:scenarios -- --section sku-compare --no-fast-path --label ux-sku
+npm run eval:scenarios -- --ids ux-001,ux-050,ux-201,ux-206 --no-fast-path
 
 # Кросс-валидация двух прогонов (согласованность signals, не дословный текст)
 npm run eval:scenarios -- --compare \
@@ -119,5 +120,7 @@ npm run eval:scenarios -- --compare \
 - `warnings` — слабые сигналы (нет breakdown, cheapest не упомянут при catalogAnchor).
 - `signals.catalog` — live cheapest/hallucination из tools; **не** golden в git.
 - Revise-кейсы (`ux-191`…`ux-200`) сначала гоняют `seedId`, затем follow-up с `history`.
+- Platform/SKU compare (`ux-201`…`ux-208`): Ice Lake ≠ S3 Ice, nearest preemptible analogs, non-empty tables.
+- Unit price (`ux-209`): Cloud.ru vCPU via `derivedFromFlavors` with `*` / оценка — не «нет в каталоге».
 
-Эти 200 кейсов **не** добавляются в `npm test` / vitest.
+Эти soft-кейсы **не** добавляются в `npm test` / vitest.

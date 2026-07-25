@@ -95,6 +95,7 @@ export const DOMAIN_CARD_COMPUTE = `## vCPU / RAM / диск (сопостави
 - Не подменяй component-only полным get_quote и не додумывай соседние ресурсы.
 - vCPU разного типа несравнимы: preemptible vs on-demand; доля 5–50% vs 100%; shared vs выделенное. База «цена 1 vCPU» = on-demand 100%. providersMatched.cheapest часто preemptible — НЕ база.
 - Preemptible/долевые — отдельным блоком. MWS: для ядра бери строку vCPU, не RAM.
+- «Сравни SKU / Ice Lake / Sapphire preemptible vCPU с аналогами» → search_prices category=compute (+ compare_unit_price). Ice Lake ≠ S3 Ice. Для такого запроса providersMatched.cheapest = ближайший аналог по смыслу (платформа/доля/preemptible), не абсолютный минимум провайдера. Нет точного SKU — ближайшее с явными отличиями; не пустая таблица «ничего нет», если в каталоге есть соседние preemptible/100% vCPU.
 - get_quote — только ВМ/конфигурация целиком (оба: ядра+память, «собери», сайт с RAM). Nearest preset — назови отличия от запроса.`;
 
 export const DOMAIN_CARD_S3 = `## Object Storage / S3
@@ -131,7 +132,7 @@ export const DOMAIN_CARD_AGGREGATES = `## Агрегаты / среднее / co
 - Среднее ≠ рыночная цена: только на сопоставимой базе, назови базу и N провайдеров, дай мин–макс.
 - Не усредняй разные типы (preemptible+on-demand). Нет сопоставимой строки — не молчи: найди повторным поиском или перечисли исключения.
 - «Дороже в N раз» только внутри одного типа.
-- Из compare_unit_price бери stats/providers[]. derivedFromFlavors — «оценка», НЕ в среднее. noComparableUnitPrice — не в среднее. preemptibleFloor — только если просили «самый дешёвый любой ценой», с пометкой типа.`;
+- Из compare_unit_price бери stats/providers[] И derivedFromFlavors[]: Cloud.ru (и др. flavor-only) показывай в той же таблице с «*» / «оценка», НЕ пиши «нет в каталоге». derivedFromFlavors — НЕ в среднее/медиану. noComparableUnitPrice — только если нет ни providers, ни derived. preemptibleFloor — только если просили «самый дешёвый любой ценой», с пометкой типа.`;
 
 export const DOMAIN_CARD_STACK = `## Мультикомпонентный стек / compose
 - Стек / K8s+workers+S3/HDD/IP/egress/CDN / магазин / веб / SaaS → compose → validate → (уточнение/repair) → price_solution → compare. Не рой search_prices и не складывай цены сам. Preview с дефолтами лучше пустого опроса.
@@ -195,9 +196,9 @@ export function matchPlanningDomains(text: string): PlanningDomain[] {
     ) && !/(?:\bs3\b|объектн)/i.test(t);
   if (hasBlockDisk) out.add('compute'); // diskMedia / compare_unit_price ssd rules live with compute+core
 
-  // «Ice Lake» (CPU) must not match S3 Ice — negative lookahead after ice.
+  // «Ice Lake» / ice-lake (CPU platform) must not match S3 Ice storage class.
   if (
-    /(?:\bs3\b|объектн|object\s*storage|hotbox|coldbox|(?:\bice\b(?!\s*lake))|\bcold\b|\bwarm\b|storageClass)/i.test(
+    /(?:\bs3\b|объектн|object\s*storage|hotbox|coldbox|(?:\bice\b(?![-\s]*lake))|\bcold\b|\bwarm\b|storageClass)/i.test(
       t,
     )
   ) {
@@ -248,15 +249,18 @@ export function matchPlanningDomains(text: string): PlanningDomain[] {
     }
   }
 
+  // Product SKU compare says «в одной таблице» but is a single-resource ask, not a stack.
+  const skuCompareAsk = /Сравни с другими провайдерами\s*:/i.test(t);
   if (
-    /собери\s+решени|мультикомпонент|стек\s+из|в\s+одной\s+таблиц|compose_solution|под\s+бюджет.{0,40}kubernetes|kubernetes.{0,40}бюджет|подбери\s+инфраструктур|lakehouse|clickhouse|кликхаус|serverless/i.test(
+    !skuCompareAsk &&
+    (/собери\s+решени|мультикомпонент|стек\s+из|в\s+одной\s+таблиц|compose_solution|под\s+бюджет.{0,40}kubernetes|kubernetes.{0,40}бюджет|подбери\s+инфраструктур|lakehouse|clickhouse|кликхаус|serverless/i.test(
       t,
     ) ||
-    workloadInfra ||
-    (out.has('s3') && out.has('cdn')) ||
-    (out.has('compute') && (out.has('s3') || out.has('cdn') || out.has('k8s'))) ||
-    (out.has('k8s') &&
-      /(?:worker|воркер|нод|cluster|кластер|services?|сервис)/i.test(t))
+      workloadInfra ||
+      (out.has('s3') && out.has('cdn')) ||
+      (out.has('compute') && (out.has('s3') || out.has('cdn') || out.has('k8s'))) ||
+      (out.has('k8s') &&
+        /(?:worker|воркер|нод|cluster|кластер|services?|сервис)/i.test(t)))
   ) {
     out.add('stack');
     // Stack asks usually touch several domains — attach likely cards generously.

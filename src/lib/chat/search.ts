@@ -18,6 +18,7 @@ import {
   extractStorageClass,
   formatPlatform,
   isRequestMeter,
+  isVcpuMeter,
   CATEGORY_TITLE,
   type CatalogMeter,
   type CategoryKey,
@@ -189,7 +190,11 @@ const STORAGE_CLASS_PATTERNS: {cls: string; re: RegExp}[] = [
   {cls: 'cold', re: /icebox|(?<![а-яёa-z])холодн\p{L}*|(?<![а-яёa-z])cold(?![а-яёa-z])/gu},
   {cls: 'standard', re: /hotbox|(?<![а-яёa-z])стандарт\p{L}*|(?<![а-яёa-z])standard(?![а-яёa-z])/gu},
   {cls: 'warm', re: /(?<![а-яёa-z])warm(?![а-яёa-z])|(?<![а-яёa-z])тепл\p{L}*/gu},
-  {cls: 'ice', re: /(?<![а-яёa-z])ice(?![а-яёa-z])|(?<![а-яёa-z])ледян\p{L}*/gu},
+  // «Ice» storage class — but NOT CPU «Ice Lake» / ice-lake platform tokens.
+  {
+    cls: 'ice',
+    re: /(?<![а-яёa-z])ice(?![-\s]*lake)(?![а-яёa-z])|(?<![а-яёa-z])ледян\p{L}*/gu,
+  },
 ];
 
 /**
@@ -451,6 +456,54 @@ function wantsGpuGbShare(query: string | undefined): boolean {
   );
 }
 
+/**
+ * Unit vCPU / platform / preemptible SKU compare — not disks, images, or RAM.
+ * Without this, «Ice Lake preemptible vCPU» ranks cheap NVMe/IOPS as cheapest.
+ */
+function looksLikeVcpuUnitQuery(query: string | undefined, searchTokens: string[]): boolean {
+  if (!query) return false;
+  const raw = query.toLowerCase();
+  const q = normalize(query);
+  if (/preemptible-vcpu|compute\.vcpu|\.vcpu\b/.test(q)) return true;
+  const hasVcpuToken =
+    searchTokens.includes('vcpu') ||
+    /\bvcpu\b|ядро|ядра|ядер|process(?:or|ors)?/.test(q);
+  const hasPlatform =
+    /ice\s*lake|ice-lake|cascade\s*lake|sapphire|epyc|rome|milan|cpu.?platform|платформ/.test(
+      q,
+    );
+  // normalize() strips `%`, so test the raw string for «100%».
+  const hasPreemptOrShare =
+    /preemptible|прерываем|spot|interrupt|доля|guaranteed/.test(q) ||
+    /100\s*%/.test(raw);
+  // «Intel Ice Lake, 100%» without the word vCPU is still a unit-CPU ask.
+  return (
+    (hasVcpuToken && (hasPlatform || hasPreemptOrShare)) ||
+    (hasPlatform && hasPreemptOrShare)
+  );
+}
+
+/** Product-page «сравни с другими» includes the source provider name — do not filter to it. */
+function isCrossProviderCompareQuery(query: string | undefined): boolean {
+  if (!query) return false;
+  return /сравни\s+с\s+другими|других\s+провайдер|ближайш\w*\s+аналог|аналог\w*\s+у\s+других/i.test(
+    query,
+  );
+}
+
+/**
+ * SKU-compare prompts are long RU boilerplate; lexical ranking must use the quoted
+ * product name / sku, not «у Yandex Cloud» / «Категория: Compute».
+ */
+function focusedSearchQuery(query: string | undefined): string | undefined {
+  if (!query) return undefined;
+  if (!isCrossProviderCompareQuery(query)) return query;
+  const quoted = query.match(/[«"]([^»"]{3,120})[»"]/);
+  const sku = query.match(/\(([a-z][a-z0-9._-]{6,})\)/i);
+  if (!quoted && !sku) return query;
+  return [quoted?.[1]?.trim(), sku?.[1]].filter(Boolean).join(' ');
+}
+
 function looksLikeKubernetesQuery(
   category: CategoryKey | null,
   searchTokens: string[],
@@ -565,6 +618,8 @@ type FilterContext = {
   meterKind: 'capacity' | 'requests' | null;
   preferCapacity: boolean;
   k8sTier: 'basic' | 'ha' | null;
+  /** SKU/platform compare: keep closest match per provider, not absolute cheapest. */
+  nearestMatchPerProvider: boolean;
 };
 
 /** Hard-filter catalog meters and compute lexical overlap (may be 0). */
@@ -572,11 +627,18 @@ function collectCandidates(params: SearchParams): FilterContext {
   const entries = getIndex();
 
   let providerFilter = params.provider?.trim().toLowerCase() || null;
-  const rawTokens = params.query ? normalize(params.query).split(/\s+/).filter(Boolean) : [];
+  const effectiveQuery = focusedSearchQuery(params.query) ?? params.query;
+  const crossProviderCompare = isCrossProviderCompareQuery(params.query);
+  const rawTokens = effectiveQuery
+    ? normalize(effectiveQuery).split(/\s+/).filter(Boolean)
+    : [];
   const tokens = new Set<string>();
   for (const tok of rawTokens) {
     if (PROVIDER_SYNONYMS[tok]) {
-      if (!providerFilter) providerFilter = PROVIDER_SYNONYMS[tok];
+      // «у Yandex Cloud» in a compare prompt must not hide Selectel/VK/…
+      if (!providerFilter && !crossProviderCompare) {
+        providerFilter = PROVIDER_SYNONYMS[tok];
+      }
       continue;
     }
     tokens.add(tok);
@@ -587,10 +649,20 @@ function collectCandidates(params: SearchParams): FilterContext {
   const category = params.category ?? null;
   const gpuModel = params.gpuModel?.trim().toLowerCase() || null;
   const aiModel =
-    params.aiModel?.trim().toLowerCase() || detectAiModelNeedle(params.query) || null;
+    params.aiModel?.trim().toLowerCase() || detectAiModelNeedle(effectiveQuery) || null;
+  const vcpuUnitOnly = looksLikeVcpuUnitQuery(effectiveQuery, searchTokens);
   let storageClass =
-    params.storageClass?.trim().toLowerCase() || detectStorageClass(params.query);
-  let meterKind = detectMeterKind(params.query, params.meterKind);
+    params.storageClass?.trim().toLowerCase() || detectStorageClass(effectiveQuery);
+  // Model often sets storageClass=ice from «Ice Lake» / ice-lake SKU — drop for CPU unit asks.
+  if (
+    storageClass &&
+    (vcpuUnitOnly ||
+      category === 'compute' ||
+      /ice\s*lake|ice-lake|preemptible\s*vcpu/i.test(effectiveQuery ?? ''))
+  ) {
+    storageClass = null;
+  }
+  let meterKind = detectMeterKind(effectiveQuery, params.meterKind);
   const looksLikeObject =
     category === 'storage' ||
     searchTokens.some((t) =>
@@ -609,9 +681,9 @@ function collectCandidates(params: SearchParams): FilterContext {
   }
 
   const preferCapacity = meterKind === 'capacity';
-  const k8sContext = looksLikeKubernetesQuery(category, searchTokens, params.query);
-  const k8sTier = k8sContext ? detectKubernetesTier(params.query) : null;
-  const k8sComparableOnly = Boolean(k8sContext && k8sTier && !wantsK8sUnitComponents(params.query));
+  const k8sContext = looksLikeKubernetesQuery(category, searchTokens, effectiveQuery);
+  const k8sTier = k8sContext ? detectKubernetesTier(effectiveQuery) : null;
+  const k8sComparableOnly = Boolean(k8sContext && k8sTier && !wantsK8sUnitComponents(effectiveQuery));
   const candidates: Candidate[] = [];
 
   for (const {meter, hay} of entries) {
@@ -630,6 +702,7 @@ function collectCandidates(params: SearchParams): FilterContext {
     if (isGpuGbShareMeter(meter) && !wantsGpuGbShare(params.query) && queryLooksLikeGpuCard) {
       continue;
     }
+    if (vcpuUnitOnly && !isVcpuMeter(meter)) continue;
     if (aiModel && !aiModelMatchesNeedle(aiModel, meter, hay)) continue;
     if (storageClass) {
       const cls = (extractStorageClass(meter) ?? '').toLowerCase();
@@ -652,6 +725,18 @@ function collectCandidates(params: SearchParams): FilterContext {
     if (storageClass && hay.includes(storageClass)) lexical += 0.5;
     if (k8sTier && isK8sComparableMaster(meter, k8sTier)) lexical += 1.5;
     if (aiModel && aiModelMatchesNeedle(aiModel, meter, hay)) lexical += 1.5;
+    if (vcpuUnitOnly) {
+      const q = normalize(effectiveQuery ?? '');
+      const raw = (effectiveQuery ?? '').toLowerCase();
+      if (/ice\s*lake|ice-lake/.test(q) && /ice.?lake|intel-ice-lake/.test(hay)) lexical += 2;
+      if (/preemptible|прерываем/.test(q) && /preemptible|прерываем/.test(hay)) lexical += 1.5;
+      if (
+        (/100\s*%/.test(raw) || /\b100\b/.test(q)) &&
+        /100\s*%|guaranteedvcpu.*100|\b100\b/.test(hay)
+      ) {
+        lexical += 1;
+      }
+    }
 
     candidates.push({
       meter,
@@ -662,7 +747,15 @@ function collectCandidates(params: SearchParams): FilterContext {
     });
   }
 
-  return {candidates, searchTokens, storageClass, meterKind, preferCapacity, k8sTier};
+  return {
+    candidates,
+    searchTokens,
+    storageClass,
+    meterKind,
+    preferCapacity,
+    k8sTier,
+    nearestMatchPerProvider: vcpuUnitOnly,
+  };
 }
 
 /** Lexical-only ranking (requires a token hit when the query has tokens). */
@@ -754,6 +847,7 @@ function buildResult(
   limit: number,
   retrieval: 'lexical' | 'hybrid',
   k8sTier: 'basic' | 'ha' | null = null,
+  nearestMatchPerProvider = false,
 ): PriceSearchResult {
   const byProvider = new Map<string, ProviderSummary>();
   for (const {row} of scored) {
@@ -767,7 +861,11 @@ function buildResult(
       });
     } else {
       existing.count += 1;
-      if (isPreferredCheaper(row, existing.cheapest, preferCapacity, k8sTier)) {
+      // scored is already best-match-first; keep the first hit as the analog.
+      if (
+        !nearestMatchPerProvider &&
+        isPreferredCheaper(row, existing.cheapest, preferCapacity, k8sTier)
+      ) {
         existing.cheapest = row;
       }
     }
@@ -856,6 +954,7 @@ export function searchPricesDetailed(params: SearchParams): PriceSearchResult {
     limit,
     'lexical',
     ctx.k8sTier,
+    ctx.nearestMatchPerProvider,
   );
 }
 
@@ -867,6 +966,8 @@ function skipHybridForHardFilters(params: SearchParams, ctx: FilterContext): boo
   if (ctx.storageClass) return true;
   if (typeof params.gpuModel === 'string' && params.gpuModel.trim()) return true;
   if (typeof params.aiModel === 'string' && params.aiModel.trim()) return true;
+  // Platform/SKU vCPU compare: lexical boosts already encode Ice Lake / 100% / preemptible.
+  if (ctx.nearestMatchPerProvider) return true;
   // Narrow category already scopes the candidate set — skip embed RTT.
   if (
     params.category === 'kubernetes' ||
@@ -902,6 +1003,7 @@ export async function searchPricesDetailedAsync(
       limit,
       'lexical',
       ctx.k8sTier,
+      ctx.nearestMatchPerProvider,
     );
   }
   const {scored, retrieval} = await rankHybrid(ctx, query);
@@ -914,6 +1016,7 @@ export async function searchPricesDetailedAsync(
     limit,
     retrieval,
     ctx.k8sTier,
+    ctx.nearestMatchPerProvider,
   );
 }
 
