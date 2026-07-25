@@ -121,5 +121,9 @@ describe('gpu landings', () => {
     assert.ok(stats.familyOfferCount > 0);
     assert.match(stats.catalogHref, /gpu=h200/);
     assert.doesNotMatch(stats.catalogHref, /q=NVL/);
+
+    const hub = hubGpuStats().familyCards.find((c) => c.slug === 'h200-nvl');
+    assert.ok(hub);
+    assert.equal(hub.catalogHref, stats.catalogHref);
   });
 });

@@ -319,7 +319,7 @@ export function hubGpuStats(): {
       return {
         slug: def.slug,
         shortTitle: def.shortTitle,
-        catalogHref: catalogHrefForLanding(def),
+        catalogHref: stats.catalogHref,
         offerCount: stats.offerCount,
         providerCount: stats.providerCount,
         fromLabel: pick ? `от ${pick.amountLabel}/${periodRu}` : null,

@@ -3,7 +3,6 @@ import {notFound} from 'next/navigation';
 import {GpuModelPage} from '@/components/gpu/GpuModelPage';
 import {
   allGpuLandingSlugs,
-  catalogHrefForLanding,
   faqForLanding,
   getGpuLanding,
   type GpuLandingDef,
@@ -58,7 +57,9 @@ export async function generateMetadata({params}: Params): Promise<Metadata> {
 function modelJsonLd(def: GpuLandingDef) {
   const url = `${SITE_URL}/gpu/${def.slug}`;
   const stats = buildGpuLandingStats(def);
-  const catalogUrl = `${SITE_URL}${catalogHrefForLanding(def)}`;
+  // Prefer stats.catalogHref so empty narrow slices (e.g. H200 NVL) do not
+  // advertise a dead `q=` filter in structured data.
+  const catalogUrl = `${SITE_URL}${stats.catalogHref}`;
   const lowOffer =
     stats.narrowEmpty || stats.offerCount === 0
       ? null
@@ -76,7 +77,9 @@ function modelJsonLd(def: GpuLandingDef) {
       : {
           '@type': 'Offer',
           url: catalogUrl,
-          availability: 'https://schema.org/InStock',
+          availability: stats.narrowEmpty
+            ? 'https://schema.org/OutOfStock'
+            : 'https://schema.org/InStock',
           priceCurrency: 'RUB',
         };
 
