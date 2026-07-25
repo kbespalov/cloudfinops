@@ -20,6 +20,22 @@ describe('sidebarConfigFromTool', () => {
     assert.match(payload.summary.line, /52 vCPU/);
   });
 
+  it('maps compose_solution virtual_machine like get_quote', () => {
+    const payload = sidebarConfigFromTool(
+      'compose_solution',
+      {
+        solutionType: 'virtual_machine',
+        requirements: {vcpu: 8, ramGiB: 32, diskGiB: 100},
+      },
+      'year',
+    );
+    assert.ok(payload && payload.kind === 'adhoc');
+    if (!payload || payload.kind !== 'adhoc' || payload.request.kind !== 'compute') return;
+    assert.equal(payload.request.vcpu, 8);
+    assert.equal(payload.request.ramGiB, 32);
+    assert.equal(payload.request.period, 'year');
+  });
+
   it('defaults RAM to 4× vCPU when omitted', () => {
     const payload = sidebarConfigFromTool('get_quote', {vcpu: 8}, 'month');
     assert.ok(payload && payload.kind === 'adhoc');

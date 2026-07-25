@@ -84,13 +84,25 @@ describe('matchPlanningDomains', () => {
 
     const prompt = buildSystemPrompt('начнём с диска SSD');
     assert.match(prompt, /compare_unit_price\(ssd\)|diskMedia/);
-    assert.match(prompt, /get_quote — ТОЛЬКО когда явно просят конфигурацию целиком/);
+    assert.match(prompt, /get_quote — ТОЛЬКО одна ВМ\/GPU целиком/);
+  });
+
+  it('attaches stack for kubernetes workers / compose asks', () => {
+    const d = matchPlanningDomains(
+      'Собери самый дешёвый managed Kubernetes с worker-нодами до 100 тысяч',
+    );
+    assert.ok(d.includes('k8s'));
+    assert.ok(d.includes('stack'));
+    const prompt = buildSystemPrompt(
+      'Собери самый дешёвый managed Kubernetes с worker-нодами до 100 тысяч',
+    );
+    assert.match(prompt, /compose_solution/);
   });
 });
 
 describe('buildSystemPrompt size', () => {
   it('core is much smaller than full SYSTEM_PROMPT', () => {
-    assert.ok(SYSTEM_PROMPT_CORE.length < 9000);
+    assert.ok(SYSTEM_PROMPT_CORE.length < 12_000);
     assert.ok(SYSTEM_PROMPT.length > SYSTEM_PROMPT_CORE.length);
   });
 

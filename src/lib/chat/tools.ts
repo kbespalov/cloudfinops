@@ -1,7 +1,8 @@
 /**
- * Function-calling tools exposed to GigaChat: `search_prices` (lexical catalog
- * search) and `get_quote` (calculator engine). JSON-schema definitions plus a
- * async dispatcher that runs the tool and returns a compact JSON string for the model.
+ * Function-calling tools for GigaChat.
+ * Primitives: search_catalog, compose_solution, validate_solution, price_solution,
+ * compare_solutions, get_product_details.
+ * Shortcuts: search_prices, get_quote, compare_unit_price, fit_budget (+ gated).
  */
 
 import type {CategoryKey, PeriodMode} from '@/lib/catalog';
@@ -11,18 +12,31 @@ import {
   type PriceRow,
   type SearchParams,
 } from './search';
-import {quotePreset, listGpuPresets} from '@/lib/calculator/quote';
+import {quotePreset} from '@/lib/calculator/quote';
 import {compareUnitPrice, type DiskMediaFilter, type UnitComponent} from './analytics';
 import {catalogAsOfIso} from '@/lib/catalog/compare-disclaimer';
 import {fitBudget, type FitBudgetProfile} from './fit-budget';
 import {recommendInferenceInfra} from './inference-recommend';
-import type {ComputePreset, GpuPreset, CalculatorPreset} from '@/lib/calculator/presets';
 import {
   resolveLakehouseInput,
   type LakehouseSize,
 } from '@/lib/calculator/lakehouse-presets';
 import {quoteLakehouse} from '@/lib/calculator/lakehouse-quote';
 import type {InferenceDtype} from '@/data/inference-models';
+import {
+  buildPresetFromRequirements,
+  compareSolutions,
+  composeSolution,
+  getProductDetails,
+  priceSolution,
+  searchCatalog,
+  searchCatalogAsync,
+  validateSolution,
+  type CatalogFilter,
+  type RequirementSpec,
+  type Solution,
+  type SolutionType,
+} from './solution';
 
 export type ChatToolCall = {
   id: string;
@@ -79,14 +93,225 @@ export const RECOMMEND_INFERENCE_INFRA_TOOL = {
   },
 };
 
+const SOLUTION_TYPES = [
+  'virtual_machine',
+  'kubernetes',
+  'inference',
+  'lakehouse',
+  'web_application',
+  'custom',
+] as const;
+
 /** Baseline tools for every planning turn (do not add gated tools here). */
 export const CHAT_TOOLS = [
   {
     type: 'function',
     function: {
+      name: 'search_catalog',
+      description:
+        'Универсальный поиск кандидатов в каталоге с match-метаданными (matchedFields/unmatchedFields/score). Для исследования SKU перед сборкой решения. Для простого вопроса про одну услугу можно search_prices (shortcut).',
+      parameters: {
+        type: 'object',
+        properties: {
+          text: {type: 'string', description: 'Свободный текст поиска (RU/EN).'},
+          entityTypes: {
+            type: 'array',
+            items: {
+              type: 'string',
+              enum: [
+                'sku',
+                'service',
+                'product',
+                'instance_type',
+                'gpu_node',
+                'storage',
+                'managed_service',
+              ],
+            },
+            description: 'Типы сущностей (мапятся на категории каталога).',
+          },
+          filters: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                field: {type: 'string'},
+                operator: {
+                  type: 'string',
+                  enum: ['eq', 'in', 'gte', 'lte', 'contains', 'exists'],
+                },
+                value: {},
+              },
+              required: ['field', 'operator', 'value'],
+            },
+            description: 'Структурные фильтры: vcpu, ramGiB, provider, gpuModel, storageClass…',
+          },
+          providers: {
+            type: 'array',
+            items: {type: 'string', enum: PROVIDER_IDS},
+          },
+          region: {type: 'string'},
+          category: {type: 'string', enum: CATEGORIES},
+          gpuModel: {type: 'string'},
+          aiModel: {type: 'string'},
+          storageClass: {type: 'string', enum: ['standard', 'warm', 'cold', 'ice']},
+          meterKind: {type: 'string', enum: ['capacity', 'requests']},
+          volumeGiB: {type: 'number'},
+          limit: {type: 'integer'},
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'get_product_details',
+      description:
+        'Карточка продукта(ов) по meterId из search_catalog/compose. Запрашивай детали только по нужным кандидатам.',
+      parameters: {
+        type: 'object',
+        properties: {
+          productIds: {
+            type: 'array',
+            items: {type: 'string'},
+            description: 'meterId вида provider:sku',
+          },
+          include: {
+            type: 'array',
+            items: {
+              type: 'string',
+              enum: ['attributes', 'pricing', 'limitations', 'compatibility', 'source'],
+            },
+          },
+        },
+        required: ['productIds'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'compose_solution',
+      description:
+        'Собрать многокомпонентное решение (BOM) по типу: virtual_machine, kubernetes, web_application, custom, lakehouse, inference. Backend подбирает компоненты и цены. После вызова ОБЯЗАТЕЛЬНО validate_solution. Для одной ВМ/GPU можно shortcut get_quote.',
+      parameters: {
+        type: 'object',
+        properties: {
+          solutionType: {type: 'string', enum: SOLUTION_TYPES},
+          requirements: {
+            type: 'object',
+            description:
+              'Структурированные требования: vcpu/ramGiB/diskGiB, workerCount, objectStorageGiB, cdnEgressGiB, k8sTier, budgetMonthRub, gpuModel, providers…',
+          },
+          providers: {type: 'array', items: {type: 'string', enum: PROVIDER_IDS}},
+          strategy: {
+            type: 'string',
+            enum: ['cheapest', 'balanced', 'performance', 'availability'],
+          },
+          maxSolutions: {type: 'integer'},
+          budgetMonthRub: {type: 'number'},
+        },
+        required: ['solutionType'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'validate_solution',
+      description:
+        'Проверить решение из compose_solution: hard/soft constraints, полнота цены, synthetic, budget. Не объявляй решение подходящим при failed checks.',
+      parameters: {
+        type: 'object',
+        properties: {
+          solution: {
+            type: 'object',
+            description: 'Объект solution из compose_solution (id, provider, components, …).',
+          },
+          requirements: {type: 'object'},
+          validationLevel: {
+            type: 'string',
+            enum: ['basic', 'pricing', 'compatibility', 'full'],
+          },
+        },
+        required: ['solution'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'price_solution',
+      description:
+        'Пересчитать BOM по pinned meterId×quantity (или shape-resolve через solutionType). Арифметика только здесь, не в модели.',
+      parameters: {
+        type: 'object',
+        properties: {
+          components: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                meterId: {type: 'string'},
+                productId: {type: 'string'},
+                quantity: {type: 'number'},
+                role: {type: 'string'},
+              },
+              required: ['quantity'],
+            },
+          },
+          solutionType: {type: 'string', enum: SOLUTION_TYPES},
+          requirements: {type: 'object'},
+          provider: {type: 'string', enum: PROVIDER_IDS},
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'compare_solutions',
+      description:
+        'Сравнить финалистов compose_solution: матрица цена/coverage/completeness + paretoOptimalSolutionIds. Передай массив solutions из compose.',
+      parameters: {
+        type: 'object',
+        properties: {
+          solutions: {
+            type: 'array',
+            items: {type: 'object'},
+            description: 'Массив Solution из compose_solution.',
+          },
+          solutionIds: {
+            type: 'array',
+            items: {type: 'string'},
+            description: 'Опционально сузить сравнение до этих id.',
+          },
+          dimensions: {
+            type: 'array',
+            items: {
+              type: 'string',
+              enum: [
+                'price',
+                'performance',
+                'availability',
+                'vendor_lock_in',
+                'operational_complexity',
+              ],
+            },
+          },
+        },
+        required: ['solutions'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'search_prices',
       description:
-        'Найти позиции прайс-листа российских облаков (Yandex Cloud, VK Cloud, Cloud.ru, T1 Cloud, Selectel, MWS) по ключевым словам и фильтрам. Hybrid-поиск (lexical + embeddings). Возвращает список SKU с ценами (₽ с НДС) за час/месяц/год. Используй для вопросов о ценах конкретных услуг, GPU, AI-моделей, дисков, трафика, CDN, S3 и т.п.',
+        'Shortcut над search_catalog: компактный поиск SKU с providersMatched/volumeEstimates. Для цен конкретных услуг, GPU card-only, AI-токенов, дисков, CDN, S3, IP. Для сборки стека — compose_solution.',
       parameters: {
         type: 'object',
         properties: {
@@ -146,7 +371,7 @@ export const CHAT_TOOLS = [
     function: {
       name: 'get_quote',
       description:
-        'Стоимость конфигурации ВМ или GPU целиком (vCPU+RAM+диск / GPU+хост). Только если просят полную машину: «N vCPU / M GiB», «собери ВМ», сайт с ядрами и памятью, GPU-хост с паритетом. НЕ для одного компонента («начнём с CPU/RAM/диска», «цена ядра», «1 GiB RAM», «SSD/NVMe GiB», IP, CDN, S3) — там compare_unit_price или search_prices. Для GPU без vcpu/ramGiB подставится типовой хост (assumedHost).',
+        'Shortcut: compose_solution(virtual_machine) для одной ВМ/GPU. Только полная машина: «N vCPU / M GiB», «собери ВМ», GPU-хост с паритетом. НЕ для одного компонента — compare_unit_price / search_catalog. Стек/K8s — compose_solution.',
       parameters: {
         type: 'object',
         properties: {
@@ -403,93 +628,17 @@ function num(v: unknown): number | undefined {
 
 export type AssumedHost = {vcpu: number; ramGiB: number; diskGiB: number; source: string};
 
-export type BuiltPreset = {preset: CalculatorPreset; assumedHost: AssumedHost | null};
-
-/**
- * Pick a representative host (vCPU/RAM/disk) for a GPU class from the site's real
- * GPU flavor shapes, so every provider can be compared at configuration parity.
- * Prefers a Cloud.ru flavor (bundle) so its bundle price matches exactly.
- */
-function defaultGpuHost(gpuModel: string, gpuCount: number): AssumedHost | null {
-  const q = gpuModel.toLowerCase();
-  const candidates = listGpuPresets().filter(
-    (p) =>
-      p.gpuCount === gpuCount &&
-      p.vcpu != null &&
-      p.ramGiB != null &&
-      (q.includes(p.gpuModelMatch.toLowerCase()) || p.gpuModelMatch.toLowerCase().includes(q)),
-  );
-  if (!candidates.length) return null;
-  const chosen =
-    candidates.find((p) => p.shapeSource === 'cloud-ru') ??
-    candidates.slice().sort((a, b) => (a.vcpu ?? 0) - (b.vcpu ?? 0))[0];
-  return {
-    vcpu: chosen.vcpu as number,
-    ramGiB: chosen.ramGiB as number,
-    diskGiB: chosen.diskGiB ?? 100,
-    source: chosen.shapeSource ?? 'catalog',
-  };
-}
-
-function buildPreset(args: Record<string, unknown>): BuiltPreset {
-  const vcpu = num(args.vcpu);
-  const ramGiB = num(args.ramGiB);
-  const diskGiB = num(args.diskGiB) ?? 100;
-  const gpuModel = typeof args.gpuModel === 'string' ? args.gpuModel.trim() : '';
-
-  if (gpuModel) {
-    const gpuCount = num(args.gpuCount) ?? 1;
-
-    // Configuration parity: if the caller gave a host, use it; otherwise apply a
-    // sensible default host for the GPU class so card-only providers get a
-    // composed host and every provider is a comparable whole-config.
-    let hostVcpu = vcpu;
-    let hostRam = ramGiB;
-    let assumedHost: AssumedHost | null = null;
-    if (!hostVcpu || !hostRam) {
-      const def = defaultGpuHost(gpuModel, gpuCount);
-      if (def) {
-        hostVcpu = def.vcpu;
-        hostRam = def.ramGiB;
-        assumedHost = def;
-      }
-    }
-
-    const useDisk = hostVcpu && hostRam ? (num(args.diskGiB) ?? assumedHost?.diskGiB ?? 100) : undefined;
-    const preset: GpuPreset = {
-      id: `chat-gpu-${gpuModel}-${gpuCount}`,
-      kind: 'gpu',
-      title: `${gpuModel} ×${gpuCount}`,
-      subtitle: 'AI-ассистент',
-      gpuModelMatch: gpuModel,
-      gpuCount,
-      vcpu: hostVcpu,
-      ramGiB: hostRam,
-      diskGiB: useDisk,
-    };
-    return {preset, assumedHost};
-  }
-
-  // Align with calculator sidebar: omitted RAM → 4×vCPU (general), not 1 GiB.
-  const resolvedVcpu = vcpu ?? 1;
-  const resolvedRam = ramGiB ?? resolvedVcpu * 4;
-  const preset: ComputePreset = {
-    id: `chat-compute-${resolvedVcpu}-${resolvedRam}`,
-    kind: 'compute',
-    family: 'general',
-    title: `${resolvedVcpu} / ${resolvedRam}`,
-    subtitle: 'AI-ассистент',
-    vcpu: resolvedVcpu,
-    ramGiB: resolvedRam,
-    diskGiB,
-  };
-  return {preset, assumedHost: null};
-}
-
 function runQuote(args: Record<string, unknown>): unknown {
   const period: PeriodMode =
     args.period === 'unit' || args.period === 'year' ? args.period : 'month';
-  const {preset, assumedHost} = buildPreset(args);
+  const req: RequirementSpec = {
+    vcpu: num(args.vcpu),
+    ramGiB: num(args.ramGiB),
+    diskGiB: num(args.diskGiB),
+    gpuModel: typeof args.gpuModel === 'string' ? args.gpuModel.trim() : undefined,
+    gpuCount: num(args.gpuCount),
+  };
+  const {preset, assumedHost} = buildPresetFromRequirements(req);
   const result = quotePreset(preset, period);
 
   const toQuote = (q: (typeof result.quotes)[number]) => ({
@@ -582,6 +731,147 @@ function runCompareUnitPrice(args: Record<string, unknown>): unknown {
     diskMedia = 'nvme';
   }
   return compareUnitPrice(component, diskMedia ? {diskMedia} : undefined);
+}
+
+function asRequirementSpec(raw: unknown): RequirementSpec {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+  return raw as RequirementSpec;
+}
+
+function runSearchCatalog(args: Record<string, unknown>, sync: boolean): unknown | Promise<unknown> {
+  const filters = Array.isArray(args.filters) ? (args.filters as CatalogFilter[]) : undefined;
+  const providers = Array.isArray(args.providers)
+    ? args.providers.filter((p): p is string => typeof p === 'string')
+    : undefined;
+  const entityTypes = Array.isArray(args.entityTypes)
+    ? (args.entityTypes as SearchCatalogInputEntity[])
+    : undefined;
+  const meterKind: 'capacity' | 'requests' | undefined =
+    args.meterKind === 'capacity' || args.meterKind === 'requests' ? args.meterKind : undefined;
+  const input = {
+    text: typeof args.text === 'string' ? args.text : typeof args.query === 'string' ? args.query : undefined,
+    entityTypes,
+    filters,
+    providers,
+    region: typeof args.region === 'string' ? args.region : undefined,
+    category: typeof args.category === 'string' ? args.category : undefined,
+    gpuModel: typeof args.gpuModel === 'string' ? args.gpuModel : undefined,
+    aiModel: typeof args.aiModel === 'string' ? args.aiModel : undefined,
+    storageClass: typeof args.storageClass === 'string' ? args.storageClass : undefined,
+    meterKind,
+    volumeGiB: num(args.volumeGiB),
+    limit: typeof args.limit === 'number' ? args.limit : undefined,
+  };
+  return sync ? searchCatalog(input) : searchCatalogAsync(input);
+}
+
+type SearchCatalogInputEntity =
+  | 'sku'
+  | 'service'
+  | 'product'
+  | 'instance_type'
+  | 'gpu_node'
+  | 'storage'
+  | 'managed_service';
+
+function runComposeSolution(args: Record<string, unknown>): unknown {
+  const rawType = typeof args.solutionType === 'string' ? args.solutionType : '';
+  const solutionType = (SOLUTION_TYPES as readonly string[]).includes(rawType)
+    ? (rawType as SolutionType)
+    : null;
+  if (!solutionType) {
+    return {error: `Укажи solutionType: ${SOLUTION_TYPES.join(' | ')}`};
+  }
+  const providers = Array.isArray(args.providers)
+    ? args.providers.filter((p): p is string => typeof p === 'string')
+    : undefined;
+  const strategyRaw = typeof args.strategy === 'string' ? args.strategy : 'cheapest';
+  const strategy =
+    strategyRaw === 'balanced' ||
+    strategyRaw === 'performance' ||
+    strategyRaw === 'availability' ||
+    strategyRaw === 'cheapest'
+      ? strategyRaw
+      : 'cheapest';
+  return composeSolution({
+    solutionType,
+    requirements: asRequirementSpec(args.requirements),
+    providers,
+    strategy,
+    maxSolutions: typeof args.maxSolutions === 'number' ? args.maxSolutions : undefined,
+    budgetMonthRub: num(args.budgetMonthRub),
+  });
+}
+
+function runValidateSolution(args: Record<string, unknown>): unknown {
+  if (!args.solution || typeof args.solution !== 'object') {
+    return {error: 'Укажи solution (объект из compose_solution).'};
+  }
+  return validateSolution({
+    solution: args.solution as Solution,
+    requirements: asRequirementSpec(args.requirements),
+    validationLevel:
+      args.validationLevel === 'basic' ||
+      args.validationLevel === 'pricing' ||
+      args.validationLevel === 'compatibility' ||
+      args.validationLevel === 'full'
+        ? args.validationLevel
+        : 'full',
+  });
+}
+
+function runPriceSolution(args: Record<string, unknown>): unknown {
+  const components = Array.isArray(args.components)
+    ? args.components.filter(
+        (c): c is Record<string, unknown> => !!c && typeof c === 'object' && !Array.isArray(c),
+      )
+    : [];
+  const rawType = typeof args.solutionType === 'string' ? args.solutionType : '';
+  const solutionType = (SOLUTION_TYPES as readonly string[]).includes(rawType)
+    ? (rawType as SolutionType)
+    : undefined;
+  return priceSolution({
+    components: components.map((c) => ({
+      meterId: typeof c.meterId === 'string' ? c.meterId : undefined,
+      productId: typeof c.productId === 'string' ? c.productId : undefined,
+      quantity: num(c.quantity) ?? 1,
+      role: typeof c.role === 'string' ? c.role : undefined,
+    })),
+    solutionType,
+    requirements: asRequirementSpec(args.requirements),
+    provider: typeof args.provider === 'string' ? args.provider : undefined,
+  });
+}
+
+function runCompareSolutions(args: Record<string, unknown>): unknown {
+  const solutions = Array.isArray(args.solutions)
+    ? (args.solutions.filter((s) => s && typeof s === 'object') as Solution[])
+    : [];
+  if (!solutions.length) {
+    return {error: 'Передай solutions[] из compose_solution.'};
+  }
+  const solutionIds = Array.isArray(args.solutionIds)
+    ? args.solutionIds.filter((id): id is string => typeof id === 'string')
+    : undefined;
+  const dimensions = Array.isArray(args.dimensions)
+    ? (args.dimensions.filter((d): d is string => typeof d === 'string') as Array<
+        'price' | 'performance' | 'availability' | 'vendor_lock_in' | 'operational_complexity'
+      >)
+    : undefined;
+  return compareSolutions({solutions, solutionIds, dimensions});
+}
+
+function runGetProductDetails(args: Record<string, unknown>): unknown {
+  const productIds = Array.isArray(args.productIds)
+    ? args.productIds.filter((id): id is string => typeof id === 'string')
+    : [];
+  if (!productIds.length) return {error: 'Укажи productIds (meterId).'};
+  const include = Array.isArray(args.include)
+    ? (args.include.filter((x): x is string => typeof x === 'string') as Array<
+        'attributes' | 'pricing' | 'limitations' | 'compatibility' | 'source'
+      >)
+    : undefined;
+  return getProductDetails(productIds, include);
 }
 
 function runLakehouseQuote(args: Record<string, unknown>): unknown {
@@ -689,6 +979,12 @@ export function runToolSync(name: string, rawArgs: string): string {
   if (!parsed.ok) return JSON.stringify({error: parsed.message});
   const args = parsed.args;
   try {
+    if (name === 'search_catalog') return JSON.stringify(runSearchCatalog(args, true));
+    if (name === 'get_product_details') return JSON.stringify(runGetProductDetails(args));
+    if (name === 'compose_solution') return JSON.stringify(runComposeSolution(args));
+    if (name === 'validate_solution') return JSON.stringify(runValidateSolution(args));
+    if (name === 'price_solution') return JSON.stringify(runPriceSolution(args));
+    if (name === 'compare_solutions') return JSON.stringify(runCompareSolutions(args));
     if (name === 'search_prices') {
       const storageClassRaw =
         typeof args.storageClass === 'string' ? args.storageClass.trim().toLowerCase() : '';
@@ -748,6 +1044,12 @@ export async function runTool(name: string, rawArgs: string): Promise<string> {
   if (!parsed.ok) return JSON.stringify({error: parsed.message});
   const args = parsed.args;
   try {
+    if (name === 'search_catalog') return JSON.stringify(await runSearchCatalog(args, false));
+    if (name === 'get_product_details') return JSON.stringify(runGetProductDetails(args));
+    if (name === 'compose_solution') return JSON.stringify(runComposeSolution(args));
+    if (name === 'validate_solution') return JSON.stringify(runValidateSolution(args));
+    if (name === 'price_solution') return JSON.stringify(runPriceSolution(args));
+    if (name === 'compare_solutions') return JSON.stringify(runCompareSolutions(args));
     if (name === 'search_prices') return JSON.stringify(await runSearch(args));
     if (name === 'get_quote') return JSON.stringify(runQuote(args));
     if (name === 'compare_unit_price') return JSON.stringify(runCompareUnitPrice(args));

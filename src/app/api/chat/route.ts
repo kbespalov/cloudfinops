@@ -244,7 +244,8 @@ export async function POST(req: Request) {
             if (
               event.name === 'get_quote' ||
               event.name === 'get_lakehouse_quote' ||
-              event.name === 'search_prices'
+              event.name === 'search_prices' ||
+              event.name === 'compose_solution'
             ) {
               try {
                 const args = JSON.parse(event.arguments) as unknown;

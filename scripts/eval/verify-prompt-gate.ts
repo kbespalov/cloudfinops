@@ -156,16 +156,37 @@ const CASES: Case[] = [
   {
     id: 'stack-small',
     q: 'Собери стоимость: ВМ 4 vCPU / 8 GiB, 1 публичный IP, Object Storage Standard 1 ТиБ. Таблица по провайдерам за месяц.',
-    expectTools: /get_quote|search_prices/i,
+    expectTools: /compose_solution|get_quote|search_prices|search_catalog/i,
     expectAnswer: /₽|IP|хранилищ|S3|vCPU/i,
     expectDomains: ['stack', 's3', 'compute'],
   },
   {
     id: 'stack-full',
     q: 'Собери решение на месяц: ВМ 16 vCPU / 32 GiB / 100 GiB SSD, 1 публичный IP, Object Storage Standard 100 ТБ, CDN 100 ТБ, зональный мастер Managed Kubernetes. Итоговая таблица с колонками по компонентам, Итого и к минимуму.',
-    expectTools: /get_quote|search_prices/i,
+    expectTools: /compose_solution|get_quote|search_prices|search_catalog|validate_solution/i,
     expectAnswer: /₽|CDN|Kubernetes|IP|хранилищ|Итого|к минимуму/i,
     expectDomains: ['stack', 's3', 'cdn', 'k8s', 'compute'],
+  },
+  {
+    id: 'compose-k8s-budget',
+    q: 'Собери самый дешёвый managed Kubernetes: 3 worker-ноды, control plane, 1 ТБ S3 Standard, до 100 тысяч ₽/мес. Сравни провайдеров.',
+    expectTools: /compose_solution|validate_solution|search_prices|get_quote/i,
+    expectAnswer: /₽|Kubernetes|worker|мастер|допущен|₽\/мес|мес/i,
+    expectDomains: ['k8s', 'stack'],
+  },
+  {
+    id: 'compose-web',
+    q: 'Собери web-приложение: ВМ 8 vCPU / 32 GiB, публичный IP, CDN egress 1 ТБ — сравни по провайдерам за месяц.',
+    expectTools: /compose_solution|get_quote|search_prices|search_catalog/i,
+    expectAnswer: /₽|vCPU|CDN|IP|мес/i,
+    expectDomains: ['stack', 'compute', 'cdn'],
+  },
+  {
+    id: 'nvme-unit',
+    q: 'Сравни цену 1 GiB NVMe по провайдерам',
+    expectTools: /compare_unit_price|nvme|ssd/i,
+    expectAnswer: /₽|NVMe|GiB/i,
+    expectDomains: ['aggregates', 'compute'],
   },
   // Edge / follow-up style (history simulated via phrasing)
   {
@@ -221,6 +242,16 @@ async function main() {
   let passed = 0;
   let failed = 0;
   const t0 = Date.now();
+  type Row = {
+    id: string;
+    ok: boolean;
+    durationMs: number;
+    toolCalls: number;
+    toolRounds: number;
+    tools: string[];
+    scoreParts: {tools: boolean; answer: boolean; domains: boolean; leak: boolean; empty: boolean; error: boolean};
+  };
+  const rows: Row[] = [];
 
   for (const c of slice) {
     const domains = matchPlanningDomains(c.q);
@@ -239,6 +270,24 @@ async function main() {
 
     if (ok) passed += 1;
     else failed += 1;
+
+    const toolNames = run.toolCalls.map((t) => t.name);
+    rows.push({
+      id: c.id,
+      ok,
+      durationMs: run.durationMs,
+      toolCalls: run.toolCalls.length,
+      toolRounds: run.toolRounds,
+      tools: toolNames,
+      scoreParts: {
+        tools: toolOk,
+        answer: answerOk,
+        domains: domainOk,
+        leak: !leak,
+        empty: noEmpty,
+        error: !run.error,
+      },
+    });
 
     console.log(`\n[${ok ? 'OK' : 'FAIL'}] ${c.id}`);
     console.log(
@@ -259,6 +308,46 @@ async function main() {
     if (!noEmpty) console.log('  ✗ empty answer');
     const preview = (run.answer ?? '').replace(/\s+/g, ' ').slice(0, 220);
     console.log(`  answer: ${preview}${preview.length >= 220 ? '…' : ''}`);
+  }
+
+  const durations = rows.map((r) => r.durationMs).sort((a, b) => a - b);
+  const pct = (p: number) => {
+    if (!durations.length) return 0;
+    const idx = Math.min(
+      durations.length - 1,
+      Math.max(0, Math.ceil((p / 100) * durations.length) - 1),
+    );
+    return durations[idx]!;
+  };
+  const meanMs = Math.round(rows.reduce((s, r) => s + r.durationMs, 0) / Math.max(1, rows.length));
+  const totalTools = rows.reduce((s, r) => s + r.toolCalls, 0);
+  const meanTools = (totalTools / Math.max(1, rows.length)).toFixed(2);
+  const toolHist = new Map<string, number>();
+  for (const r of rows) for (const t of r.tools) toolHist.set(t, (toolHist.get(t) ?? 0) + 1);
+
+  console.log(`\n===== SCOREBOARD (${slice.length} Q, agent path) =====`);
+  console.log(
+    `Pass: ${passed}/${slice.length} (${((passed / slice.length) * 100).toFixed(1)}%) · Fail: ${failed}`,
+  );
+  console.log(
+    `Latency p50/p95/mean/max: ${Math.round(pct(50))}/${Math.round(pct(95))}/${meanMs}/${durations[durations.length - 1] ?? 0} ms`,
+  );
+  console.log(`Tool calls: total=${totalTools} · mean=${meanTools} · mean rounds=${(
+    rows.reduce((s, r) => s + r.toolRounds, 0) / Math.max(1, rows.length)
+  ).toFixed(2)}`);
+  console.log(
+    'Tools used:',
+    [...toolHist.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .map(([n, c]) => `${n}×${c}`)
+      .join(', ') || '—',
+  );
+  console.log('\n| id | ok | sec | tools | rounds | tool names |');
+  console.log('|---|---|---:|---:|---:|---|');
+  for (const r of rows) {
+    console.log(
+      `| ${r.id} | ${r.ok ? '✓' : '✗'} | ${(r.durationMs / 1000).toFixed(1)} | ${r.toolCalls} | ${r.toolRounds} | ${r.tools.join('+') || '—'} |`,
+    );
   }
 
   console.log(

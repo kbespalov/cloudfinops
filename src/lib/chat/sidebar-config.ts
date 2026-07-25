@@ -13,7 +13,11 @@ import type {LakehouseQuoteRequest} from '@/lib/calculator/useLakehouseQuote';
 import type {PeriodMode} from '@/lib/calculator/quote-view';
 import {formatGiBCapacity} from '@/lib/calculator/quote-view';
 
-export type SidebarConfigTool = 'get_quote' | 'get_lakehouse_quote' | 'search_prices';
+export type SidebarConfigTool =
+  | 'get_quote'
+  | 'get_lakehouse_quote'
+  | 'search_prices'
+  | 'compose_solution';
 
 export type SidebarConfigPayload =
   | {kind: 'adhoc'; request: AdhocQuoteRequest; summary: {line: string}}
@@ -164,6 +168,41 @@ function mapSearchPricesCdn(
   };
 }
 
+function mapComposeSolution(
+  args: Record<string, unknown>,
+  period: PeriodMode,
+): SidebarConfigPayload | null {
+  const solutionType = typeof args.solutionType === 'string' ? args.solutionType : '';
+  if (solutionType === 'lakehouse') {
+    return mapLakehouse(
+      {
+        ...(typeof args.requirements === 'object' && args.requirements
+          ? (args.requirements as Record<string, unknown>)
+          : {}),
+      },
+      period,
+    );
+  }
+  if (solutionType !== 'virtual_machine' && solutionType !== 'web_application') {
+    return null;
+  }
+  const req =
+    typeof args.requirements === 'object' && args.requirements && !Array.isArray(args.requirements)
+      ? (args.requirements as Record<string, unknown>)
+      : {};
+  return mapGetQuote(
+    {
+      vcpu: req.vcpu ?? req.vcpuMin,
+      ramGiB: req.ramGiB ?? req.ramGiBMin,
+      diskGiB: req.diskGiB,
+      gpuModel: req.gpuModel,
+      gpuCount: req.gpuCount,
+      cdnEgressGiB: req.cdnEgressGiB,
+    },
+    period,
+  );
+}
+
 /** Build a sidebar quote payload from a chat tool call (+ page period). */
 export function sidebarConfigFromTool(
   tool: string,
@@ -173,6 +212,7 @@ export function sidebarConfigFromTool(
   if (tool === 'get_quote') return mapGetQuote(args, period);
   if (tool === 'get_lakehouse_quote') return mapLakehouse(args, period);
   if (tool === 'search_prices') return mapSearchPricesCdn(args);
+  if (tool === 'compose_solution') return mapComposeSolution(args, period);
   return null;
 }
 

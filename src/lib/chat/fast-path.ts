@@ -1245,6 +1245,87 @@ export function formatFastPathAnswer(
       .trim();
   }
 
+  if (primary.name === 'compose_solution' && Array.isArray(data.solutions)) {
+    type Sol = {
+      providerName?: string;
+      provider?: string;
+      monthlyCostRub?: number | null;
+      requirementsCoverage?: number;
+      status?: string;
+      assumptions?: string[];
+      unresolved?: string[];
+      components?: {role: string; monthlyCostRub?: number | null}[];
+    };
+    const solutions = (data.solutions as Sol[])
+      .filter((s) => (s.providerName || s.provider) && typeof s.monthlyCostRub === 'number')
+      .slice()
+      .sort((a, b) => (a.monthlyCostRub as number) - (b.monthlyCostRub as number));
+    if (!solutions.length) return null;
+    const best = solutions[0].monthlyCostRub as number;
+    const solutionType =
+      typeof data.solutionType === 'string' ? data.solutionType : 'solution';
+    const rows = solutions
+      .map((s) => {
+        const name = s.providerName || s.provider || '—';
+        const roles = (s.components ?? []).map((c) => c.role).filter(Boolean).join(', ');
+        const cov =
+          typeof s.requirementsCoverage === 'number'
+            ? `${Math.round(s.requirementsCoverage * 100)}%`
+            : '—';
+        return `| ${name} | ${roles || '—'} | ${formatRub(s.monthlyCostRub as number)} | ${cov} | ${pctVsBest(s.monthlyCostRub as number, best)} |`;
+      })
+      .join('\n');
+    const assumptions = (data.assumptions as string[] | undefined)?.slice(0, 4) ?? [];
+    const assumptionBlock = assumptions.length
+      ? `\n\nДопущения: ${assumptions.join('; ')}.`
+      : '';
+    return `**Сравнение решений (${solutionType}) за месяц** (НДС вкл., 720 ч)\n\n| Провайдер | Компоненты | Итого / мес | Покрытие | к минимуму |\n|---|---|---:|---:|---|\n${rows}\n\n${cheapestInCatalogLine({
+      provider: solutions[0].providerName || solutions[0].provider || '—',
+      priceText: `${formatRub(best)}/мес`,
+    })}${assumptionBlock}`;
+  }
+
+  if (primary.name === 'validate_solution' && Array.isArray(data.checks)) {
+    type Check = {code: string; status: string; message?: string};
+    const checks = data.checks as Check[];
+    const rows = checks
+      .slice(0, 12)
+      .map((c) => `| ${c.code} | ${c.status} | ${c.message ?? '—'} |`)
+      .join('\n');
+    const valid = data.valid === true ? 'да' : 'нет';
+    return `**Проверка решения:** valid=${valid}, coverage=${data.coverage ?? '—'}\n\n| Код | Статус | Комментарий |\n|---|---|---|\n${rows}`;
+  }
+
+  if (primary.name === 'compare_solutions' && Array.isArray(data.comparison)) {
+    type Row = {
+      providerName?: string;
+      provider?: string;
+      monthlyCostRub?: number | null;
+      requirementCoverage?: number;
+      solutionId?: string;
+    };
+    const comparison = (data.comparison as Row[])
+      .filter((r) => typeof r.monthlyCostRub === 'number')
+      .slice();
+    if (!comparison.length) return null;
+    const best = comparison[0].monthlyCostRub as number;
+    const pareto = Array.isArray(data.paretoOptimalSolutionIds)
+      ? (data.paretoOptimalSolutionIds as string[])
+      : [];
+    const rows = comparison
+      .map((r) => {
+        const name = r.providerName || r.provider || r.solutionId || '—';
+        const cov =
+          typeof r.requirementCoverage === 'number'
+            ? `${Math.round(r.requirementCoverage * 100)}%`
+            : '—';
+        return `| ${name} | ${formatRub(r.monthlyCostRub as number)} | ${cov} | ${pctVsBest(r.monthlyCostRub as number, best)} |`;
+      })
+      .join('\n');
+    const paretoNote = pareto.length ? `\n\nPareto-оптимальные: ${pareto.join(', ')}.` : '';
+    return `**Сравнение вариантов** (НДС вкл.)\n\n| Провайдер | Итого / мес | Покрытие | к минимуму |\n|---|---:|---:|---|\n${rows}${paretoNote}`;
+  }
+
   if (primary.name === 'get_quote' && Array.isArray(data.quotes)) {
     type Q = {
       provider: string;
@@ -1746,9 +1827,14 @@ export function tryFormatAgentToolAnswer(options: {
     return formatStackFastPathAnswer(payloads);
   }
   if (payloads.length !== 1) return null;
-  // One tool cannot answer a multi-SKU stack — keep the final LLM (or more rounds).
-  if (looksMultiComponentStack(options.userText)) return null;
   const primary = payloads[0]!;
+  // compose/validate/compare already return a full multi-component BOM — format them.
+  const composedTool =
+    primary.name === 'compose_solution' ||
+    primary.name === 'validate_solution' ||
+    primary.name === 'compare_solutions';
+  // One search/quote tool cannot answer a multi-SKU stack — keep the final LLM.
+  if (!composedTool && looksMultiComponentStack(options.userText)) return null;
   const planId = inferPlanIdFromAgentTool(
     primary.name,
     primary.arguments,
@@ -1804,6 +1890,15 @@ function inferPlanIdFromAgentTool(
   }
 
   if (name === 'recommend_inference_infra') return 'inference-agent';
+
+  if (name === 'compose_solution') {
+    const t = typeof args.solutionType === 'string' ? args.solutionType : 'custom';
+    return `compose-${t}`;
+  }
+  if (name === 'validate_solution') return 'validate-solution';
+  if (name === 'compare_solutions') return 'compare-solutions';
+  if (name === 'search_catalog') return 'search-catalog';
+  if (name === 'price_solution') return 'price-solution';
 
   if (name === 'get_quote') {
     if (typeof args.gpuModel === 'string' && args.gpuModel) {

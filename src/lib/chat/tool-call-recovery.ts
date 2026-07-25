@@ -8,6 +8,12 @@
 import type {CompletionChoiceMessage} from './gigachat';
 
 export const CHAT_TOOL_NAMES = [
+  'search_catalog',
+  'get_product_details',
+  'compose_solution',
+  'validate_solution',
+  'price_solution',
+  'compare_solutions',
   'search_prices',
   'get_quote',
   'compare_unit_price',
@@ -20,6 +26,12 @@ export type ChatToolName = (typeof CHAT_TOOL_NAMES)[number];
 const TOOL_NAME_SET = new Set<string>(CHAT_TOOL_NAMES);
 
 const TOOL_NAME_USER_LABEL: Record<ChatToolName, string> = {
+  search_catalog: 'каталога услуг',
+  get_product_details: 'карточки продукта',
+  compose_solution: 'сборщика решений',
+  validate_solution: 'проверки решения',
+  price_solution: 'расчёта стоимости решения',
+  compare_solutions: 'сравнения решений',
   get_quote: 'калькулятора конфигурации',
   search_prices: 'прайс-листа',
   compare_unit_price: 'кросс-провайдерной аналитики',

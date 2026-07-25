@@ -10,8 +10,8 @@ export type ChatStreamDeltaEvent = {type: 'delta'; text: string};
 /** Drives the calculator AI-tab sidebar; full-page /chat ignores it. */
 export type ChatStreamSidebarConfigEvent = {
   type: 'sidebar_config';
-  /** get_quote / lakehouse replace the basket; search_prices (CDN) patches it. */
-  tool: 'get_quote' | 'get_lakehouse_quote' | 'search_prices';
+  /** get_quote / lakehouse / compose VM replace the basket; search_prices (CDN) patches it. */
+  tool: 'get_quote' | 'get_lakehouse_quote' | 'search_prices' | 'compose_solution';
   args: Record<string, unknown>;
 };
 export type ChatStreamEvent =
@@ -23,6 +23,12 @@ export const CHAT_STATUS_THINKING = 'Думаю…';
 export const CHAT_STATUS_COMPOSING = 'Формирую ответ…';
 
 const TOOL_STATUS_LABEL: Record<ChatToolName, string> = {
+  search_catalog: 'Ищу в каталоге…',
+  get_product_details: 'Открываю карточку продукта…',
+  compose_solution: 'Собираю решение…',
+  validate_solution: 'Проверяю решение…',
+  price_solution: 'Считаю стоимость решения…',
+  compare_solutions: 'Сравниваю варианты…',
   search_prices: 'Ищу цены в каталоге…',
   get_quote: 'Считаю конфигурацию…',
   compare_unit_price: 'Сравниваю цены…',
@@ -58,7 +64,8 @@ export function parseChatStreamLine(line: string): ChatStreamEvent | null {
       if (
         parsed.tool !== 'get_quote' &&
         parsed.tool !== 'get_lakehouse_quote' &&
-        parsed.tool !== 'search_prices'
+        parsed.tool !== 'search_prices' &&
+        parsed.tool !== 'compose_solution'
       ) {
         return null;
       }
