@@ -52,12 +52,11 @@ function yandexMaxRamPerVcpu(share: VcpuShare): number {
   return share === '5%' ? 2 : 4;
 }
 
-const FAMILY_VCPU_STEPS: Record<ComputeFamily, number[]> = {
-  'low-cost': [1, 2, 4, 8, 16, 32],
-  general: [2, 4, 8, 16, 32, 64, 96, 128],
-  'high-cpu': [2, 4, 8, 16, 32, 64, 96, 128],
-  'high-memory': [2, 4, 8, 16, 32, 64, 96, 128],
-};
+/** Dedicated (100%) shape ladder — independent of family ratio presets. */
+const DEDICATED_VCPU_STEPS = [1, 2, 4, 8, 16, 32, 64, 96, 128];
+const DEDICATED_RAM_STEPS = [
+  1, 2, 4, 6, 8, 12, 16, 24, 32, 40, 48, 64, 80, 96, 128, 160, 192, 256, 320, 384, 512, 768, 1024,
+];
 
 const FAMILY_RAM_PER_VCPU: Record<ComputeFamily, number> = {
   general: 4,
@@ -66,17 +65,45 @@ const FAMILY_RAM_PER_VCPU: Record<ComputeFamily, number> = {
   'low-cost': 2,
 };
 
+/** Geometric midpoints between 2↔4 and 4↔8 GiB/vCPU. */
+const RATIO_HIGH_CPU_MAX = Math.SQRT2 * 2; // ≈2.83
+const RATIO_GENERAL_MAX = Math.SQRT2 * 4; // ≈5.66
+
 function uniqueSorted(values: number[]): number[] {
   return [...new Set(values)].sort((a, b) => a - b);
+}
+
+function withCurrent(options: number[], current?: number): number[] {
+  if (current == null || !Number.isFinite(current) || options.includes(current)) return options;
+  return uniqueSorted([...options, current]);
 }
 
 export function isFractionalShare(share: VcpuShare): boolean {
   return share !== '100%';
 }
 
+/**
+ * Map a free-form vCPU/RAM shape onto the closest family chip.
+ * Keeps `low-cost` when the ratio still matches the cheap shelf (~2 GiB/vCPU);
+ * never auto-enters `low-cost` from other families (that path also flips spot/HDD).
+ */
+export function inferComputeFamily(
+  vcpu: number,
+  ramGiB: number,
+  current: ComputeFamily = 'general',
+): ComputeFamily {
+  if (vcpu <= 0 || ramGiB <= 0) return current;
+  const ratio = ramGiB / vcpu;
+  if (ratio < RATIO_HIGH_CPU_MAX) {
+    return current === 'low-cost' ? 'low-cost' : 'high-cpu';
+  }
+  if (ratio < RATIO_GENERAL_MAX) return 'general';
+  return 'high-memory';
+}
+
 /** vCPU slider steps allowed for the selected share. */
-export function vcpuStepsForShare(share: VcpuShare, family: ComputeFamily): number[] {
-  if (share === '100%') return FAMILY_VCPU_STEPS[family];
+export function vcpuStepsForShare(share: VcpuShare, _family: ComputeFamily): number[] {
+  if (share === '100%') return DEDICATED_VCPU_STEPS;
   if (share === '10%' || share === '30%') {
     return uniqueSorted(CLOUDRU_FLAVORS[share].map((f) => f.vcpu));
   }
@@ -91,7 +118,8 @@ export function ramOptionsForShare(
   vcpu: number,
 ): number[] {
   if (share === '100%') {
-    return uniqueSorted(FAMILY_VCPU_STEPS[family].map((v) => v * FAMILY_RAM_PER_VCPU[family]));
+    // Free dedicated shapes: family chips only set a preferred default ratio.
+    return DEDICATED_RAM_STEPS;
   }
   if (share === '10%' || share === '30%') {
     return uniqueSorted(
@@ -108,6 +136,24 @@ export function ramOptionsForShare(
     if (r >= 1 && r <= max) steps.push(r);
   }
   return uniqueSorted(steps.filter((r) => r <= max));
+}
+
+/** Slider options that keep the current committed value on the ladder. */
+export function vcpuOptionsForShape(
+  share: VcpuShare,
+  family: ComputeFamily,
+  vcpu: number,
+): number[] {
+  return withCurrent(vcpuStepsForShare(share, family), vcpu);
+}
+
+export function ramOptionsForShape(
+  share: VcpuShare,
+  family: ComputeFamily,
+  vcpu: number,
+  ramGiB: number,
+): number[] {
+  return withCurrent(ramOptionsForShare(share, family, vcpu), ramGiB);
 }
 
 export function defaultRamForShare(

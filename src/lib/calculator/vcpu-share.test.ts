@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import {
   clampShapeToShare,
+  inferComputeFamily,
   ramOptionsForShare,
   shapeAllowedForShare,
   vcpuStepsForShare,
@@ -24,6 +25,27 @@ describe('vcpu share limits', () => {
     assert.ok(!shapeAllowedForShare('10%', 16, 32));
     assert.ok(shapeAllowedForShare('30%', 32, 64));
     assert.deepEqual(ramOptionsForShare('10%', 'general', 4), [8, 16, 32]);
+  });
+
+  it('dedicated 100% exposes free vCPU/RAM ladders (not family-ratio locked)', () => {
+    const vcpu = vcpuStepsForShare('100%', 'general');
+    const ram = ramOptionsForShare('100%', 'high-cpu', 2);
+    assert.ok(vcpu.includes(1) && vcpu.includes(128));
+    assert.ok(ram.includes(24), 'custom sizes like 24 GiB must be reachable');
+    assert.ok(ram.includes(128));
+    assert.ok(ram.includes(1024));
+    // Same ladder regardless of active family chip.
+    assert.deepEqual(ram, ramOptionsForShare('100%', 'high-memory', 2));
+  });
+
+  it('inferComputeFamily follows GiB/vCPU ratio and keeps low-cost sticky', () => {
+    assert.equal(inferComputeFamily(4, 8, 'general'), 'high-cpu');
+    assert.equal(inferComputeFamily(4, 16, 'high-cpu'), 'general');
+    assert.equal(inferComputeFamily(2, 24, 'general'), 'high-memory');
+    assert.equal(inferComputeFamily(2, 4, 'low-cost'), 'low-cost');
+    assert.equal(inferComputeFamily(2, 4, 'general'), 'high-cpu');
+    assert.equal(inferComputeFamily(4, 20, 'low-cost'), 'general');
+    assert.equal(inferComputeFamily(4, 24, 'general'), 'high-memory');
   });
 
   it('clampShapeToShare snaps oversized configs down to allowed envelope', () => {

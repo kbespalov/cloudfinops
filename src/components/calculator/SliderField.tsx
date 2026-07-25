@@ -1,6 +1,6 @@
 'use client';
 
-import {useState} from 'react';
+import {useEffect, useState} from 'react';
 import {Cpu, Minus, Plus} from '@gravity-ui/icons';
 import {Button, Flex, HelpMark, Icon, NumberInput, Slider, Text} from '@gravity-ui/uikit';
 import styles from './SliderField.module.css';
@@ -129,6 +129,30 @@ function CompactValue({
   );
 }
 
+function commitTypedValue(
+  next: number,
+  value: number,
+  options: number[],
+  absMin: number,
+  absMax: number,
+  onUpdate: (next: number) => void,
+): boolean {
+  const rounded = Math.round(next);
+  if (rounded < absMin || rounded > absMax) return false;
+  if (rounded === value + 1) {
+    onUpdate(bump(options, value, 1));
+    return true;
+  }
+  if (rounded === value - 1) {
+    onUpdate(bump(options, value, -1));
+    return true;
+  }
+  // Prefer ladder steps when close; otherwise keep typed value in range.
+  const nearest = nearestIn(options, rounded);
+  onUpdate(Math.abs(nearest - rounded) <= Math.max(1, rounded * 0.05) ? nearest : rounded);
+  return true;
+}
+
 export function SliderField({
   icon,
   label,
@@ -152,34 +176,56 @@ export function SliderField({
   const posMax = toPos(absMax);
   const pos = Math.min(posMax, Math.max(posMin, toPos(clamped)));
   const [rangeError, setRangeError] = useState<string | null>(null);
+  /** Local draft so clearing/retyping (e.g. 8 → 128) is not blocked by min/max. */
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<number | null>(value);
   const idx = nearestIndex(options, value);
   const fieldAria = ariaLabel ?? label;
+  const inputValue = editing ? draft : value;
+
+  useEffect(() => {
+    if (!editing) setDraft(value);
+  }, [value, editing]);
 
   function handleSlider(nextPos: number) {
     setRangeError(null);
+    setEditing(false);
     onUpdate(fromPos(nextPos, options));
   }
 
   function handleInput(next: number | null) {
-    if (next == null || !Number.isFinite(next)) return;
+    setEditing(true);
+    setDraft(next);
+    if (next == null || !Number.isFinite(next)) {
+      // Empty / partial clear while typing — keep parent value until blur/commit.
+      setRangeError(null);
+      return;
+    }
     const rounded = Math.round(next);
     if (rounded < absMin || rounded > absMax) {
-      // Do not silently clamp — keep previous value and surface the range.
       setRangeError(`Допустимо от ${absMin} до ${absMax}`);
       return;
     }
     setRangeError(null);
-    if (rounded === value + 1) {
-      onUpdate(bump(options, value, 1));
+    commitTypedValue(rounded, value, options, absMin, absMax, onUpdate);
+  }
+
+  function handleBlur() {
+    if (!editing) return;
+    if (draft == null || !Number.isFinite(draft)) {
+      setDraft(value);
+      setRangeError(null);
+      setEditing(false);
       return;
     }
-    if (rounded === value - 1) {
-      onUpdate(bump(options, value, -1));
-      return;
+    const ok = commitTypedValue(Math.round(draft), value, options, absMin, absMax, onUpdate);
+    if (!ok) {
+      setDraft(value);
+      setRangeError(`Допустимо от ${absMin} до ${absMax}`);
+    } else {
+      setRangeError(null);
     }
-    // Prefer ladder steps when close; otherwise keep typed value in range.
-    const nearest = nearestIn(options, rounded);
-    onUpdate(Math.abs(nearest - rounded) <= Math.max(1, rounded * 0.05) ? nearest : rounded);
+    setEditing(false);
   }
 
   return (
@@ -233,18 +279,23 @@ export function SliderField({
         <div className={styles.inputWrap}>
           <NumberInput
             size="l"
-            min={absMin}
-            max={absMax}
+            // No min/max here: Gravity clamps on blur and blocks retyping (8 → 128).
+            // Range is enforced in handleInput / handleBlur instead.
             step={1}
             allowDecimal={false}
-            value={value}
+            value={inputValue}
             onUpdate={handleInput}
+            onBlur={handleBlur}
             endContent={<Unit unit={unit} />}
             className={styles.input}
             validationState={rangeError ? 'invalid' : undefined}
             errorMessage={rangeError ?? undefined}
             errorPlacement="outside"
-            controlProps={{'aria-label': fieldAria}}
+            controlProps={{
+              'aria-label': fieldAria,
+              'aria-valuemin': absMin,
+              'aria-valuemax': absMax,
+            }}
           />
         </div>
       </div>
@@ -279,6 +330,13 @@ export function IntegerSliderField({
   const safeMax = Math.max(min, max);
   const clamped = Math.min(safeMax, Math.max(min, value));
   const fieldAria = ariaLabel ?? label;
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<number | null>(clamped);
+  const inputValue = editing ? draft : clamped;
+
+  useEffect(() => {
+    if (!editing) setDraft(clamped);
+  }, [clamped, editing]);
 
   return (
     <div className={styles.shell}>
@@ -326,18 +384,33 @@ export function IntegerSliderField({
         <div className={styles.inputWrap}>
           <NumberInput
             size="l"
-            min={min}
-            max={safeMax}
             step={1}
             allowDecimal={false}
-            value={clamped}
+            value={inputValue}
             onUpdate={(next) => {
+              setEditing(true);
+              setDraft(next);
               if (next == null || !Number.isFinite(next)) return;
-              onUpdate(Math.min(safeMax, Math.max(min, Math.round(next))));
+              const rounded = Math.round(next);
+              if (rounded < min || rounded > safeMax) return;
+              onUpdate(rounded);
+            }}
+            onBlur={() => {
+              if (!editing) return;
+              if (draft == null || !Number.isFinite(draft)) {
+                setDraft(clamped);
+              } else {
+                onUpdate(Math.min(safeMax, Math.max(min, Math.round(draft))));
+              }
+              setEditing(false);
             }}
             endContent={<Unit unit={unit} />}
             className={styles.input}
-            controlProps={{'aria-label': fieldAria}}
+            controlProps={{
+              'aria-label': fieldAria,
+              'aria-valuemin': min,
+              'aria-valuemax': safeMax,
+            }}
           />
         </div>
       </div>

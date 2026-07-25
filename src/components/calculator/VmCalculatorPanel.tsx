@@ -50,11 +50,12 @@ import {useAdhocQuote} from '@/lib/calculator/useAdhocQuote';
 import {
   clampShapeToShare,
   defaultRamForShare,
+  inferComputeFamily,
   isFractionalShare,
-  ramOptionsForShare,
+  ramOptionsForShape,
   VCPU_SHARE_OPTIONS,
+  vcpuOptionsForShape,
   vcpuShareHint,
-  vcpuStepsForShare,
 } from '@/lib/calculator/vcpu-share';
 import {chatUrlForQuery} from '@/components/home/homePrompts';
 import {CalculatorSidebar} from './CalculatorSidebar';
@@ -220,8 +221,8 @@ export function VmCalculatorPanel({
     return gpuPresets.filter((p) => p.gpuModelMatch === gpuFilter);
   }, [gpuPresets, gpuFilter]);
 
-  const vcpuOptions = vcpuStepsForShare(vcpuShare, family);
-  const ramOptions = ramOptionsForShare(vcpuShare, family, vcpu);
+  const vcpuOptions = vcpuOptionsForShape(vcpuShare, family, vcpu);
+  const ramOptions = ramOptionsForShape(vcpuShare, family, vcpu, ramGiB);
 
   const request = useMemo(() => {
     if (isGpu) {
@@ -341,29 +342,32 @@ export function VmCalculatorPanel({
       ? VCPU_SHARE_OPTIONS.filter((s) => s !== '10%' && s !== '30%')
       : VCPU_SHARE_OPTIONS;
 
+  /** Family chips are presets; free slider edits re-tag the closest profile. */
+  function syncFamilyFromShape(nextVcpu: number, nextRam: number) {
+    if (isFractionalShare(vcpuShare)) return;
+    const inferred = inferComputeFamily(nextVcpu, nextRam, family);
+    if (inferred === family) return;
+    setFamily(inferred);
+    setMode(inferred);
+  }
+
   function onVcpuChange(next: number) {
     setForceCustomPreset(true);
     setVcpu(next);
-    if (!customRam) setRamGiB(defaultRamForShare(vcpuShare, family, next));
-    else {
-      const options = ramOptionsForShare(vcpuShare, family, next);
-      setRamGiB(nearestIn(options, ramGiB));
+    let nextRam = ramGiB;
+    if (!customRam) {
+      nextRam = defaultRamForShare(vcpuShare, family, next);
+      setRamGiB(nextRam);
     }
+    syncFamilyFromShape(next, nextRam);
   }
 
   function onRamChange(next: number) {
     setForceCustomPreset(true);
     setCustomRam(true);
     setRamGiB(next);
-    if (!isFractionalShare(vcpuShare)) {
-      const match = vcpuOptions.find(
-        (v) => defaultRamForShare(vcpuShare, family, v) === next,
-      );
-      if (match != null) {
-        setVcpu(match);
-        setCustomRam(false);
-      }
-    }
+    // Keep vCPU as typed/slid — do not snap back to a family ratio.
+    syncFamilyFromShape(vcpu, next);
   }
 
   function applyPreset(preset: ComputePreset) {
@@ -578,13 +582,17 @@ export function VmCalculatorPanel({
                     label="vCPU"
                     value={vcpu}
                     options={vcpuOptions}
-                    scaleMin={vcpuOptions[0] ?? 1}
-                    scaleMax={vcpuOptions[vcpuOptions.length - 1] ?? 128}
+                    scaleMin={isFractionalShare(vcpuShare) ? (vcpuOptions[0] ?? 1) : 1}
+                    scaleMax={
+                      isFractionalShare(vcpuShare)
+                        ? (vcpuOptions[vcpuOptions.length - 1] ?? 128)
+                        : 128
+                    }
                     unit="vCPU"
                     hint={
                       isFractionalShare(vcpuShare)
                         ? `Количество vCPU при доле ${vcpuShare}. Для долей Yandex Cloud доступны только 2 или 4 ядра.`
-                        : 'Количество виртуальных процессоров для каждого экземпляра.'
+                        : 'Количество виртуальных процессоров для каждого экземпляра. Профиль сверху подстраивается под пропорцию vCPU/RAM.'
                     }
                     onUpdate={onVcpuChange}
                   />
@@ -593,13 +601,17 @@ export function VmCalculatorPanel({
                     label="RAM"
                     value={ramGiB}
                     options={ramOptions}
-                    scaleMin={ramOptions[0] ?? 1}
-                    scaleMax={ramOptions[ramOptions.length - 1] ?? 1024}
+                    scaleMin={isFractionalShare(vcpuShare) ? (ramOptions[0] ?? 1) : 1}
+                    scaleMax={
+                      isFractionalShare(vcpuShare)
+                        ? (ramOptions[ramOptions.length - 1] ?? 1024)
+                        : 1024
+                    }
                     unit="GiB"
                     hint={
                       isFractionalShare(vcpuShare)
                         ? `Объём RAM при доле ${vcpuShare}; лимит зависит от провайдера и числа ядер.`
-                        : 'Объём оперативной памяти для каждого экземпляра.'
+                        : 'Объём оперативной памяти для каждого экземпляра. Можно задать независимо от vCPU — профиль сверху сменится сам.'
                     }
                     onUpdate={onRamChange}
                   />
