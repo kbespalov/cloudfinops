@@ -13,7 +13,6 @@ import {
   TabList,
   TabProvider,
   Text,
-  Tooltip,
 } from '@gravity-ui/uikit';
 import {Calculator, ChevronRight} from '@gravity-ui/icons';
 import {AppHeader} from '@/components/AppHeader';
@@ -130,23 +129,22 @@ export function CalculatorPage({
                 {subtitle}
               </Text>
               {focusProviderId && independenceNote ? (
-                <Text variant="caption-2" color="hint" className={styles.methodLine}>
+                <div className={styles.methodLine}>
+                  <Text variant="caption-2" color="hint" className={styles.methodLineText}>
+                    {independenceNote}
+                    {' · '}
+                    Обновлено {catalogAsOfLabel()}
+                  </Text>
                   {independenceTooltip ? (
-                    <Tooltip content={independenceTooltip} openDelay={200}>
-                      <span className={styles.independencePhrase} tabIndex={0}>
-                        {independenceNote}
-                      </span>
-                    </Tooltip>
-                  ) : (
-                    independenceNote
-                  )}
-                  {' · '}
-                  Обновлено {catalogAsOfLabel()}
-                  {' · '}
-                  <a href="#provider-calc-method" className={styles.methodLink}>
-                    Как считается цена
-                  </a>
-                </Text>
+                    <HelpMark
+                      aria-label="О независимости расчёта"
+                      iconSize="s"
+                      className={styles.independenceHelp}
+                    >
+                      {independenceTooltip}
+                    </HelpMark>
+                  ) : null}
+                </div>
               ) : independenceNote ? (
                 <Text variant="caption-2" color="hint" className={styles.independenceNote}>
                   {independenceNote}
@@ -243,10 +241,12 @@ export function CalculatorPage({
               <Icon data={ChevronRight} size={16} />
             </Button>
           </Flex>
-          <Text variant="caption-2" color="hint" className={styles.disclaimer}>
-            * Meta признана экстремистской организацией, её деятельность на территории России
-            запрещена
-          </Text>
+          {!focusProviderId ? (
+            <Text variant="caption-2" color="hint" className={styles.disclaimer}>
+              * Meta признана экстремистской организацией, её деятельность на территории России
+              запрещена
+            </Text>
+          ) : null}
         </footer>
       </main>
     </>

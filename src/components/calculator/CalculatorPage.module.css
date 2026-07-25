@@ -55,28 +55,29 @@
 }
 
 .methodLine {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   max-width: 44rem;
   margin-top: 4px;
-  line-height: 1.35;
 }
 
-.independencePhrase {
-  cursor: help;
-  text-decoration: underline;
-  text-decoration-style: dotted;
-  text-underline-offset: 0.15em;
-  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+.methodLineText {
+  line-height: 18px;
 }
 
-.methodLink {
-  color: inherit;
-  text-decoration: underline;
-  text-underline-offset: 0.15em;
-  text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+.independenceHelp {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  line-height: 0;
 }
 
-.methodLink:hover {
-  text-decoration-color: currentColor;
+.independenceHelp :global(.g-help-mark__icon),
+.independenceHelp :global(.g-button) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Keep lead in DOM for SEO / crawlers; hide from visual UI. */

@@ -12,41 +12,34 @@ export function ProviderCalculatorSeo({seo}: {seo: CalculatorProviderSeo}) {
   return (
     <section className={styles.seo} aria-labelledby="provider-calc-seo-title">
       <h2 id="provider-calc-seo-title" className={styles.title}>
-        {seo.h1}
+        О расчёте
       </h2>
       <p className={styles.lead}>{seo.intro}</p>
-
-      <p className={styles.meta}>
-        Также ищут: {[seo.brandRu, seo.brandEn, ...seo.aliases].join(', ')}. Полное сравнение без
-        фокуса на одном провайдере — в{' '}
-        <Link href="/calculator/vm">калькуляторе ВМ и GPU</Link> и{' '}
-        <Link href="/calculator/self-host">хостинге LLM</Link>.
-      </p>
 
       <details className={styles.method} id="provider-calc-method">
         <summary>Как считается цена</summary>
         <ul>
           <li>
-            Цены получены из открытых источников. Каталог Cloud FinOps на {catalogAsOfLabel()}.
-            Cloud FinOps не связан с {seo.brandDisplay} и не является его официальным калькулятором.
+            Источник: опубликованные тарифы и документация провайдеров в каталоге Cloud FinOps на{' '}
+            {catalogAsOfLabel()}.
           </li>
           <li>
-            Для сравнения используются максимально близкие конфигурации. Предложения могут
-            различаться по модели предоставления ресурсов, производительности и включённым услугам.
+            Сравнение ориентировочное: близкие выбранные параметры. Поколение CPU, доля ядра, диск,
+            регион и модель тарификации у провайдеров могут отличаться.
           </li>
           <li>
-            Показанные суммы приведены с НДС. Если провайдер публикует тариф без НДС, в каталоге он
-            нормализован к цене с НДС для сопоставимости. Индивидуальные скидки и специальные
-            условия договоров не учитываются.
+            Суммы приведены с НДС. Если провайдер публикует тариф без НДС, в каталоге он
+            нормализован к цене с НДС. Индивидуальные скидки, промоакции и договорные условия не
+            учитываются.
           </li>
           <li>
-            Расчётный месяц = 720 часов. Перед заказом проверьте итоговую стоимость, регион и
-            доступность на сайте провайдера.
+            Почасовые тарифы пересчитываются в месяц как 720 часов; помесячные берутся как в
+            источнике. Перед заказом проверьте актуальные условия на сайте провайдера.
           </li>
         </ul>
       </details>
 
-      <h3 className={styles.subtitle}>Частые вопросы · {seo.brandDisplay}</h3>
+      <h3 className={styles.subtitle}>Частые вопросы</h3>
       <dl className={styles.faq}>
         {seo.faq.map((item) => (
           <div key={item.question}>

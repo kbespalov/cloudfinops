@@ -23,6 +23,8 @@ const DEFAULT_BEST_BADGE = 'Минимальная цена в каталоге'
 const DEFAULT_BEST_HINT = catalogCompareScopeHint();
 const ALT_DELTA_HINT =
   'Разница относительно минимальной расчётной цены для выбранной конфигурации в каталоге Cloud FinOps.';
+const FOCUS_DELTA_HINT =
+  'Разница относительно цены выбранного провайдера страницы при тех же параметрах. Предложения могут различаться по модели предоставления ресурсов.';
 
 export type DeploymentSummary = {
   nodeCount: number;
@@ -50,19 +52,20 @@ function formatGpuDeployment(summary: DeploymentSummary): ConfigSummary {
 
 function ProviderList({
   quotes,
-  best,
+  baseline,
   selectedKey,
   period,
   onSelect,
-  bestHint,
+  deltaHint,
   focusProviderId,
 }: {
   quotes: ViewProviderQuote[];
-  best: ViewProviderQuote | null;
+  /** Price baseline for ±% (focus provider on landing pages, else catalog minimum). */
+  baseline: ViewProviderQuote | null;
   selectedKey: string | null;
   period: PeriodMode;
   onSelect: (key: string) => void;
-  bestHint: string;
+  deltaHint: string;
   focusProviderId?: CalculatorProviderId | null;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -78,16 +81,17 @@ function ProviderList({
       {visible.map((q) => {
         const key = quoteKey(q);
         const active = key === selectedKey;
-        const isCatalogMin = best != null && quoteKey(q) === quoteKey(best);
+        const isBaseline = baseline != null && quoteKey(q) === quoteKey(baseline);
         const deltaPct =
-          best && !isCatalogMin && best.total > 0
-            ? Math.round((q.total / best.total - 1) * 100)
+          baseline && !isBaseline && baseline.total > 0
+            ? Math.round((q.total / baseline.total - 1) * 100)
             : 0;
-        const tip = isCatalogMin
-          ? bestHint
-          : deltaPct > 0
-            ? ALT_DELTA_HINT
-            : q.providerName;
+        const tip =
+          deltaPct !== 0
+            ? deltaHint
+            : isBaseline && focusProviderId
+              ? `Фокус этой страницы — ${q.providerName}.`
+              : q.providerName;
         const isFocus = focusProviderId != null && q.provider === focusProviderId;
         return (
           <Tooltip key={key} content={tip} openDelay={250}>
@@ -110,7 +114,11 @@ function ProviderList({
                     </Text>
                   ) : null}
                 </Text>
-                {deltaPct > 0 ? (
+                {deltaPct < 0 ? (
+                  <Text variant="caption-2" color="complementary" className={styles.providerDelta}>
+                    −{Math.abs(deltaPct)}%
+                  </Text>
+                ) : deltaPct > 0 ? (
                   <Text variant="caption-2" color="complementary" className={styles.providerDelta}>
                     +{deltaPct}%
                   </Text>
@@ -270,28 +278,33 @@ export function CalculatorSidebar({
         null
       : null;
   const isFocus = focusQuote != null && quoteKey(selected) === quoteKey(focusQuote);
-  const bestVsFocus =
+  const cheaperThanFocus =
     focusQuote != null &&
     result.best != null &&
-    quoteKey(result.best) !== quoteKey(focusQuote)
+    quoteKey(result.best) !== quoteKey(focusQuote) &&
+    isFocus
       ? result.best
       : null;
   const cheaperPct =
-    bestVsFocus && focusQuote && focusQuote.total > 0
-      ? Math.max(0, Math.round((1 - bestVsFocus.total / focusQuote.total) * 100))
+    cheaperThanFocus && focusQuote.total > 0
+      ? Math.max(0, Math.round((1 - cheaperThanFocus.total / focusQuote.total) * 100))
       : 0;
+  const listBaseline = focusQuote ?? result.best;
+  const listDeltaHint = focusQuote
+    ? `${FOCUS_DELTA_HINT} База — ${focusQuote.providerName}.`
+    : ALT_DELTA_HINT;
   const lines = configSummary ?? (deploymentSummary ? formatGpuDeployment(deploymentSummary) : null);
   const periodWord = periodShortLabel(period);
   const showMobileBar = !detailsInView;
-  const selectedBadge = isBest
-    ? priceBadge
-    : isFocus
-      ? 'Выбранный провайдер'
+  const selectedBadge = isFocus
+    ? 'Выбранный провайдер'
+    : isBest
+      ? priceBadge
       : null;
-  const selectedBadgeHint = isBest
-    ? priceHint
-    : isFocus
-      ? `Фокус этой страницы — ${selected.providerName}. Сравнение с другими провайдерами ниже.`
+  const selectedBadgeHint = isFocus
+    ? `Фокус этой страницы — ${selected.providerName}. Сравнение с другими провайдерами ниже.`
+    : isBest
+      ? priceHint
       : null;
 
   return (
@@ -315,15 +328,15 @@ export function CalculatorSidebar({
         <span className={styles.mobileBarMeta}>
           <Text variant="body-2" ellipsis className={styles.mobileBarProvider}>
             {selected.providerName}
-            {isBest ? (
-              <Text as="span" variant="caption-2" color="complementary" className={styles.mobileBarBest}>
-                {' '}
-                · мин. в каталоге
-              </Text>
-            ) : isFocus ? (
+            {isFocus ? (
               <Text as="span" variant="caption-2" color="complementary" className={styles.mobileBarBest}>
                 {' '}
                 · выбранный
+              </Text>
+            ) : isBest ? (
+              <Text as="span" variant="caption-2" color="complementary" className={styles.mobileBarBest}>
+                {' '}
+                · мин. в каталоге
               </Text>
             ) : null}
           </Text>
@@ -350,7 +363,7 @@ export function CalculatorSidebar({
             {selectedBadge && selectedBadgeHint ? (
               <Tooltip content={selectedBadgeHint} openDelay={200}>
                 <span className={styles.bestBadge}>
-                  <Label size="xs" theme={isBest ? 'success' : 'normal'}>
+                  <Label size="xs" theme={isFocus ? 'normal' : 'success'}>
                     {selectedBadge}
                   </Label>
                 </span>
@@ -372,69 +385,24 @@ export function CalculatorSidebar({
               / {periodWord}
             </Text>
           </div>
-          <Tooltip
-            content="Суммы в каталоге Cloud FinOps приведены с НДС. Если провайдер публикует тариф без НДС, он нормализован к цене с НДС для сопоставимости."
-            openDelay={200}
-          >
-            <Text
-              as="span"
-              variant="caption-2"
-              color="complementary"
-              className={styles.vatNote}
-              tabIndex={0}
-            >
-              включая НДС
-            </Text>
-          </Tooltip>
+          <Text variant="caption-2" color="complementary" className={styles.vatNote}>
+            с НДС
+          </Text>
 
-          {bestVsFocus && !isBest ? (
+          {cheaperThanFocus && cheaperPct > 0 ? (
             <button
               type="button"
-              className={styles.bestOffer}
-              onClick={() => setSelectedKey(quoteKey(bestVsFocus))}
+              className={styles.cheaperLine}
+              onClick={() => setSelectedKey(quoteKey(cheaperThanFocus))}
             >
-              <Text variant="caption-2" color="complementary" className={styles.bestOfferLabel}>
-                Дешевле при этих параметрах
+              <Text variant="caption-2" color="complementary">
+                Дешевле на {cheaperPct}%
               </Text>
-              <Flex alignItems="center" gap={2} className={styles.bestOfferRow}>
-                <span className={styles.sellerMark}>
-                  <ProviderMark providerId={bestVsFocus.provider} size={12} />
-                </span>
-                <Text variant="body-2" ellipsis className={styles.bestOfferName}>
-                  {bestVsFocus.providerName}
-                </Text>
-                <Text variant="body-2" className={styles.bestOfferPrice}>
-                  {formatQuoteAmount(bestVsFocus.total, period)}
-                </Text>
-              </Flex>
-              {cheaperPct > 0 ? (
-                <Text variant="caption-2" color="complementary">
-                  На {cheaperPct}% дешевле при выбранных параметрах
-                </Text>
-              ) : null}
-            </button>
-          ) : null}
-
-          {focusQuote && isBest && !isFocus ? (
-            <button
-              type="button"
-              className={styles.bestOffer}
-              onClick={() => setSelectedKey(quoteKey(focusQuote))}
-            >
-              <Text variant="caption-2" color="complementary" className={styles.bestOfferLabel}>
-                Выбранный провайдер
+              <Text variant="body-2" className={styles.cheaperLineMain}>
+                {cheaperThanFocus.providerName}
+                {' — '}
+                {formatQuoteAmount(cheaperThanFocus.total, period)}
               </Text>
-              <Flex alignItems="center" gap={2} className={styles.bestOfferRow}>
-                <span className={styles.sellerMark}>
-                  <ProviderMark providerId={focusQuote.provider} size={12} />
-                </span>
-                <Text variant="body-2" ellipsis className={styles.bestOfferName}>
-                  {focusQuote.providerName}
-                </Text>
-                <Text variant="body-2" className={styles.bestOfferPrice}>
-                  {formatQuoteAmount(focusQuote.total, period)}
-                </Text>
-              </Flex>
             </button>
           ) : null}
         </div>
@@ -442,9 +410,16 @@ export function CalculatorSidebar({
         <div className={styles.divider} />
 
         <div className={styles.block}>
-          <Text variant="caption-2" color="complementary" className={styles.blockLabel}>
-            Структура цены
-          </Text>
+          <div className={styles.blockLabelRow}>
+            <Text variant="caption-2" color="complementary" className={styles.blockLabel}>
+              Структура цены
+            </Text>
+            {focusProviderId ? (
+              <a href="#provider-calc-method" className={styles.methodLink}>
+                Как считается цена
+              </a>
+            ) : null}
+          </div>
           <CostBreakdownBar parts={selected.parts} period={period} showLegend={false} />
           <ul className={styles.partList}>
             {selected.parts.map((part) => {
@@ -487,17 +462,12 @@ export function CalculatorSidebar({
         {(() => {
           const skipKeys = new Set<string>();
           if (selectedKey) skipKeys.add(selectedKey);
-          if (bestVsFocus) skipKeys.add(quoteKey(bestVsFocus));
-          else if (result.best && !focusProviderId) skipKeys.add(quoteKey(result.best));
-          const otherQuotes = result.quotes.filter((q) => !skipKeys.has(quoteKey(q)));
-          // On provider landings keep the focus vendor near the top of the remaining list.
-          if (focusProviderId) {
-            otherQuotes.sort((a, b) => {
-              const aFocus = a.provider === focusProviderId ? 0 : 1;
-              const bFocus = b.provider === focusProviderId ? 0 : 1;
-              return aFocus - bFocus || a.total - b.total;
-            });
-          }
+          // On the general calculator the main card already shows the catalog minimum.
+          if (!focusProviderId && result.best) skipKeys.add(quoteKey(result.best));
+          const otherQuotes = result.quotes
+            .filter((q) => !skipKeys.has(quoteKey(q)))
+            .slice()
+            .sort((a, b) => a.total - b.total);
           if (otherQuotes.length === 0) return null;
           return (
             <>
@@ -508,17 +478,17 @@ export function CalculatorSidebar({
                     Другие предложения
                   </Text>
                   <HelpMark aria-label="Про другие предложения" iconSize="s">
-                    {ALT_DELTA_HINT} Предложения могут различаться по модели предоставления
+                    {listDeltaHint} Предложения могут различаться по модели предоставления
                     ресурсов, производительности и включённым услугам.
                   </HelpMark>
                 </div>
                 <ProviderList
                   quotes={otherQuotes}
-                  best={result.best}
+                  baseline={listBaseline}
                   selectedKey={selectedKey}
                   period={period}
                   onSelect={setSelectedKey}
-                  bestHint={priceHint}
+                  deltaHint={listDeltaHint}
                   focusProviderId={focusProviderId}
                 />
               </div>
@@ -535,11 +505,11 @@ export function CalculatorSidebar({
               </Text>
               <ProviderList
                 quotes={result.alternateQuotes}
-                best={result.alternateQuotes[0] ?? null}
+                baseline={result.alternateQuotes[0] ?? null}
                 selectedKey={selectedKey}
                 period={period}
                 onSelect={setSelectedKey}
-                bestHint={priceHint}
+                deltaHint={ALT_DELTA_HINT}
                 focusProviderId={focusProviderId}
               />
             </div>
