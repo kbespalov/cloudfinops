@@ -286,7 +286,7 @@ export function CalculatorSidebar({
       ? result.best
       : null;
   const cheaperPct =
-    cheaperThanFocus && focusQuote.total > 0
+    cheaperThanFocus && focusQuote != null && focusQuote.total > 0
       ? Math.max(0, Math.round((1 - cheaperThanFocus.total / focusQuote.total) * 100))
       : 0;
   const listBaseline = focusQuote ?? result.best;
