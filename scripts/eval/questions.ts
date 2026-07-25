@@ -664,6 +664,20 @@ export function buildQuestions(): Question[] {
     q: 'Какая минимальная цена 1 GiB RAM в месяц по провайдерам?',
     truth: () => truthFromUnitPrice('ram'),
   });
+  qs.push({
+    id: 'nat-vcpu-unit-all-cloudru',
+    tag: 'unit-price',
+    kind: 'unit',
+    q: 'Минимальная цена 1 vCPU on-demand 100% в месяц у всех провайдеров, включая Cloud.ru — кто дешевле и какой разброс?',
+    truth: () => truthFromUnitPrice('vcpu'),
+  });
+  qs.push({
+    id: 'nat-ram-unit-all-cloudru',
+    tag: 'unit-price',
+    kind: 'unit',
+    q: 'Минимальная цена 1 GiB RAM в месяц у всех, Cloud.ru тоже — кто минимум и кто дороже всех?',
+    truth: () => truthFromUnitPrice('ram'),
+  });
 
   // Near-miss / agent-lite (intentionally off homepage chip aliases).
   qs.push({

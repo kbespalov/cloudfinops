@@ -426,7 +426,10 @@ describe('matchFastPath', () => {
           component: 'vcpu',
           providers: [
             {providerName: 'Selectel', priceMonth: 725.11},
+            {providerName: 'VK Cloud', priceMonth: 819.59},
+            {providerName: 'MWS Cloud', priceMonth: 829.58},
             {providerName: 'Yandex Cloud', priceMonth: 892.8},
+            {providerName: 'T1 Cloud', priceMonth: 898.75},
           ],
           derivedFromFlavors: [
             {
@@ -443,6 +446,47 @@ describe('matchFastPath', () => {
     assert.ok(md);
     assert.match(md, /Cloud\.ru\s*\*/);
     assert.match(md, /702[,.]72/);
+    assert.match(md, /Selectel/);
+    assert.match(md, /T1/);
+    assert.match(md, /оценка|flavor/i);
+    // Cloud.ru* is cheapest → first row; Selectel still listed.
+    const cloudIdx = md!.indexOf('Cloud.ru');
+    const selectelIdx = md!.indexOf('Selectel');
+    assert.ok(cloudIdx >= 0 && selectelIdx > cloudIdx);
+    assert.doesNotMatch(md, /не\s+представлен|нет\s+в\s+каталоге/i);
+  });
+
+  it('includes Cloud.ru derivedFromFlavors (*) in RAM unit table', () => {
+    const md = formatFastPathAnswer('ram-unit', [
+      {
+        name: 'compare_unit_price',
+        content: JSON.stringify({
+          component: 'ram',
+          providers: [
+            {providerName: 'T1 Cloud', priceMonth: 217.54},
+            {providerName: 'MWS Cloud', priceMonth: 220.82},
+            {providerName: 'VK Cloud', priceMonth: 222.65},
+            {providerName: 'Yandex Cloud', priceMonth: 237.6},
+            {providerName: 'Selectel', priceMonth: 263.66},
+          ],
+          derivedFromFlavors: [
+            {
+              provider: 'cloud-ru',
+              providerName: 'Cloud.ru',
+              hour: 0.2547,
+              month: 183.37,
+              method: 'оценка (*) по типичным готовым ВМ',
+            },
+          ],
+        }),
+      },
+    ]);
+    assert.ok(md);
+    assert.match(md, /1 GiB RAM/);
+    assert.match(md, /Cloud\.ru\s*\*/);
+    assert.match(md, /183[,.]37/);
+    assert.match(md, /T1/);
+    assert.match(md, /Selectel/);
     assert.match(md, /оценка|flavor/i);
     assert.doesNotMatch(md, /не\s+представлен|нет\s+в\s+каталоге/i);
   });
@@ -534,6 +578,42 @@ describe('matchFastPath', () => {
     assert.match(md, /Selectel/);
     assert.match(md, /Утилизация/);
     assert.match(md, /\bmin\b/);
+  });
+
+  it('formats fit_budget valuePick when Cloud.ru loses util top-6', () => {
+    const md = formatFastPathAnswer('budget-10000', [
+      {
+        name: 'fit_budget',
+        content: JSON.stringify({
+          budgetMonthRub: 10_000,
+          highlights: [
+            {
+              provider: 'VK Cloud',
+              shape: '2 vCPU / 8 GiB / 100 GiB SSD',
+              count: 2,
+              spendMonth: 9440.81,
+              utilPct: 94.41,
+              totalVcpu: 4,
+            },
+          ],
+          valuePick: {
+            provider: 'Cloud.ru',
+            shape: '4 vCPU / 16 GiB / 100 GiB SSD',
+            shapeId: '4-16',
+            count: 1,
+            spendMonth: 6886.66,
+            utilPct: 68.87,
+            leftoverMonth: 3113.34,
+            totalVcpu: 4,
+            unitMonth: 6886.66,
+          },
+        }),
+      },
+    ]);
+    assert.ok(md);
+    assert.match(md, /Cloud\.ru/);
+    assert.match(md, /дешевле/i);
+    assert.match(md, /остаток/);
   });
 
   it('does not short-circuit impossible GPU budget / HA+1 node (needs narrative)', () => {

@@ -215,6 +215,13 @@ export function truthFromUnitPrice(component: 'vcpu' | 'ram' | 'ssd'): Truth {
     runToolSync('compare_unit_price', JSON.stringify({component})),
   ) as {
     providers?: {provider: string; providerName: string; priceMonth: number | null; priceHour: number | null}[];
+    /** Flavor-only estimates (Cloud.ru etc.) — show with *; keep out of cheapest/stats. */
+    derivedFromFlavors?: {
+      provider?: string;
+      providerName?: string;
+      hour?: number | null;
+      month?: number | null;
+    }[];
     stats?: {cheapest?: {provider: string; price: number}};
   };
   const allowed = new Set<ProviderId>();
@@ -231,6 +238,13 @@ export function truthFromUnitPrice(component: 'vcpu' | 'ram' | 'ssd'): Truth {
       cheapestProvider = id;
       cheapestPrice = price;
     }
+  }
+  // Cloud.ru (and other flavor-only) must be allowlisted so a correct «* / оценка»
+  // mention is not graded as hallucination. Do NOT promote them to cheapest —
+  // stats.cheapest stays on like-for-like unit meters only.
+  for (const d of raw.derivedFromFlavors ?? []) {
+    const id = mapProviderName(d.providerName || d.provider || '');
+    if (id) allowed.add(id);
   }
   if (raw.stats?.cheapest) {
     const id = mapProviderName(raw.stats.cheapest.provider);

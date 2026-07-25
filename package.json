@@ -21,7 +21,7 @@
     "seo:indexnow": "tsx scripts/indexnow.ts",
     "lint": "next lint",
     "theme:brand": "tsx scripts/generate-brand-theme.ts",
-    "test": "tsx --test $(find src/lib/calculator src/lib/chat src/lib/catalog -name '*.test.ts' | sort)"
+    "test": "tsx --test $(find src/lib/calculator src/lib/chat src/lib/catalog scripts/eval -name '*.test.ts' | sort)"
   },
   "dependencies": {
     "@gravity-ui/aikit": "^2.11.0",

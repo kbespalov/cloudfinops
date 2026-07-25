@@ -116,7 +116,14 @@ export type FitScenario = {
   best: FitPack | null;
   /** Next 2 packs for the same shape (other providers), if any. */
   also: FitPack[];
+  /**
+   * Lowest unitMonth among affordable packs with the same totalVcpu as `best`
+   * (same resources, cheaper unit — often lower utilPct / larger leftover).
+   */
+  cheapestSameResources: FitPack | null;
 };
+
+export type FitHighlight = FitPack & {shape: string; shapeId: string};
 
 export type FitBudgetResult = {
   budgetMonthRub: number;
@@ -127,7 +134,13 @@ export type FitBudgetResult = {
   assumption: string;
   scenarios: FitScenario[];
   /** Top packs across shapes: most vCPU (or GPU count) within budget, then util. */
-  highlights: Array<FitPack & {shape: string; shapeId: string}>;
+  highlights: FitHighlight[];
+  /**
+   * Cheapest unit among packs that match highlights' max totalVcpu (or count for GPU).
+   * Surfaces providers like Cloud.ru that lose util%-ranking but deliver the same
+   * resources for less — omitted when already in highlights.
+   */
+  valuePick: FitHighlight | null;
   note: string;
 };
 
@@ -187,6 +200,21 @@ export function fitBudget(options: {
         return (b.totalVcpu ?? b.count) - (a.totalVcpu ?? a.count);
       });
     const best = affordable[0] ?? null;
+    const bestResources = best ? (best.totalVcpu ?? best.count) : 0;
+    const cheapestAmongBestResources =
+      best == null
+        ? null
+        : (affordable
+            .filter((p) => (p.totalVcpu ?? p.count) === bestResources)
+            .slice()
+            .sort((a, b) => a.unitMonth - b.unitMonth || b.utilPct - a.utilPct)[0] ?? null);
+    const cheapestSameResources =
+      best &&
+      cheapestAmongBestResources &&
+      cheapestAmongBestResources.provider !== best.provider &&
+      cheapestAmongBestResources.unitMonth < best.unitMonth - 0.01
+        ? cheapestAmongBestResources
+        : null;
 
     scenarios.push({
       shapeId: shape.id,
@@ -194,6 +222,7 @@ export function fitBudget(options: {
       kind: shape.kind,
       best,
       also: affordable.slice(1, 3),
+      cheapestSameResources,
     });
   }
 
@@ -207,6 +236,17 @@ export function fitBudget(options: {
     })
     .slice(0, 6);
 
+  const maxResources = highlights[0] ? (highlights[0].totalVcpu ?? highlights[0].count) : 0;
+  const highlightKeys = new Set(highlights.map((h) => `${h.provider}|${h.shapeId}|${h.count}`));
+  const valuePick =
+    maxResources > 0
+      ? (flat
+          .filter((p) => p.count >= 1 && (p.totalVcpu ?? p.count) === maxResources)
+          .slice()
+          .sort((a, b) => a.unitMonth - b.unitMonth || b.utilPct - a.utilPct)
+          .find((p) => !highlightKeys.has(`${p.provider}|${p.shapeId}|${p.count}`)) ?? null)
+      : null;
+
   return {
     budgetMonthRub: budget,
     profile,
@@ -219,7 +259,8 @@ export function fitBudget(options: {
         : 'GPU‑конфигурация целиком (карта + типовой хост + диск) из калькулятора. Без IP/S3/K8s/трафика.',
     scenarios,
     highlights,
+    valuePick,
     note:
-      'Ответь сразу таблицей по highlights (или 2–4 сценария из scenarios.best): Провайдер | Конфиг ×N | Итого ₽/мес | Утилизация % | к минимуму. Не устраивай опрос. count=число целых машин; utilPct=доля бюджета. Формы только из ответа инструмента. Минимум — в каталоге Cloud FinOps среди публичных тарифов в выборке.',
+      'Ответь сразу таблицей по highlights (или 2–4 сценария из scenarios.best): Провайдер | Конфиг ×N | Итого ₽/мес | Утилизация % | к минимуму. Если valuePick задан — отдельной строкой/абзацем: тот же объём ресурсов дешевле (часто ниже utilPct, больше leftover). Не пиши «провайдера нет», если он есть в scenarios/valuePick. Не устраивай опрос. count=число целых машин; utilPct=доля бюджета. Формы только из ответа инструмента. Минимум — в каталоге Cloud FinOps среди публичных тарифов в выборке.',
   };
 }

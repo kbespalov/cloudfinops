@@ -2,6 +2,50 @@ import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import {compareUnitPrice} from './analytics';
 
+describe('compareUnitPrice vCPU / RAM (Cloud.ru derived)', () => {
+  it('surfaces Cloud.ru vCPU via derivedFromFlavors, not as comparable unit meter', () => {
+    const r = compareUnitPrice('vcpu');
+    assert.equal(r.providers.some((p) => p.provider === 'cloud-ru'), false);
+    const derived = r.derivedFromFlavors.find((d) => d.provider === 'cloud-ru');
+    assert.ok(derived, 'Cloud.ru must appear in derivedFromFlavors');
+    assert.ok((derived.month ?? 0) > 0);
+    assert.ok((derived.hour ?? 0) > 0);
+    assert.match(derived.method, /оценк/i);
+    // Like-for-like floor stays on published unit meters (Selectel today).
+    assert.equal(r.stats?.cheapest?.provider, 'Selectel');
+    assert.ok(
+      (derived.month as number) < (r.providers[0]?.priceMonth as number),
+      'Cloud.ru* estimate is typically below the unit-meter floor',
+    );
+  });
+
+  it('surfaces Cloud.ru RAM via derivedFromFlavors; T1 is unit-meter floor', () => {
+    const r = compareUnitPrice('ram');
+    assert.equal(r.providers.some((p) => p.provider === 'cloud-ru'), false);
+    const derived = r.derivedFromFlavors.find((d) => d.provider === 'cloud-ru');
+    assert.ok(derived, 'Cloud.ru must appear in derivedFromFlavors');
+    assert.ok((derived.month ?? 0) > 0);
+    assert.equal(r.stats?.cheapest?.provider, 'T1 Cloud');
+    const selectel = r.providers.find((p) => p.provider === 'selectel');
+    assert.ok(selectel?.priceMonth != null);
+    assert.ok(
+      (selectel!.priceMonth as number) > (r.stats!.cheapest!.price as number),
+      'Selectel RAM is not the unit-meter floor (inversion vs vCPU)',
+    );
+  });
+
+  it('unit-meter spread stays in a sane band for vCPU and RAM', () => {
+    const vcpu = compareUnitPrice('vcpu');
+    const ram = compareUnitPrice('ram');
+    assert.ok((vcpu.stats?.spreadMaxVsMinPct ?? 0) > 10);
+    assert.ok((vcpu.stats?.spreadMaxVsMinPct ?? 0) < 40);
+    assert.ok((ram.stats?.spreadMaxVsMinPct ?? 0) > 10);
+    assert.ok((ram.stats?.spreadMaxVsMinPct ?? 0) < 40);
+    assert.equal(vcpu.providers.length, 5);
+    assert.equal(ram.providers.length, 5);
+  });
+});
+
 describe('compareUnitPrice disk media', () => {
   it('diskMedia=nvme does not pick T1 Basic SSD as NVMe', () => {
     const r = compareUnitPrice('ssd', {diskMedia: 'nvme'});

@@ -1932,6 +1932,8 @@ export function formatFastPathAnswer(
       count: number;
       spendMonth: number;
       utilPct: number;
+      leftoverMonth?: number;
+      totalVcpu?: number | null;
     };
     const highlights = (data.highlights as H[])
       .filter((h) => h.provider && h.count >= 1 && typeof h.spendMonth === 'number')
@@ -1949,7 +1951,18 @@ export function formatFastPathAnswer(
       budget != null
         ? `Варианты ВМ при бюджете ≈ ${budget.toLocaleString('ru-RU')} ₽/мес`
         : 'Варианты размещения в рамках бюджета';
-    return `**${title}** (НДС вкл., месяц = 720 ч; без IP/S3/K8s/GPU)\n\n| Провайдер | Конфиг × N | Итого ₽/мес | Утилизация | к минимуму |\n|---|---|---:|---:|---|\n${rows}\n\nЛучшая утилизация бюджета в каталоге Cloud FinOps: **${highlights[0].provider}** — ${highlights[0].shape} × ${highlights[0].count}.`;
+    const value = data.valuePick as H | null | undefined;
+    const valueNote =
+      value &&
+      value.provider &&
+      value.count >= 1 &&
+      typeof value.spendMonth === 'number' &&
+      !highlights.some(
+        (h) => h.provider === value.provider && h.shape === value.shape && h.count === value.count,
+      )
+        ? `\n\nТе же ${value.totalVcpu != null ? `${value.totalVcpu} vCPU` : 'ресурсы'} дешевле unit (ниже утилизация бюджета): **${value.provider}** — ${value.shape} × ${value.count} за ${formatRub(value.spendMonth)} (${value.utilPct.toLocaleString('ru-RU')}%${typeof value.leftoverMonth === 'number' ? `; остаток ≈ ${formatRub(value.leftoverMonth)}` : ''}).`
+        : '';
+    return `**${title}** (НДС вкл., месяц = 720 ч; без IP/S3/K8s/GPU)\n\n| Провайдер | Конфиг × N | Итого ₽/мес | Утилизация | к минимуму |\n|---|---|---:|---:|---|\n${rows}\n\nЛучшая утилизация бюджета в каталоге Cloud FinOps: **${highlights[0].provider}** — ${highlights[0].shape} × ${highlights[0].count}.${valueNote}`;
   }
 
   if (primary.name === 'search_prices') {
