@@ -3,7 +3,7 @@
 import {useState, type FormEvent} from 'react';
 import dynamic from 'next/dynamic';
 import {useRouter} from 'next/navigation';
-import {Button, Flex, Icon, Text, TextInput, ThemeProvider} from '@gravity-ui/uikit';
+import {Button, Flex, Icon, Text, TextInput} from '@gravity-ui/uikit';
 import {ArrowRight, Magnifier} from '@gravity-ui/icons';
 import {AppHeader} from '@/components/AppHeader';
 import {
@@ -54,9 +54,7 @@ export function HomeLanding() {
               Сравнение цен облаков России
             </Text>
 
-            {/* Light scoped theme keeps SearchInput readable when the app is dark;
-                rootClassName clears .g-root's solid white square behind the card. */}
-            <ThemeProvider theme="light" scoped rootClassName={styles.searchTheme}>
+            <div className={styles.searchTheme}>
               <form className={styles.searchCard} onSubmit={onSubmit}>
                 <Flex className={styles.searchRow} gap={3} alignItems="center">
                   <TextInput
@@ -96,7 +94,7 @@ export function HomeLanding() {
                   ))}
                 </div>
               </form>
-            </ThemeProvider>
+            </div>
           </div>
         </main>
       </div>
