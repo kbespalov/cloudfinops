@@ -186,6 +186,56 @@ describe('Selectel/T1 H200 VK-host parity synthetics', () => {
   });
 });
 
+describe('VK H200 synthetic GPU unit (card-only estimate)', () => {
+  it('unit = flavor − Cascade Lake host (44 vCPU / 256 GiB)', () => {
+    const synth = catalog.meters.find((m) => m.sku === 'vk.gpu.h200.unit.synthetic')!;
+    const flavor = catalog.meters.find((m) => m.sku === 'vk.gpu.h200-1')!;
+    const vcpu = catalog.meters.find((m) => m.sku === 'vk.compute.cascade-lake.vcpu')!;
+    const ram = catalog.meters.find((m) => m.sku === 'vk.compute.cascade-lake.ram')!;
+    assert.ok(synth && flavor && vcpu && ram);
+    assert.equal(synth.synthetic, true);
+    assert.equal(synth.priceProvenance, 'derived');
+    assert.equal(gpuPriceBasisLabel(synth), 'только GPU');
+    assert.equal(formatGpuLabel(synth), 'только GPU · оценка *');
+    assert.match(synth.notes || '', /синтетич/i);
+    assert.ok(synth.name.includes('*'));
+
+    const implied =
+      amountNumber(flavor, 'unit')! -
+      44 * amountNumber(vcpu, 'unit')! -
+      256 * amountNumber(ram, 'unit')!;
+    const synthHour = amountNumber(synth, 'unit')!;
+    assert.ok(
+      nearlyEqual(synthHour, implied, 0.01),
+      `expected ${implied}, got ${synthHour}`,
+    );
+    assert.ok(nearlyEqual(synthHour, 972.348, 0.01));
+    assert.ok(synthHour < amountNumber(flavor, 'unit')!);
+  });
+
+  it('calculator ignores VK synthetic GPU unit and keeps flavor quote', () => {
+    const preset: GpuPreset = {
+      id: 'h200-vk-unit',
+      kind: 'gpu',
+      title: 'H200 VK',
+      subtitle: '44/256',
+      gpuModelMatch: 'H200',
+      gpuCount: 1,
+      vcpu: 44,
+      ramGiB: 256,
+      diskGiB: 100,
+      gpuMemoryGb: 141,
+      shapeSource: 'vk-cloud',
+    };
+    const result = quotePreset(preset, 'month');
+    const vk = result.quotes.find((q) => q.provider === 'vk-cloud');
+    assert.ok(vk);
+    assert.equal(vk.scope, 'bundle');
+    assert.ok(!vk.meters.some((m) => m.synthetic));
+    assert.ok(vk.meters.some((m) => m.sku === 'vk.gpu.h200-1'));
+  });
+});
+
 describe('Cloud.ru A100 synthetic GPU units', () => {
   const vcpuHour = () =>
     amountNumber(

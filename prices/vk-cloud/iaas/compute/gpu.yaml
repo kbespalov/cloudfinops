@@ -354,6 +354,66 @@ spec:
         formula: '146.85 × 60'
         vat: included
     notes: "Цена конфигурации целиком: vCPU, RAM и восемь GPU включены."
+
+  # ---------------------------------------------------------------------------
+  # Synthetic per-GPU unit estimate (catalog comparison only).
+  # flavor_hour − 44×vCPU − 256×RAM (VK Cascade Lake unit rates).
+  # VK sells H200 only as full flavors; this row mirrors Cloud.ru unit.synthetic.
+  # ---------------------------------------------------------------------------
+  - sku: vk.gpu.h200.unit.synthetic
+    name: NVIDIA H200 141GB *
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: Москва
+    priceProvenance: derived
+    effectiveFrom: '2026-07-26'
+    checkedAt: '2026-07-26'
+    sourceRefs:
+    - vk.pricelist
+    dimensions:
+      gpuModel: NVIDIA H200
+      gpuCount: 1
+      gpuMemoryGb: 141
+      vramGb: 141
+      purchaseModel: on-demand
+      synthetic: true
+      syntheticFrom:
+      - vk.gpu.h200-1
+      - vk.compute.cascade-lake.vcpu
+      - vk.compute.cascade-lake.ram
+      hostDeduction:
+        vcpuPerGpu: 44
+        ramGiBPerGpu: 256
+        vcpuUnitSku: vk.compute.cascade-lake.vcpu
+        ramUnitSku: vk.compute.cascade-lake.ram
+        flavorSku: vk.gpu.h200-1
+    pricing:
+      rate:
+        amount: '972.348'
+        currency: RUB
+        unit:
+          quantity: GPU
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '972.348'
+        unit:
+          currency: RUB
+          quantity: GPU
+          period: hour
+        formula: 1101.6 − 44×1.13832 − 256×0.30924 (VK H200 ×1 host deduction, VAT incl.)
+        vat: included
+    notes: >
+      Синтетическая позиция каталога Cloud FinOps (*): оценка только GPU после
+      вычета хоста (44 vCPU / 256 GiB) по unit-ставкам VK Cascade Lake.
+      VK Cloud продаёт H200 только готовыми flavor’ами (vCPU+RAM+GPU) —
+      отдельной card-only строки в прайсе нет. Для заказа смотрите
+      GPU-44-256-H200-1 / GPU-240-2048-H200-8; эта строка — чтобы сравнить карту
+      с card-only тарифами Selectel и T1. Плотность хоста у ×8 иная (30 vCPU на
+      карту) — оценка взята с ×1 flavor.
+
   - sku: vk.gpu.a100-80-2
     name: GPU2-64-384-A100x80-2
     meter: compute.flavor

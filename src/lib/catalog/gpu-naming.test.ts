@@ -25,6 +25,14 @@ describe('GPU catalog naming', () => {
     assert.equal(displayMeterName(bySku('t1.gpu.h200')), 'NVIDIA H200 141 ГБ · SXM · ×1');
     assert.equal(displayMeterName(bySku('vk.gpu.h200-1')), 'NVIDIA H200 141 ГБ · ×1');
     assert.equal(displayMeterName(bySku('vk.gpu.h200-8')), 'NVIDIA H200 141 ГБ · ×8');
+    assert.equal(
+      displayMeterName(bySku('vk.gpu.h200.unit.synthetic')),
+      'NVIDIA H200 141 ГБ · ×1',
+    );
+    assert.equal(
+      formatGpuLabel(bySku('vk.gpu.h200.unit.synthetic')),
+      'только GPU · оценка *',
+    );
   });
 
   it('puts billing basis only in the Состав column, without repeating the card name', () => {

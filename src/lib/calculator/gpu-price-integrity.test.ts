@@ -259,6 +259,15 @@ describe('GPU price integrity — calculator must not launder synthetics', () =>
     );
     assert.doesNotMatch(displayMeterName(meter('selectel.gpu.h200-141')), /44\/256|целиком/);
   });
+
+  it('20b. VK H200 unit synthetic = flavor − 44×Cascade Lake vCPU − 256×RAM', () => {
+    const flavor = hour('vk.gpu.h200-1');
+    const v = hour('vk.compute.cascade-lake.vcpu');
+    const r = hour('vk.compute.cascade-lake.ram');
+    nearly(hour('vk.gpu.h200.unit.synthetic'), flavor - 44 * v - 256 * r);
+    assert.equal(gpuPriceBasisLabel(meter('vk.gpu.h200.unit.synthetic')), 'только GPU');
+    assert.match(meter('vk.gpu.h200.unit.synthetic').notes || '', /синтетич/i);
+  });
 });
 
 describe('GPU price integrity — Cloud.ru unit synthetics still consistent', () => {
