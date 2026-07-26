@@ -1,6 +1,7 @@
 'use client';
 
-import {Text, Tooltip} from '@gravity-ui/uikit';
+import {useState} from 'react';
+import {Disclosure, Text, Tooltip} from '@gravity-ui/uikit';
 import {
   formatVramUsage,
   vramPartTone,
@@ -80,6 +81,7 @@ export function VramBreakdownCard({
   breakdown: VramBreakdown;
   embedded?: boolean;
 }) {
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const byId = new Map(breakdown.parts.map((p) => [p.id, p.gib]));
   const orderedParts = PART_ORDER.map((id) => ({
     id,
@@ -106,92 +108,108 @@ export function VramBreakdownCard({
       : []),
   ];
 
+  const usageLabel = formatVramUsage(used, capacity);
+  const utilLabel =
+    utilPct != null
+      ? `${new Intl.NumberFormat('ru-RU', {maximumFractionDigits: 1}).format(utilPct)}%`
+      : null;
+
   return (
-    <Root className={embedded ? styles.embedded : styles.card}>
-      <div className={styles.head}>
-        <Text as="h3" variant="subheader-1" className={styles.title}>
-          Использование VRAM на одну ноду
-        </Text>
-        <div className={styles.headMeta}>
-          <Text variant="body-2" color="secondary">
-            {formatVramUsage(used, capacity)}
-          </Text>
-          {utilPct != null ? (
-            <Text variant="caption-2" color="hint" className={styles.headPct}>
-              {new Intl.NumberFormat('ru-RU', {maximumFractionDigits: 1}).format(utilPct)}%
-              занято
+    <Root className={embedded ? styles.embedded : styles.card} aria-label="Использование VRAM на одну ноду">
+      <div className={styles.summary}>
+        <Text variant="body-2" color="primary" className={styles.summaryUsage}>
+          {usageLabel}
+          {utilLabel ? (
+            <Text as="span" variant="body-2" color="secondary">
+              {' '}
+              · {utilLabel}
             </Text>
           ) : null}
-        </div>
+        </Text>
+        <Text variant="caption-2" color="hint">
+          на одну ноду
+        </Text>
       </div>
 
-      <div
-        className={styles.barTrack}
-        role="img"
-        aria-label={legendItems
-          .filter((item) => item.gib > 0)
-          .map((item) => `${item.label} ${formatGiB(item.gib)} GiB`)
-          .join(', ')}
+      <Disclosure
+        className={styles.detailsDisclosure}
+        size="m"
+        arrowPosition="start"
+        summary="Подробнее про VRAM"
+        expanded={detailsOpen}
+        onUpdate={setDetailsOpen}
+        keepMounted
       >
-        {orderedParts.map((part) => {
-          if (part.gib <= 0 || scale <= 0) return null;
-          const pct = Math.max((part.gib / scale) * 100, part.gib > 0 ? 0.8 : 0);
-          const amount = formatPartAmount(part.id, part.gib, breakdown);
-          return (
-            <Tooltip
-              key={part.id}
-              content={`${part.label}: ${amount.display} · ${formatShare(part.gib, scale)}. ${PART_HINT[part.id]}${amount.tipExtra ? `. ${amount.tipExtra}` : ''}`}
-              openDelay={150}
-            >
-              <span
-                className={styles.segment}
-                data-tone={part.tone}
-                style={{width: `${pct}%`}}
-                tabIndex={0}
-              />
-            </Tooltip>
-          );
-        })}
-        {freeGiB != null && freeGiB > 0 && scale > 0 ? (
-          <Tooltip
-            content={`Свободно: ${formatGiB(freeGiB)}\u00a0GiB · ${formatShare(freeGiB, scale)}`}
-            openDelay={150}
+        <div className={styles.detailsBody}>
+          <div
+            className={styles.barTrack}
+            role="img"
+            aria-label={legendItems
+              .filter((item) => item.gib > 0)
+              .map((item) => `${item.label} ${formatGiB(item.gib)} GiB`)
+              .join(', ')}
           >
-            <span
-              className={styles.segment}
-              data-tone="free"
-              style={{width: `${(freeGiB / scale) * 100}%`}}
-              tabIndex={0}
-            />
-          </Tooltip>
-        ) : null}
-      </div>
+            {orderedParts.map((part) => {
+              if (part.gib <= 0 || scale <= 0) return null;
+              const pct = Math.max((part.gib / scale) * 100, part.gib > 0 ? 0.8 : 0);
+              const amount = formatPartAmount(part.id, part.gib, breakdown);
+              return (
+                <Tooltip
+                  key={part.id}
+                  content={`${part.label}: ${amount.display} · ${formatShare(part.gib, scale)}. ${PART_HINT[part.id]}${amount.tipExtra ? `. ${amount.tipExtra}` : ''}`}
+                  openDelay={150}
+                >
+                  <span
+                    className={styles.segment}
+                    data-tone={part.tone}
+                    style={{width: `${pct}%`}}
+                    tabIndex={0}
+                  />
+                </Tooltip>
+              );
+            })}
+            {freeGiB != null && freeGiB > 0 && scale > 0 ? (
+              <Tooltip
+                content={`Свободно: ${formatGiB(freeGiB)}\u00a0GiB · ${formatShare(freeGiB, scale)}`}
+                openDelay={150}
+              >
+                <span
+                  className={styles.segment}
+                  data-tone="free"
+                  style={{width: `${(freeGiB / scale) * 100}%`}}
+                  tabIndex={0}
+                />
+              </Tooltip>
+            ) : null}
+          </div>
 
-      <ul className={styles.legend}>
-        {legendItems.map((item) => {
-          const amount =
-            item.id === 'free'
-              ? {display: `${formatGiB(item.gib)}\u00a0GiB` as string, tipExtra: undefined}
-              : formatPartAmount(item.id, item.gib, breakdown);
-          const tip =
-            item.id === 'free'
-              ? `Свободно: ${amount.display} · ${formatShare(item.gib, scale)}`
-              : `${item.label}: ${amount.display}${item.gib > 0 ? ` · ${formatShare(item.gib, scale)}` : ''}. ${PART_HINT[item.id]}${amount.tipExtra ? `. ${amount.tipExtra}` : ''}`;
-          return (
-            <Tooltip key={item.id} content={tip} openDelay={150}>
-              <li className={styles.legendItem} tabIndex={0}>
-                <span className={styles.swatch} data-tone={item.tone} aria-hidden />
-                <Text as="span" variant="caption-2" color="secondary" className={styles.legendLabel}>
-                  {item.label}
-                </Text>
-                <Text as="span" variant="caption-2" color="hint" className={styles.legendAmount}>
-                  {amount.display}
-                </Text>
-              </li>
-            </Tooltip>
-          );
-        })}
-      </ul>
+          <ul className={styles.legend}>
+            {legendItems.map((item) => {
+              const amount =
+                item.id === 'free'
+                  ? {display: `${formatGiB(item.gib)}\u00a0GiB` as string, tipExtra: undefined}
+                  : formatPartAmount(item.id, item.gib, breakdown);
+              const tip =
+                item.id === 'free'
+                  ? `Свободно: ${amount.display} · ${formatShare(item.gib, scale)}`
+                  : `${item.label}: ${amount.display}${item.gib > 0 ? ` · ${formatShare(item.gib, scale)}` : ''}. ${PART_HINT[item.id]}${amount.tipExtra ? `. ${amount.tipExtra}` : ''}`;
+              return (
+                <Tooltip key={item.id} content={tip} openDelay={150}>
+                  <li className={styles.legendItem} tabIndex={0}>
+                    <span className={styles.swatch} data-tone={item.tone} aria-hidden />
+                    <Text as="span" variant="caption-2" color="secondary" className={styles.legendLabel}>
+                      {item.label}
+                    </Text>
+                    <Text as="span" variant="caption-2" color="hint" className={styles.legendAmount}>
+                      {amount.display}
+                    </Text>
+                  </li>
+                </Tooltip>
+              );
+            })}
+          </ul>
+        </div>
+      </Disclosure>
     </Root>
   );
 }

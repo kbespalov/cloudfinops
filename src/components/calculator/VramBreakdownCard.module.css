@@ -3,7 +3,7 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .card {
@@ -14,14 +14,7 @@
   padding-top: 0;
 }
 
-.head {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.headMeta {
+.summary {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -29,15 +22,20 @@
   min-width: 0;
 }
 
-.headPct {
-  white-space: nowrap;
+.summaryUsage {
+  font-variant-numeric: tabular-nums;
 }
 
-.title {
-  margin: 0;
-  font-size: 18px;
-  line-height: 24px;
-  font-weight: 600;
+.detailsDisclosure {
+  min-width: 0;
+}
+
+.detailsBody {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0 4px;
+  min-width: 0;
 }
 
 .barTrack {

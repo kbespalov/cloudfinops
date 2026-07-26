@@ -5,13 +5,16 @@
   padding: 24px 24px 40px;
   display: flex;
   flex-direction: column;
-  gap: 16px; /* scale: 4/8/12/16/24/32 */
+  gap: 0;
+  /* Locked tabs → calculator offset (same for VM / LLM / Lakehouse / AI). */
+  --cf-calc-after-tabs: 20px;
 }
 
 .hero {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  margin-bottom: var(--cf-calc-after-tabs);
 }
 
 .heroTop {
@@ -107,6 +110,10 @@
   grid-template-columns: minmax(0, 1fr) 420px;
   gap: 20px;
   align-items: start;
+  /* Explicit under-tabs offset — do not let panels invent their own top padding. */
+  margin-top: 0;
+  margin-bottom: 16px;
+  padding-top: 0;
 }
 
 /* AI tab: stretch chat column to the sidebar row height on desktop. */
@@ -166,11 +173,16 @@
   .page {
     /* Extra bottom room for sticky mobile price bar. */
     padding: 12px 14px calc(88px + env(safe-area-inset-bottom, 0px));
-    gap: 12px;
+    gap: 0;
+    --cf-calc-after-tabs: 16px;
   }
 
   .hero {
     gap: 8px;
+  }
+
+  .workspace {
+    margin-bottom: 12px;
   }
 
   .heroTop {
@@ -237,6 +249,7 @@
   align-items: center;
   gap: 12px;
   margin-top: 4px;
+  margin-bottom: 0;
 }
 
 .disclaimer {

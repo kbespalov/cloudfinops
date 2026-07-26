@@ -30,6 +30,25 @@
   min-width: 0;
 }
 
+/* First control band — same visual start as VM family / LLM model picker. */
+.presetHead {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 18px;
+}
+
+.presetHeadLabel {
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+  color: var(--g-color-text-complementary);
+}
+
+.fieldGroup:first-child {
+  gap: 8px;
+}
+
 /* Vertical rhythm between undivided sections (Размер → Object Storage). */
 .fieldGroup + .fieldGroup:not(.fieldGroupDivided) {
   margin-top: 32px;

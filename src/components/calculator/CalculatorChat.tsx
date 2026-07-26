@@ -23,7 +23,11 @@ import styles from './CalculatorChat.module.css';
 
 const ChatContainer = dynamic(
   () => import('@gravity-ui/aikit').then((m) => ({default: m.ChatContainer})),
-  {ssr: false},
+  {
+    ssr: false,
+    /* Outer .shell keeps height — avoid nested placeholder collapsing the column. */
+    loading: () => null,
+  },
 );
 
 const STORAGE_KEY = 'cf-calculator-chat-v1';

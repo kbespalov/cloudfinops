@@ -6,6 +6,7 @@ import {Suspense, useEffect, useMemo, useState} from 'react';
 import {
   Alert,
   Button,
+  Disclosure,
   Flex,
   HelpMark,
   Icon,
@@ -125,9 +126,25 @@ function defaultAvgContext(maxContext: number): number {
   return Math.max(4_096, Math.min(32_768, Math.round(maxContext / 4)));
 }
 
+function InferenceCalculatorFallback({period}: {period: PeriodMode}) {
+  return (
+    <>
+      <div className={panelStyles.formColumn} aria-hidden>
+        <div className={panelStyles.topSlot} />
+      </div>
+      <CalculatorSidebar
+        period={period}
+        result={null}
+        loading
+        emptyHint="Подбираем конфигурацию…"
+      />
+    </>
+  );
+}
+
 export function InferenceCalculatorPanel({period}: {period: PeriodMode}) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<InferenceCalculatorFallback period={period} />}>
       <InferenceCalculatorPanelInner period={period} />
     </Suspense>
   );
@@ -154,6 +171,7 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
   const [selectedIdx, setSelectedIdx] = useState(0);
   /** True when the user picked a row other than the algorithm recommendation. */
   const [manualPick, setManualPick] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const profile = useMemo(
     () => INFERENCE_MODELS.find((m) => m.displayName === model) ?? null,
@@ -413,10 +431,10 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
                   {manualPick && selectedQuantLabel && selectedGpuLabel ? (
                     <>
                       <Text variant="caption-2" color="complementary" className={styles.autoHint}>
-                        Выбрано вручную: {selectedQuantLabel} · {selectedGpuLabel}
+                        Выбрано: {selectedQuantLabel} · {selectedGpuLabel}
                       </Text>
                       <Button size="s" view="flat" onClick={returnToRecommendation}>
-                        Вернуться к рекомендации
+                        К рекомендации
                       </Button>
                     </>
                   ) : (
@@ -429,7 +447,7 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
                       openDelay={200}
                     >
                       <Text variant="caption-2" color="complementary" className={styles.autoHint}>
-                        Рекомендовано: {recommendedQuantLabel} · {recommendedGpuLabel}
+                        Авто: {recommendedQuantLabel} · {recommendedGpuLabel}
                       </Text>
                     </Tooltip>
                   )}
@@ -438,16 +456,7 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
             </div>
           </section>
 
-          <section className={styles.group} aria-labelledby="workload-heading">
-            <div className={styles.sectionTitleRow}>
-              <Text as="h3" id="workload-heading" className={styles.sectionTitle}>
-                Нагрузка
-              </Text>
-              <HelpMark aria-label="Про расчёт нагрузки" iconSize="s">
-                Расчёт оценивает требуемую VRAM. Фактическая пропускная способность зависит от
-                runtime, batch size, длины output и целевой задержки.
-              </HelpMark>
-            </div>
+          <section className={styles.group} aria-label="Нагрузка">
             <div className={styles.workload}>
               <div className={styles.field}>
                 <div className={styles.fieldLabelRow}>
@@ -455,8 +464,8 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
                     Параллельные запросы
                   </Text>
                   <HelpMark aria-label="Про параллельные запросы" iconSize="s">
-                    Максимальное число запросов, которые одновременно находятся в генерации. Это не
-                    обязательно равно числу пользователей.
+                    Сколько запросов одновременно находятся в генерации. KV cache считается на все
+                    сразу. Это не обязательно равно числу пользователей.
                   </HelpMark>
                 </div>
                 <NumberInput
@@ -475,11 +484,11 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
               <div className={styles.field}>
                 <div className={styles.fieldLabelRow}>
                   <Text as="span" className={styles.fieldLabel}>
-                    Токенов на запрос
+                    Токены на запрос (вход + выход)
                   </Text>
                   <HelpMark aria-label="Про число токенов на запрос" iconSize="s">
-                    Сколько токенов в среднем занимает один запрос: промпт плюс ответ. Нужно для
-                    оценки KV cache в VRAM.
+                    Средняя длина prompt + response для оценки KV cache. Не путать с максимальным
+                    контекстом модели.
                   </HelpMark>
                 </div>
                 <Select
@@ -495,52 +504,52 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
                   }}
                 />
               </div>
-              <div className={styles.field}>
-                <div className={styles.fieldLabelRow}>
-                  <Text as="span" className={styles.fieldLabel}>
-                    Макс. контекст
-                  </Text>
-                  <HelpMark aria-label="Про максимальный контекст" iconSize="s">
-                    Максимум токенов, который модель должна уметь держать в одном запросе. Влияет
-                    на резерв VRAM под KV cache.
-                  </HelpMark>
-                </div>
-                <Select
-                  size="l"
-                  width="max"
-                  value={[String(maxContextTokens)]}
-                  options={maxCtxOptions}
-                  onUpdate={(v) => {
-                    const n = Number(v[0]);
-                    if (!Number.isFinite(n) || n <= 0) return;
-                    setMaxContextTokens(n);
-                    setAvgContextTokens((avg) => Math.min(avg, n));
-                  }}
-                />
-              </div>
             </div>
-            <Text variant="caption-2" color="secondary" className={styles.workloadNote}>
-              Расчёт подбирает конфигурации, достаточные по VRAM. Фактическая скорость и задержка
-              зависят от runtime, batching, длины ответа и настроек инференса.
-            </Text>
+            <Disclosure
+              className={styles.advancedDisclosure}
+              size="m"
+              arrowPosition="start"
+              summary={
+                advancedOpen
+                  ? 'Дополнительно'
+                  : `Дополнительно · макс. контекст ${formatContextTokens(maxContextTokens)}`
+              }
+              expanded={advancedOpen}
+              onUpdate={setAdvancedOpen}
+              keepMounted
+            >
+              <div className={styles.advancedBody}>
+                <div className={styles.field}>
+                  <div className={styles.fieldLabelRow}>
+                    <Text as="span" className={styles.fieldLabel}>
+                      Макс. контекст модели
+                    </Text>
+                    <HelpMark aria-label="Про максимальный контекст" iconSize="s">
+                      Потолок токенов одного запроса. Влияет на резерв и допустимость конфигурации,
+                      но не заменяет «токены на запрос» для оценки среднего KV cache.
+                    </HelpMark>
+                  </div>
+                  <Select
+                    size="l"
+                    width="max"
+                    value={[String(maxContextTokens)]}
+                    options={maxCtxOptions}
+                    onUpdate={(v) => {
+                      const n = Number(v[0]);
+                      if (!Number.isFinite(n) || n <= 0) return;
+                      setMaxContextTokens(n);
+                      setAvgContextTokens((avg) => Math.min(avg, n));
+                    }}
+                  />
+                </div>
+              </div>
+            </Disclosure>
           </section>
 
           <div className={styles.configSection} data-stale={recLoading ? 'true' : 'false'}>
-            <div className={styles.sectionTitleRow}>
-              <Text as="h3" variant="subheader-1" className={styles.sectionTitle}>
-                Подходящие GPU-конфигурации
-              </Text>
-              {!apiOnly && selected && selectedPlan?.kind !== 'impossible' ? (
-                <Tooltip
-                  content="Конфигурация помещает веса модели и рассчитанные компоненты памяти. Производительность не гарантируется этим расчётом."
-                  openDelay={200}
-                >
-                  <Text variant="caption-2" color="secondary">
-                    Достаточно по VRAM
-                  </Text>
-                </Tooltip>
-              ) : null}
-            </div>
+            <Text as="h3" className={styles.sectionTitle}>
+              Конфигурация
+            </Text>
 
             {apiOnly && !recLoading ? (
               <Text variant="body-2" color="secondary">
@@ -571,6 +580,7 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
                         const next = Math.max(4_096, Math.round(maxContextTokens / 2));
                         setMaxContextTokens(next);
                         setAvgContextTokens((avg) => Math.min(avg, next));
+                        setAdvancedOpen(true);
                       }}
                     >
                       Уменьшить контекст
@@ -596,31 +606,8 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
               <div
                 className={styles.configList}
                 role="listbox"
-                aria-label="Подходящие GPU-конфигурации"
+                aria-label="Конфигурация GPU"
               >
-                <div className={styles.configHead} aria-hidden="true">
-                  <span className={styles.configHeadSpacer} />
-                  <Text variant="caption-2" color="secondary">
-                    GPU-конфигурация
-                  </Text>
-                  <Text variant="caption-2" color="secondary">
-                    Формат
-                  </Text>
-                  <Text variant="caption-2" color="secondary">
-                    Использование VRAM
-                  </Text>
-                  <Text
-                    variant="caption-2"
-                    color="secondary"
-                    className={styles.configLoad}
-                    title="Количество серверных узлов в конфигурации"
-                  >
-                    Ноды
-                  </Text>
-                  <Text variant="caption-2" color="secondary" className={styles.configPrice}>
-                    Стоимость
-                  </Text>
-                </div>
                 {configs.slice(0, 4).map((c, i) => {
                   const isActive = selectedIdx === i;
                   const plan = configPlans[i];
@@ -636,10 +623,6 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
                   const impossible = plan?.kind === 'impossible';
                   const usedGiB = bd?.totalGiB ?? c.estimatedVramGiB;
                   const capGiB = bd?.capacityGiB ?? null;
-                  const freeGiB =
-                    capGiB != null
-                      ? Math.max(0, Math.round((capGiB - usedGiB) * 10) / 10)
-                      : null;
                   const utilPct =
                     bd?.utilizationPct ??
                     (capGiB != null && capGiB > 0
@@ -656,6 +639,11 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
                     (bd?.loadBand === 'tight' ||
                       bd?.loadBand === 'limit' ||
                       (utilPct != null && utilPct >= 75 && utilPct < 100));
+                  const secondaryParts = [
+                    quantDisplay(c, plan),
+                    vramLabel,
+                    impossible ? null : formatNodeCount(plan?.nodeCount ?? 1),
+                  ].filter(Boolean);
                   return (
                     <button
                       key={`${c.gpuFamily}-${c.gpuCount}-${c.quant}-${i}`}
@@ -674,59 +662,42 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
                         data-checked={isActive ? 'true' : 'false'}
                         aria-hidden
                       />
-                      <span className={styles.configGpuCell}>
-                        <Text ellipsis className={styles.configGpu}>
-                          {c.gpuCount}×&nbsp;{c.gpuFamily}
-                        </Text>
-                        {isRecommended ? (
-                          <Label
-                            size="xs"
-                            theme="success"
-                            title="Самая дешёвая конфигурация, которая помещает модель и рассчитанную нагрузку"
-                          >
-                            Минимальная цена
-                          </Label>
-                        ) : null}
-                        {tightVram ? (
-                          <Label
-                            size="xs"
-                            theme="warning"
-                            title="Свободно менее 10% памяти. Изменение batch size, длины контекста или runtime может привести к OOM"
-                          >
-                            Малый запас VRAM
-                          </Label>
-                        ) : null}
-                      </span>
-                      <Text color="secondary" className={styles.configQuant}>
-                        {quantDisplay(c, plan)}
-                      </Text>
-                      <span
-                        className={styles.configVram}
-                        title={
-                          !impossible && utilPct != null
-                            ? `${formatRuNumber(utilPct, 1)}% занято`
-                            : undefined
-                        }
-                      >
-                        <Text color="secondary" className={styles.configVramUsed}>
-                          {vramLabel}
-                        </Text>
-                        {!impossible && freeGiB != null ? (
-                          <span className={styles.configVramFree}>
-                            свободно&nbsp;{formatRuNumber(freeGiB, 1)}&nbsp;GiB
-                          </span>
-                        ) : null}
-                      </span>
-                      <span className={styles.configLoad}>
-                        {impossible ? (
-                          <Label size="xs" theme="normal">
-                            —
-                          </Label>
-                        ) : (
-                          <Text color="secondary" title={formatNodeCount(plan?.nodeCount ?? 1)}>
-                            {plan?.nodeCount ?? 1}
+                      <span className={styles.configMain}>
+                        <span className={styles.configPrimary}>
+                          <Text ellipsis className={styles.configGpu}>
+                            {c.gpuCount}×&nbsp;{c.gpuFamily}
                           </Text>
-                        )}
+                          {isRecommended ? (
+                            <Label
+                              size="xs"
+                              theme="success"
+                              title="Самая дешёвая конфигурация, которая помещает модель и рассчитанную нагрузку"
+                            >
+                              Мин. цена
+                            </Label>
+                          ) : null}
+                          {tightVram ? (
+                            <Label
+                              size="xs"
+                              theme="warning"
+                              title="Свободно менее 25% памяти. Изменение batch size, длины контекста или runtime может привести к OOM"
+                            >
+                              Малый запас
+                            </Label>
+                          ) : null}
+                        </span>
+                        <Text
+                          variant="caption-2"
+                          color="secondary"
+                          className={styles.configSecondary}
+                          title={
+                            !impossible && utilPct != null
+                              ? `${formatRuNumber(utilPct, 1)}% занято`
+                              : undefined
+                          }
+                        >
+                          {secondaryParts.join(' · ')}
+                        </Text>
                       </span>
                       <span className={styles.configPrice}>
                         {amount != null && !impossible

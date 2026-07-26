@@ -147,9 +147,10 @@ export function LakehouseCalculatorPanel({period}: {period: PeriodMode}) {
       <div className={`${panelStyles.formColumn} ${styles.configCard}`}>
         <div className={styles.configInner}>
           <section className={styles.fieldGroup} aria-label="Размер Lakehouse">
-            <div className={styles.groupHead}>
-              <Text as="h3" className={styles.groupTitle}>
-                Размер Lakehouse
+            {/* Compact first band — matches VM/LLM topSlot start (no H3 before controls). */}
+            <div className={styles.presetHead}>
+              <Text as="span" className={styles.presetHeadLabel}>
+                Размер
               </Text>
               <HelpMark aria-label="Про пресеты" iconSize="s">
                 Пресет задаёт объём озера и типовой DIY-стек: Managed Kubernetes +

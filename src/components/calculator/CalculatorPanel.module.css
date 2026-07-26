@@ -1,10 +1,18 @@
-/* Shared chrome so VM ↔ Self-host tab switches don't jump. */
+/* Shared chrome so VM ↔ Self-host ↔ Lakehouse ↔ AI tab switches don't jump. */
 
 .formColumn {
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 0;
+  /* Keep left column from collapsing while Suspense / dynamic chat mounts. */
+  min-height: 280px;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.formColumn > :first-child {
+  margin-top: 0;
 }
 
 .topSlot {
