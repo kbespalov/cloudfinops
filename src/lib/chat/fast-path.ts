@@ -2274,16 +2274,32 @@ export function formatFastPathAnswer(
       leftoverMonth?: number;
       totalVcpu?: number | null;
     };
+    // Budget packing: rank by util%, not by cheapest spend — «к минимуму» here confuses
+    // (Selectel can be cheapest ₽ but leave the largest leftover).
     const highlights = (data.highlights as H[])
       .filter((h) => h.provider && h.count >= 1 && typeof h.spendMonth === 'number')
-      .slice(0, 8);
+      .slice(0, 8)
+      .slice()
+      .sort((a, b) => {
+        if (b.utilPct !== a.utilPct) return b.utilPct - a.utilPct;
+        return b.spendMonth - a.spendMonth;
+      });
     if (!highlights.length) return null;
     const budget = typeof data.budgetMonthRub === 'number' ? data.budgetMonthRub : null;
-    const bestSpend = Math.min(...highlights.map((h) => h.spendMonth));
+    const bestUtil = highlights[0]!.utilPct;
     const rows = highlights
       .map((h) => {
         const cfg = `${h.shape} × ${h.count}`;
-        return `| ${h.provider} | ${cfg} | ${formatRub(h.spendMonth)} | ${h.utilPct.toLocaleString('ru-RU')}% | ${pctVsBest(h.spendMonth, bestSpend)} |`;
+        const leftover =
+          typeof h.leftoverMonth === 'number'
+            ? h.leftoverMonth
+            : budget != null
+              ? Math.max(0, budget - h.spendMonth)
+              : null;
+        const leftoverCell = leftover != null ? formatRub(leftover) : '—';
+        const utilMark =
+          h.utilPct >= bestUtil - 0.005 ? `${h.utilPct.toLocaleString('ru-RU')}% · best` : `${h.utilPct.toLocaleString('ru-RU')}%`;
+        return `| ${h.provider} | ${cfg} | ${formatRub(h.spendMonth)} | ${utilMark} | ${leftoverCell} |`;
       })
       .join('\n');
     const title =
@@ -2301,7 +2317,16 @@ export function formatFastPathAnswer(
       )
         ? `\n\nТе же ${value.totalVcpu != null ? `${value.totalVcpu} vCPU` : 'ресурсы'} дешевле unit (ниже утилизация бюджета): **${value.provider}** — ${value.shape} × ${value.count} за ${formatRub(value.spendMonth)} (${value.utilPct.toLocaleString('ru-RU')}%${typeof value.leftoverMonth === 'number' ? `; остаток ≈ ${formatRub(value.leftoverMonth)}` : ''}).`
         : '';
-    return `**${title}** (НДС вкл., месяц = 720 ч; без IP/S3/K8s/GPU)\n\n| Провайдер | Конфиг × N | Итого ₽/мес | Утилизация | к минимуму |\n|---|---|---:|---:|---|\n${rows}\n\nЛучшая утилизация бюджета в каталоге Cloud FinOps: **${highlights[0].provider}** — ${highlights[0].shape} × ${highlights[0].count}.${valueNote}`;
+    const winner = highlights[0]!;
+    return (
+      `**${title}** (НДС вкл., месяц = 720 ч; без IP/S3/K8s/GPU)\n\n` +
+      `| Провайдер | Конфиг × N | Итого ₽/мес | Утилизация | Остаток |\n` +
+      `|---|---|---:|---:|---:|\n${rows}\n\n` +
+      `Лучшая утилизация бюджета в каталоге Cloud FinOps: **${winner.provider}** — ${winner.shape} × ${winner.count} ` +
+      `(${winner.utilPct.toLocaleString('ru-RU')}%). ` +
+      `Остаток — неиспользованные ₽ бюджета; дешевле pack ≠ лучше для этой задачи.` +
+      valueNote
+    );
   }
 
   if (primary.name === 'search_prices') {

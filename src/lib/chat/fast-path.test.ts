@@ -748,7 +748,7 @@ describe('matchFastPath', () => {
     assert.doesNotMatch(md, /Standard/);
   });
 
-  it('formats fit_budget highlights without LLM', () => {
+  it('formats fit_budget by util%, not cheapest spend (no «к минимуму»/min)', () => {
     const md = formatFastPathAnswer('budget-50000', [
       {
         name: 'fit_budget',
@@ -756,18 +756,21 @@ describe('matchFastPath', () => {
           budgetMonthRub: 50_000,
           highlights: [
             {
+              // Cheapest spend — would wrongly get «min» if we reused price delta.
               provider: 'Selectel',
               shape: '8 vCPU / 32 GiB',
               count: 2,
-              spendMonth: 48_000,
-              utilPct: 96,
+              spendMonth: 41_000,
+              utilPct: 82,
+              leftoverMonth: 9_000,
             },
             {
-              provider: 'MWS Cloud',
-              shape: '4 vCPU / 16 GiB',
-              count: 3,
-              spendMonth: 45_000,
-              utilPct: 90,
+              provider: 'Cloud.ru',
+              shape: '16 vCPU / 64 GiB',
+              count: 1,
+              spendMonth: 48_000,
+              utilPct: 96,
+              leftoverMonth: 2_000,
             },
           ],
         }),
@@ -775,9 +778,17 @@ describe('matchFastPath', () => {
     ]);
     assert.ok(md);
     assert.match(md, /50[\s\u00a0]?000/);
-    assert.match(md, /Selectel/);
-    assert.match(md, /Утилизация/);
-    assert.match(md, /\bmin\b/);
+    assert.match(md, /Остаток/);
+    assert.doesNotMatch(md, /к минимуму/);
+    assert.doesNotMatch(md, /\|\s*min\s*\|/);
+    // Winner by util first, marked best — not Selectel cheapest.
+    assert.match(md, /Cloud\.ru[\s\S]*96% · best/);
+    assert.match(md, /Лучшая утилизация бюджета[\s\S]*Cloud\.ru/);
+    assert.match(md, /дешевле pack/);
+    // Selectel appears after Cloud.ru (lower util).
+    const cloudIdx = md!.indexOf('Cloud.ru');
+    const selectelIdx = md!.indexOf('Selectel');
+    assert.ok(cloudIdx >= 0 && selectelIdx > cloudIdx);
   });
 
   it('formats fit_budget valuePick when Cloud.ru loses util top-6', () => {
