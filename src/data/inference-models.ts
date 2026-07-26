@@ -352,6 +352,65 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
     confidence: 'high',
   },
   {
+    id: 'qwen3.5-122b-a10b',
+    displayName: 'Qwen3.5 122B-A10B',
+    aliases: [
+      'qwen 3.5',
+      'qwen3.5',
+      'qwen3.5-122b-a10b',
+      'qwen 3.5 122b',
+      'qwen3.5 122b-a10b',
+      'qwen3.5-122b',
+    ],
+    arch: 'moe',
+    parameterCountB: 122,
+    activeParameterCountB: 10,
+    parameterCountNote:
+      'MoE 122B total / ~10B active (256 experts, 8+1). Multimodal + native 262K (extendable ~1M).',
+    weights: [
+      {dtype: 'bf16', weightsVramGiB: 245},
+      {dtype: 'fp8', weightsVramGiB: 125},
+      {dtype: 'int4', weightsVramGiB: 65},
+    ],
+    contextDefault: 262_144,
+    minGpuMemoryGiB: 80,
+    recommended: [
+      {
+        gpuFamily: 'H100',
+        gpuCount: 2,
+        quant: 'fp8',
+        interconnect: 'NVLink',
+        estimatedVramGiB: 160,
+        notes: 'Практичный FP8 узел под Qwen3.5 mid/large MoE.',
+      },
+      {
+        gpuFamily: 'H100',
+        gpuCount: 1,
+        quant: 'int4',
+        estimatedVramGiB: 80,
+        notes: 'INT4 / NVFP4 — single-H100 floor.',
+      },
+      {
+        gpuFamily: 'A100',
+        gpuCount: 2,
+        quant: 'int4',
+        interconnect: 'NVLink',
+        estimatedVramGiB: 140,
+      },
+    ],
+    hostedCatalogKeys: ['Qwen 3.5', 'qwen3.5', 'qwen3.5-122b-a10b', 'qwen'],
+    sources: [
+      'https://huggingface.co/Qwen/Qwen3.5-122B-A10B',
+      'Qwen3.5 MoE card — 122B / 10B active, Apache 2.0',
+    ],
+    checkedAt: '2026-07-26',
+    caveats: [
+      'МоE: в VRAM лежат все эксперты; active≈10B влияет на compute, не на вес.',
+      'Vision encoder добавляет overhead к чисто текстовому footprint.',
+    ],
+    confidence: 'high',
+  },
+  {
     id: 'qwen3-235b',
     displayName: 'Qwen3 235B',
     aliases: [
@@ -734,9 +793,157 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
     confidence: 'high',
   },
   {
+    id: 'deepseek-v4-flash',
+    displayName: 'DeepSeek V4 Flash',
+    aliases: [
+      'deepseek v4 flash',
+      'deepseek-v4-flash',
+      'deepseek v4',
+      'deepseek-v4',
+      'deepseekv4',
+      'deepseek',
+      'дипсик v4',
+      'дипсик',
+    ],
+    arch: 'moe',
+    parameterCountB: 284,
+    activeParameterCountB: 13,
+    parameterCountNote:
+      'V4 Flash: 284B total / 13B active, 1M ctx. Native FP4+FP8 mixed (~158 GB on disk); MIT.',
+    weights: [
+      {
+        dtype: 'int4',
+        weightFormat: 'nvfp4',
+        checkpointSizeGiB: 158,
+        weightsVramGiB: 158,
+        theoreticalLowerBoundGiB: 142,
+        effectiveBitsPerWeight: 4.5,
+        quantizedComponents: 'MoE experts (FP4); most other params FP8',
+        compatibleRuntimes: ['vLLM', 'SGLang'],
+        supportedGpuArch: ['Hopper', 'Blackwell'],
+        source: 'deepseek-ai/DeepSeek-V4-Flash — FP4+FP8 Mixed ~158 GB',
+        confidence: 'measured',
+      },
+      {
+        dtype: 'fp8',
+        weightFormat: 'fp8',
+        checkpointSizeGiB: 220,
+        weightsVramGiB: 210,
+        theoreticalLowerBoundGiB: 264,
+        source: 'DeepSeek-V4-Flash-Base FP8 Mixed / community FP8 serving footprint',
+        confidence: 'estimated',
+      },
+    ],
+    contextDefault: 1_000_000,
+    minGpuMemoryGiB: 160,
+    recommended: [
+      {
+        gpuFamily: 'H200',
+        gpuCount: 2,
+        quant: 'int4',
+        interconnect: 'NVLink',
+        estimatedVramGiB: 220,
+        notes: 'Native FP4+FP8 на 2×H200 — главный self-host путь июля 2026.',
+      },
+      {
+        gpuFamily: 'H100',
+        gpuCount: 4,
+        quant: 'int4',
+        interconnect: 'NVLink',
+        estimatedVramGiB: 240,
+      },
+      {
+        gpuFamily: 'A100',
+        gpuCount: 4,
+        quant: 'int4',
+        interconnect: 'NVLink',
+        estimatedVramGiB: 240,
+      },
+    ],
+    hostedCatalogKeys: ['DeepSeek V4', 'deepseek-v4-flash', 'deepseek-v4', 'deepseek'],
+    sources: [
+      'https://huggingface.co/deepseek-ai/DeepSeek-V4-Flash',
+      'DeepSeek-V4 series (MIT) — Flash 284B/13B active, 1M context',
+    ],
+    checkedAt: '2026-07-26',
+    caveats: [
+      'Для Think Max reasoning держите контекстное окно ≥384K — KV растёт заметно.',
+      'Не путать с V4-Pro (1.6T) — другой класс железа.',
+    ],
+    confidence: 'high',
+  },
+  {
+    id: 'deepseek-v4-pro',
+    displayName: 'DeepSeek V4 Pro',
+    aliases: [
+      'deepseek v4 pro',
+      'deepseek-v4-pro',
+      'deepseek v4 1.6t',
+      'deepseek-v4-pro-1.6t',
+    ],
+    arch: 'moe',
+    parameterCountB: 1600,
+    activeParameterCountB: 49,
+    parameterCountNote:
+      'V4 Pro: 1.6T total / 49B active, 1M ctx. Native FP4+FP8 mixed ~862 GB; MIT.',
+    weights: [
+      {
+        dtype: 'int4',
+        weightFormat: 'nvfp4',
+        checkpointSizeGiB: 862,
+        weightsVramGiB: 862,
+        theoreticalLowerBoundGiB: 800,
+        quantizedComponents: 'MoE experts (FP4); dense / attn mostly FP8',
+        compatibleRuntimes: ['vLLM', 'SGLang'],
+        supportedGpuArch: ['Hopper', 'Blackwell'],
+        source: 'deepseek-ai/DeepSeek-V4-Pro — FP4+FP8 Mixed ~862 GB',
+        confidence: 'measured',
+      },
+      {
+        dtype: 'fp8',
+        weightFormat: 'fp8',
+        checkpointSizeGiB: 1200,
+        weightsVramGiB: 1100,
+        source: 'DeepSeek-V4-Pro-Base FP8 Mixed / multi-node serving estimates',
+        confidence: 'estimated',
+      },
+    ],
+    contextDefault: 1_000_000,
+    minGpuMemoryGiB: 800,
+    recommended: [
+      {
+        gpuFamily: 'H200',
+        gpuCount: 8,
+        quant: 'int4',
+        interconnect: 'NVLink',
+        estimatedVramGiB: 1000,
+        notes: 'Single-node floor под native FP4+FP8 Pro; длинный ctx → multi-node.',
+      },
+      {
+        gpuFamily: 'B300',
+        gpuCount: 8,
+        quant: 'int4',
+        interconnect: 'NVLink',
+        estimatedVramGiB: 1100,
+        notes: 'Blackwell HGX — запас по bandwidth и KV под 1M.',
+      },
+    ],
+    hostedCatalogKeys: ['DeepSeek V4 Pro', 'deepseek-v4-pro', 'deepseek'],
+    sources: [
+      'https://huggingface.co/deepseek-ai/DeepSeek-V4-Pro',
+      'DeepSeek-V4 series (MIT) — Pro 1.6T / 49B active',
+    ],
+    checkedAt: '2026-07-26',
+    caveats: [
+      'Production FP8 / длинный Think Max почти всегда multi-node.',
+      'Для большинства команд достаточно V4-Flash.',
+    ],
+    confidence: 'high',
+  },
+  {
     id: 'deepseek-v3',
     displayName: 'DeepSeek V3',
-    aliases: ['deepseek v3', 'deepseek-v3', 'deepseek v3.2', 'deepseek-v3.2', 'deepseek'],
+    aliases: ['deepseek v3', 'deepseek-v3', 'deepseek v3.2', 'deepseek-v3.2'],
     arch: 'moe',
     parameterCountB: 671,
     activeParameterCountB: 37,
@@ -1042,6 +1249,62 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
     sources: ['Google Gemma 3 model card', 'MWS catalog'],
     checkedAt: '2026-07-20',
     caveats: [],
+    confidence: 'high',
+  },
+  {
+    id: 'gemma-4-31b',
+    displayName: 'Gemma 4 31B',
+    aliases: [
+      'gemma 4 31b',
+      'gemma-4-31b',
+      'gemma4 31b',
+      'gemma 4',
+      'gemma-4',
+      'gemma4',
+    ],
+    arch: 'dense',
+    parameterCountB: 31,
+    parameterCountNote:
+      'Dense multimodal (~30.7B) + vision encoder. Apache 2.0. Family also has 26B-A4B MoE.',
+    weights: [
+      {dtype: 'bf16', weightsVramGiB: 70},
+      {dtype: 'fp8', weightsVramGiB: 35},
+      {dtype: 'int4', weightsVramGiB: 18},
+    ],
+    contextDefault: 256_000,
+    minGpuMemoryGiB: 24,
+    recommended: [
+      {
+        gpuFamily: 'A100',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 80,
+        notes: 'BF16 / SFP8 на 1×A100 — серверный default.',
+      },
+      {
+        gpuFamily: 'L40S',
+        gpuCount: 1,
+        quant: 'fp8',
+        estimatedVramGiB: 43,
+      },
+      {
+        gpuFamily: 'L4',
+        gpuCount: 1,
+        quant: 'int4',
+        estimatedVramGiB: 23,
+        notes: 'QAT Q4_0 / INT4 — edge / 24 GB путь.',
+      },
+    ],
+    hostedCatalogKeys: ['Gemma 4', 'gemma-4-31b', 'gemma-4', 'gemma'],
+    sources: [
+      'https://huggingface.co/google/gemma-4-31B',
+      'https://ai.google.dev/gemma/docs/core/model_card_4',
+    ],
+    checkedAt: '2026-07-26',
+    caveats: [
+      'Полный 256K ctx заметно раздувает KV — для edge держите окно короче.',
+      'Не путать с Gemma 4 26B-A4B (MoE) — другой VRAM-профиль.',
+    ],
     confidence: 'high',
   },
   {
@@ -1463,6 +1726,186 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
     checkedAt: '2026-07-20',
     caveats: ['Сильнее на reasoning/math в своём размере, чем на длинном agentic coding.'],
     confidence: 'high',
+  },
+  {
+    id: 'granite-4.1-8b',
+    displayName: 'IBM Granite 4.1 8B',
+    aliases: [
+      'granite 4.1',
+      'granite-4.1',
+      'granite 4.1 8b',
+      'granite-4.1-8b',
+      'ibm granite 4.1',
+      'ibm granite',
+      'granite 8b',
+    ],
+    arch: 'dense',
+    parameterCountB: 8,
+    parameterCountNote: 'Dense instruct, Apache 2.0; enterprise tool-calling / RAG. ~131K ctx.',
+    weights: [
+      {dtype: 'bf16', weightsVramGiB: 16},
+      {dtype: 'fp8', weightsVramGiB: 9},
+      {dtype: 'int4', weightsVramGiB: 5},
+    ],
+    contextDefault: 131_072,
+    minGpuMemoryGiB: 16,
+    recommended: [
+      {
+        gpuFamily: 'L4',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 24,
+        notes: 'Комфортно на L4; один из самых скачиваемых open SLM июля 2026 (HF).',
+      },
+      {
+        gpuFamily: 'L40S',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 48,
+      },
+      {
+        gpuFamily: 'A100',
+        gpuCount: 1,
+        quant: 'bf16',
+        estimatedVramGiB: 40,
+      },
+    ],
+    hostedCatalogKeys: ['Granite', 'granite-4.1-8b', 'ibm-granite'],
+    sources: [
+      'https://huggingface.co/ibm-granite/granite-4.1-8b',
+      'IBM Granite 4.1 language models (Apache 2.0)',
+    ],
+    checkedAt: '2026-07-26',
+    caveats: ['Enterprise-first SLM; не frontier chat, зато дешёвый self-host и permissive license.'],
+    confidence: 'high',
+  },
+  {
+    id: 'minimax-m3',
+    displayName: 'MiniMax M3',
+    aliases: [
+      'minimax m3',
+      'minimax-m3',
+      'minimax m3 428b',
+      'minimax-m3-428b',
+      'minimax',
+    ],
+    arch: 'moe',
+    parameterCountB: 428,
+    activeParameterCountB: 23,
+    parameterCountNote:
+      '~428B total / ~23B active, native multimodal (text/image/video), 1M ctx via MSA.',
+    weights: [
+      {dtype: 'bf16', weightsVramGiB: 856},
+      {dtype: 'fp8', weightsVramGiB: 430},
+      {dtype: 'int4', weightsVramGiB: 220},
+    ],
+    contextDefault: 1_000_000,
+    minGpuMemoryGiB: 240,
+    recommended: [
+      {
+        gpuFamily: 'H100',
+        gpuCount: 8,
+        quant: 'int4',
+        interconnect: 'NVLink',
+        estimatedVramGiB: 320,
+        notes: 'INT4 multi-GPU floor; официальные recipes часто TP=8.',
+      },
+      {
+        gpuFamily: 'H200',
+        gpuCount: 8,
+        quant: 'fp8',
+        interconnect: 'NVLink',
+        estimatedVramGiB: 560,
+      },
+      {
+        gpuFamily: 'H200',
+        gpuCount: 4,
+        quant: 'int4',
+        interconnect: 'NVLink',
+        estimatedVramGiB: 320,
+      },
+    ],
+    hostedCatalogKeys: ['MiniMax', 'minimax-m3', 'MiniMax-M3'],
+    sources: [
+      'https://huggingface.co/MiniMaxAI/MiniMax-M3',
+      'MiniMax-M3 technical report / vLLM & SGLang recipes',
+    ],
+    checkedAt: '2026-07-26',
+    caveats: [
+      'Лицензия MiniMax Community — проверьте коммерческие условия отдельно от Apache/MIT.',
+      'MSA / custom ops: нужен свежий vLLM или SGLang с trust_remote_code.',
+    ],
+    confidence: 'medium',
+  },
+  {
+    id: 'nemotron-3-super',
+    displayName: 'Nemotron 3 Super 120B-A12B',
+    aliases: [
+      'nemotron 3 super',
+      'nemotron-3-super',
+      'nemotron 3',
+      'nemotron-3',
+      'nemotron 120b',
+      'nemotron-3-super-120b-a12b',
+      'nvidia nemotron 3 super',
+    ],
+    arch: 'moe',
+    parameterCountB: 120,
+    activeParameterCountB: 12,
+    parameterCountNote:
+      'LatentMoE hybrid (Mamba-2 + MoE + attn), 120B / 12B active, up to 1M ctx. NVFP4-native.',
+    weights: [
+      {
+        dtype: 'int4',
+        weightFormat: 'nvfp4',
+        weightsVramGiB: 65,
+        checkpointSizeGiB: 65,
+        compatibleRuntimes: ['TensorRT-LLM', 'vLLM', 'NIM'],
+        supportedGpuArch: ['Hopper', 'Blackwell'],
+        source: 'NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4',
+        confidence: 'estimated',
+      },
+      {dtype: 'fp8', weightFormat: 'fp8', weightsVramGiB: 120},
+      {dtype: 'bf16', weightsVramGiB: 240},
+    ],
+    contextDefault: 262_144,
+    minGpuMemoryGiB: 80,
+    recommended: [
+      {
+        gpuFamily: 'H100',
+        gpuCount: 2,
+        quant: 'int4',
+        interconnect: 'NVLink',
+        estimatedVramGiB: 160,
+        notes: 'NVFP4 — практичный floor (TRT-LLM / NIM); GGUF Q4 может сесть и на 1×80 GB.',
+      },
+      {
+        gpuFamily: 'H100',
+        gpuCount: 2,
+        quant: 'fp8',
+        interconnect: 'NVLink',
+        estimatedVramGiB: 160,
+      },
+      {
+        gpuFamily: 'H100',
+        gpuCount: 4,
+        quant: 'bf16',
+        interconnect: 'NVLink',
+        estimatedVramGiB: 320,
+        notes: 'BF16 dense footprint всех экспертов; NIM card иногда требует 8× для max ctx.',
+      },
+    ],
+    hostedCatalogKeys: ['Nemotron', 'nemotron-3-super', 'nvidia-nemotron'],
+    sources: [
+      'https://docs.api.nvidia.com/nim/reference/nvidia-nemotron-3-super-120b-a12b',
+      'TensorRT-LLM Nemotron v3 Super deployment guide',
+    ],
+    checkedAt: '2026-07-26',
+    caveats: [
+      'NVIDIA Open Model License — проверьте коммерческие условия.',
+      'Hybrid Mamba/MoE: runtime и shm важны; не каждый generic vLLM build подойдёт.',
+    ],
+    confidence: 'medium',
   },
 
   // ── Speech / ASR (RU-first open weights) ─────────────────────────────
@@ -1902,7 +2345,7 @@ function aliasMatchScore(query: string, alias: string): number | null {
       .trim();
     if (
       leftover &&
-      /\b(next|480b?|235b?|123b?|120b?|20b|14b|8b|32b|35b|70b|109b|397b|a3b|a17b|a22b|a35b|scout|maverick|r1|distill|devstral|flash|lite|pro|max|\d)\b/i.test(
+      /\b(next|480b?|235b?|123b?|122b?|120b?|20b|14b|8b|32b|35b|70b|109b|397b|a3b|a4b|a10b|a12b|a17b|a22b|a35b|scout|maverick|r1|v4|distill|devstral|flash|lite|pro|max|super|ultra|\d)\b/i.test(
         leftover,
       )
     ) {
@@ -1920,7 +2363,7 @@ function aliasMatchScore(query: string, alias: string): number | null {
       .trim();
     if (
       leftover &&
-      /\b(next|480b?|235b?|123b?|120b?|20b|14b|8b|32b|35b|70b|109b|397b|a3b|a17b|a22b|a35b|scout|maverick|r1|distill|devstral|flash|lite|pro|max|\d)\b/i.test(
+      /\b(next|480b?|235b?|123b?|122b?|120b?|20b|14b|8b|32b|35b|70b|109b|397b|a3b|a4b|a10b|a12b|a17b|a22b|a35b|scout|maverick|r1|v4|distill|devstral|flash|lite|pro|max|super|ultra|\d)\b/i.test(
         leftover,
       )
     ) {

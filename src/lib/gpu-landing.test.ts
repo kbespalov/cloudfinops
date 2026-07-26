@@ -50,15 +50,16 @@ describe('gpu landings', () => {
 
     const h100Show = showcaseModelsForLanding(h100);
     assert.ok(h100Show.some((m) => m.id === 'glm-4.6-357b'));
-    assert.ok(h100Show.some((m) => m.id === 'deepseek-v3'));
+    assert.ok(h100Show.some((m) => m.id === 'deepseek-v4-flash'));
     assert.equal(new Set(h100Show.map((m) => m.family)).size, h100Show.length);
 
     const a100Show = showcaseModelsForLanding(a100);
     assert.equal(a100Show[0]?.id, 'qwen3-32b');
-    assert.ok(a100Show.some((m) => m.id === 'llama-3.3-70b'));
+    assert.ok(a100Show.some((m) => m.id === 'gemma-4-31b' || m.id === 'llama-3.3-70b'));
 
     const l4Show = showcaseModelsForLanding(l4);
     assert.equal(l4Show[0]?.id, 'qwen3-8b');
+    assert.ok(l4Show.some((m) => m.id === 'granite-4.1-8b' || m.id === 'gemma-4-31b'));
     assert.ok(l4Show.length >= 4);
   });
 

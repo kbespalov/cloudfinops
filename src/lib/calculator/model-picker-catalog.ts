@@ -122,17 +122,23 @@ export const LAB_TASK_CHIPS: {id: 'all' | ModelTask | 'dense' | 'moe'; label: st
 
 const POPULAR_IDS = new Set([
   'qwen3-coder-next',
+  'deepseek-v4-flash',
   'deepseek-r1',
   'glm-5.2',
+  'gemma-4-31b',
+  'qwen3.6-35b-a3b',
+  'qwen3-8b',
   'gigaam-v3',
   't-search',
-  'qwen3-32b',
+  'minimax-m3',
 ]);
 
 const RECOMMENDED_IDS = new Set([
   'qwen3-coder-next',
+  'deepseek-v4-flash',
   'deepseek-r1',
   'glm-5.2',
+  'gemma-4-31b',
   'gigaam-v3',
   't-search',
   'qwen3-embedding-8b',
@@ -151,7 +157,7 @@ function detectTasks(profile: InferenceModelProfile): ModelTask[] {
   if (modality === 'rerank' || /rerank|реранк/.test(blob)) tasks.add('rerank');
   if (/coder|code|devstral|coding/.test(blob)) tasks.add('coder');
   if (/\br1\b|reason|thinking|scout|maverick/.test(blob)) tasks.add('reasoning');
-  if (/vision|vl|multimodal|gemma 3/.test(blob)) tasks.add('vision');
+  if (/vision|vl|multimodal|gemma\s*[34]|minimax/.test(blob)) tasks.add('vision');
   if (profile.contextDefault >= 200_000) tasks.add('long-context');
   if (
     (profile.minGpuMemoryGiB > 0 && profile.minGpuMemoryGiB <= 48) ||

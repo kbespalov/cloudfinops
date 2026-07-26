@@ -2,6 +2,10 @@
 
 ## 2026-07-27
 
+### Self-host / open-weight top модели июля 2026
+
+В каталог inference добавили популярные open-weight модели, которых не хватало для топ-15 по HF/ранжированиям июля: **DeepSeek V4 Flash/Pro**, **Gemma 4 31B**, **Qwen3.5 122B-A10B**, **MiniMax M3**, **Nemotron 3 Super**, **IBM Granite 4.1 8B**. Обновили Popular в picker; алиас `deepseek` ведёт на V4 Flash.
+
 ### Каталог / Yandex preemptible GPU (1/2/4)
 
 В Billing API у Yandex есть отдельные preemptible SKU на GPU. Добавили в каталог Gen2 / T4i / V100 Broadwell preemptible; у A100/V100/T4/Platform V4 поправили решётку на **1/2/4** (8× в spot обычно недоступна). Реальная скидка — у A100/V100/T4; у Gen2/T4i/Platform V4 ставка GPU как у on-demand. Добавили vCPU/RAM ставок GPU-платформ (`gpu-platforms.yaml`) и переключатель «Прерываемая» в калькуляторе GPU.
