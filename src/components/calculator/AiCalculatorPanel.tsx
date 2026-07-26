@@ -8,6 +8,7 @@ import {
 } from '@/components/calculator/CalculatorSidebar';
 import {
   mergeSidebarPatch,
+  type AppliedSidebarPayload,
   type SidebarConfigPayload,
 } from '@/lib/chat/sidebar-config';
 import type {PeriodMode} from '@/lib/calculator/quote-view';
@@ -20,8 +21,6 @@ import {
   type LakehouseQuoteRequest,
 } from '@/lib/calculator/useLakehouseQuote';
 import panelStyles from './CalculatorPanel.module.css';
-
-type AppliedSidebarPayload = Exclude<SidebarConfigPayload, {kind: 'adhoc-patch'}>;
 
 function withPeriod(
   payload: AppliedSidebarPayload,

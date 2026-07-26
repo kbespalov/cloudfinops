@@ -29,6 +29,9 @@ export type SidebarConfigPayload =
       summary: {line: string};
     };
 
+/** Payload that can drive a quote (patches are applied via mergeSidebarPatch). */
+export type AppliedSidebarPayload = Exclude<SidebarConfigPayload, {kind: 'adhoc-patch'}>;
+
 function num(v: unknown): number | undefined {
   if (typeof v === 'number' && Number.isFinite(v)) return v;
   if (typeof v === 'string' && v.trim() && Number.isFinite(Number(v))) return Number(v);
@@ -51,7 +54,7 @@ export function appendCdnToSummaryLine(line: string, volumeGiB: number): string 
 function mapGetQuote(
   args: Record<string, unknown>,
   period: PeriodMode,
-): SidebarConfigPayload | null {
+): Extract<AppliedSidebarPayload, {kind: 'adhoc'}> | null {
   const gpuModel = typeof args.gpuModel === 'string' ? args.gpuModel.trim() : '';
   const diskGiB = num(args.diskGiB) ?? 100;
 
@@ -218,10 +221,10 @@ export function sidebarConfigFromTool(
 
 /** Merge a CDN (or similar) patch into the last adhoc compute basket. */
 export function mergeSidebarPatch(
-  previous: SidebarConfigPayload | null,
+  previous: AppliedSidebarPayload | null,
   patch: Extract<SidebarConfigPayload, {kind: 'adhoc-patch'}>,
   period: PeriodMode,
-): SidebarConfigPayload | null {
+): AppliedSidebarPayload | null {
   // No prior compute basket (CDN-first turn) — seed a small general VM so the
   // sidebar still shows the CDN line instead of silently dropping the patch.
   if (!previous || previous.kind !== 'adhoc' || previous.request.kind !== 'compute') {

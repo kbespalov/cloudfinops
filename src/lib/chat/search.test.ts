@@ -82,6 +82,7 @@ describe('searchPricesDetailed compute platforms', () => {
       limit: 20,
     });
     assert.ok(r.providers.length >= 3, `expected analogs, got ${r.providers.length}`);
+    assert.ok(r.applied);
     assert.equal(r.applied.storageClass, null);
     const yandex = r.providers.find((p) => p.provider === 'yandex-cloud');
     assert.ok(yandex);

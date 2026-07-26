@@ -91,8 +91,8 @@ describe('sidebarConfigFromTool', () => {
       {category: 'cdn', volumeGiB: 1024},
       'month',
     );
-    assert.ok(base && patch && patch.kind === 'adhoc-patch');
-    if (!base || !patch || patch.kind !== 'adhoc-patch') return;
+    assert.ok(base && base.kind === 'adhoc' && patch && patch.kind === 'adhoc-patch');
+    if (!base || base.kind !== 'adhoc' || !patch || patch.kind !== 'adhoc-patch') return;
     const merged = mergeSidebarPatch(base, patch, 'month');
     assert.ok(merged && merged.kind === 'adhoc');
     if (!merged || merged.kind !== 'adhoc' || merged.request.kind !== 'compute') return;

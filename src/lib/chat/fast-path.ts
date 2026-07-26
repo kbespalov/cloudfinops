@@ -1633,7 +1633,7 @@ export function formatStackFastPathAnswer(
   const providers = new Set<string>();
   for (const c of comps) for (const p of c.byProvider.keys()) providers.add(p);
 
-  type Row = {provider: string; parts: number[]; total: number; missing: boolean};
+  type Row = {provider: string; parts: number[]; total: number};
   const rows: Row[] = [];
   for (const provider of providers) {
     const parts: number[] = [];

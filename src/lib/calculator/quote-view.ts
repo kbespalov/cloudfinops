@@ -11,6 +11,7 @@ export type CostPartId =
   | 'ip'
   | 'storage'
   | 'cdn'
+  | 'egress'
   | 'k8s'
   | 'platform'
   | 'etl'
@@ -200,7 +201,7 @@ export function partTone(id: CostPartId): string {
   if (id === 'ram' || id === 'query') return 'warning';
   /** Disk / object storage use positive (not success*) — success-* tokens absent in Gravity themes. */
   if (id === 'disk' || id === 'storage') return 'positive';
-  if (id === 'cdn') return 'warning';
+  if (id === 'cdn' || id === 'egress') return 'warning';
   if (id === 'k8s') return 'info';
   return 'unknown';
 }
