@@ -284,17 +284,20 @@ describe('recommendInferenceInfra', () => {
     assert.doesNotMatch(hostedLabels, /Coder-Next|3\.6|qwen3-32b/i);
   });
 
-  it('prices L40S primary for Mistral/Devstral (L4 must not steal L40S host)', () => {
+  it('prices L4 minimum then L40S for Mistral/Devstral (ladder, not L40S-only)', () => {
     for (const model of ['Mistral Small 24B', 'Devstral Small 24B']) {
       const result = recommendInferenceInfra({model, maxConfigs: 3});
       assert.equal(result.ok, true, model);
-      assert.equal(result.primaryRecommendation?.gpuFamily, 'L40S', model);
+      assert.equal(result.primaryRecommendation?.gpuFamily, 'L4', model);
+      assert.equal(result.primaryRecommendation?.quant, 'int4', model);
       assert.ok(
         result.primaryRecommendation?.bestMonth != null,
-        `${model}: L40S primary must be priced`,
+        `${model}: L4 primary must be priced`,
       );
-      assert.equal(result.configs?.[0]?.host?.ramGiB, 112, `${model}: L40S host is 16/112`);
-      assert.notEqual(result.configs?.[0]?.host?.ramGiB, 72, `${model}: L4 16/72 must not win`);
+      assert.equal(result.configs?.[0]?.host?.ramGiB, 72, `${model}: L4 host is 16/72`);
+      const l40s = result.configs?.find((c) => c.gpuFamily === 'L40S');
+      assert.ok(l40s, `${model}: L40S FP8 must remain as recommended rung`);
+      assert.equal(l40s?.host?.ramGiB, 112, `${model}: L40S host is 16/112`);
     }
   });
 

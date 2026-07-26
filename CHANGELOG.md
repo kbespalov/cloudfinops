@@ -10,6 +10,8 @@
 
 Аудит популярных self-host моделей: поправили заниженные FP8 footprints — **DeepSeek V3/R1** (~685 GiB, не 350; FP8 → 8×H200), **Qwen3-235B** (~235), **Coder-480B** (~480), **GLM 4.6** (~330; убрали 2×H200 FP8). gpt-oss помечены как MoE+MXFP4; Mistral/Devstral Small на L40S — FP8, не BF16.
 
+Второй проход по рецептам: статус minimum / recommended / high-throughput / experimental в notes; переставили лестницы (Qwen3.6/32/Gemma → L4 INT4 first; Coder-480/MiniMax → 4×H200 FP8 min, 8×H200 high-throughput; Kimi → 4×H200 INT4 + 8×H200 FP8 как плотный FP8; GLM 5.2 → 4×H200 INT4 primary; Mixtral → 2×A100 INT4 primary, 1×A100 experimental).
+
 ### Каталог / Yandex preemptible GPU (1/2/4)
 
 В Billing API у Yandex есть отдельные preemptible SKU на GPU. Добавили в каталог Gen2 / T4i / V100 Broadwell preemptible; у A100/V100/T4/Platform V4 поправили решётку на **1/2/4** (8× в spot обычно недоступна). Реальная скидка — у A100/V100/T4; у Gen2/T4i/Platform V4 ставка GPU как у on-demand. Добавили vCPU/RAM ставок GPU-платформ (`gpu-platforms.yaml`) и переключатель «Прерываемая» в калькуляторе GPU.
