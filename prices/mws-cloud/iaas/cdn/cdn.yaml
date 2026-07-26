@@ -36,13 +36,10 @@ spec:
         vat: included
         byteBasis: binary
     notes: >
-      0,732 ₽/ГБ с НДС 22% — исходящий трафик с CDN к клиентам (docs MWS CDN и
-      сводная страница тарифов Cloud Platform). Входящий — 0 ₽. В публичном
+      Исходящий трафик с CDN к клиентам. Входящий не тарифицируется. В публичном
       прайсе MWS CDN нет абонплаты за ресурс и нет тарифа за запросы (только
       egress) — поэтому в каталоге нет строк «CDN-ресурс» / «Запросы CDN», в
-      отличие от Yandex/Selectel (ресурс) и Yandex/T1 (запросы). С 01.08.2026
-      ставка 0,8418 ₽/ГБ с НДС; в каталоге пока текущая. Источники: pricing CDN
-      + mws-cloud-platform-pricing.
+      отличие от Yandex/Selectel (ресурс) и Yandex/T1 (запросы).
 
   - sku: mws.cdn.traffic.ingress
     name: Входящий трафик CDN

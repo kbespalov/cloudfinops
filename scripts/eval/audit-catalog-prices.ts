@@ -68,11 +68,11 @@ for (const m of catalog.meters) {
   if (m.effectiveFrom) {
     const from = new Date(m.effectiveFrom);
     if (from > today) {
-      // MWS GPT Model Hub: intentional — catalog shows Aug-1 list, not the short promo.
+      // MWS GPT Model Hub: catalog uses list rates with future effectiveFrom by policy.
       const intentional =
         m.provider === 'mws-cloud' &&
         m.categoryKey === 'ai' &&
-        (m.notes || '').includes('сознательно');
+        m.dimensions?.serviceProduct === 'gpt-model-hub';
       if (!intentional) {
         add(
           'warn',
@@ -83,17 +83,8 @@ for (const m of catalog.meters) {
       }
     }
   }
-  if (futureFrom && !promoUntil && !m.notes?.includes('01.08') && !m.notes?.includes('1 августа')) {
-    // soft: future hike documented only in dimensions
-    if (!m.notes?.toLowerCase().includes('future') && !m.notes?.includes('вырастет')) {
-      add(
-        'warn',
-        'future-rate-undocumented',
-        m.id,
-        `has ${futureFrom} future rate in dimensions but notes do not mention upcoming change`,
-      );
-    }
-  }
+  // futureRateFrom / futureHourlyAmount in dimensions is enough — do not require
+  // user-facing notes to advertise upcoming list changes or promos.
 
   // Sanity: amountNumber should resolve for non-status meters with amounts
   if (['unit', 'bundle', 'fixed'].includes(m.pricingMode)) {

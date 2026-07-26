@@ -42,7 +42,7 @@ describe('price anchors — live-verified 2026-07-26', () => {
     assert.equal(meter('mws.compute.vcpu').dimensions?.futureHourlyAmount, '1.267458');
   });
 
-  it('MWS AI keeps Aug-1 Model Hub list rates (promo until 31.07 intentionally skipped)', () => {
+  it('MWS AI Model Hub list rates stay pinned (effectiveFrom 2026-08-01)', () => {
     nearly(hour('mws.ai.gpt-oss-120b.input'), 13.42);
     nearly(hour('mws.ai.gpt-oss-120b.output'), 54.9);
     nearly(hour('mws.ai.qwen3.6-35b-a3b.input'), 70.76);

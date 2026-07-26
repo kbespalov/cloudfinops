@@ -74,20 +74,20 @@ describe('GPU price integrity — published unit anchors', () => {
   });
 });
 
-describe('GPU price integrity — VK-host parity synthetics (no fiction)', () => {
+describe('GPU price integrity — full-node synthetics (no fiction)', () => {
   it('6. Selectel ×1 synthetic = H200 + 44×vCPU + 256×RAM (no disk)', () => {
     const expect =
       hour('selectel.gpu.h200-141') +
       44 * hour('selectel.compute.vcpu-2250') +
       256 * hour('selectel.compute.ram-2133-2933');
-    nearly(hour('selectel.gpu.h200-141.vk-host-1.synthetic'), expect);
+    nearly(hour('selectel.gpu.h200-141.44-256.synthetic'), expect);
     nearly(expect, 725.7308, 1e-3);
   });
 
   it('7. T1 ×1 synthetic = H200 + 44×a1.vCPU + 256×RAM (no disk)', () => {
     const expect =
       hour('t1.gpu.h200') + 44 * hour('t1.compute.a1.vcpu') + 256 * hour('t1.compute.ram');
-    nearly(hour('t1.gpu.h200.vk-host-1.synthetic'), expect);
+    nearly(hour('t1.gpu.h200.44-256.synthetic'), expect);
   });
 
   it('8. Selectel ×8 synthetic = 8×H200 + 240×vCPU + 2048×RAM', () => {
@@ -95,19 +95,19 @@ describe('GPU price integrity — VK-host parity synthetics (no fiction)', () =>
       8 * hour('selectel.gpu.h200-141') +
       240 * hour('selectel.compute.vcpu-2250') +
       2048 * hour('selectel.compute.ram-2133-2933');
-    nearly(hour('selectel.gpu.h200-141.vk-host-8.synthetic'), expect);
+    nearly(hour('selectel.gpu.h200-141.240-2048.synthetic'), expect);
   });
 
   it('9. T1 ×8 synthetic = 8×H200 + 240×a1.vCPU + 2048×RAM', () => {
     const expect =
       8 * hour('t1.gpu.h200') + 240 * hour('t1.compute.a1.vcpu') + 2048 * hour('t1.compute.ram');
-    nearly(hour('t1.gpu.h200.vk-host-8.synthetic'), expect);
+    nearly(hour('t1.gpu.h200.240-2048.synthetic'), expect);
   });
 
   it('10. Parity synthetics share VK host dimensions exactly', () => {
     for (const sku of [
-      'selectel.gpu.h200-141.vk-host-1.synthetic',
-      't1.gpu.h200.vk-host-1.synthetic',
+      'selectel.gpu.h200-141.44-256.synthetic',
+      't1.gpu.h200.44-256.synthetic',
     ]) {
       const m = meter(sku);
       assert.equal(Number(m.dimensions.vcpu), 44);
@@ -116,8 +116,8 @@ describe('GPU price integrity — VK-host parity synthetics (no fiction)', () =>
       assert.equal(Number(m.dimensions.gpuMemoryGb), 141);
     }
     for (const sku of [
-      'selectel.gpu.h200-141.vk-host-8.synthetic',
-      't1.gpu.h200.vk-host-8.synthetic',
+      'selectel.gpu.h200-141.240-2048.synthetic',
+      't1.gpu.h200.240-2048.synthetic',
     ]) {
       const m = meter(sku);
       assert.equal(Number(m.dimensions.vcpu), 240);
@@ -128,34 +128,36 @@ describe('GPU price integrity — VK-host parity synthetics (no fiction)', () =>
 
   it('11. Synthetics are marked derived / synthetic / * / Russian disclosure', () => {
     for (const sku of [
-      'selectel.gpu.h200-141.vk-host-1.synthetic',
-      'selectel.gpu.h200-141.vk-host-8.synthetic',
-      't1.gpu.h200.vk-host-1.synthetic',
-      't1.gpu.h200.vk-host-8.synthetic',
+      'selectel.gpu.h200-141.44-256.synthetic',
+      'selectel.gpu.h200-141.240-2048.synthetic',
+      't1.gpu.h200.44-256.synthetic',
+      't1.gpu.h200.240-2048.synthetic',
     ]) {
       const m = meter(sku);
       assert.equal(m.synthetic, true);
       assert.equal(m.priceProvenance, 'derived');
       assert.ok(m.name.includes('*'), sku);
       assert.match(m.notes || '', /синтетич/i, sku);
-      assert.match(m.notes || '', /VK/i, sku);
+      assert.match(m.notes || '', /не публичный тариф/i, sku);
+      assert.match(m.notes || '', /сравн/i, sku);
+      assert.doesNotMatch(m.notes || '', /\bVK\b/i, sku);
       assert.equal(gpuPriceBasisLabel(m), 'целиком', sku);
       assert.match(formatGpuLabel(m) || '', /оценка \*/, sku);
     }
   });
 
   it('12. Full-node synthetics cost more than GPU-only (host is not free)', () => {
-    assert.ok(hour('selectel.gpu.h200-141.vk-host-1.synthetic') > hour('selectel.gpu.h200-141'));
-    assert.ok(hour('t1.gpu.h200.vk-host-1.synthetic') > hour('t1.gpu.h200'));
+    assert.ok(hour('selectel.gpu.h200-141.44-256.synthetic') > hour('selectel.gpu.h200-141'));
+    assert.ok(hour('t1.gpu.h200.44-256.synthetic') > hour('t1.gpu.h200'));
     const hostOnlySel =
-      hour('selectel.gpu.h200-141.vk-host-1.synthetic') - hour('selectel.gpu.h200-141');
+      hour('selectel.gpu.h200-141.44-256.synthetic') - hour('selectel.gpu.h200-141');
     nearly(hostOnlySel, 44 * 1.0071 + 256 * 0.3662, 0.01);
   });
 
   it('13. Selectel/T1 full-node undercut VK flavor on the same host (honest delta)', () => {
     const vk1 = hour('vk.gpu.h200-1');
-    const sel1 = hour('selectel.gpu.h200-141.vk-host-1.synthetic');
-    const t11 = hour('t1.gpu.h200.vk-host-1.synthetic');
+    const sel1 = hour('selectel.gpu.h200-141.44-256.synthetic');
+    const t11 = hour('t1.gpu.h200.44-256.synthetic');
     assert.ok(sel1 < vk1);
     assert.ok(t11 < vk1);
     // ~+52% VK vs Selectel assemble — keep the band honest, not flip signs
@@ -164,17 +166,17 @@ describe('GPU price integrity — VK-host parity synthetics (no fiction)', () =>
   });
 
   it('14. ×8 synthetics are not a silent 8× of ×1 (host scales with VK matrix)', () => {
-    const sel1 = hour('selectel.gpu.h200-141.vk-host-1.synthetic');
-    const sel8 = hour('selectel.gpu.h200-141.vk-host-8.synthetic');
-    assert.ok(Math.abs(sel8 - 8 * sel1) > 1, 'VK ×8 host is not 8× of 44/256');
-    // Per-GPU flavor hour at VK is almost linear; our assemble uses 240/2048 not 352/2048
+    const sel1 = hour('selectel.gpu.h200-141.44-256.synthetic');
+    const sel8 = hour('selectel.gpu.h200-141.240-2048.synthetic');
+    assert.ok(Math.abs(sel8 - 8 * sel1) > 1, '×8 host 240/2048 is not 8× of 44/256');
+    // Per-GPU at ×8 uses 240/2048, not 8×(44/256)=352/2048
     nearly(sel8 / 8, 711.6314, 0.05);
   });
 
   it('15. Month prices are 720× hour for parity synthetics', () => {
     for (const sku of [
-      'selectel.gpu.h200-141.vk-host-1.synthetic',
-      't1.gpu.h200.vk-host-1.synthetic',
+      'selectel.gpu.h200-141.44-256.synthetic',
+      't1.gpu.h200.44-256.synthetic',
       'vk.gpu.h200-1',
     ]) {
       nearly(month(sku), hour(sku) * HOURS, 1);
@@ -184,7 +186,7 @@ describe('GPU price integrity — VK-host parity synthetics (no fiction)', () =>
 
 describe('GPU price integrity — calculator must not launder synthetics', () => {
   const vkHostPreset: GpuPreset = {
-    id: 'integrity-h200-vk-host',
+    id: 'integrity-h200-fullnode-synthetic',
     kind: 'gpu',
     title: 'H200 VK host',
     subtitle: '44/256',
@@ -212,7 +214,7 @@ describe('GPU price integrity — calculator must not launder synthetics', () =>
   it('17. Calculator Selectel total ≈ synthetic + SSD (disk is extra vs catalog parity row)', () => {
     const result = quotePreset(vkHostPreset, 'month');
     const sel = result.quotes.find((q) => q.provider === 'selectel')!;
-    const synMonth = month('selectel.gpu.h200-141.vk-host-1.synthetic');
+    const synMonth = month('selectel.gpu.h200-141.44-256.synthetic');
     const disk = sel.parts.find((p) => p.id === 'disk')?.amount ?? 0;
     nearly(sel.total, synMonth + disk, 2);
     assert.ok(disk > 0, 'boot disk present in calculator');
@@ -254,7 +256,7 @@ describe('GPU price integrity — calculator must not launder synthetics', () =>
     assert.equal(gpuPriceBasisLabel(meter('t1.gpu.h200')), 'только GPU');
     assert.equal(gpuPriceBasisLabel(meter('vk.gpu.h200-1')), 'целиком');
     assert.equal(
-      gpuPriceBasisLabel(meter('selectel.gpu.h200-141.vk-host-1.synthetic')),
+      gpuPriceBasisLabel(meter('selectel.gpu.h200-141.44-256.synthetic')),
       'целиком',
     );
     assert.doesNotMatch(displayMeterName(meter('selectel.gpu.h200-141')), /44\/256|целиком/);
@@ -369,8 +371,8 @@ describe('GPU price integrity — shelf multi-provider coverage (H200/A100/L4/L4
 describe('GPU price integrity — no silent preemptible / wrong SKU', () => {
   it('24. Parity synthetics are on-demand only', () => {
     for (const sku of [
-      'selectel.gpu.h200-141.vk-host-1.synthetic',
-      't1.gpu.h200.vk-host-1.synthetic',
+      'selectel.gpu.h200-141.44-256.synthetic',
+      't1.gpu.h200.44-256.synthetic',
     ]) {
       assert.equal(meter(sku).dimensions.purchaseModel, 'on-demand');
     }
@@ -380,7 +382,7 @@ describe('GPU price integrity — no silent preemptible / wrong SKU', () => {
     const pre = hour('selectel.gpu.h200-141.preemptible');
     const on = hour('selectel.gpu.h200-141');
     assert.ok(pre < on);
-    const synFrom = meter('selectel.gpu.h200-141.vk-host-1.synthetic').dimensions
+    const synFrom = meter('selectel.gpu.h200-141.44-256.synthetic').dimensions
       .syntheticFrom as string[];
     assert.ok(synFrom.includes('selectel.gpu.h200-141'));
     assert.ok(!synFrom.some((s) => /preemptible/i.test(s)));

@@ -256,10 +256,11 @@ spec:
       - 8
 
   # ---------------------------------------------------------------------------
-  # Synthetic full-node quotes matching VK Cloud H200 hosts (catalog compare).
-  # H200 SXM unit + T1 a1 vCPU + RAM; no boot disk. Not a published T1 SKU.
+  # Synthetic full-node estimates for catalog compare (not a published T1 SKU).
+  # H200 SXM unit + T1 a1 vCPU + RAM; no boot disk. Config size matches common
+  # 44/256 and 240/2048 H200 flavors elsewhere; parityHost is metadata only.
   # ---------------------------------------------------------------------------
-  - sku: t1.gpu.h200.vk-host-1.synthetic
+  - sku: t1.gpu.h200.44-256.synthetic
     name: NVIDIA H200 141GB SXM · 44/256 *
     meter: compute.flavor
     status: available
@@ -308,15 +309,17 @@ spec:
           currency: RUB
           quantity: flavor
           period: hour
-        formula: 593.0555554 + 44×1.2482635 + 256×0.3021367 (VK H200 ×1 host parity, VAT incl.)
+        formula: 593.0555554 + 44×1.2482635 + 256×0.3021367 (1×H200 + 44 vCPU + 256 GiB, synthetic bundle, VAT incl.)
         vat: included
     notes: >
-      Синтетическая позиция каталога Cloud FinOps (*): сборка T1 Cloud под хост
-      VK Cloud GPU-44-256-H200-1 (1×H200 SXM + 44 vCPU a1 + 256 GiB) из unit-ставок.
-      T1 продаёт карту отдельно; эта строка — чтобы сравнить «целиком» с VK.
-      Без загрузочного диска.
+      Синтетическая оценка Cloud FinOps (*), не публичный тариф T1 Cloud.
+      T1 продаёт H200 отдельно (только GPU). Эта строка — ориентировочная
+      стоимость конфигурации целиком: 1×H200 SXM + 44 vCPU a1 + 256 GiB, по
+      unit-ставкам T1. Нужна, чтобы приблизительно сравнить с провайдерами, у
+      которых H200 идёт готовым flavor’ом (GPU+хост). Без загрузочного диска.
+      Для заказа смотрите card-only SKU.
 
-  - sku: t1.gpu.h200.vk-host-8.synthetic
+  - sku: t1.gpu.h200.240-2048.synthetic
     name: NVIDIA H200 141GB SXM · 240/2048 · ×8 *
     meter: compute.flavor
     status: available
@@ -365,9 +368,12 @@ spec:
           currency: RUB
           quantity: flavor
           period: hour
-        formula: 8×593.0555554 + 240×1.2482635 + 2048×0.3021367 (VK H200 ×8 host parity, VAT incl.)
+        formula: 8×593.0555554 + 240×1.2482635 + 2048×0.3021367 (8×H200 + 240 vCPU + 2048 GiB, synthetic bundle, VAT incl.)
         vat: included
     notes: >
-      Синтетическая позиция каталога Cloud FinOps (*): сборка T1 Cloud под хост
-      VK Cloud GPU-240-2048-H200-8 (8×H200 SXM + 240 vCPU a1 + 2048 GiB) из unit-ставок.
-      Для сравнения «целиком» с VK; без загрузочного диска.
+      Синтетическая оценка Cloud FinOps (*), не публичный тариф T1 Cloud.
+      T1 продаёт H200 отдельно (только GPU). Эта строка — ориентировочная
+      стоимость конфигурации целиком: 8×H200 SXM + 240 vCPU a1 + 2048 GiB, по
+      unit-ставкам T1. Нужна, чтобы приблизительно сравнить с провайдерами, у
+      которых H200 идёт готовым flavor’ом (GPU+хост). Без загрузочного диска.
+      Для заказа смотрите card-only SKU.

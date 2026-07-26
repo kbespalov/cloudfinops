@@ -34,7 +34,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API). До 31.07.2026 на сайте MWS действует акция — в каталоге сознательно показан тариф с 01.08.
+    notes: GPT Model Hub. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '13.42'
@@ -60,7 +60,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
-    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API). До 31.07.2026 на сайте MWS действует акция — в каталоге сознательно показан тариф с 01.08.
+    notes: GPT Model Hub. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '54.90'
@@ -86,7 +86,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API). До 31.07.2026 на сайте MWS действует акция — в каталоге сознательно показан тариф с 01.08.
+    notes: GPT Model Hub. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '56.12'
@@ -112,7 +112,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
-    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API). До 31.07.2026 на сайте MWS действует акция — в каталоге сознательно показан тариф с 01.08.
+    notes: GPT Model Hub. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '224.48'
@@ -139,7 +139,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API). До 31.07.2026 на сайте MWS действует акция — в каталоге сознательно показан тариф с 01.08.
+    notes: GPT Model Hub. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '70.76'
@@ -166,7 +166,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
-    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API). До 31.07.2026 на сайте MWS действует акция — в каталоге сознательно показан тариф с 01.08.
+    notes: GPT Model Hub. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '283.04'
@@ -193,7 +193,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API). До 31.07.2026 на сайте MWS действует акция — в каталоге сознательно показан тариф с 01.08.
+    notes: GPT Model Hub. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '79.30'
@@ -220,7 +220,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
-    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API). До 31.07.2026 на сайте MWS действует акция — в каталоге сознательно показан тариф с 01.08.
+    notes: GPT Model Hub. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '320.86'
@@ -247,7 +247,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API). До 31.07.2026 на сайте MWS действует акция — в каталоге сознательно показан тариф с 01.08.
+    notes: GPT Model Hub. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '104.92'
@@ -274,7 +274,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
-    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API). До 31.07.2026 на сайте MWS действует акция — в каталоге сознательно показан тариф с 01.08.
+    notes: GPT Model Hub. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '419.68'
@@ -301,7 +301,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API). До 31.07.2026 на сайте MWS действует акция — в каталоге сознательно показан тариф с 01.08.
+    notes: GPT Model Hub. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '178.12'
@@ -328,7 +328,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
-    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API). До 31.07.2026 на сайте MWS действует акция — в каталоге сознательно показан тариф с 01.08.
+    notes: GPT Model Hub. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '746.64'
@@ -355,7 +355,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API). До 31.07.2026 на сайте MWS действует акция — в каталоге сознательно показан тариф с 01.08.
+    notes: GPT Model Hub. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '157.38'
@@ -382,7 +382,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: output
-    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Локальный inference в контуре MWS (не внешний API). До 31.07.2026 на сайте MWS действует акция — в каталоге сознательно показан тариф с 01.08.
+    notes: GPT Model Hub. Локальный inference в контуре MWS (не внешний API).
     pricing:
       rate:
         amount: '652.70'
@@ -407,7 +407,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Embeddings; в прайсе шаг — 1 000 токенов, в каталоге приведено к 1M для сравнения. До 31.07.2026 на сайте MWS действует акция — в каталоге сознательно показан тариф с 01.08.
+    notes: GPT Model Hub. Embeddings; в прайсе шаг — 1 000 токенов, в каталоге приведено к 1M для сравнения.
     pricing:
       rate:
         amount: '6.10'
@@ -432,7 +432,7 @@ spec:
       inferenceScope: local
       serviceProduct: gpt-model-hub
       tokenDirection: input
-    notes: Тариф GPT Model Hub с 1 августа 2026 (публичная тарификация). Embeddings; в прайсе шаг — 1 000 токенов, в каталоге приведено к 1M для сравнения. До 31.07.2026 на сайте MWS действует акция — в каталоге сознательно показан тариф с 01.08.
+    notes: GPT Model Hub. Embeddings; в прайсе шаг — 1 000 токенов, в каталоге приведено к 1M для сравнения.
     pricing:
       rate:
         amount: '18.30'

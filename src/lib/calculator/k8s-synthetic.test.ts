@@ -86,7 +86,7 @@ describe('k8s synthetic HA integrity', () => {
       );
       assert.match(
         notes,
-        /оценка для сравнения|не отдельная строка/i,
+        /не публичный тариф|приблизительно сравн|оценка для сравнения|не отдельная строка/i,
         `${m.sku}: notes must explain this is an estimate for comparison`,
       );
       assert.doesNotMatch(

@@ -521,10 +521,11 @@ spec:
       Спека хоста: selectel.ru/services/gpu/ (таблица HGX B300).
 
   # ---------------------------------------------------------------------------
-  # Synthetic full-node quotes matching VK Cloud H200 hosts (catalog compare).
-  # GPU unit + Selectel vCPU/RAM; no boot disk. Not a published Selectel SKU.
+  # Synthetic full-node estimates for catalog compare (not a published Selectel SKU).
+  # GPU unit + Selectel vCPU/RAM; no boot disk. Config size matches common 44/256
+  # and 240/2048 H200 flavors elsewhere; parityHost is metadata only.
   # ---------------------------------------------------------------------------
-  - sku: selectel.gpu.h200-141.vk-host-1.synthetic
+  - sku: selectel.gpu.h200-141.44-256.synthetic
     name: NVIDIA H200 141 ГБ · 44/256 *
     meter: compute.flavor
     status: available
@@ -570,15 +571,17 @@ spec:
           currency: RUB
           quantity: flavor
           period: hour
-        formula: 587.6712 + 44×1.0071 + 256×0.3662 (VK H200 ×1 host parity, VAT incl.)
+        formula: 587.6712 + 44×1.0071 + 256×0.3662 (1×H200 + 44 vCPU + 256 GiB, synthetic bundle, VAT incl.)
         vat: included
     notes: >
-      Синтетическая позиция каталога Cloud FinOps (*): сборка Selectel под хост
-      VK Cloud GPU-44-256-H200-1 (1×H200 + 44 vCPU + 256 GiB) из unit-ставок.
-      Selectel продаёт карту отдельно; эта строка — чтобы сравнить «целиком» с VK.
-      Без загрузочного диска.
+      Синтетическая оценка Cloud FinOps (*), не публичный тариф Selectel.
+      Selectel продаёт H200 отдельно (только GPU). Эта строка — ориентировочная
+      стоимость конфигурации целиком: 1×H200 + 44 vCPU + 256 GiB, по unit-ставкам
+      Selectel. Нужна, чтобы приблизительно сравнить с провайдерами, у которых
+      H200 идёт готовым flavor’ом (GPU+хост). Без загрузочного диска. Для заказа
+      смотрите card-only SKU.
 
-  - sku: selectel.gpu.h200-141.vk-host-8.synthetic
+  - sku: selectel.gpu.h200-141.240-2048.synthetic
     name: NVIDIA H200 141 ГБ · 240/2048 · ×8 *
     meter: compute.flavor
     status: available
@@ -624,9 +627,12 @@ spec:
           currency: RUB
           quantity: flavor
           period: hour
-        formula: 8×587.6712 + 240×1.0071 + 2048×0.3662 (VK H200 ×8 host parity, VAT incl.)
+        formula: 8×587.6712 + 240×1.0071 + 2048×0.3662 (8×H200 + 240 vCPU + 2048 GiB, synthetic bundle, VAT incl.)
         vat: included
     notes: >
-      Синтетическая позиция каталога Cloud FinOps (*): сборка Selectel под хост
-      VK Cloud GPU-240-2048-H200-8 (8×H200 + 240 vCPU + 2048 GiB) из unit-ставок.
-      Для сравнения «целиком» с VK; без загрузочного диска.
+      Синтетическая оценка Cloud FinOps (*), не публичный тариф Selectel.
+      Selectel продаёт H200 отдельно (только GPU). Эта строка — ориентировочная
+      стоимость конфигурации целиком: 8×H200 + 240 vCPU + 2048 GiB, по unit-ставкам
+      Selectel. Нужна, чтобы приблизительно сравнить с провайдерами, у которых
+      H200 идёт готовым flavor’ом (GPU+хост). Без загрузочного диска. Для заказа
+      смотрите card-only SKU.

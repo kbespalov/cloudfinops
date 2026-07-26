@@ -124,11 +124,11 @@ describe('Cloud.ru H100 synthetic GPU units', () => {
   });
 });
 
-describe('Selectel/T1 H200 VK-host parity synthetics', () => {
-  it('assembles Selectel/T1 full nodes to VK H200 ×1 host (44/256)', () => {
+describe('Selectel/T1 H200 full-node synthetics', () => {
+  it('assembles Selectel/T1 full nodes as 44/256 synthetic bundles', () => {
     const vk = catalog.meters.find((m) => m.sku === 'vk.gpu.h200-1')!;
-    const sel = catalog.meters.find((m) => m.sku === 'selectel.gpu.h200-141.vk-host-1.synthetic')!;
-    const t1 = catalog.meters.find((m) => m.sku === 't1.gpu.h200.vk-host-1.synthetic')!;
+    const sel = catalog.meters.find((m) => m.sku === 'selectel.gpu.h200-141.44-256.synthetic')!;
+    const t1 = catalog.meters.find((m) => m.sku === 't1.gpu.h200.44-256.synthetic')!;
     assert.ok(vk && sel && t1);
     assert.equal(sel.synthetic, true);
     assert.equal(t1.synthetic, true);
