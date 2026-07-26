@@ -24,6 +24,7 @@ export function gpuFamilyToken(model: string): string | null {
   if (/Platform V4|platform-v4/i.test(m)) return 'Platform V4';
   if (/T4i/i.test(m)) return 'T4i';
   if (/B300/i.test(m)) return 'B300';
+  if (/B200/i.test(m)) return 'B200';
   if (/H200/i.test(m)) return 'H200';
   if (/H100/i.test(m)) return 'H100';
   if (/L40S/i.test(m)) return 'L40S';

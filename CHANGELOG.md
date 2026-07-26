@@ -6,6 +6,8 @@
 
 В каталог inference добавили популярные open-weight модели, которых не хватало для топ-15 по HF/ранжированиям июля: **DeepSeek V4 Flash/Pro**, **Gemma 4 31B**, **Qwen3.5 122B-A10B**, **MiniMax M3**, **Nemotron 3 Super**, **IBM Granite 4.1 8B**. Обновили Popular в picker; алиас `deepseek` ведёт на V4 Flash.
 
+Уточнили GPU-рецепты с обязательным precision: V4 Flash — 2×H200 INT4 / 4×H100 FP8 / 4×A100 INT4 (FP8 на 2×H200 не предлагаем); MiniMax — только FP8 (4×H200 min, 8×H100/H200); Nemotron — NVFP4 только на B200, на H100 FP8/BF16.
+
 ### Каталог / Yandex preemptible GPU (1/2/4)
 
 В Billing API у Yandex есть отдельные preemptible SKU на GPU. Добавили в каталог Gen2 / T4i / V100 Broadwell preemptible; у A100/V100/T4/Platform V4 поправили решётку на **1/2/4** (8× в spot обычно недоступна). Реальная скидка — у A100/V100/T4; у Gen2/T4i/Platform V4 ставка GPU как у on-demand. Добавили vCPU/RAM ставок GPU-платформ (`gpu-platforms.yaml`) и переключатель «Прерываемая» в калькуляторе GPU.
