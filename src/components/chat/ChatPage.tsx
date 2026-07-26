@@ -87,11 +87,20 @@ export function ChatPage() {
       raf = requestAnimationFrame(() => {
         const layoutH = window.innerHeight || vv.height;
         const height = vv.height;
-        root.style.setProperty('--cf-vv-height', `${height}px`);
+        /*
+         * Large-monitor `html { zoom }` (globals.css) scales fixed shells too.
+         * visualViewport reports pre-zoom CSS px — divide so the chat shell fits
+         * the visible screen and the composer is not clipped below the fold.
+         */
+        const zoomRaw = getComputedStyle(root).zoom;
+        const zoomParsed =
+          zoomRaw && zoomRaw !== 'normal' ? Number.parseFloat(String(zoomRaw)) : 1;
+        const zoom = Number.isFinite(zoomParsed) && zoomParsed > 0 ? zoomParsed : 1;
+        root.style.setProperty('--cf-vv-height', `${height / zoom}px`);
         const keyboardLikely = height < layoutH * 0.85 && vv.offsetTop > 0;
         root.style.setProperty(
           '--cf-vv-offset-top',
-          keyboardLikely ? `${vv.offsetTop}px` : '0px',
+          keyboardLikely ? `${vv.offsetTop / zoom}px` : '0px',
         );
       });
     };
@@ -100,11 +109,13 @@ export function ChatPage() {
     vv.addEventListener('resize', sync);
     vv.addEventListener('scroll', sync);
     window.addEventListener('orientationchange', sync);
+    window.addEventListener('resize', sync);
     return () => {
       cancelAnimationFrame(raf);
       vv.removeEventListener('resize', sync);
       vv.removeEventListener('scroll', sync);
       window.removeEventListener('orientationchange', sync);
+      window.removeEventListener('resize', sync);
       root.style.removeProperty('--cf-vv-height');
       root.style.removeProperty('--cf-vv-offset-top');
     };

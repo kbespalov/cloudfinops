@@ -54,13 +54,25 @@ function interconnectOf(meter: CatalogMeter): string {
   const raw = meter.dimensions.gpuInterconnect ?? meter.dimensions.nvlink;
   if (raw === true || raw === 'true') return 'NVLink';
   if (typeof raw === 'string' && raw.trim()) {
-    if (/nvlink/i.test(raw)) return 'NVLink';
-    if (/pcie/i.test(raw)) return 'PCIe';
+    if (/nvlink|\bnvl\b/i.test(raw)) return 'NVLink';
+    if (/pcie|pci\b/i.test(raw)) return 'PCIe';
+    if (/sxm5/i.test(raw)) return 'SXM5';
+    if (/sxm/i.test(raw)) return 'SXM';
     return raw.trim();
   }
-  const model = String(meter.dimensions.gpuModel || '');
-  if (/NVLink/i.test(model)) return 'NVLink';
-  if (/PCI/i.test(model)) return 'PCIe';
+  const model = String(meter.dimensions.gpuModel || meter.name || '');
+  if (/NVLink/i.test(model) || /\bNVL\b/i.test(model)) return 'NVLink';
+  if (/SXM5/i.test(model)) return 'SXM5';
+  if (/\bSXM\b/i.test(model)) return 'SXM';
+  if (/PCI(?:e)?/i.test(model)) return 'PCIe';
+  if (/HGX|\bB300\b/i.test(model)) return 'NVLink';
+  if (
+    /L40S|\bL40\b|\bL4\b|\bA30\b|\bA2\b|A2000|A5000|\bT4\b|Tesla T4|V100S|RTX|GTX/i.test(
+      model,
+    )
+  ) {
+    return 'PCIe';
+  }
   return '';
 }
 

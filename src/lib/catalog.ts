@@ -41,6 +41,12 @@ export type GpuFacet =
   | 'a30'
   | 't4';
 
+/**
+ * Coarse GPU attach / fabric filter — PCIe cards vs NVLink-class (incl. SXM / NVL).
+ * Used to find independently attachable cards vs dense fabric hosts.
+ */
+export type GpuInterconnectFacet = 'all' | 'pcie' | 'nvlink';
+
 /** Object storage classes from SKU dimensions.storageClass. */
 export type StorageFacet = 'all' | 'standard' | 'warm' | 'cold' | 'ice';
 
@@ -521,22 +527,56 @@ export function extractGpuMemoryGb(meter: CatalogMeter): number | null {
   return vram;
 }
 
-function extractGpuInterconnect(meter: CatalogMeter): string | null {
+/**
+ * Normalize GPU attach / fabric token for display and filters.
+ * Prefer explicit dimensions; fall back to model/name tokens, then family defaults
+ * for cards that only ship as PCIe (L4/L40S/T4/…) or dense NVLink hosts (B300/HGX).
+ */
+export function extractGpuInterconnect(meter: CatalogMeter): string | null {
   const raw = meter.dimensions.gpuInterconnect ?? meter.dimensions.nvlink;
   if (raw === true || raw === 'true') return 'NVLink';
   if (typeof raw === 'string' && raw.trim()) {
-    if (/nvlink/i.test(raw)) return 'NVLink';
+    if (/nvlink|\bnvl\b/i.test(raw)) return 'NVLink';
     if (/pcie|pci\b/i.test(raw)) return 'PCIe';
     if (/sxm5/i.test(raw)) return 'SXM5';
     if (/sxm/i.test(raw)) return 'SXM';
     return raw.trim();
   }
   const hay = gpuHayForIdentity(meter);
-  if (/NVLink/i.test(hay)) return 'NVLink';
+  if (/NVLink/i.test(hay) || /\bNVL\b/i.test(hay)) return 'NVLink';
   if (/SXM5/i.test(hay)) return 'SXM5';
   if (/\bSXM\b/i.test(hay)) return 'SXM';
   if (/PCI(?:e)?/i.test(hay)) return 'PCIe';
+  if (/HGX|\bB300\b/i.test(hay)) return 'NVLink';
+  // PCIe-only silicon families (no SXM/NVLink SKU in this catalog).
+  if (
+    /L40S|\bL40\b|\bL4\b|\bA30\b|\bA2\b|A2000|A5000|\bT4\b|Tesla T4|V100S|RTX|GTX/i.test(
+      hay,
+    )
+  ) {
+    return 'PCIe';
+  }
   return null;
+}
+
+/** Coarse bucket for catalog chips: PCIe vs NVLink-class (SXM / NVL / HGX). */
+export function gpuInterconnectFacetOf(
+  meter: CatalogMeter,
+): Exclude<GpuInterconnectFacet, 'all'> | null {
+  const link = extractGpuInterconnect(meter);
+  if (!link) return null;
+  if (/pcie|pci\b/i.test(link)) return 'pcie';
+  if (/nvlink|\bnvl\b|sxm|hgx/i.test(link)) return 'nvlink';
+  return null;
+}
+
+export function meterMatchesGpuInterconnectFacet(
+  meter: CatalogMeter,
+  facet: GpuInterconnectFacet,
+): boolean {
+  if (facet === 'all') return true;
+  if (meter.categoryKey !== 'gpu') return false;
+  return gpuInterconnectFacetOf(meter) === facet;
 }
 
 function extractGpuCardFamily(hay: string): string | null {

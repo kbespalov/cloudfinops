@@ -134,6 +134,10 @@
 /* Composer: keep Send on the same row as the field; never let it drop below fold. */
 .chatShell :global(.g-aikit-chat-container__footer) {
   flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  background: var(--g-aikit-chat-container-footer-background, var(--g-color-base-background));
   padding-bottom: max(var(--g-aikit-layout-base-padding-m, 12px), env(safe-area-inset-bottom, 0px));
 }
 
@@ -180,11 +184,6 @@
 
   .chatShell :global(.g-aikit-chat-container__footer) {
     padding: 8px 10px;
-    /* Stay glued above the (virtual) keyboard. */
-    position: sticky;
-    bottom: 0;
-    z-index: 2;
-    background: var(--g-aikit-chat-container-footer-background, var(--g-color-base-background));
   }
 
   .chatShell :global(.g-aikit-prompt-input_view_simple),

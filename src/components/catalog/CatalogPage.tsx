@@ -77,6 +77,7 @@ import {
   meterMatchesComputeFacet,
   meterMatchesDiskFacet,
   meterMatchesGpuFacet,
+  meterMatchesGpuInterconnectFacet,
   meterMatchesKubernetesAvailabilityFacet,
   meterMatchesSearch,
   meterMatchesNetworkFacet,
@@ -98,6 +99,7 @@ import {
   type ComputeFacet,
   type DiskFacet,
   type GpuFacet,
+  type GpuInterconnectFacet,
   type KubernetesAvailabilityFacet,
   type NetworkFacet,
   type PeriodMode,
@@ -188,6 +190,12 @@ const GPU_FACET_OPTIONS: {value: GpuFacet; title: string}[] = [
   {value: 'l4', title: 'L4'},
   {value: 'a30', title: 'A30'},
   {value: 't4', title: 'T4'},
+];
+
+const GPU_INTERCONNECT_OPTIONS: {value: GpuInterconnectFacet; title: string}[] = [
+  {value: 'all', title: 'Все'},
+  {value: 'pcie', title: 'PCIe'},
+  {value: 'nvlink', title: 'NVLink'},
 ];
 
 const STORAGE_KIND_OPTIONS: {value: StorageKindFacet; title: string}[] = [
@@ -289,6 +297,13 @@ function parseGpuFacet(v: string | null): GpuFacet {
   ) {
     return v;
   }
+  return 'all';
+}
+
+function parseGpuInterconnectFacet(v: string | null): GpuInterconnectFacet {
+  if (v === 'pcie' || v === 'nvlink' || v === 'all') return v;
+  if (v === 'pci' || v === 'pci-e' || v === 'pcie-e') return 'pcie';
+  if (v === 'nvl' || v === 'sxm') return 'nvlink';
   return 'all';
 }
 
@@ -407,6 +422,9 @@ export function CatalogPage() {
   );
   const [facet, setFacet] = useState<ComputeFacet>(() => parseFacet(searchParams.get('facet')));
   const [gpuFacet, setGpuFacet] = useState<GpuFacet>(() => parseGpuFacet(searchParams.get('gpu')));
+  const [gpuInterconnectFacet, setGpuInterconnectFacet] = useState<GpuInterconnectFacet>(() =>
+    parseGpuInterconnectFacet(searchParams.get('link')),
+  );
   const [storageFacet, setStorageFacet] = useState<StorageFacet>(() =>
     parseStorageFacet(searchParams.get('storage')),
   );
@@ -464,6 +482,9 @@ export function CatalogPage() {
         if (vcpuPlatformFacet !== 'all') params.set('cpu', vcpuPlatformFacet);
       }
       if (category === 'gpu' && gpuFacet !== 'all') params.set('gpu', gpuFacet);
+      if (category === 'gpu' && gpuInterconnectFacet !== 'all') {
+        params.set('link', gpuInterconnectFacet);
+      }
       if (category === 'storage' && storageFacet !== 'all') params.set('storage', storageFacet);
       if (category === 'storage' && storageKindFacet !== 'all') params.set('kind', storageKindFacet);
       if (category === 'network' && networkFacet !== 'all') params.set('net', networkFacet);
@@ -492,6 +513,7 @@ export function CatalogPage() {
     vcpuShareFacet,
     vcpuPlatformFacet,
     gpuFacet,
+    gpuInterconnectFacet,
     storageFacet,
     storageKindFacet,
     networkFacet,
@@ -608,6 +630,17 @@ export function CatalogPage() {
       t4: gpus.filter((m) => meterMatchesGpuFacet(m, 't4')).length,
     };
   }, [baseMeters]);
+
+  const gpuInterconnectCounts = useMemo(() => {
+    const gpus = baseMeters.filter(
+      (m) => m.categoryKey === 'gpu' && meterMatchesGpuFacet(m, gpuFacet),
+    );
+    return {
+      all: gpus.length,
+      pcie: gpus.filter((m) => meterMatchesGpuInterconnectFacet(m, 'pcie')).length,
+      nvlink: gpus.filter((m) => meterMatchesGpuInterconnectFacet(m, 'nvlink')).length,
+    };
+  }, [baseMeters, gpuFacet]);
 
   const storageMeters = useMemo(
     () => baseMeters.filter((m) => m.categoryKey === 'storage'),
@@ -824,6 +857,9 @@ export function CatalogPage() {
         if (!meterMatchesVcpuPlatformFacet(m, vcpuPlatformFacet)) return false;
       }
       if (category === 'gpu' && !meterMatchesGpuFacet(m, gpuFacet)) return false;
+      if (category === 'gpu' && !meterMatchesGpuInterconnectFacet(m, gpuInterconnectFacet)) {
+        return false;
+      }
       if (category === 'storage' && !meterMatchesStorageKindFacet(m, storageKindFacet)) {
         return false;
       }
@@ -859,6 +895,7 @@ export function CatalogPage() {
     vcpuShareFacet,
     vcpuPlatformFacet,
     gpuFacet,
+    gpuInterconnectFacet,
     storageFacet,
     storageKindFacet,
     networkFacet,
@@ -890,6 +927,7 @@ export function CatalogPage() {
     vcpuShareFacet,
     vcpuPlatformFacet,
     gpuFacet,
+    gpuInterconnectFacet,
     storageFacet,
     storageKindFacet,
     networkFacet,
@@ -1104,6 +1142,7 @@ export function CatalogPage() {
       setVcpuShareFacet('all');
       setVcpuPlatformFacet('all');
       setGpuFacet('all');
+      setGpuInterconnectFacet('all');
       setStorageFacet('all');
       setStorageKindFacet('all');
       setNetworkFacet('all');
@@ -1126,6 +1165,7 @@ export function CatalogPage() {
     vcpuShareFacet !== 'all' ||
     vcpuPlatformFacet !== 'all' ||
     gpuFacet !== 'all' ||
+    gpuInterconnectFacet !== 'all' ||
     storageFacet !== 'all' ||
     storageKindFacet !== 'all' ||
     networkFacet !== 'all' ||
@@ -1187,7 +1227,10 @@ export function CatalogPage() {
                   setVcpuShareFacet('all');
                   setVcpuPlatformFacet('all');
                 }
-                if (next !== 'gpu') setGpuFacet('all');
+                if (next !== 'gpu') {
+                  setGpuFacet('all');
+                  setGpuInterconnectFacet('all');
+                }
                 if (next !== 'storage') {
                   setStorageFacet('all');
                   setStorageKindFacet('all');
@@ -1455,31 +1498,61 @@ export function CatalogPage() {
               ) : null}
 
               {category === 'gpu' ? (
-                <div className={styles.facetControl} title="Семейство GPU">
-                  <Text variant="caption-2" color="complementary" className={styles.facetLabel}>
-                    GPU
-                  </Text>
-                  <SegmentedRadioGroup
-                    size="m"
-                    value={gpuFacet}
-                    onUpdate={(v) => setGpuFacet(v as GpuFacet)}
-                  >
-                    {GPU_FACET_OPTIONS.map((o) => (
-                      <SegmentedRadioGroup.Option key={o.value} value={o.value}>
-                        <span className={styles.facetOption}>
-                          {o.value === 'all' ? (
-                            <Icon data={Layers3Diagonal} size={14} />
-                          ) : (
-                            <Icon data={Gpu} size={14} />
-                          )}
-                          <span>
-                            {o.title} {gpuFacetCounts[o.value]}
+                <>
+                  <div className={styles.facetControl} title="Семейство GPU">
+                    <Text variant="caption-2" color="complementary" className={styles.facetLabel}>
+                      GPU
+                    </Text>
+                    <SegmentedRadioGroup
+                      size="m"
+                      value={gpuFacet}
+                      onUpdate={(v) => setGpuFacet(v as GpuFacet)}
+                    >
+                      {GPU_FACET_OPTIONS.map((o) => (
+                        <SegmentedRadioGroup.Option key={o.value} value={o.value}>
+                          <span className={styles.facetOption}>
+                            {o.value === 'all' ? (
+                              <Icon data={Layers3Diagonal} size={14} />
+                            ) : (
+                              <Icon data={Gpu} size={14} />
+                            )}
+                            <span>
+                              {o.title} {gpuFacetCounts[o.value]}
+                            </span>
                           </span>
-                        </span>
-                      </SegmentedRadioGroup.Option>
-                    ))}
-                  </SegmentedRadioGroup>
-                </div>
+                        </SegmentedRadioGroup.Option>
+                      ))}
+                    </SegmentedRadioGroup>
+                  </div>
+                  <div
+                    className={styles.facetControl}
+                    title="Интерфейс GPU: PCIe-карта или NVLink/SXM"
+                  >
+                    <Text variant="caption-2" color="complementary" className={styles.facetLabel}>
+                      Интерфейс
+                    </Text>
+                    <SegmentedRadioGroup
+                      size="m"
+                      value={gpuInterconnectFacet}
+                      onUpdate={(v) => setGpuInterconnectFacet(v as GpuInterconnectFacet)}
+                    >
+                      {GPU_INTERCONNECT_OPTIONS.map((o) => (
+                        <SegmentedRadioGroup.Option key={o.value} value={o.value}>
+                          <span className={styles.facetOption}>
+                            {o.value === 'all' ? (
+                              <Icon data={Layers3Diagonal} size={14} />
+                            ) : (
+                              <Icon data={Gpu} size={14} />
+                            )}
+                            <span>
+                              {o.title} {gpuInterconnectCounts[o.value]}
+                            </span>
+                          </span>
+                        </SegmentedRadioGroup.Option>
+                      ))}
+                    </SegmentedRadioGroup>
+                  </div>
+                </>
               ) : null}
 
               {category === 'storage' ? (

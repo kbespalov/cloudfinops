@@ -6,7 +6,9 @@ import {
   formatGpuLabel,
   formatGpuTariffName,
   gpuDisplayIdentity,
+  gpuInterconnectFacetOf,
   gpuPriceBasisLabel,
+  meterMatchesGpuInterconnectFacet,
 } from '@/lib/catalog';
 
 function bySku(sku: string) {
@@ -17,17 +19,20 @@ function bySku(sku: string) {
 
 describe('GPU catalog naming', () => {
   it('normalizes Selectel / T1 / VK H200 to NVIDIA · memory · attrs', () => {
-    assert.equal(displayMeterName(bySku('selectel.gpu.h200-141')), 'NVIDIA H200 141 ГБ · ×1');
+    assert.equal(
+      displayMeterName(bySku('selectel.gpu.h200-141')),
+      'NVIDIA H200 141 ГБ · NVLink · ×1',
+    );
     assert.equal(
       displayMeterName(bySku('selectel.gpu.h200-141.preemptible')),
-      'NVIDIA H200 141 ГБ · ×1 · прерываемая',
+      'NVIDIA H200 141 ГБ · NVLink · ×1 · прерываемая',
     );
     assert.equal(displayMeterName(bySku('t1.gpu.h200')), 'NVIDIA H200 141 ГБ · SXM · ×1');
-    assert.equal(displayMeterName(bySku('vk.gpu.h200-1')), 'NVIDIA H200 141 ГБ · ×1');
-    assert.equal(displayMeterName(bySku('vk.gpu.h200-8')), 'NVIDIA H200 141 ГБ · ×8');
+    assert.equal(displayMeterName(bySku('vk.gpu.h200-1')), 'NVIDIA H200 141 ГБ · NVLink · ×1');
+    assert.equal(displayMeterName(bySku('vk.gpu.h200-8')), 'NVIDIA H200 141 ГБ · NVLink · ×8');
     assert.equal(
       displayMeterName(bySku('vk.gpu.h200.unit.synthetic')),
-      'NVIDIA H200 141 ГБ · ×1',
+      'NVIDIA H200 141 ГБ · NVLink · ×1',
     );
     assert.equal(
       formatGpuLabel(bySku('vk.gpu.h200.unit.synthetic')),
@@ -38,7 +43,7 @@ describe('GPU catalog naming', () => {
   it('puts billing basis only in the Состав column, without repeating the card name', () => {
     const unit = bySku('selectel.gpu.h200-141');
     const bundle = bySku('cloudru.gpu.h100-80-pcie-1');
-    assert.equal(displayMeterName(unit), 'NVIDIA H200 141 ГБ · ×1');
+    assert.equal(displayMeterName(unit), 'NVIDIA H200 141 ГБ · NVLink · ×1');
     assert.doesNotMatch(displayMeterName(unit), /только GPU|целиком|\*/);
     assert.equal(formatGpuLabel(unit), 'только GPU');
     assert.equal(formatGpuLabel(bundle), 'целиком · 20 vCPU · 110 GiB');
@@ -90,6 +95,17 @@ describe('GPU catalog naming', () => {
     assert.equal(displayMeterName(bySku('vk.gpu.a100-40-1')), 'NVIDIA A100 40 ГБ · ×1');
     assert.equal(displayMeterName(bySku('t1.gpu.a100')), 'NVIDIA A100 40 ГБ · PCIe · ×1');
     assert.match(displayMeterName(bySku('t1.gpu.metax-c550')), /^Metax C550 64 ГБ/);
+  });
+
+  it('classifies PCIe vs NVLink interconnect facets', () => {
+    assert.equal(gpuInterconnectFacetOf(bySku('cloudru.gpu.h100-80-pcie-1')), 'pcie');
+    assert.equal(gpuInterconnectFacetOf(bySku('cloudru.gpu.h100-80-nvlink-1')), 'nvlink');
+    assert.equal(gpuInterconnectFacetOf(bySku('t1.gpu.h200')), 'nvlink');
+    assert.equal(gpuInterconnectFacetOf(bySku('selectel.gpu.l4-24')), 'pcie');
+    assert.equal(gpuInterconnectFacetOf(bySku('selectel.dedicated.hgx-b300-8')), 'nvlink');
+    assert.equal(meterMatchesGpuInterconnectFacet(bySku('selectel.gpu.l4-24'), 'pcie'), true);
+    assert.equal(meterMatchesGpuInterconnectFacet(bySku('selectel.gpu.l4-24'), 'nvlink'), false);
+    assert.equal(meterMatchesGpuInterconnectFacet(bySku('t1.gpu.h100-sxm5'), 'nvlink'), true);
   });
 
   it('formatGpuTariffName is used for every GPU meter without basis suffix', () => {
