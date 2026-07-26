@@ -8,6 +8,8 @@
 
 Уточнили GPU-рецепты с обязательным precision: V4 Flash — 2×H200 INT4 / 4×H100 FP8 / 4×A100 INT4 (FP8 на 2×H200 не предлагаем); MiniMax — только FP8 (4×H200 min, 8×H100/H200); Nemotron — NVFP4 только на B200, на H100 FP8/BF16.
 
+Аудит популярных self-host моделей: поправили заниженные FP8 footprints — **DeepSeek V3/R1** (~685 GiB, не 350; FP8 → 8×H200), **Qwen3-235B** (~235), **Coder-480B** (~480), **GLM 4.6** (~330; убрали 2×H200 FP8). gpt-oss помечены как MoE+MXFP4; Mistral/Devstral Small на L40S — FP8, не BF16.
+
 ### Каталог / Yandex preemptible GPU (1/2/4)
 
 В Billing API у Yandex есть отдельные preemptible SKU на GPU. Добавили в каталог Gen2 / T4i / V100 Broadwell preemptible; у A100/V100/T4/Platform V4 поправили решётку на **1/2/4** (8× в spot обычно недоступна). Реальная скидка — у A100/V100/T4; у Gen2/T4i/Platform V4 ставка GPU как у on-demand. Добавили vCPU/RAM ставок GPU-платформ (`gpu-platforms.yaml`) и переключатель «Прерываемая» в калькуляторе GPU.
