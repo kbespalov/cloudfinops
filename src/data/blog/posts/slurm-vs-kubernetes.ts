@@ -4,295 +4,530 @@ export const slurmVsKubernetesPost: BlogPost = {
   slug: 'slurm-vs-kubernetes',
   date: '2026-07-26',
   series: 'AI-инфраструктура',
-  title: 'Slurm и Kubernetes: что есть что для обучения и инференса',
-  seoTitle: 'Slurm vs Kubernetes: обучение, инференс и GPU — в чём разница',
+  title: 'Slurm vs Kubernetes: обучение, batch и online inference на GPU',
+  seoTitle: 'Slurm vs Kubernetes для GPU: обучение, gang scheduling и inference',
   description:
-    'Чем Slurm отличается от Kubernetes для обучения LLM и инференса: история HPC-планировщика, gang scheduling, когда нужен каждый инструмент и как выбор бьёт по утилизации GPU.',
+    'Сравнение Slurm и Kubernetes для distributed training, batch workloads и online inference: gang scheduling, Kueue, Volcano, JobSet, Slinky, утилизация GPU и FinOps-выбор стека.',
   lead:
-    '«Поднимем на кубе» — рефлекс эпохи. А в GPU-облаке вам предлагают Slurm. Это не «старый Kubernetes» и не магия из суперкомпьютеров: два разных способа делить дорогие карты. Разбираем на пальцах — для тех, кто только входит в тему.',
+    '64 GPU уже выделены планировщиком, но обучение не делает ни одной итерации: часть процессов ждёт rendezvous, карты заняты, счётчик часов крутится. Разбираем, чем Slurm отличается от Kubernetes для обучения, batch и online inference — и какой выбор снижает простой дорогой capacity.',
   tags: ['ai', 'finops'],
   keywords: [
     'Slurm',
     'Kubernetes',
     'Slurm vs Kubernetes',
-    'обучение LLM',
-    'инференс',
-    'GPU кластер',
+    'distributed training',
     'gang scheduling',
-    'HPC',
-    'планировщик GPU',
+    'Kueue',
+    'Volcano',
+    'JobSet',
+    'Kubeflow Trainer',
+    'GPU scheduler',
+    'inference',
+    'GPU utilization',
+    'обучение LLM',
+    'GPU кластер',
     'AI инфраструктура',
-    'batch scheduler',
   ],
-  readingMinutes: 11,
+  readingMinutes: 17,
   sources: [
-    {
-      label: 'Slurm Workload Manager (Wikipedia)',
-      url: 'https://en.wikipedia.org/wiki/Slurm_Workload_Manager',
-    },
     {
       label: 'SchedMD — документация Slurm',
       url: 'https://slurm.schedmd.com/documentation.html',
     },
     {
-      label: 'Kubernetes — Concepts',
-      url: 'https://kubernetes.io/docs/concepts/',
+      label: 'Slurm Containers Guide',
+      url: 'https://slurm.schedmd.com/containers.html',
     },
     {
-      label: 'Nebius — Slurm vs Kubernetes for model training',
-      url: 'https://nebius.com/blog/posts/model-pre-training/slurm-vs-k8s',
+      label: 'Slinky — Slurm и Kubernetes',
+      url: 'https://slurm.schedmd.com/slinky.html',
     },
     {
-      label: 'ZenML — Slurm vs Kubernetes for ML teams',
-      url: 'https://www.zenml.io/blog/slurm-vs-kubernetes',
+      label: 'Kubernetes — Gang Scheduling (alpha)',
+      url: 'https://kubernetes.io/docs/concepts/scheduling-eviction/gang-scheduling/',
     },
     {
-      label: 'HPCwire — Slurm vs Kubernetes in the age of AI',
-      url: 'https://www.hpcwire.com/2026/05/15/slurm-vs-kubernetes-in-the-age-of-ai/',
+      label: 'Kubernetes — PodGroup API',
+      url: 'https://kubernetes.io/docs/concepts/workloads/podgroup-api/',
+    },
+    {
+      label: 'Kubernetes v1.34: DRA graduated to GA',
+      url: 'https://kubernetes.io/blog/2025/09/01/kubernetes-v1-34-dra-updates/',
+    },
+    {
+      label: 'Kubernetes v1.36: Workload-Aware Scheduling',
+      url: 'https://kubernetes.io/blog/2026/05/13/kubernetes-v1-36-advancing-workload-aware-scheduling/',
+    },
+    {
+      label: 'Kueue — All-or-nothing Scheduling',
+      url: 'https://kueue.sigs.k8s.io/docs/concepts/all_or_nothing/',
+    },
+    {
+      label: 'Volcano — PodGroup',
+      url: 'https://volcano.sh/docs/concepts/podgroup/',
+    },
+    {
+      label: 'JobSet overview',
+      url: 'https://jobset.sigs.k8s.io/docs/overview/',
+    },
+    {
+      label: 'Kubeflow Trainer v2 — миграция',
+      url: 'https://www.kubeflow.org/docs/components/trainer/operator-guides/migration/',
+    },
+    {
+      label: 'LeaderWorkerSet',
+      url: 'https://lws.sigs.k8s.io/',
     },
   ],
   body: [
     {
       type: 'p',
-      text: 'Представьте диалог на стендапе. Backend: «Инференс поднимем в Kubernetes, как всё остальное». Data Science: «А обучение у нас на Slurm, иначе multi-node не взлетит». Product: «Это одно и то же, нет?» Все трое кивают с разной степенью уверенности. Через месяц в биллинге горят GPU, а «то самое обучение» то ждёт очередь, то держит половину нод и не стартует.',
+      text: 'Кластер выделил восемь узлов по восемь GPU. В мониторинге карты «заняты». В логах — таймаут на rendezvous: часть ranks так и не поднялась. Полезная работа равна нулю, а биллинг уже считает GPU-часы.',
     },
     {
       type: 'p',
-      text: 'Если вы только заходите в AI-инфраструктуру, путаница закономерна. В интернете Kubernetes — ответ на любой вопрос про оркестрацию. В прайсах GPU-облаков и в лабораториях рядом всплывает **Slurm**. Кто-то думает: «устаревший куб». Кто-то — «магия суперкомпьютеров, нам рано». Оба мифа мешают выбрать стек и понять, **за что вы платите**, когда карта занята, а работы нет.',
+      text: 'Такая картина чаще всего возникает не из‑за «плохого фреймворка», а из‑за несовпадения контракта планировщика с моделью нагрузки. Крупное синхронное обучение хочет группу ресурсов сразу. Онлайн‑сервис хочет непрерывно доступные реплики. Batch inference — очередь конечных задач. Один и тот же набор GPU может обслуживать все три режима, но один и тот же control plane делает это с разной ценой.',
     },
     {
       type: 'p',
-      text: 'Ниже — без религии «наш стек лучше». Сначала аналогия, потом история, потом обучение vs инференс, потом где утекают деньги. К концу должно стать ясно: это не два бренда одного инструмента, а два разных контракта с железом.',
+      text: 'Ниже — инженерное сравнение **Slurm** и **Kubernetes** для distributed training, batch workloads и online inference. После статьи можно ответить: какой стек ближе к вашей нагрузке, где хватит ванильного kube-scheduler, а где нужны Kueue, Volcano, JobSet или Slinky — и где именно теряется утилизация GPU.',
     },
 
-    {type: 'h2', text: 'Аналогия на минуту: ресторан и такси'},
+    {type: 'h2', text: 'Коротко: если нужна только суть'},
     {
-      type: 'p',
-      text: '**Slurm** ближе к ресторану с бронью большого зала. Вы говорите: «мне восемь столов на двое суток, иначе банкет не состоится». Пока зал не собран целиком — гостей не рассаживают. Зато когда всё готово, вы сидите плотно и никто не отбирает стул посередине ужина.',
-    },
-    {
-      type: 'p',
-      text: '**Kubernetes** ближе к парку такси и диспетчеру. Машины приезжают и уезжают, кто-то сломался — подменяют, вечером спрос вырос — подали ещё. Вам не нужен «зал на 64 человека сразу»; вам нужно, чтобы **сервис** был доступен, масштабировался и переживал падения отдельных водителей.',
-    },
-    {
-      type: 'p',
-      text: 'Обучение большой модели часто — банкет: либо весь комплект GPU, либо бессмысленный простой. Онлайн-инференс — такси: latency, реплики, rolling update. Когда банкет пытаются устроить через диспетчер такси «по одной машине», получаются красивые YAML и грустный utilization.',
+      type: 'ul',
+      items: [
+        '**Slurm** — workload manager и scheduler: очередь, выделение ресурсов (allocation), fair-share, backfill, preemption, topology. Сильная сторона — batch и крупный multi-node train.',
+        '**Kubernetes** — оркестратор желаемого состояния: Pod, Deployment, Service, probes, rolling update, autoscaling. Сильная сторона — online serving и облачный GitOps‑контур.',
+        'Формула «Slurm = train, Kubernetes = inference» — удобная эвристика, но не правило. На Kubernetes успешно учат; на Slurm запускают и долгоживущие процессы, и batch inference.',
+        'Ванильный kube-scheduler планирует Pod по одному. Gang / all-or-nothing семантика появляется через **alpha**‑функции Kubernetes (с 1.35), через Kueue/Volcano или через альтернативный scheduler.',
+        'Kueue и Volcano — разные механизмы. Kueue ближе к quota / placement-aware admission и timeout-based eviction. Volcano как batch scheduler даёт gang через PodGroup / minMember.',
+        'FinOps‑боль — не логотип в README, а GPU, которые уже выделены или удерживаются, но не выполняют полезную работу.',
+      ],
     },
 
-    {type: 'h2', text: 'Откуда взялся Slurm (и почему он внезапно про LLM)'},
+    {type: 'h2', text: 'Что именно планирует и контролирует Slurm'},
     {
       type: 'p',
-      text: '**Slurm** родился не в эпоху ChatGPT. В начале 2000-х в Lawrence Livermore National Laboratory нужен был свободный способ делить суперкомпьютер между тысячами учёных: чья задача займёт узлы, на сколько часов, с каким приоритетом. Официально имя разворачивали в *Simple Linux Utility for Resource Management*; дальше проект вырос в полноценный workload manager. Сегодня его пилит SchedMD, а на заметной доле машин из TOP500 именно Slurm решает, кто следующий в очереди.',
-    },
-    {
-      type: 'aside',
-      label: 'Про название',
-      text: '«Slurm» — газировка из Futurama. Расшифровку SLURM придумали уже после того, как имя прижилось. Если кто-то на собеседовании с серьёзным лицом рассказывает про «глубокий смысл аббревиатуры» — можно мягко улыбнуться.',
+      text: 'Slurm (Simple Linux Utility for Resource Management по поздней расшифровке; имя появилось раньше аббревиатуры) — открытый workload manager. Его развивает SchedMD (с 2025–2026 в составе NVIDIA). На дату публикации актуальная ветка — **26.05** (релиз 26.05.2 от июля 2026).',
     },
     {
       type: 'p',
-      text: 'Ментальная модель за двадцать лет почти не изменилась — и в этом сила. Есть **пул узлов** (часто bare metal, одинаковые полки). Пользователь кладёт **job** в очередь. Планировщик смотрит приоритеты, fair-share («чтобы одна группа не сожрала кластер»), backfill («пока слон ждёт 64 GPU, пропихнем мышей на дырки»). Когда ресурсы собраны — job получает их **целиком** на отведённое время.',
+      text: 'По документации SchedMD у Slurm три базовые функции: выделить ресурсы пользователю на время, запустить и контролировать работу на этих ресурсах, разрешать конкуренцию через очередь и политики. Это не «просто очередь» и не только bare metal.',
     },
     {
       type: 'p',
-      text: 'Интерфейс до сих пор пугает веб-разработчика и радует HPC-инженера:',
+      text: 'Полезный словарь:',
     },
     {
       type: 'ul',
       items: [
-        '`sbatch` — «вот скрипт, поставь в очередь».',
-        '`salloc` — «выдели мне узлы, поработаю интерактивно».',
-        '`srun` — «запусти шаг на уже выделенных ресурсах» (часто вместе с MPI/torchrun).',
+        '**Node** — вычислительный узел.',
+        '**Partition** — логическая группа узлов с лимитами и ACL; ближе к «очереди с политикой», чем к Kafka‑топику.',
+        '**Job** — заявка на ресурсы и работу; после выделения получает **allocation**.',
+        '**Job step** — запуск задач внутри уже выделенного allocation (часто через `srun`).',
+        '**Task / rank** — единица параллельной работы внутри step; в distributed training rank обычно соответствует процессу фреймворка.',
+        '**TRES / GRES** — учитываемые ресурсы (CPU, память, GPU и др.).',
+        '**Priority, fair-share, backfill, preemption, reservation, requeue** — механизмы очереди и политики кластера.',
       ],
     },
     {
+      type: 'p',
+      text: 'Важная оговорка: allocation не гарантирует успешное завершение. Job может упасть, попасть под preemption, быть отменён, перезапущен (`requeue`) или восстановлен из checkpoint — в зависимости от конфигурации и приложения. Slurm обещает управляемое выделение и запуск, а не «успех обучения».',
+    },
+    {
+      type: 'p',
+      text: 'Контейнеры поддерживаются. Встроенный путь — OCI через `oci.conf` и `--container`. Отдельно распространены SPANK‑плагины вроде **Pyxis + Enroot**. Утверждение «Slurm не умеет контейнеры» устарело; другое дело, что UX и экосистема отличаются от Kubernetes.',
+    },
+    {
+      type: 'p',
+      text: 'Типичный пользовательский интерфейс:',
+    },
+    {
+      type: 'ul',
+      items: [
+        '`sbatch` — поставить batch job в очередь.',
+        '`salloc` — получить allocation интерактивно.',
+        '`srun` — запустить job step на выделенных ресурсах.',
+      ],
+    },
+    {
+      type: 'p',
+      text: 'Упрощённая, но рабочая схема multi-node запуска PyTorch через Slurm и `torchrun`. Один task на узел поднимает `torchrun`, который создаёт восемь процессов на узле; world size = 8 узлов × 8 процессов = 64. Rendezvous — на первом узле allocation:',
+    },
+    {
       type: 'pre',
-      text: `# Не манифест сервиса — заявка на банкет
+      text: `#!/bin/bash
 #SBATCH --job-name=train-llm
 #SBATCH --nodes=8
+#SBATCH --ntasks-per-node=1
 #SBATCH --gpus-per-node=8
 #SBATCH --time=48:00:00
 #SBATCH --partition=gpu
 
-srun torchrun --nproc_per_node=8 train.py`,
+# Упрощённая схема: один torchrun на узел, 8 процессов на узел.
+export MASTER_ADDR=$(scontrol show hostnames "$SLURM_JOB_NODELIST" | head -n 1)
+export MASTER_PORT=29500
+
+srun --ntasks-per-node=1 --gpus-per-node=8 \\
+  torchrun \\
+    --nnodes="$SLURM_NNODES" \\
+    --nproc_per_node=8 \\
+    --rdzv_backend=c10d \\
+    --rdzv_endpoint="\${MASTER_ADDR}:\${MASTER_PORT}" \\
+    --rdzv_id="$SLURM_JOB_ID" \\
+    train.py`,
     },
     {
       type: 'p',
-      text: 'Почему это внезапно про LLM? Потому что крупное обучение снова стало похоже на классический HPC: много узлов, синхронные collective-операции, чувствительность к сети между GPU, дни и недели wall-clock. Индустрия не «вернулась в прошлое» — она снова упёрлась в задачу, для которой очереди и gang scheduling писали двадцать лет.',
+      text: 'Без `nnodes`, `nproc_per_node`, endpoint rendezvous и согласованного размещения tasks по узлам конструкция вида `srun torchrun --nproc_per_node=8 train.py` для multi-node обычно недостаточна: процессы не договорятся о world size и ranks.',
     },
 
-    {type: 'h2', text: 'А Kubernetes — это про другое обещание'},
+    {type: 'h2', text: 'Что именно планирует и контролирует Kubernetes'},
     {
       type: 'p',
-      text: '**Kubernetes** вырос из внутреннего оркестратора Google и с 2014-го живёт как открытый проект (CNCF). Его суперсила — не «выдать 64 GPU одной научной группе», а держать **желаемое состояние**: «всегда три реплики API», «если под умер — подними новый», «если RPS вырос — докинь подов».',
+      text: 'Kubernetes держит **желаемое состояние**. Базовая единица планирования — **Pod**. Вокруг него — Deployment, StatefulSet, Job, Service, Ingress, HPA/VPA, операторы. Control plane сверяет факт с манифестом: упавший Pod нужно заменить, реплики — довести до числа, сервис — оставить доступным.',
     },
     {
       type: 'p',
-      text: 'Единица мира — **pod**. Вокруг — Deployment, Service, Ingress, HPA, куча операторов. Философия: control plane постоянно сверяет факт с манифестом. Это идеально для микросервисов и всего, что должно **жить бесконечно** с точки зрения пользователя.',
+      text: 'Это другая модель контракта. Kubernetes силён там, где нагрузка — долгоживущий сервис с probes, rolling update и autoscaling. GPU он научился видеть давно через device plugin (`nvidia.com/gpu` и аналоги). С Kubernetes **1.34** ядро **Dynamic Resource Allocation (DRA)** стало **stable (GA)**: workload описывает требования к устройствам через ResourceClaim, драйверы публикуют атрибуты, scheduler учитывает их при размещении. Часть расширений DRA в 1.35–1.36 ещё в beta/alpha — зрелость нужно смотреть по конкретной функции, а не по слову «DRA» целиком.',
     },
     {
       type: 'p',
-      text: 'GPU сюда пришли позже. Сначала device plugin («на ноде есть N штук nvidia.com/gpu»), потом более богатые модели вроде DRA. Важно для новичка: **куб не родился GPU-first**. Он научился видеть карты; семантика «запусти распределённый train только когда все 64 GPU свободны одновременно» — уже другой спорт. Её добавляют надстройками.',
+      text: 'Но DRA отвечает на вопрос «какое устройство и с какими свойствами», а не автоматически решает gang scheduling. Базовый kube-scheduler по умолчанию всё ещё оценивает Pod независимо. Групповая семантика — отдельный слой.',
     },
     {
-      type: 'quote',
-      text: 'Грубо: Kubernetes обещает «сервис будет доступен». Slurm обещает «когда дойдёт очередь — получишь свой кусок кластера целиком и доработаешь job».',
+      type: 'aside',
+      label: 'Слои, которые нельзя смешивать',
+      text: 'Базовый Kubernetes ≠ kube-scheduler plugins ≠ alpha/beta feature gates ≠ SIG‑проекты (JobSet, Kueue) ≠ альтернативные scheduler (Volcano) ≠ vendor‑решения. Фраза «Kubernetes не умеет X» почти всегда требует уточнения версии и компонента.',
     },
 
-    {type: 'h2', text: 'Таблица, чтобы не смешивать словари'},
+    {type: 'h2', text: 'Почему крупное синхронное обучение требует особой семантики'},
+    {
+      type: 'p',
+      text: 'Возьмём классический синхронный DDP на 8 узлах × 8 GPU. Обычно это 64 процесса (по одному CUDA‑устройству на процесс), `world_size=64`, у каждого процесса свой `rank`, общий rendezvous endpoint. На каждой итерации ranks обмениваются градиентами через NCCL; для multi-node критичны Ethernet/RoCE/InfiniBand и топология GPU (NVLink внутри узла, сеть между узлами).',
+    },
+    {
+      type: 'p',
+      text: 'Если стартовали только 48 из 64 процессов, синхронный train часто не делает полезных шагов: либо висит на init/rendezvous, либо падает. При этом уже запущенные процессы могут удерживать GPU. С точки зрения планировщика ресурсы «заняты»; с точки зрения модели — простой.',
+    },
+    {
+      type: 'p',
+      text: 'Не любое распределённое обучение требует жёсткого одновременного старта всех ranks на весь срок жизни job. Есть elastic и fault-tolerant режимы, checkpoint/restart, изменение world size, короткие fine-tune на одном‑двух узлах. Но для крупного синхронного pre-training all-or-nothing при старте — типичное и дорогое требование.',
+    },
+    {
+      type: 'p',
+      text: 'Именно здесь проявляется разница механизмов:',
+    },
+    {
+      type: 'ul',
+      items: [
+        'независимое планирование Pod;',
+        'quota-based admission («квота на весь workload есть»);',
+        'placement-aware admission («квота есть и физически помещается»);',
+        'timeout-based eviction («не все Pod Ready — выселить и вернуть в очередь»);',
+        'строгий gang scheduling с атомарным bind группы;',
+        'capacity provisioning до допуска workload (например, через ProvisioningRequest).',
+      ],
+    },
+
+    {
+      type: 'h2',
+      text: 'Что умеет экосистема Kubernetes для batch и training на середину 2026',
+    },
+    {
+      type: 'h3',
+      text: 'Нативный gang scheduling — alpha',
+    },
+    {
+      type: 'p',
+      text: 'С Kubernetes **1.35** в документации описан **Gang Scheduling** как **alpha** (feature gate `GangScheduling`, по умолчанию выключен). Он опирается на **PodGroup API** (`scheduling.k8s.io/v1alpha2`) и связанный Workload API. В **1.36** архитектуру уточнили: Workload — шаблон политики, PodGroup — runtime‑объект группы; у kube-scheduler появился отдельный цикл планирования PodGroup и первые шаги topology-aware scheduling / workload-aware preemption (тоже за feature gates).',
+    },
+    {
+      type: 'p',
+      text: 'Это важный сдвиг: больше нельзя честно писать «в Kubernetes нет gang scheduling» без оговорки. Но на дату публикации это **не production-default**: alpha, opt-in, ограничения по формам workload ещё снимаются. Для большинства кластеров рабочий путь по-прежнему — Kueue, Volcano, JobSet + политики очереди или внешний scheduler.',
+    },
+
+    {type: 'h3', text: 'Kueue: admission, а не «ещё один Volcano»'},
+    {
+      type: 'p',
+      text: '**Kueue** (SIG‑проект) управляет допуском Job/Workload в кластер: LocalQueue → ClusterQueue, резервирование квоты, приоритеты, preemption на уровне очередей, MultiKueue, интеграция с autoscaling через AdmissionCheck / ProvisioningRequest.',
+    },
+    {
+      type: 'p',
+      text: 'Официальная документация прямо называет all-or-nothing «приближением» gang scheduling и раскладывает его на слои:',
+    },
+    {
+      type: 'ol',
+      items: [
+        '**Quota-based admission** — workload не снимают с suspend, пока нельзя зарезервировать квоту для всех pod sets сразу (partial admission — отдельная опция).',
+        '**Topology-Aware Scheduling (TAS)** — перед admission проверяется, что Pod реально помещаются в topology domains; иначе «8 GPU в квоте» могут оказаться размазаны по узлам так, что крупный Pod никогда не встанет.',
+        '**waitForPodsReady** — после admission, если не все Pod стали Ready за timeout, workload выселяют и возвращают в очередь; `blockAdmission` снижает риск взаимной блокировки двух частично стартовавших job.',
+        '**ProvisioningRequest** — для автоскейла capacity: не запускать работу, пока провайдер не подтвердил или не попытался выделить узлы.',
+      ],
+    },
+    {
+      type: 'p',
+      text: 'Итого: Kueue отлично закрывает очередь, квоты и admission‑политику. Это не то же самое, что атомарный gang bind альтернативного scheduler, хотя на практике комбинация quota + TAS + waitForPodsReady часто достаточна.',
+    },
+
+    {type: 'h3', text: 'Volcano: batch scheduler с PodGroup'},
+    {
+      type: 'p',
+      text: '**Volcano** — отдельный batch system для Kubernetes: собственный scheduler, очереди, **PodGroup**, `minMember` / `minAvailable`. Если кластер не может удовлетворить минимум группы, Volcano не стартует членов группы по одному. Это ближе к классической gang‑семантике HPC‑планировщика, но ценой ещё одного scheduler в control plane и своей операционной модели.',
+    },
+
+    {type: 'h3', text: 'JobSet, LeaderWorkerSet, Kubeflow Trainer'},
+    {
+      type: 'ul',
+      items: [
+        '**JobSet** (`jobset.sigs.k8s.io`, API **v1alpha2**) — группа Kubernetes Job как единый distributed workload; удобная база для training/HPC на Kubernetes.',
+        '**LeaderWorkerSet** — API для групп leader/worker, особенно multi-host **inference**; API group `leaderworkerset.x-k8s.io/v1`.',
+        '**Kubeflow Trainer v2** переходит от framework‑specific CRD (`PyTorchJob`, `TFJob`, `MPIJob`) к унифицированному **TrainJob** (`trainer.kubeflow.org/v1alpha1`) поверх JobSet. Интеграции с Trainer v1 в экосистеме уже помечают как deprecated.',
+      ],
+    },
+    {
+      type: 'p',
+      text: 'Практический вывод: «мы учим на Kubernetes» почти всегда значит «Kubernetes плюс слой admission/orchestration». Вопрос не в возможности, а в том, сколько семантики Slurm вы готовы собрать сами.',
+    },
+
+    {type: 'h2', text: 'Где Slurm удобнее, а где Kubernetes'},
+    {
+      type: 'p',
+      text: 'Slurm обычно выигрывает, когда доминируют конечные job с жёсткими требованиями к комплекту ресурсов: multi-node pre-training, тяжёлый synchronous fine-tune, исследовательский HPC‑контур, привычный UX `sbatch`/`srun`, зрелые fair-share и backfill на общем кластере.',
+    },
+    {
+      type: 'p',
+      text: 'Kubernetes обычно выигрывает, когда доминирует продуктовый контур: online API, canary/rolling update, service mesh/gateway, GitOps, единый observability‑стек с остальными микросервисами, автоскейл реплик по нагрузке.',
+    },
+    {
+      type: 'ul',
+      items: [
+        '**Крупный multi-node / долгий pre-train** — очередь и gang/all-or-nothing; часто Slurm или Kubernetes с явным batch‑слоем.',
+        '**Короткий fine-tune на 1–2 узлах в уже живом GitOps** — Kubernetes обычно достаточен.',
+        '**Ноутбуки + ночные batch + редкий крупный train** — либо Kubernetes с Kueue/Volcano, либо честный dual-stack.',
+        '**Единый control plane любой ценой** — возможно, но сложность никуда не исчезает: она переезжает в операторы, feature gates и политики admission.',
+      ],
+    },
+
+    {type: 'h2', text: 'Online и batch inference — разные задачи'},
+    {
+      type: 'p',
+      text: 'Слово «инференс» в ТЗ стоит уточнять сразу.',
+    },
+    {
+      type: 'ul',
+      items: [
+        '**Online / latency-sensitive serving** — chat API, поиск, стриминг токенов, SLA по p95/p99. Здесь естественны Deployment/LeaderWorkerSet, Service, readiness/liveness, rolling update, HPA. Kubernetes — распространённая, но не единственная база.',
+        '**Batch / offline inference** — прогон корпуса, пересчёт эмбеддингов, ночной rerank. Это очередь конечных задач: спокойно живёт и как Slurm job, и как Job/CronJob/JobSet в Kubernetes.',
+        '**Stateful / multi-host serving** — шардированная модель на несколько узлов. На Kubernetes для этого активно используют LeaderWorkerSet и родственные API; на Slurm тоже можно держать долгоживущие процессы, но эксплуатационная модель (деплой, прогрев, drain, автоскейл) будет другой.',
+      ],
+    },
+    {
+      type: 'p',
+      text: 'Slurm умеет долгоживущие процессы. Слабое место не в «невозможности inference», а в том, что его основной контракт — allocation с лимитом времени и политиками очереди, а не Deployment с probes и прогрессивным rollout. Для user-facing API это обычно дороже в сопровождении.',
+    },
+
+    {type: 'h2', text: 'Отказоустойчивость: checkpoint, preemption, recovery'},
+    {
+      type: 'p',
+      text: 'В training‑контуре отказоустойчивость почти всегда строится вокруг **checkpoint/restart**, а не вокруг «Pod сам воскреснет и продолжит ту же итерацию». И Slurm, и Kubernetes могут перезапустить задачу; вопрос — сохранил ли framework состояние и согласованы ли ranks после рестарта.',
+    },
+    {
+      type: 'ul',
+      items: [
+        '**Slurm**: preemption, requeue, time limit, reservation; поведение зависит от Partition и Priority. Падение узла или вытеснение job — штатный сценарий для зрелого HPC‑кластера.',
+        '**Kubernetes**: RestartPolicy, Job backoff, PodFailurePolicy, eviction; для группы нужна политика уровня JobSet/Trainer/Kueue (`recoveryTimeout` и аналоги).',
+        '**Elastic training** снижает требование «все 64 ranks или ничего на весь срок», но усложняет код и воспроизводимость.',
+      ],
+    },
+    {
+      type: 'p',
+      text: 'Для online inference цель другая: пользователь не должен заметить смерть реплики. Здесь сильны health checks, pod disruption budgets и постепенный rollout — то, под что Kubernetes проектировали изначально.',
+    },
+
+    {
+      type: 'h2',
+      text: 'FinOps: queue time, fragmentation и полезная работа GPU',
+    },
+    {
+      type: 'p',
+      text: 'Планировщик не меняет прайс карты. Он меняет, какая доля оплаченного времени превращается в полезные kernels. Различайте уровни:',
+    },
+    {
+      type: 'ul',
+      items: [
+        'GPU зарезервирована scheduler / квотой;',
+        'GPU выделена процессу или контейнеру;',
+        'создан CUDA context;',
+        'идут полезные kernels;',
+        'занята память GPU;',
+        'SM / tensor-core utilization;',
+        'доля wall-clock, когда workload реально обучается или обслуживает запросы.',
+      ],
+    },
+    {
+      type: 'p',
+      text: 'Pending workload сам по себе не всегда создаёт расход. В on-demand облаке часто платят за уже запущенные инстансы и удерживаемые GPU. В reserved / dedicated кластере плата идёт за capacity независимо от очереди. В managed training стоимость иногда начинается только после фактического выделения. Модель поставки важнее лозунга «очередь бесплатна».',
+    },
+    {
+      type: 'p',
+      text: 'Типичные дыры:',
+    },
+    {
+      type: 'ol',
+      items: [
+        '**Частичный старт** — 48 из 64 GPU удерживаются, синхронный train не идёт.',
+        '**Фрагментация** — суммарно GPU хватает, но ни один комплект узлов не собирается под topology/size constraints.',
+        '**Очередь без fair-share/backfill** — длинные эксперименты блокируют короткие; или наоборот, «слоны» голодают.',
+        '**Train и online inference в одном пуле без изоляции** — p99 сервиса и сходимость обучения мешают друг другу.',
+        '**Dual-stack без capacity planning** — два operational tax и два разрозненных пула GPU.',
+      ],
+    },
+    {
+      type: 'p',
+      text: 'Сверить публичные тарифы GPU в облаках России удобно в [каталоге GPU](/gpu) и [калькуляторе](/calculator). Цифра за карту — одно. Вопрос, какой планировщик не даст ей простаивать в полузапущенном train, — другое.',
+    },
+
+    {type: 'h2', text: 'Dual-stack и современные мосты'},
+    {
+      type: 'p',
+      text: 'Паттерн **train на Slurm, serve на Kubernetes** остаётся нормальной индустриальной схемой. Миры сближаются, но не сливаются в один простой продукт.',
+    },
+    {
+      type: 'p',
+      text: '**Slinky** (SchedMD) — набор проектов интеграции:',
+    },
+    {
+      type: 'ul',
+      items: [
+        '**slurm-operator** — запускать и сопровождать кластер Slurm на Kubernetes (демоны как Pod/CRD), сохраняя пользовательский UX Slurm.',
+        '**slurm-bridge** — использовать Slurm как scheduler для выбранных Kubernetes workload (Pod/Job/JobSet/LeaderWorkerSet): Kubernetes подаёт заявку, Slurm решает placement, затем pods bindятся на выделенные узлы.',
+      ],
+    },
+    {
+      type: 'p',
+      text: 'Это снижает стоимость «двух миров», но добавляет компоненты, версии и failure modes. Единый control plane — не бесплатная абстракция.',
+    },
+
+    {type: 'h2', text: 'Матрица выбора'},
     {
       type: 'table',
-      caption: 'Одни и те же слова — разный смысл.',
-      headers: ['', 'Slurm', 'Kubernetes'],
+      caption: 'Сравнение по эксплуатационным осям. «Через компонент» значит: не ванильный kube-scheduler / не дефолтный Slurm без настройки.',
+      headers: ['Ось', 'Slurm', 'Kubernetes'],
       rows: [
-        ['Кто ты', 'Workload manager / batch scheduler', 'Container orchestrator'],
-        ['Главная сущность', 'Job в очереди', 'Pod (и контроллеры вокруг)'],
         [
-          'Сильная сторона',
-          'Gang scheduling, fair-share, backfill, топология',
-          'HA, автоскейл, экосистема, GitOps',
+          'Основная модель',
+          'Batch job + allocation на время',
+          'Желаемое состояние сервисов и контроллеров',
         ],
         [
-          'Слабое место',
-          'User-facing API с «пятью девятками»',
-          'HPC-batch «из коробки» для крупного multi-node',
+          'Единица планирования',
+          'Job / step / task на nodes + TRES/GRES',
+          'Pod; группы — через PodGroup/JobSet/операторы',
         ],
         [
-          'Как выглядит работа',
-          'Короткий sbatch / shell',
-          'YAML, helm, операторы, control plane',
+          'Queue и admission',
+          'Partition, priority, QOS, reservations',
+          'Через Kueue / Volcano queues; иначе etcd+scheduler',
         ],
         [
-          'Что болит при ошибке',
-          'Job упал — перезапустил с чекпоинта',
-          'Под умер — пользователь не должен заметить',
+          'Gang / all-or-nothing',
+          'Нативная модель выделения комплекта ресурсов',
+          'Alpha GangScheduling; иначе Kueue/Volcano/мосты',
+        ],
+        [
+          'Topology awareness',
+          'Зрелые HPC‑механизмы и GRES/topology плагины',
+          'DRA + scheduler plugins; TAS в Kueue; alpha в 1.36',
+        ],
+        [
+          'Fair-share и приоритеты',
+          'Встроенные multifactor / fair-share',
+          'PriorityClass + политики Kueue/Volcano',
+        ],
+        [
+          'Preemption',
+          'Штатно настраивается',
+          'Есть; workload-aware — за feature gates / политиками',
+        ],
+        [
+          'Autoscaling capacity',
+          'Возможен, но не «родной» облачный UX',
+          'Cluster Autoscaler, ProvisioningRequest, node pools',
+        ],
+        [
+          'Failure recovery',
+          'requeue, checkpoint/restart приложения',
+          'контроллеры + JobSet/Trainer политики + checkpoints',
+        ],
+        [
+          'Long-running services',
+          'Возможно, эксплуатационно менее удобно',
+          'Сильная сторона (Deployment/Service/probes)',
+        ],
+        [
+          'Distributed training',
+          'Очень сильная сторона',
+          'Сильно с JobSet/Trainer + admission/gang слоем',
+        ],
+        [
+          'Online inference',
+          'Возможно, редко оптимальный UX',
+          'Сильная сторона; multi-host — LWS и аналоги',
+        ],
+        [
+          'API и UX',
+          'sbatch/salloc/srun, REST/API опционально',
+          'YAML/API/GitOps, kubectl, операторы',
+        ],
+        [
+          'Контейнеры',
+          'OCI, Pyxis/Enroot и др.',
+          'Базовая модель runtime',
+        ],
+        [
+          'Observability',
+          'sacct/sstat + внешний стек',
+          'Метрики/логи/traces экосистемы cloud-native',
+        ],
+        [
+          'Operational complexity',
+          'Высокая в HPC‑кластере, привычная HPC‑команде',
+          'Высокая в platform‑команде; растёт с batch‑надстройками',
         ],
       ],
     },
-    {
-      type: 'aside',
-      label: 'Gang scheduling — слово, которое стоит запомнить',
-      text: 'Распределённый train на 8 узлах × 8 GPU = 64 процесса, которые должны стартовать **вместе**. Slurm резервирует полный блок, потом запускает. Ванильный kube-scheduler кладёт поды по одному: шесть подов уже сидят на GPU и ждут двух соседей. Карты «заняты», обучения нет, счётчик часов крутится. Две такие job могут ещё и взаимно заблокировать друг друга. Это не баг куба — это другая модель планирования.',
-    },
 
-    {type: 'h2', text: 'Обучение: где Slurm обычно выигрывает спор'},
-    {
-      type: 'p',
-      text: 'Возьмите multi-node pre-train или тяжёлый distributed fine-tune. Каждую итерацию процессы синхронизируются (all-reduce и компания). Если один ранг не встал — остальные либо висят, либо падают. Сеть между нодами и топология GPU (NVLink, какой GPU с каким «дружит») перестают быть мелочью.',
-    },
-    {
-      type: 'p',
-      text: 'Здесь Slurm совпадает с задачей почти один в один: очередь, выделение целиком, политики справедливости между командами, привычный HPC-UX. Поэтому в разговорах про «серьёзный train» слово Slurm звучит так часто — не из ностальгии, а из прагматики.',
-    },
-    {
-      type: 'p',
-      text: 'Значит ли это, что на Kubernetes нельзя учить? Нет. Учат — и успешно. Для этого ставят Training Operator / PyTorchJob / MPI Job, Ray, а для очередей и gang scheduling — **Volcano**, **Kueue**, KAI Scheduler и родня. На Хабре как раз полно разборов «как мы пилили GPU-планировщик в кубе». Читайте их *после* этой статьи: станет понятно, **какую дыру** они закрывают.',
-    },
-    {
-      type: 'ul',
-      items: [
-        '**Крупный multi-node / долгий pre-train** — мыслите очередью и gang scheduling (часто = Slurm или очень похожий HPC-слой).',
-        '**Короткий fine-tune, 1–2 узла, команда уже в GitOps** — Kubernetes обычно нормальный дом.',
-        '**R&D-каша** (ноутбуки + ночные batch + редкий «слон») — либо K8s с batch-надстройками, либо честный dual-stack.',
-      ],
-    },
-    {
-      type: 'aside',
-      label: 'Практический нюанс',
-      text: '«Мы учим на Kubernetes» часто значит «мы учим на Kubernetes **плюс** оператор/планировщик, который добавил часть семантики Slurm». Это ок. Просто не путайте ванильный kube-scheduler с «из коробки готов к 64-GPU job».',
-    },
-
-    {type: 'h2', text: 'Инференс: тут куб почти всегда роднее'},
-    {
-      type: 'p',
-      text: 'Онлайн-инференс — это не «посчитать ночью и выйти». Это сервис с SLA: p95 latency, rolling update без даунтайма, health checks, автоскейл по очереди или RPS, нормальный вход через API gateway, метрики, алерты. Kubernetes для этого писали десятилетие.',
-    },
-    {
-      type: 'p',
-      text: 'Выжать из чистого Slurm «вечный» user-facing API можно в теории — как можно ездить на тракторе в город. Трактор мощный. Просто руль и тормоза от другого мира: планировщик думает конечными job с walltime, а не Deployment’ами, которые должны жить месяцами.',
-    },
-    {
-      type: 'p',
-      text: 'Важная развилка в слове «инференс»:',
-    },
-    {
-      type: 'ul',
-      items: [
-        '**Online** (чат, API, поиск) → почти всегда Kubernetes / managed serving поверх него.',
-        '**Offline / batch** (прогнать миллион документов, пересчитать эмбеддинги) → очередь задач; спокойно живёт и на Slurm, и как Job/CronJob в кубе.',
-      ],
-    },
-    {
-      type: 'p',
-      text: 'Если в ТЗ написано «инференс», уточните, какой из двух. Половина споров «Slurm vs K8s» рассыпается после этого вопроса.',
-    },
-
-    {type: 'h2', text: 'FinOps: планировщик не меняет прайс карты — он меняет, сколько карт работают'},
-    {
-      type: 'p',
-      text: 'H100 в прайсе стоит сколько стоит. Обидно платить за неё, когда она «занята ожиданием». Типичные дыры:',
-    },
+    {type: 'h2', text: 'Как выбрать'},
     {
       type: 'ol',
       items: [
-        '**Частичное выделение** — взяли 48 из 64 GPU, ждём ещё 16. Сорок восемь карт греют воздух. Классика без gang scheduling.',
-        '**Очередь без политики** — одна группа забила кластер бесконечными экспериментами; «слоны» без backfill душат мелкие job; fair-share никто не настроил.',
-        '**Dual-stack без capacity planning** — train на Slurm, serve на Kubernetes. Паттерн нормальный и частый. Но без явных квот GPU «залипают» в одном контуре, пока второй простаивает. Вы платите за два operational tax и ещё за разрозненные пулы.',
-        '**Train и online inference на одних узлах без изоляции** — красиво на слайде «единый кластер», больно в p99 и в нервах on-call.',
-      ],
-    },
-    {
-      type: 'p',
-      text: 'Поэтому выбор оркестратора — часть FinOps, даже если в инвойсе нет строки «Slurm». Он определяет, превращается ли аренда GPU в полезную работу или в дорогой простой.',
-    },
-    {
-      type: 'p',
-      text: 'Сверить публичные тарифы GPU в облаках России удобно в [каталоге GPU](/gpu) и [калькуляторе](/calculator); для open-weight моделей — в [хостинге LLM](/calculator/self-host). Цифра за карту — одно. Вопрос «какой планировщик не даст ей простаивать» — другое.',
-    },
-
-    {type: 'h2', text: 'Как выбрать, не устраивая холивар'},
-    {
-      type: 'p',
-      text: 'Честный алгоритм для новичка — не гуглить «best orchestrator 2026», а ответить на четыре вопроса:',
-    },
-    {
-      type: 'ol',
-      items: [
-        'Нагрузка **конечная** (job) или **вечная** (сервис)?',
-        'Нужен ли старт **всей группой** ресурсов сразу?',
-        'Есть ли **user-facing SLA** (latency, доступность)?',
+        'Нагрузка **конечная** (job) или **непрерывная** (сервис)?',
+        'Нужен ли старт **комплектом** ресурсов / ranks сразу?',
+        'Есть ли **user-facing SLA** по latency и доступности?',
         'Команда уже живёт в **sbatch** или в **YAML/GitOps**?',
+        'Готовы ли вы сопровождать **второй слой** (Kueue/Volcano/Slinky), если выбираете один control plane?',
       ],
     },
     {
       type: 'ul',
       items: [
-        'Исследовательский контур, крупный pre-train, люди с HPC-привычками → **Slurm** (или близкий batch).',
-        'Продукт, API, MLOps, автоскейл инференса → **Kubernetes** как база.',
-        'И то и другое всерьёз → часто **оба**: train-on-Slurm, serve-on-K8s. Это не стыдно, это паттерн.',
-        'Хотите один control plane → batch-надстройки к кубу (Volcano, Kueue…) или мосты вроде Slurm-под-Kubernetes (Slinky / slurm-operator). Миры сближаются — сложность никуда не девается, просто меняет форму.',
+        'Исследовательский контур и крупный pre-train → **Slurm** или Kubernetes с явным batch/gang стеком.',
+        'Продуктовый API и автоскейл serving → **Kubernetes**.',
+        'И то и другое всерьёз → часто **оба**, с явными квотами GPU между контурами.',
+        'Один control plane → Kueue/Volcano/JobSet/Trainer или Slinky; закладывайте операционную сложность заранее.',
       ],
-    },
-    {
-      type: 'quote',
-      text: 'Если после статьи вы запомните одну фразу: «Kubernetes не заменяет Slurm, а Slurm не заменяет Kubernetes — они закрывают разные контракты с GPU».',
     },
 
-    {type: 'h2', text: 'Коротко, чтобы переслать коллеге'},
+    {type: 'h2', text: 'Вывод'},
     {
-      type: 'ul',
-      items: [
-        'Slurm — очередь и банкет целиком; Kubernetes — диспетчер сервисов и самовосстановление.',
-        'Крупное распределённое **обучение** ближе к Slurm; **онлайн-инференс** — к Kubernetes.',
-        'На кубе train возможен, но серьёзный multi-node почти всегда = куб **плюс** batch/gang-надстройка.',
-        'Гибрид train/serve — норма индустрии, не признак отсталости.',
-        'FinOps-боль — простой GPU и два бесхозных пула, а не «немодный» логотип в README.',
-        'Цены карт смотрите в [каталоге](/catalog?category=gpu) и [калькуляторе](/calculator); оркестратор выбирайте отдельно от прайса.',
-      ],
+      type: 'p',
+      text: 'Slurm и Kubernetes закрывают разные контракты с GPU‑кластером. Первый исторически заточен под управляемое выделение ресурсов для batch и крупного параллельного train. Второй — под долгоживущие сервисы и облачную платформенную модель. К 2026 году Kubernetes заметно подтянул device management (DRA GA) и начал нативный gang‑путь (пока alpha), а вокруг него созрели Kueue, JobSet, Trainer v2 и Slinky. Это не отменяет выбор — это делает его более точным.',
     },
     {
       type: 'p',
-      text: 'Дальше можно углубляться: Volcano vs Kueue, топология GPU, Slinky. Но базовый слой путаницы — «это же всё оркестрация» — после такого прохода обычно спадает. А дальше уже честный инженерный выбор, а не спор логотипов.',
+      text: 'Если после статьи останется одна рабочая формулировка: выбирайте не логотип, а семантику планирования под свою доминирующую нагрузку — и считайте простой GPU там, где ресурсы уже удерживаются, а полезной работы ещё нет.',
     },
   ],
 };

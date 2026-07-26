@@ -64,9 +64,9 @@ export const newsItems: NewsItem[] = [
     date: '2026-07-26',
     provider: 'market',
     providerName: 'Cloud FinOps',
-    title: 'Slurm и Kubernetes: что есть что для обучения и инференса',
+    title: 'Slurm vs Kubernetes: обучение, batch и online inference на GPU',
     summary:
-      'Новая статья в духе «для тех, кто только входит в тему»: почему «поднимем на кубе» и Slurm в GPU-облаке — не одно и то же. Аналогии, gang scheduling, обучение vs инференс и где в биллинге горят простаивающие GPU.',
+      'Инженерное сравнение стеков для distributed training и inference: gang scheduling, Kueue vs Volcano, JobSet/Trainer, Slinky и где в GPU-кластере теряется полезная работа карт.',
     tags: ['ai', 'kubernetes', 'finops'],
     sourceUrl: 'https://cloudfinops.ru/blog/slurm-vs-kubernetes',
     sourceLabel: 'Cloud FinOps · блог',
