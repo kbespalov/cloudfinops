@@ -2,6 +2,14 @@
 
 ## 2026-07-27
 
+### AI-конфигурация / корзина сайдбара (merge)
+
+Сайдбар `/calculator/ai` — корзина с merge, не replace: follow-up «докинь CDN» / «RAM 32» / «150 TiB» не затирает остальные части. Общий normalize алиасов (`objectStorageGiB`/`storageGiB`/`lakeTiB`, `egressGiB`, worker*). После tool result шлём второй `sidebar_config` из resolved request. В adhoc quote — Object Storage + internet egress parts. Смена типа диска (`diskMedia=hdd|ssd|nvme`) доходит до сайдбара; `get_quote` принимает и возвращает `diskMedia`.
+
+### AI-конфигурация / сайдбар lakehouse follow-up
+
+В `/calculator/ai` чат мог пересчитать 75→150 TiB в тексте, а правый сайдбар оставался на medium/75: `compose_solution` передавал `objectStorageGiB`, а маппинг сайдбара читал только `lakeTiB`. Теперь GiB→TiB (как в compose), `workload`→preset; follow-up «150 TiB» после lakehouse-хода снова открывает `get_lakehouse_quote`.
+
 ### Калькулятор ВМ / степперы vCPU и RAM
 
 Починили кнопки ± у NumberInput: draft показывал 9/17, а в расчёт уходило 12/24 (или откатывало на 8). Spinbutton теперь сразу показывает ступень лестницы. На узкой ширине у vCPU/RAM тоже compact −/+. Повторный клик по активному семейству больше не сбрасывает shape.

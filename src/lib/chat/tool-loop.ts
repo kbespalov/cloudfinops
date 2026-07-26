@@ -65,6 +65,7 @@ export type ChatToolsParam = typeof CHAT_TOOLS | readonly unknown[];
 
 export type ToolLoopEvent =
   | {type: 'tool_call'; name: string; arguments: string; recoveredFromLeak: boolean}
+  | {type: 'tool_result'; name: string; content: string}
   | {type: 'tool_leak'; action: 'recovered' | 'retry_required' | 'dropped'; preview: string};
 
 export type ToolLoopResult = {
@@ -255,6 +256,11 @@ export async function runToolLoop(options: {
           recoveredFromLeak,
         });
         const result = await runTool(call.function.name, call.function.arguments);
+        options.onEvent?.({
+          type: 'tool_result',
+          name: call.function.name,
+          content: result,
+        });
         return {call, result};
       }),
     );

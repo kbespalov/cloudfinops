@@ -24,12 +24,14 @@ export type FastPathPlan = {
   tools: FastPathTool[];
 };
 
-export type FastPathEvent = {
-  type: 'tool_call';
-  name: string;
-  arguments: string;
-  recoveredFromLeak: boolean;
-};
+export type FastPathEvent =
+  | {
+      type: 'tool_call';
+      name: string;
+      arguments: string;
+      recoveredFromLeak: boolean;
+    }
+  | {type: 'tool_result'; name: string; content: string};
 
 export type FastPathResult = {
   finalText: string | null;
@@ -2998,6 +3000,11 @@ export async function tryRunFastPath(options: {
         recoveredFromLeak: false,
       });
       const result = await runTool(call.function.name, call.function.arguments);
+      options.onEvent?.({
+        type: 'tool_result',
+        name: call.function.name,
+        content: result,
+      });
       return {call, result};
     }),
   );

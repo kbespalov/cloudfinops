@@ -9,6 +9,8 @@ import {
 } from '@/lib/calculator/presets';
 import {
   addCdnEgressParts,
+  addInternetEgressParts,
+  addObjectStorageParts,
   addPublicIpParts,
   buildQuotesByPeriod,
   quoteAllPresets,
@@ -762,5 +764,26 @@ describe('calculator quote arbitration', () => {
     assert.ok(withCdn.best!.total > base.best!.total);
     const again = addCdnEgressParts(withCdn, 1024, 'month');
     assert.equal(again.best!.parts.filter((p) => p.id === 'cdn').length, 1);
+  });
+
+  it('addObjectStorageParts folds standard S3 capacity into the basket', () => {
+    const base = toViewQuote(quotePreset(COMPUTE_PRESETS[0]!, 'month'));
+    const withS3 = addObjectStorageParts(base, 2048, 'month');
+    assert.ok(withS3.best);
+    const part = withS3.best!.parts.find((p) => p.id === 'storage');
+    assert.ok(part, 'expected object storage part');
+    assert.match(part!.label, /Object Storage/);
+    assert.ok(part!.amount > 0);
+    assert.ok(withS3.best!.total > base.best!.total);
+  });
+
+  it('addInternetEgressParts folds internet egress (not CDN) into the basket', () => {
+    const base = toViewQuote(quotePreset(COMPUTE_PRESETS[0]!, 'month'));
+    const withEgress = addInternetEgressParts(base, 512, 'month');
+    assert.ok(withEgress.best);
+    const part = withEgress.best!.parts.find((p) => p.id === 'egress');
+    assert.ok(part, 'expected internet egress part');
+    assert.match(part!.label, /Internet egress/);
+    assert.ok(part!.amount > 0);
   });
 });

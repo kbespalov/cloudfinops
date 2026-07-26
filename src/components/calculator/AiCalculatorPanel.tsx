@@ -7,7 +7,7 @@ import {
   type ConfigSummary,
 } from '@/components/calculator/CalculatorSidebar';
 import {
-  mergeSidebarPatch,
+  applySidebarConfig,
   type AppliedSidebarPayload,
   type SidebarConfigPayload,
 } from '@/lib/chat/sidebar-config';
@@ -86,16 +86,10 @@ export function AiCalculatorPanel({period}: {period: PeriodMode}) {
       setConfigSummary(null);
       return;
     }
-    if (payload.kind === 'adhoc-patch') {
-      const merged = mergeSidebarPatch(lastPayloadRef.current, payload, period);
-      if (!merged) return;
-      lastPayloadRef.current = merged;
-      applyPayload(merged, setAdhocRequest, setLakehouseRequest, setConfigSummary);
-      return;
-    }
-    const next = withPeriod(payload, period);
-    lastPayloadRef.current = next;
-    applyPayload(next, setAdhocRequest, setLakehouseRequest, setConfigSummary);
+    const merged = applySidebarConfig(lastPayloadRef.current, payload, period);
+    if (!merged) return;
+    lastPayloadRef.current = merged;
+    applyPayload(merged, setAdhocRequest, setLakehouseRequest, setConfigSummary);
   };
 
   return (

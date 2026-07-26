@@ -11,11 +11,17 @@ export type AdhocComputeQuoteRequest = {
   ramGiB: number;
   diskGiB: number;
   diskMedia?: DiskMedia;
+  /** Prefer NVMe block SKU when composing the disk line (still diskMedia=ssd for API). */
+  preferNvme?: boolean;
   family?: ComputeFamily;
   vmCount?: number;
   publicIpCount?: number;
   /** CDN egress GiB/month to fold into the sidebar basket. */
   cdnEgressGiB?: number;
+  /** Object Storage (standard) GiB to fold into the sidebar basket. */
+  objectStorageGiB?: number;
+  /** Internet egress GiB/month (not CDN). */
+  internetEgressGiB?: number;
   purchaseModel?: PurchaseModel;
   vcpuShare?: VcpuShare;
 };

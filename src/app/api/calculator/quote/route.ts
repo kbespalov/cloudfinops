@@ -1,6 +1,8 @@
 import {NextResponse} from 'next/server';
 import {
   addCdnEgressParts,
+  addInternetEgressParts,
+  addObjectStorageParts,
   addPublicIpParts,
   quotePreset,
   toViewQuote,
@@ -28,12 +30,18 @@ type ComputeBody = {
   ramGiB: number;
   diskGiB: number;
   diskMedia?: DiskMedia;
+  /** Prefer NVMe network SSD when available in the region. */
+  preferNvme?: boolean;
   family?: ComputeFamily;
   vmCount?: number;
   /** Public IPv4 count; capped by vmCount. */
   publicIpCount?: number;
   /** CDN egress volume in GiB/month (binary); added as a separate cost part. */
   cdnEgressGiB?: number;
+  /** Object Storage (standard) GiB; added as a separate cost part. */
+  objectStorageGiB?: number;
+  /** Internet egress GiB/month (not CDN). */
+  internetEgressGiB?: number;
   purchaseModel?: PurchaseModel;
   vcpuShare?: VcpuShare;
 };
@@ -111,16 +119,21 @@ export async function POST(request: Request) {
       : 0;
     const family: ComputeFamily =
       body.family && FAMILIES.has(body.family) ? body.family : 'general';
+    const preferNvme = body.preferNvme === true && body.diskMedia !== 'hdd';
     const diskMedia: DiskMedia =
-      body.diskMedia && DISK_MEDIA.has(body.diskMedia) ? body.diskMedia : 'ssd';
+      body.diskMedia && DISK_MEDIA.has(body.diskMedia)
+        ? body.diskMedia
+        : preferNvme
+          ? 'ssd'
+          : 'ssd';
     const purchaseModel: PurchaseModel =
       body.purchaseModel && PURCHASE_MODELS.has(body.purchaseModel)
         ? body.purchaseModel
         : 'on-demand';
     const vcpuShare: VcpuShare = parseVcpuShare(body.vcpuShare) ?? '100%';
-    const diskLabel = diskMedia === 'hdd' ? 'HDD' : 'SSD';
+    const diskLabel = diskMedia === 'hdd' ? 'HDD' : preferNvme ? 'NVMe' : 'SSD';
     const preset: ComputePreset = {
-      id: `adhoc-${family}-${vcpu}-${ramGiB}-${diskGiB}-${diskMedia}-${purchaseModel}-${vcpuShare}`,
+      id: `adhoc-${family}-${vcpu}-${ramGiB}-${diskGiB}-${diskMedia}${preferNvme ? '-nvme' : ''}-${purchaseModel}-${vcpuShare}`,
       kind: 'compute',
       family,
       title: `${vcpu} / ${ramGiB}`,
@@ -129,12 +142,17 @@ export async function POST(request: Request) {
       ramGiB,
       diskGiB,
       diskMedia,
+      preferNvme: preferNvme || undefined,
       purchaseModel,
       vcpuShare,
     };
-    const rawCdn = Number(body.cdnEgressGiB ?? 0);
-    const cdnEgressGiB =
-      Number.isFinite(rawCdn) && rawCdn > 0 ? Math.min(Math.round(rawCdn), 512 * 1024) : 0;
+    const clampGiB = (raw: unknown) => {
+      const n = Number(raw ?? 0);
+      return Number.isFinite(n) && n > 0 ? Math.min(Math.round(n), 512 * 1024) : 0;
+    };
+    const cdnEgressGiB = clampGiB(body.cdnEgressGiB);
+    const objectStorageGiB = clampGiB(body.objectStorageGiB);
+    const internetEgressGiB = clampGiB(body.internetEgressGiB);
     let view = addPublicIpParts(
       scaleQuote(toViewQuote(quotePreset(preset, body.period)), vmCount),
       publicIpCount,
@@ -142,6 +160,12 @@ export async function POST(request: Request) {
     );
     if (cdnEgressGiB > 0) {
       view = addCdnEgressParts(view, cdnEgressGiB, body.period);
+    }
+    if (objectStorageGiB > 0) {
+      view = addObjectStorageParts(view, objectStorageGiB, body.period);
+    }
+    if (internetEgressGiB > 0) {
+      view = addInternetEgressParts(view, internetEgressGiB, body.period);
     }
     return NextResponse.json(view);
   }

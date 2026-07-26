@@ -403,6 +403,12 @@ export const CHAT_TOOLS = [
             description:
               'Системный диск в GiB. shape: если не задан — 100 GiB SSD. cheapest-per-provider: по умолчанию 10 GiB (минимальный boot).',
           },
+          diskMedia: {
+            type: 'string',
+            enum: ['ssd', 'hdd', 'nvme'],
+            description:
+              'Тип системного/блочного диска: ssd (по умолчанию), hdd, nvme. Обязательно передавай при «поставь HDD», «NVMe», смене типа диска — иначе сайдбар калькулятора не обновится.',
+          },
           publicIpCount: {
             type: 'integer',
             description:
@@ -707,6 +713,7 @@ function runQuote(args: Record<string, unknown>): unknown {
     vcpu: num(args.vcpu),
     ramGiB: num(args.ramGiB),
     diskGiB: num(args.diskGiB),
+    diskMedia: typeof args.diskMedia === 'string' ? args.diskMedia.trim() : undefined,
     gpuModel: typeof args.gpuModel === 'string' ? args.gpuModel.trim() : undefined,
     gpuCount: num(args.gpuCount),
   };
@@ -717,6 +724,12 @@ function runQuote(args: Record<string, unknown>): unknown {
     publicIpCount > 0
       ? addPublicIpParts(toViewQuote(base), publicIpCount, period)
       : toViewQuote(base);
+  const resolvedDiskMedia =
+    preset.kind === 'compute'
+      ? preset.preferNvme
+        ? 'nvme'
+        : (preset.diskMedia ?? 'ssd')
+      : null;
 
   const toQuote = (q: (typeof view.quotes)[number]) => ({
     provider: q.providerName,
@@ -781,6 +794,8 @@ function runQuote(args: Record<string, unknown>): unknown {
       vcpu: hostVcpu,
       ramGiB: hostRam,
       diskGiB: preset.diskGiB ?? null,
+      diskMedia: resolvedDiskMedia,
+      preferNvme: preset.kind === 'compute' ? preset.preferNvme === true : undefined,
       publicIpCount: publicIpCount > 0 ? publicIpCount : 0,
       gpuModel: preset.kind === 'gpu' ? preset.gpuModelMatch : null,
       gpuCount: preset.kind === 'gpu' ? preset.gpuCount : null,

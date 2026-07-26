@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
-import {matchLakehouseIntent} from './lakehouse-intent';
+import {matchLakehouseIntent, matchLakehouseIntentWithHistory} from './lakehouse-intent';
 import {CHAT_TOOLS, CHAT_TOOLS_WITH_LAKEHOUSE, runToolSync} from './tools';
 
 describe('matchLakehouseIntent', () => {
@@ -27,6 +27,19 @@ describe('matchLakehouseIntent', () => {
     assert.equal(matchLakehouseIntent('Сколько стоит объектное хранилище 10 ТиБ?').matched, false);
     assert.equal(matchLakehouseIntent('Самый дешёвый H100 в месяц').matched, false);
     assert.equal(matchLakehouseIntent('ВМ 8 vCPU 32 GiB').matched, false);
+  });
+
+  it('keeps lakehouse tools on TiB scale follow-ups after a lakehouse turn', () => {
+    const history = 'Оцени lakehouse medium ~75 TiB\nпоставь 150 терабайт';
+    assert.equal(matchLakehouseIntent('поставь 150 терабайт').matched, false);
+    assert.equal(
+      matchLakehouseIntentWithHistory('поставь 150 терабайт', history).matched,
+      true,
+    );
+    assert.equal(
+      matchLakehouseIntentWithHistory('Самый дешёвый H100', history).matched,
+      false,
+    );
   });
 });
 

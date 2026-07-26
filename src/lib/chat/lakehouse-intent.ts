@@ -48,6 +48,28 @@ export function matchLakehouseIntent(userText: string): LakehouseIntent {
   return {matched: false, reason: 'none'};
 }
 
+/** Follow-ups like «поставь 150 TiB» after a lakehouse turn — keep get_lakehouse_quote. */
+const LAKEHOUSE_REVISION_SIGNAL =
+  /(?:\d+(?:[.,]\d+)?\s*(?:тиб|tib|тб|tb|терабайт)|увелич|уменьш|масштаб|пересчит|поставь|сделай\s+\d|hot\s*%|cold|хранилищ|объем|объём)/i;
+
+/**
+ * Same as matchLakehouseIntent, but keeps lakehouse tools on config revisions
+ * when recent user turns already established a lakehouse context.
+ */
+export function matchLakehouseIntentWithHistory(
+  userText: string,
+  recentUserText: string,
+): LakehouseIntent {
+  const current = matchLakehouseIntent(userText);
+  if (current.matched) return current;
+  const history = matchLakehouseIntent(recentUserText);
+  if (!history.matched) return current;
+  if (LAKEHOUSE_REVISION_SIGNAL.test(userText)) {
+    return {matched: true, reason: history.reason === 'none' ? 'lakehouse' : history.reason};
+  }
+  return current;
+}
+
 /**
  * System addendum for lakehouse / data-platform turns.
  * Distilled from the product persona: explain estimate, assumptions, drivers, alternatives.

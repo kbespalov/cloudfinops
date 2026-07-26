@@ -29,7 +29,7 @@ import {
 } from '@/lib/chat/inference-intent';
 import {
   LAKEHOUSE_SYSTEM_ADDENDUM,
-  matchLakehouseIntent,
+  matchLakehouseIntentWithHistory,
 } from '@/lib/chat/lakehouse-intent';
 import {
   CHAT_STATUS_COMPOSING,
@@ -135,7 +135,9 @@ export async function POST(req: Request) {
     .map((m) => m.content as string)
     .join('\n');
   const inferenceIntent = matchInferenceIntent(userText);
-  const lakehouseIntent = matchLakehouseIntent(userText);
+  // Follow-ups («150 TiB») after a lakehouse turn must keep get_lakehouse_quote
+  // so the calculator sidebar can re-quote — not only the chat markdown.
+  const lakehouseIntent = matchLakehouseIntentWithHistory(userText, recentUserText);
   // Inference wins if both match (rare); otherwise lakehouse persona + tool.
   const calculatorAddendum =
     surface === 'calculator'
@@ -237,6 +239,7 @@ export async function POST(req: Request) {
                 arguments: string;
                 recoveredFromLeak: boolean;
               }
+            | {type: 'tool_result'; name: string; content: string}
             | {type: 'tool_leak'; action: 'recovered' | 'retry_required' | 'dropped'; preview: string},
         ) => {
           if (event.type === 'tool_call') {
@@ -302,6 +305,98 @@ export async function POST(req: Request) {
               argsPreview: event.arguments.slice(0, 200),
               recoveredFromLeak: event.recoveredFromLeak,
             });
+            return;
+          }
+          if (event.type === 'tool_result') {
+            // Resolved request / requirementSpec — sidebar matches chat totals.
+            if (
+              event.name === 'get_quote' ||
+              event.name === 'get_lakehouse_quote' ||
+              event.name === 'compose_solution'
+            ) {
+              try {
+                const parsed = JSON.parse(event.content) as unknown;
+                if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                  const record = parsed as Record<string, unknown>;
+                  if (!record.error) {
+                    if (event.name === 'get_lakehouse_quote' && record.request) {
+                      send({
+                        type: 'sidebar_config',
+                        tool: 'get_lakehouse_quote',
+                        args: record.request as Record<string, unknown>,
+                      });
+                    } else if (event.name === 'get_quote' && record.request) {
+                      send({
+                        type: 'sidebar_config',
+                        tool: 'get_quote',
+                        args: record.request as Record<string, unknown>,
+                      });
+                    } else if (
+                      event.name === 'compose_solution' &&
+                      record.requirementSpec &&
+                      typeof record.requirementSpec === 'object'
+                    ) {
+                      const spec = record.requirementSpec as Record<string, unknown>;
+                      const solutionType =
+                        typeof spec.solutionType === 'string' ? spec.solutionType : '';
+                      const quantities =
+                        typeof spec.quantities === 'object' && spec.quantities
+                          ? (spec.quantities as Record<string, unknown>)
+                          : {};
+                      const extras =
+                        typeof spec.extras === 'object' && spec.extras
+                          ? (spec.extras as Record<string, unknown>)
+                          : {};
+                      const constraints =
+                        typeof spec.constraints === 'object' && spec.constraints
+                          ? (spec.constraints as Record<string, unknown>)
+                          : {};
+                      if (solutionType === 'lakehouse') {
+                        send({
+                          type: 'sidebar_config',
+                          tool: 'compose_solution',
+                          args: {
+                            solutionType: 'lakehouse',
+                            requirements: {
+                              workload: extras.workload,
+                              storageGiB: quantities.storageGiB,
+                              objectStorageGiB: quantities.storageGiB,
+                              hotPercent: extras.hotPercent,
+                              k8sTier: constraints.k8sTier,
+                            },
+                          },
+                        });
+                      } else if (
+                        solutionType === 'virtual_machine' ||
+                        solutionType === 'web_application'
+                      ) {
+                        send({
+                          type: 'sidebar_config',
+                          tool: 'compose_solution',
+                          args: {
+                            solutionType,
+                            requirements: {
+                              vcpu: quantities.workerVcpu ?? quantities.vcpu,
+                              ramGiB: quantities.workerRamGiB ?? quantities.ramGiB,
+                              diskGiB: quantities.diskGiB ?? quantities.workerDiskGiB,
+                              publicIpCount: quantities.publicIpCount,
+                              cdnEgressGiB: quantities.cdnEgressGiB,
+                              objectStorageGiB:
+                                quantities.storageGiB ?? quantities.objectStorageGiB,
+                              egressGiB: quantities.egressGiB,
+                              gpuModel: quantities.gpuModel ?? extras.gpuModel,
+                              gpuCount: quantities.gpuCount,
+                            },
+                          },
+                        });
+                      }
+                    }
+                  }
+                }
+              } catch {
+                // Ignore malformed tool results for sidebar.
+              }
+            }
             return;
           }
           chatLog('chat.tool_leak', {

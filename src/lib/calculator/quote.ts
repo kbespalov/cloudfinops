@@ -1315,6 +1315,73 @@ export function addInternetEgressParts(
   };
 }
 
+/** Cheapest multi-AZ-leaning standard object storage (₽/GiB·month). */
+function pickStandardObjectStorageRate(provider: string): number | null {
+  const meters = catalog.meters.filter(
+    (m) =>
+      m.provider === provider &&
+      m.meter === 'storage.object.capacity' &&
+      m.status !== 'unavailable' &&
+      String(m.dimensions.storageClass || '').toLowerCase() === 'standard',
+  );
+  if (meters.length === 0) return null;
+  const scored = meters.map((m) => {
+    const hay = `${m.sku} ${m.name} ${JSON.stringify(m.dimensions)}`.toLowerCase();
+    let score = 0;
+    if (hay.includes('multi-zone') || m.dimensions.redundancy === 'multi-zone') score += 4;
+    if (hay.includes('single-zone') || m.dimensions.redundancy === 'single-copy') score -= 4;
+    return {m, score, rate: amountNumber(m, 'month')};
+  });
+  scored.sort(
+    (a, b) =>
+      b.score - a.score ||
+      (a.rate ?? Number.POSITIVE_INFINITY) - (b.rate ?? Number.POSITIVE_INFINITY),
+  );
+  const rate = scored[0]?.rate;
+  return rate != null && Number.isFinite(rate) && rate > 0 ? rate : null;
+}
+
+/**
+ * Add Object Storage capacity (standard class, GiB) to an already-built view.
+ */
+export function addObjectStorageParts(
+  view: ViewPresetQuote,
+  volumeGiB: number,
+  period: PeriodMode,
+): ViewPresetQuote {
+  if (!Number.isFinite(volumeGiB) || volumeGiB <= 0) return view;
+
+  const volLabel = formatGiBCapacity(volumeGiB);
+
+  const enrich = (q: ViewProviderQuote): ViewProviderQuote => {
+    const without = {
+      ...q,
+      total: q.parts.filter((p) => p.id !== 'storage').reduce((s, p) => s + p.amount, 0),
+      parts: q.parts.filter((p) => p.id !== 'storage'),
+    };
+    const rateMonth = pickStandardObjectStorageRate(q.provider);
+    if (rateMonth == null) return without;
+    const amount = scaleMonthUsageAmount(rateMonth * volumeGiB, period);
+    return {
+      ...without,
+      total: without.total + amount,
+      parts: [
+        ...without.parts,
+        {id: 'storage', label: `Object Storage: ${volLabel}`, amount},
+      ],
+    };
+  };
+
+  const quotes = view.quotes.map(enrich).sort((a, b) => a.total - b.total);
+  const alternateQuotes = view.alternateQuotes.map(enrich).sort((a, b) => a.total - b.total);
+  return {
+    ...view,
+    quotes,
+    alternateQuotes,
+    best: quotes[0] ?? null,
+  };
+}
+
 /** Cheapest billable CDN traffic rate (₽/GiB) — egress or bidirectional, never free ingress. */
 function pickCdnTrafficRate(provider: string): number | null {
   const meters = [
