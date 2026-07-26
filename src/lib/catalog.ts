@@ -53,6 +53,9 @@ export type NetworkFacet = 'all' | 'public-ip' | 'egress';
 /** CDN kind — traffic vs monthly resource vs requests vs paid add-ons. */
 export type CdnFacet = 'all' | 'traffic' | 'resource' | 'requests' | 'options';
 
+/** CDN traffic direction — shown only when CDN → Трафик is selected. */
+export type CdnTrafficFacet = 'all' | 'ingress' | 'egress';
+
 /** Kubernetes master topology — zonal (not HA) vs regional (fault-tolerant). */
 export type KubernetesAvailabilityFacet = 'all' | 'zonal' | 'regional';
 
@@ -1036,6 +1039,25 @@ export function meterMatchesCdnFacet(meter: CatalogMeter, facet: CdnFacet): bool
   if (facet === 'all') return true;
   if (meter.categoryKey !== 'cdn') return false;
   return extractCdnKind(meter) === facet;
+}
+
+/** Pure ingress / egress; bidirectional stays under «Все». */
+export function extractCdnTrafficDirection(
+  meter: CatalogMeter,
+): 'ingress' | 'egress' | 'bidirectional' | null {
+  if (meter.categoryKey !== 'cdn') return null;
+  if (meter.meter === 'cdn.traffic.ingress') return 'ingress';
+  if (meter.meter === 'cdn.traffic.egress') return 'egress';
+  if (meter.meter === 'cdn.traffic.bidirectional') return 'bidirectional';
+  return null;
+}
+
+export function meterMatchesCdnTrafficFacet(
+  meter: CatalogMeter,
+  facet: CdnTrafficFacet,
+): boolean {
+  if (facet === 'all') return true;
+  return extractCdnTrafficDirection(meter) === facet;
 }
 
 /** Zonal = single-zone / not HA; regional = multi-zone / fault-tolerant. */
