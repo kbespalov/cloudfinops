@@ -343,6 +343,26 @@ describe('matchFastPath', () => {
     assert.match(md, /\+20%/);
   });
 
+  it('appends short missingProviders footnotes to get_quote answers', () => {
+    const md = formatFastPathAnswer('vm', [
+      {
+        name: 'get_quote',
+        content: JSON.stringify({
+          request: {gpuModel: 'H200', gpuCount: 1, vcpu: 44, ramGiB: 256, diskGiB: 100},
+          quotes: [{provider: 'Selectel', total: 400000, scope: 'gpu-synthetic'}],
+          missingProviders: [
+            {provider: 'Yandex Cloud', reason: 'нет H200 в каталоге'},
+            {provider: 'MWS Cloud Platform', reason: 'нет H200 в каталоге'},
+          ],
+        }),
+      },
+    ]);
+    assert.ok(md);
+    assert.match(md, /Нет в сравнении/);
+    assert.match(md, /Yandex Cloud — нет H200 в каталоге/);
+    assert.match(md, /MWS Cloud Platform — нет H200 в каталоге/);
+  });
+
   it('formats recommend_inference_infra with readable markdown sections', () => {
     const md = formatFastPathAnswer('coder-next-infra', [
       {

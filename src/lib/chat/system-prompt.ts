@@ -97,7 +97,8 @@ export const DOMAIN_CARD_GPU = `## GPU / паритет хоста
 - «Сравни SKU / ближайшие аналоги» (B300/H200/H100, HGX, ×8) → search_prices category=gpu + nearestAnalog: providersMatched = ближайший datacenter peer (то же поколение или H200/H100 к B300, сопоставимое число карт), НЕ самый дешёвый NVIDIA (GTX 1080 / T4 / L4 vGPU). Нет близкого SKU у провайдера — не включай его как «аналог».
 - «Сравни по провайдерам» / «паритет по конфигурации» → ОБЯЗАТЕЛЬНО get_quote (при необходимости vcpu/ramGiB), даже если уже был search_prices. Не собирай хост вручную из card-only.
 - Если get_quote не привёл провайдера к общему хосту — отдельной строкой родная цена из search_prices + пояснение; не подгоняй.
-- Явно указывай assumedHost/request (vCPU/RAM/диск); если хост по умолчанию — скажи.`;
+- Явно указывай assumedHost/request (vCPU/RAM/диск); если хост по умолчанию — скажи.
+- Если в get_quote есть missingProviders — в конце ответа коротко (1 строка/провайдер): «X — reason». Без длинного эссе.`;
 
 export const DOMAIN_CARD_COMPUTE = `## vCPU / RAM / диск (сопоставимость, component-only)
 - Один компонент без полной ВМ:
@@ -110,7 +111,8 @@ export const DOMAIN_CARD_COMPUTE = `## vCPU / RAM / диск (сопостави
 - «Сравни SKU / Ice Lake / Sapphire preemptible vCPU с аналогами» → search_prices category=compute (+ compare_unit_price). Ice Lake ≠ S3 Ice. Для такого запроса providersMatched.cheapest = ближайший аналог по смыслу (платформа/доля/preemptible), не абсолютный минимум провайдера. Нет точного SKU — ближайшее с явными отличиями; не пустая таблица «ничего нет», если в каталоге есть соседние preemptible/100% vCPU.
 - get_quote — только ВМ/конфигурация целиком (оба: ядра+память, «собери», сайт с RAM). Nearest preset — назови отличия от запроса.
 - «Самая дешёвая ВМ у всех / по провайдерам» → get_quote(mode=cheapest-per-provider); в ответе таблица: провайдер · конфиг (vCPU/RAM, доля, обычная/прерываемая, диск) · ₽/мес. Не compare_unit_price и не усреднённые «вилки» без BOM.
-- get_quote по умолчанию: системный диск 100 GiB SSD (boot), без публичного IP. IP (publicIpCount) — только по явной просьбе. Не раздувай корзину «типовым» IP.`;
+- get_quote по умолчанию: системный диск 100 GiB SSD (boot), без публичного IP. IP (publicIpCount) — только по явной просьбе. Не раздувай корзину «типовым» IP.
+- missingProviders из get_quote — коротко в конце ответа («X — reason»), не разворачивай в абзацы.`;
 
 export const DOMAIN_CARD_S3 = `## Object Storage / S3
 - Standard / Warm / Cold / Ice — разные продукты. Не ставь в одну таблицу как равнозначные; не объявляй Ice/Cold «самым дешёвым Standard».

@@ -8,6 +8,8 @@ import {
 import type {ComputePreset} from '@/lib/calculator/presets';
 import {quotePreset, toViewQuote} from '@/lib/calculator/quote';
 import {
+  CALCULATOR_PROVIDER_IDS,
+  CALCULATOR_PROVIDER_NAMES,
   formatGiBCapacity,
   type CostPartId,
   type ViewCostPart,
@@ -241,10 +243,33 @@ export function quoteLakehouse(
   }
 
   quotes.sort((a, b) => a.total - b.total);
+
+  const present = new Set(quotes.map((q) => q.provider));
+  const missingProviders = CALCULATOR_PROVIDER_IDS.filter((id) => !present.has(id)).map(
+    (id) => {
+      const hasStorage = Boolean(storageParts(id, input.lakeTiB, input.hotPercent, period));
+      const hasK8s = Boolean(pickK8sMasterMeter(id, input.k8sTier));
+      const hasPools =
+        quoteNodePoolTotal(id, input.platform, period) != null &&
+        quoteNodePoolTotal(id, input.etl, period) != null &&
+        quoteNodePoolTotal(id, input.query, period) != null;
+      let reason = 'нет подходящего пресета для этой конфигурации';
+      if (!hasStorage) reason = 'нет object storage в каталоге';
+      else if (!hasK8s) reason = 'нет Managed Kubernetes в каталоге';
+      else if (!hasPools) reason = 'нет подходящих VM для пулов';
+      return {
+        provider: id,
+        providerName: CALCULATOR_PROVIDER_NAMES[id],
+        reason,
+      };
+    },
+  );
+
   return {
     presetId: 'lakehouse',
     quotes,
     alternateQuotes: [],
     best: quotes[0] ?? null,
+    missingProviders,
   };
 }

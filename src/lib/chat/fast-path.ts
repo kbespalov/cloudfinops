@@ -1878,11 +1878,22 @@ export function formatFastPathAnswer(
     const composedWinner =
       quotes[0].scope === 'gpu-synthetic' ||
       Boolean(quotes[0].scopeNote?.includes('собранный хост'));
+    type Missing = {provider?: string; reason?: string};
+    const missing = (Array.isArray(data.missingProviders) ? data.missingProviders : [])
+      .filter((m): m is Missing => Boolean(m && typeof m === 'object'))
+      .filter((m) => typeof m.provider === 'string' && typeof m.reason === 'string')
+      .slice(0, 6);
+    const missingBlock =
+      missing.length > 0
+        ? `\n\n**Нет в сравнении:** ${missing
+            .map((m) => `${m.provider} — ${m.reason}`)
+            .join('; ')}.`
+        : '';
     return `**${title}**\n\n| Провайдер | Итого / мес | к минимуму |\n|---|---:|---|\n${rows}\n\n${cheapestInCatalogLine({
       provider: quotes[0].provider,
       priceText: `${formatRub(best)}/мес`,
       composed: composedWinner,
-    })}`;
+    })}${missingBlock}`;
   }
 
   if (primary.name === 'compare_unit_price') {

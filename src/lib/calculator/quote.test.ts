@@ -678,6 +678,26 @@ describe('calculator quote arbitration', () => {
     assert.equal(view.best?.hostConfig?.scope, 'compute');
   });
 
+  it('lists short reasons for providers missing from a GPU quote', () => {
+    const preset = GPU_PRESETS.find((p) => /H200/i.test(p.gpuModelMatch) && p.gpuCount === 1);
+    assert.ok(preset, 'expected an H200 GPU preset');
+    const view = toViewQuote(quotePreset(preset!, 'month'));
+    const present = new Set([
+      ...view.quotes.map((q) => q.provider),
+      ...view.alternateQuotes.map((q) => q.provider),
+    ]);
+    assert.ok(view.missingProviders.length > 0, 'expected at least one missing provider');
+    for (const note of view.missingProviders) {
+      assert.ok(!present.has(note.provider), note.provider);
+      assert.ok(note.providerName.length > 0);
+      assert.ok(note.reason.length > 0 && note.reason.length <= 80, note.reason);
+    }
+    const yandex = view.missingProviders.find((m) => m.provider === 'yandex-cloud');
+    if (yandex) {
+      assert.match(yandex.reason, /нет|каталог|пресет|flavor|хост/i);
+    }
+  });
+
   it('toViewQuote exposes host config for flavor / composed GPU quotes', () => {
     const preset = GPU_PRESETS.find(
       (p) => p.shapeSource === 'cloud-ru' && p.vcpu != null && p.gpuCount === 1,

@@ -116,6 +116,7 @@ describe('quote-view helpers', () => {
         parts: [{id: 'bundle', label: 'all', amount: 100}],
         note: 'n',
       },
+      missingProviders: [],
     };
     const slim = toSlimPresetQuote(full);
     assert.equal(slim.quoteCount, 1);

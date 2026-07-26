@@ -45,11 +45,21 @@ export type ViewProviderQuote = {
   hostConfig?: ViewHostConfig;
 };
 
+/** Short footnote when a catalog provider has no quote for this config. */
+export type MissingProviderNote = {
+  provider: string;
+  providerName: string;
+  /** One short RU clause, e.g. «нет H200 в каталоге». */
+  reason: string;
+};
+
 export type ViewPresetQuote = {
   presetId: string;
   quotes: ViewProviderQuote[];
   alternateQuotes: ViewProviderQuote[];
   best: ViewProviderQuote | null;
+  /** Providers with no primary/alternate quote — why they are absent. */
+  missingProviders: MissingProviderNote[];
 };
 
 /**
@@ -121,6 +131,7 @@ export function scalePresetQuote(
     quotes,
     alternateQuotes,
     best: quotes[0] ?? null,
+    missingProviders: view.missingProviders ?? [],
   };
 }
 

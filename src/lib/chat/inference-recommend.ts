@@ -87,18 +87,62 @@ function presetMatchesGpuFamily(presetMatch: string, family: string): boolean {
   return presetMatch.trim().toLowerCase() === family.trim().toLowerCase();
 }
 
+/** NVLink recipe ≈ SXM / NVL fabric hosts in the catalog. */
+function interconnectClassMatch(presetHay: string, want: string): boolean {
+  if (!want) return false;
+  const p = presetHay.toLowerCase();
+  const w = want.toLowerCase();
+  if (p.includes(w)) return true;
+  const nvClass = /nvlink|\bsxm\b|\bnvl\b/;
+  return nvClass.test(w) && nvClass.test(p);
+}
+
+/**
+ * How many providers quote a full config on this host shape.
+ * Prefer H200×8 240/2048 (Selectel+T1+VK) over Selectel-only 96/960 that drops VK.
+ */
+function providerCoverageForHost(
+  gpuFamily: string,
+  gpuCount: number,
+  host: {
+    vcpu: number;
+    ramGiB: number;
+    diskGiB?: number;
+    gpuMemoryGb?: number | null;
+    dedicated?: boolean;
+  },
+): number {
+  const result = quotePreset(
+    {
+      id: `coverage-${gpuFamily}-${gpuCount}-${host.vcpu}-${host.ramGiB}`,
+      kind: 'gpu',
+      title: 'coverage probe',
+      subtitle: 'coverage probe',
+      gpuModelMatch: gpuFamily,
+      gpuCount,
+      vcpu: host.vcpu,
+      ramGiB: host.ramGiB,
+      diskGiB: host.diskGiB ?? 100,
+      dedicated: host.dedicated || undefined,
+      gpuMemoryGb: host.gpuMemoryGb ?? null,
+    },
+    'month',
+  );
+  return result.quotes.length;
+}
+
 function rankGpuHostPresets(
   candidates: ReturnType<typeof listGpuPresets>,
   gpuFamily: string,
   interconnect?: string,
 ): ReturnType<typeof listGpuPresets> {
-  const wantLink = (interconnect || '').toLowerCase();
+  const wantLink = interconnect || '';
   const family = gpuFamily.toUpperCase();
   return candidates.slice().sort((a, b) => {
-    const aLink = `${a.gpuInterconnect || ''} ${a.title}`.toLowerCase();
-    const bLink = `${b.gpuInterconnect || ''} ${b.title}`.toLowerCase();
-    const aMatch = wantLink && aLink.includes(wantLink) ? 0 : 1;
-    const bMatch = wantLink && bLink.includes(wantLink) ? 0 : 1;
+    const aLink = `${a.gpuInterconnect || ''} ${a.title}`;
+    const bLink = `${b.gpuInterconnect || ''} ${b.title}`;
+    const aMatch = wantLink && interconnectClassMatch(aLink, wantLink) ? 0 : 1;
+    const bMatch = wantLink && interconnectClassMatch(bLink, wantLink) ? 0 : 1;
     if (aMatch !== bMatch) return aMatch - bMatch;
     // Prefer dedicated / flavor hosts over bare GPU-unit rows.
     const aKind = a.dedicated ? 0 : a.vcpu != null && a.ramGiB != null ? 1 : 2;
@@ -115,6 +159,32 @@ function rankGpuHostPresets(
     if (aRu !== bRu) return aRu - bRu;
     return (a.vcpu ?? 0) - (b.vcpu ?? 0);
   });
+}
+
+function pickHostPresetByCoverage(
+  ranked: ReturnType<typeof listGpuPresets>,
+  gpuFamily: string,
+  gpuCount: number,
+  scaleOf: (p: (typeof ranked)[number]) => number,
+): (typeof ranked)[number] {
+  let chosen = ranked[0]!;
+  let bestCoverage = -1;
+  for (const p of ranked) {
+    if (p.dedicated || p.vcpu == null || p.ramGiB == null) continue;
+    const scale = scaleOf(p);
+    const coverage = providerCoverageForHost(gpuFamily, gpuCount, {
+      vcpu: Math.round(p.vcpu * scale),
+      ramGiB: Math.round(p.ramGiB * scale),
+      diskGiB: p.diskGiB ?? 100,
+      gpuMemoryGb: p.gpuMemoryGb ?? null,
+    });
+    // Higher coverage wins; ties keep earlier (cheaper/smaller) rank order.
+    if (coverage > bestCoverage) {
+      bestCoverage = coverage;
+      chosen = p;
+    }
+  }
+  return chosen;
 }
 
 function defaultGpuHost(
@@ -147,7 +217,12 @@ function defaultGpuHost(
   if (!candidates.length) return null;
 
   const ranked = rankGpuHostPresets(candidates, gpuFamily, interconnect);
-  const chosen = ranked[0]!;
+  const chosen = pickHostPresetByCoverage(
+    ranked,
+    gpuFamily,
+    gpuCount,
+    (p) => (exact.length === 0 && p.gpuCount > 0 ? gpuCount / p.gpuCount : 1),
+  );
   const scale =
     exact.length === 0 && chosen.gpuCount > 0 ? gpuCount / chosen.gpuCount : 1;
 

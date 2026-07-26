@@ -769,6 +769,12 @@ function runQuote(args: Record<string, unknown>): unknown {
       ? ` В итог включён публичный IP ×${publicIpCount}.`
       : ' Публичный IP не включён (не запрашивался).';
 
+  const missingProviders = (view.missingProviders ?? []).map((m) => ({
+    provider: m.providerName,
+    providerId: m.provider,
+    reason: m.reason,
+  }));
+
   return {
     request: {
       kind: preset.kind,
@@ -787,7 +793,7 @@ function runQuote(args: Record<string, unknown>): unknown {
     periodNote: period === 'month' ? 'месяц = 720 ч' : period === 'year' ? 'год = 8640 ч' : 'цена за час',
     providerCount,
     note:
-      'Каждая строка quotes — цена конкретного провайдера из каталога. Минимум формулируй как «в каталоге Cloud FinOps на catalogAsOf» среди публичных тарифов в выборке. scope=gpu-synthetic → составная цена из публичных unit-ставок (помечай как оценку сборки). Не добавляй отсутствующих провайдеров и не копируй цену между ними.' +
+      'Каждая строка quotes — цена конкретного провайдера из каталога. Минимум формулируй как «в каталоге Cloud FinOps на catalogAsOf» среди публичных тарифов в выборке. scope=gpu-synthetic → составная цена из публичных unit-ставок (помечай как оценку сборки). Не добавляй отсутствующих провайдеров и не копируй цену между ними. Если есть missingProviders — коротко упомяни в конце ответа (1 строка на провайдера: «X — reason»), без длинного эссе.' +
       diskNote +
       ipNote +
       gpuNote,
@@ -799,6 +805,7 @@ function runQuote(args: Record<string, unknown>): unknown {
         }
       : null,
     quotes,
+    ...(missingProviders.length ? {missingProviders} : {}),
     ...(quotes.length === 0
       ? {warning: 'Ни один провайдер не покрывает такую конфигурацию в каталоге.'}
       : {}),
@@ -1050,9 +1057,18 @@ function runLakehouseQuote(args: Record<string, unknown>): unknown {
         }
       : null,
     quotes,
+    ...(result.missingProviders?.length
+      ? {
+          missingProviders: result.missingProviders.map((m) => ({
+            provider: m.providerName,
+            providerId: m.provider,
+            reason: m.reason,
+          })),
+        }
+      : {}),
     answerHint: {
       calculatorUrl: '/calculator/lakehouse',
-      tip: 'В конце ответа дай ссылку на калькулятор. Сравнивай провайдеров только внутри этой DIY-модели; serverless/managed — качественно, без выдуманных тарифов.',
+      tip: 'В конце ответа дай ссылку на калькулятор. Сравнивай провайдеров только внутри этой DIY-модели; serverless/managed — качественно, без выдуманных тарифов. Если есть missingProviders — коротко в конце: «X — reason».',
     },
     ...(quotes.length === 0
       ? {warning: 'Ни один провайдер не покрывает Object Storage + Managed K8s в каталоге для этой конфигурации.'}

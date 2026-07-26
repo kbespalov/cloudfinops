@@ -458,12 +458,11 @@ export function CalculatorSidebar({
         </div>
 
         {(() => {
-          const skipKeys = new Set<string>();
-          if (selectedKey) skipKeys.add(selectedKey);
-          // On the general calculator the main card already shows the catalog minimum.
-          if (!focusProviderId && result.best) skipKeys.add(quoteKey(result.best));
+          // Hide only the quote currently shown in the hero — keep the catalog
+          // minimum in the list when the user picked another row, so they can
+          // switch back (previously best was always filtered out).
           const otherQuotes = result.quotes
-            .filter((q) => !skipKeys.has(quoteKey(q)))
+            .filter((q) => quoteKey(q) !== selectedKey)
             .slice()
             .sort((a, b) => a.total - b.total);
           if (otherQuotes.length === 0) return null;

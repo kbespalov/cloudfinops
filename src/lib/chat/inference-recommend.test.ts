@@ -1,10 +1,50 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
-import {findInferenceModel} from '@/data/inference-models';
+import {findInferenceModel, INFERENCE_MODELS} from '@/data/inference-models';
+import {getModelPickerCatalog} from '@/lib/calculator/model-picker-catalog';
+import {listGpuPresets, quotePreset, toViewQuote} from '@/lib/calculator/quote';
 import {matchInferenceIntent} from './inference-intent';
 import {defaultPricedConfigIndex, recommendInferenceInfra} from './inference-recommend';
 import {matchFastPath} from './fast-path';
 import {CHAT_TOOLS, CHAT_TOOLS_WITH_INFERENCE, runToolSync} from './tools';
+
+/** Max primary-quote provider count among published exact-count host shapes. */
+function maxPublishedHostCoverage(
+  gpuFamily: string,
+  gpuCount: number,
+  gpuMemoryGb: number | null | undefined,
+): number {
+  const pool = listGpuPresets().filter(
+    (p) =>
+      p.gpuModelMatch === gpuFamily &&
+      p.gpuCount === gpuCount &&
+      p.vcpu != null &&
+      p.ramGiB != null &&
+      !p.dedicated,
+  );
+  let max = 0;
+  for (const p of pool) {
+    const n = toViewQuote(
+      quotePreset(
+        {
+          id: `cov-${gpuFamily}-${gpuCount}-${p.vcpu}-${p.ramGiB}`,
+          kind: 'gpu',
+          title: 'cov',
+          subtitle: 'cov',
+          gpuModelMatch: gpuFamily,
+          gpuCount,
+          vcpu: p.vcpu,
+          ramGiB: p.ramGiB,
+          diskGiB: p.diskGiB ?? 100,
+          gpuMemoryGb: gpuMemoryGb ?? p.gpuMemoryGb ?? null,
+        },
+        'month',
+      ),
+    ).quotes.length;
+    if (n > max) max = n;
+  }
+  return max;
+}
 
 describe('inference model KB', () => {
   it('resolves GLM 5.2 aliases', () => {
@@ -133,6 +173,68 @@ describe('recommendInferenceInfra', () => {
       result.configs!.some((c) => c.quant === 'fp8' && c.gpuCount === 8 && c.gpuFamily === 'H200'),
     );
     assert.ok(result.disclaimer);
+  });
+
+  it('keeps Selectel+T1+VK on GLM 5.2 8×H200 (parity host, not Selectel-only 96/960)', () => {
+    const result = recommendInferenceInfra({model: 'GLM 5.2', maxConfigs: 3});
+    assert.equal(result.ok, true);
+    const h200x8 = result.configs?.filter((c) => c.gpuFamily === 'H200' && c.gpuCount === 8);
+    assert.ok(h200x8?.length, 'expected 8×H200 configs');
+    for (const c of h200x8!) {
+      assert.equal(c.host?.vcpu, 240, `${c.quant}: parity host vCPU`);
+      assert.equal(c.host?.ramGiB, 2048, `${c.quant}: parity host RAM`);
+      const providers = new Set((c.quotes ?? []).map((q) => q.provider));
+      assert.ok(providers.has('Selectel'), `${c.quant}: Selectel missing — ${[...providers]}`);
+      assert.ok(providers.has('T1 Cloud'), `${c.quant}: T1 missing — ${[...providers]}`);
+      assert.ok(providers.has('VK Cloud'), `${c.quant}: VK missing — ${[...providers]}`);
+      assert.ok(providers.size >= 3, `${c.quant}: expected ≥3 providers`);
+    }
+  });
+
+  it('resolves JLM typo alias to GLM 5.2', () => {
+    assert.equal(findInferenceModel('JLM 5.2')?.id, 'glm-5.2');
+    assert.equal(findInferenceModel('jlm-5.2')?.id, 'glm-5.2');
+  });
+
+  it('keeps multi-provider coverage on Qwen3 32B ladder (A100/L40S/L4)', () => {
+    const result = recommendInferenceInfra({model: 'Qwen3 32B', maxConfigs: 3});
+    assert.equal(result.ok, true);
+    assert.ok(result.configs?.length);
+    const allProviders = new Set(
+      result.configs!.flatMap((c) => (c.quotes ?? []).map((q) => q.provider)),
+    );
+    assert.ok(allProviders.size >= 3, `expected ≥3 providers across configs, got ${[...allProviders]}`);
+    assert.ok(
+      result.configs!.some((c) => (c.quotes?.length ?? 0) >= 2),
+      'at least one config should compare 2+ providers',
+    );
+  });
+
+  it('sidebar-style adhoc quote matches recommend providers for GLM 8×H200', () => {
+    const result = recommendInferenceInfra({model: 'GLM 5.2', maxConfigs: 1});
+    assert.equal(result.ok, true);
+    const c = result.configs?.[0];
+    assert.ok(c?.host && !c.host.unitOnly && !c.host.dedicated);
+    const view = toViewQuote(
+      quotePreset(
+        {
+          id: 'adhoc-glm-h200',
+          kind: 'gpu',
+          title: 'adhoc',
+          subtitle: 'adhoc',
+          gpuModelMatch: c!.gpuFamily,
+          gpuCount: c!.gpuCount,
+          vcpu: c!.host!.vcpu,
+          ramGiB: c!.host!.ramGiB,
+          diskGiB: c!.host!.diskGiB ?? 100,
+          gpuMemoryGb: c!.host!.gpuMemoryGb ?? null,
+        },
+        'month',
+      ),
+    );
+    const recommendNames = new Set((c!.quotes ?? []).map((q) => q.provider));
+    const adhocNames = new Set(view.quotes.map((q) => q.providerName));
+    assert.deepEqual([...adhocNames].sort(), [...recommendNames].sort());
   });
 
   it('recommends single H100 for gpt-oss-120b, not 8×', () => {
@@ -402,5 +504,65 @@ describe('fast-path inference chips', () => {
     const plan = matchFastPath('Сколько стоит GLM 5.2 у MWS за 1M токенов?');
     assert.ok(plan);
     assert.equal(plan!.tools[0]?.name, 'search_prices');
+  });
+});
+
+describe('inference catalog host coverage', () => {
+  it('popular / recommended models stay priced with multi-provider hosts where catalog allows', () => {
+    const focus = getModelPickerCatalog().filter(
+      (m) => (m.popular || m.recommended) && m.deployment !== 'api-only',
+    );
+    assert.ok(focus.length >= 6, `expected popular/recommended self-host set, got ${focus.length}`);
+
+    for (const item of focus) {
+      const result = recommendInferenceInfra({model: item.displayName, maxConfigs: 5});
+      assert.equal(result.ok, true, item.displayName);
+      assert.ok(result.configs?.length, `${item.displayName}: no configs`);
+
+      for (const c of result.configs!) {
+        const providers = (c.quotes ?? []).map((q) => q.provider);
+        const label = `${item.displayName} ${c.gpuCount}×${c.gpuFamily} ${c.quant}`;
+        // Dedicated / GPU-only rows may be single-provider; full hosts must quote.
+        if (c.host?.dedicated || c.host?.unitOnly) {
+          assert.ok(providers.length >= 1, `${label}: unpriced`);
+          continue;
+        }
+        assert.ok(providers.length >= 1, `${label}: unpriced full host`);
+        assert.ok(c.host?.vcpu && c.host.ramGiB, `${label}: missing host shape`);
+
+        // H200×8 must keep the VK parity shelf (Selectel+T1+VK).
+        if (c.gpuFamily === 'H200' && c.gpuCount === 8) {
+          assert.equal(c.host.vcpu, 240, `${label}: expected 240/2048 parity host`);
+          assert.equal(c.host.ramGiB, 2048, `${label}: expected 240/2048 parity host`);
+          assert.ok(providers.includes('Selectel'), `${label}: Selectel missing`);
+          assert.ok(providers.includes('T1 Cloud'), `${label}: T1 missing`);
+          assert.ok(providers.includes('VK Cloud'), `${label}: VK missing`);
+        }
+      }
+    }
+  });
+
+  it('never picks a published host with worse provider coverage than another exact shape', () => {
+    const selfHost = INFERENCE_MODELS.filter((m) => (m.deployment ?? 'self-host') !== 'api-only');
+    const gaps: string[] = [];
+
+    for (const profile of selfHost) {
+      const result = recommendInferenceInfra({model: profile.displayName, maxConfigs: 5});
+      if (!result.ok || !result.configs?.length) continue;
+
+      for (const c of result.configs) {
+        const host = c.host;
+        if (!host || host.unitOnly || host.dedicated || !host.vcpu || !host.ramGiB) continue;
+        const got = c.quotes?.length ?? 0;
+        const max = maxPublishedHostCoverage(c.gpuFamily, c.gpuCount, host.gpuMemoryGb);
+        if (max > got) {
+          gaps.push(
+            `${profile.displayName} ${c.gpuCount}×${c.gpuFamily} ${c.quant}: host ${host.vcpu}/${host.ramGiB} → ${got} providers < max ${max}`,
+          );
+        }
+      }
+    }
+
+    assert.deepEqual(gaps, [], gaps.join('\n'));
   });
 });

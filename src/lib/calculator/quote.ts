@@ -18,13 +18,17 @@ import {
   vcpuSharePercent,
 } from '@/lib/calculator/vcpu-share';
 import {
+  CALCULATOR_PROVIDER_IDS,
+  CALCULATOR_PROVIDER_NAMES,
   formatGiBCapacity,
   formatPlatformLabel,
   formatQuoteAmount,
   periodShortLabel,
   partTone,
   scopeLabel,
+  type CalculatorProviderId,
   type CostPartId,
+  type MissingProviderNote,
   type QuoteScope,
   type QuotesByPeriod,
   type ViewHostConfig,
@@ -68,6 +72,8 @@ export type PresetQuoteResult = {
    */
   alternateQuotes: ProviderQuote[];
   best: ProviderQuote | null;
+  /** Why a catalog provider has no quote for this preset. */
+  missingProviders: MissingProviderNote[];
 };
 
 type MeterIndex = {
@@ -858,18 +864,148 @@ function quoteGpu(
   return {primary, alternate};
 }
 
+function providerDisplayName(providerId: string): string {
+  if (providerId in CALCULATOR_PROVIDER_NAMES) {
+    return CALCULATOR_PROVIDER_NAMES[providerId as CalculatorProviderId];
+  }
+  return catalog.providers.find((p) => p.id === providerId)?.name ?? providerId;
+}
+
+/** Short RU reason when compute quoting skips a provider. */
+function explainComputeMiss(
+  providerId: string,
+  preset: ComputePreset,
+  period: PeriodMode,
+): string {
+  const share = vcpuShareOf(preset);
+  if (isFractionalShare(share) && !shapeAllowedForShare(share, preset.vcpu, preset.ramGiB)) {
+    return `нет формы с долей vCPU ${share}`;
+  }
+
+  const preference = purchaseModelOf(preset);
+  const lowCost = preset.family === 'low-cost';
+  const anyVcpu = pricedList(
+    providerId,
+    'compute.vcpu',
+    period,
+    (m) => !m.synthetic && matchesComputePurchase(m, preference),
+  );
+  const anyFlavor = pricedList(
+    providerId,
+    'compute.flavor',
+    period,
+    (m) => m.categoryKey === 'compute' && matchesComputePurchase(m, preference),
+  );
+
+  if (!anyVcpu.length && !anyFlavor.length) {
+    return preference === 'preemptible'
+      ? 'нет прерываемого тарифа compute'
+      : 'нет тарифа compute в каталоге';
+  }
+
+  const shareVcpu = anyVcpu.filter((x) => matchesVcpuShare(x.m, share));
+  const shareFlavor = anyFlavor.filter((x) => matchesVcpuShare(x.m, share));
+  if (share !== '100%' && !shareVcpu.length && !shareFlavor.length) {
+    return `нет тарифа с долей vCPU ${share}`;
+  }
+
+  const exactFlavor = shareFlavor.filter(
+    (x) => flavorVcpu(x.m) === preset.vcpu && flavorRamGiB(x.m) === preset.ramGiB,
+  );
+  if (!shareVcpu.length && !exactFlavor.length) {
+    return `нет пресета ${preset.vcpu} vCPU / ${preset.ramGiB} GiB`;
+  }
+
+  if (preference === 'preemptible') {
+    const onDemand = pickComputeCombo(
+      providerId,
+      {...preset, purchaseModel: 'on-demand'},
+      period,
+      lowCost,
+    );
+    if (onDemand) return 'нет прерываемого тарифа для этой формы';
+  }
+
+  if (preset.diskMedia === 'hdd') return 'нет подходящего HDD в регионе';
+  if (preset.preferNvme) return 'нет подходящего NVMe в регионе';
+
+  return 'нет подходящего пресета для этой конфигурации';
+}
+
+/** Short RU reason when GPU quoting skips a provider. */
+function explainGpuMiss(providerId: string, preset: GpuPreset, _period: PeriodMode): string {
+  const index = getMeterIndex();
+  const allGpu = (index.gpuByProvider.get(providerId) ?? []).filter(
+    (m) => m.status === 'available' && isConfirmedAvailable(m) && !m.synthetic,
+  );
+  const modelMatches = allGpu.filter((m) => gpuModelMatches(m, preset.gpuModelMatch));
+  if (!modelMatches.length) {
+    return `нет ${preset.gpuModelMatch} в каталоге`;
+  }
+
+  const billable = modelMatches.filter((m) => isOnDemand(m) || preset.dedicated);
+  if (!billable.length) {
+    return `нет on-demand тарифа ${preset.gpuModelMatch}`;
+  }
+
+  if (preset.dedicated) {
+    const bundles = billable.filter((m) => isGpuBundle(m) && bundleMatchesShape(m, preset));
+    if (!bundles.length) return 'нет dedicated-узла под эту форму';
+  }
+
+  if (preset.gpuMemoryGb != null) {
+    const memOk = billable.some(
+      (m) => isGpuBundle(m) || gpuMemoryMatches(m, preset),
+    );
+    if (!memOk) {
+      return `нет ${preset.gpuModelMatch} ${preset.gpuMemoryGb} ГБ`;
+    }
+  }
+
+  const units = billable.filter((m) => !isGpuBundle(m) && gpuMemoryMatches(m, preset));
+  const bundles = billable.filter((m) => isGpuBundle(m) && bundleMatchesShape(m, preset));
+  if (!bundles.length && units.length && hostPresetForGpu(preset)) {
+    return 'есть GPU, но нет подходящего хоста vCPU/RAM';
+  }
+
+  return 'нет подходящего flavor / хоста';
+}
+
+function collectMissingProviders(
+  preset: CalculatorPreset,
+  period: PeriodMode,
+  presentIds: Set<string>,
+): MissingProviderNote[] {
+  const notes: MissingProviderNote[] = [];
+  for (const id of CALCULATOR_PROVIDER_IDS) {
+    if (presentIds.has(id)) continue;
+    const reason =
+      preset.kind === 'compute'
+        ? explainComputeMiss(id, preset, period)
+        : explainGpuMiss(id, preset, period);
+    notes.push({
+      provider: id,
+      providerName: providerDisplayName(id),
+      reason,
+    });
+  }
+  return notes;
+}
+
 export function quotePreset(
   preset: CalculatorPreset,
   period: PeriodMode = 'month',
 ): PresetQuoteResult {
   if (preset.kind === 'compute') {
     const quotes = quoteCompute(preset, period);
+    const present = new Set(quotes.map((q) => q.provider));
     return {
       preset,
       period,
       quotes,
       alternateQuotes: [],
       best: quotes[0] ?? null,
+      missingProviders: collectMissingProviders(preset, period, present),
     };
   }
 
@@ -877,12 +1013,16 @@ export function quotePreset(
   // If the preferred scope is empty, fall back so the card is not blank.
   const quotes = primary.length ? primary : alternate;
   const alternateQuotes = primary.length ? alternate : [];
+  const present = new Set(
+    [...quotes, ...alternateQuotes].map((q) => q.provider),
+  );
   return {
     preset,
     period,
     quotes,
     alternateQuotes,
     best: quotes[0] ?? null,
+    missingProviders: collectMissingProviders(preset, period, present),
   };
 }
 
@@ -951,6 +1091,7 @@ export function toViewQuote(result: PresetQuoteResult): ViewPresetQuote {
     quotes: result.quotes.map(stripMeters),
     alternateQuotes: result.alternateQuotes.map(stripMeters),
     best: result.best ? stripMeters(result.best) : null,
+    missingProviders: result.missingProviders,
   };
 }
 

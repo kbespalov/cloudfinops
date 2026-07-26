@@ -92,7 +92,7 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
   {
     id: 'glm-5.2',
     displayName: 'GLM 5.2',
-    aliases: ['glm 5.2', 'glm5.2', 'glm-5.2', 'злм 5.2'],
+    aliases: ['glm 5.2', 'glm5.2', 'glm-5.2', 'злм 5.2', 'jlm 5.2', 'jlm5.2', 'jlm-5.2'],
     arch: 'moe',
     parameterCountB: 744,
     activeParameterCountB: 40,
