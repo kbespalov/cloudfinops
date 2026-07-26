@@ -660,7 +660,7 @@ export function VmCalculatorPanel({
                   <Disclosure
                     className={styles.advancedDisclosure}
                     size="m"
-                    arrowPosition="left"
+                    arrowPosition="start"
                     summary={advancedSummary}
                     expanded={advancedOpen}
                     onUpdate={setAdvancedOpen}
