@@ -24,6 +24,7 @@ FUNCTION CALLING: инструменты — ТОЛЬКО native tool_calls. Б�
 ## INTENT (сначала пойми задачу → минимальная глубина)
 1) Отдельная цена / unit → search_prices | compare_unit_price | search_catalog. НЕ compose, НЕ полная архитектура.
 2) Точная конфигурация (vcpu+RAM+диск±IP±egress…) → get_quote или compose+validate+price. Все названные компоненты в BOM; nearest-match — с явной дельтой (больше RAM, другой диск, только preset).
+2b) «Самая дешёвая / экономичная ВМ у каждого провайдера» / «минимальная конфигурация по провайдерам» → get_quote(mode=cheapest-per-provider). Это полноценные ВМ (vCPU+RAM+диск), не unit-компоненты и не размытый обзор «~400–600 ₽» без tool. Разные shape/доля/preemptible у провайдеров — ок, явно покажи. Не устраивай длинный опросник вместо расчёта.
 3) Workload без ТЗ («развернуть GLM», LLM-инференс, ClickHouse, K8s для веба, lakehouse, высоконагруженная БД) → сначала архитектура и допущения; tools: recommend_inference_infra / get_lakehouse_quote / compose. Можно min / balanced / performance — каждое допущение видно (не выдавай за слова пользователя).
 4) Capacity / RPS → конфиг («тысяча RPS», «сколько ядер/памяти нужно», Go/API без ТЗ) → сначала прикидка ядер/RAM с явными допущениями, потом get_quote/compose на округлённый flavor и сравнение провайдеров. Не отвечай только теорией без цены, если спросили «какую конфигурацию / сколько стоит».
 5) Сравнение вариантов → одинаковая база (ресурсы, полнота цены); иначе явный warning. Смотри цену + coverage + состав + completeness + ограничения + assumptions + актуальность.
@@ -108,6 +109,7 @@ export const DOMAIN_CARD_COMPUTE = `## vCPU / RAM / диск (сопостави
 - Preemptible/долевые — отдельным блоком. MWS: для ядра бери строку vCPU, не RAM.
 - «Сравни SKU / Ice Lake / Sapphire preemptible vCPU с аналогами» → search_prices category=compute (+ compare_unit_price). Ice Lake ≠ S3 Ice. Для такого запроса providersMatched.cheapest = ближайший аналог по смыслу (платформа/доля/preemptible), не абсолютный минимум провайдера. Нет точного SKU — ближайшее с явными отличиями; не пустая таблица «ничего нет», если в каталоге есть соседние preemptible/100% vCPU.
 - get_quote — только ВМ/конфигурация целиком (оба: ядра+память, «собери», сайт с RAM). Nearest preset — назови отличия от запроса.
+- «Самая дешёвая ВМ у всех / по провайдерам» → get_quote(mode=cheapest-per-provider); в ответе таблица: провайдер · конфиг (vCPU/RAM, доля, обычная/прерываемая, диск) · ₽/мес. Не compare_unit_price и не усреднённые «вилки» без BOM.
 - get_quote по умолчанию: системный диск 100 GiB SSD (boot), без публичного IP. IP (publicIpCount) — только по явной просьбе. Не раздувай корзину «типовым» IP.`;
 
 export const DOMAIN_CARD_S3 = `## Object Storage / S3
@@ -198,6 +200,10 @@ export function matchPlanningDomains(text: string): PlanningDomain[] {
     (/\d+\s*(?:GiB|ГиБ|гиби|гб)/i.test(t) && /(?:RAM|ОЗУ|памят|vcpu|ядер)/i.test(t)) ||
     // «шестнадцать ядер / тридцать два гига памяти» without Latin digits
     /(?:ядер\w*|ядра\w*).{0,40}(?:памят|озу|гиг)|(?:памят|озу|гиг).{0,40}(?:ядер\w*|ядра\w*|vcpu)/i.test(
+      t,
+    ) ||
+    // «самая дешёвая / экономичная ВМ у каждого провайдера»
+    /(?:экономичн[а-яё]*|самая?\s+деш[её]в|минимальн[а-яё]*).{0,40}(?:вм|виртуал|конфигурац|вариант).{0,40}провайдер|(?:провайдер).{0,40}(?:экономичн|самая?\s+деш[её]в|минимальн)/i.test(
       t,
     );
   if (hasCompute) out.add('compute');

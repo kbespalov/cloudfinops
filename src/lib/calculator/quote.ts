@@ -180,8 +180,8 @@ export function isDedicatedVcpu(meter: CatalogMeter): boolean {
 /**
  * A core with a fractional performance guarantee below 100% (e.g. Yandex 5%/20%/50%
  * burstable). These do not deliver N full vCPUs and carry hard limits on core/RAM
- * counts, so quoting "8 vCPU" on a 5% core would be misleading — excluded even from
- * the low-cost tier, which still relies on 100% preemptible / oversubscribed cores.
+ * counts, so quoting "8 vCPU" on a 5% core would be misleading — excluded from the
+ * default dedicated path. Low-cost uses explicit vcpuShare (Cloud.ru 10%/30% flavors).
  */
 export function isFractionalGuarantee(meter: CatalogMeter): boolean {
   const share = String(meter.dimensions.guaranteedVcpuShare ?? '');

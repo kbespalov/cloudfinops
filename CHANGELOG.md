@@ -2,6 +2,23 @@
 
 ## 2026-07-26
 
+### Чат / самая дешёвая ВМ у каждого провайдера
+
+Запрос вроде «самое экономичное у каждого провайдера» больше не должен отвечать размытой вилкой «~400–600 ₽». `get_quote(mode=cheapest-per-provider)` сканирует минимальные полноценные ВМ (vCPU+RAM+диск) по всем провайдерам: Cloud.ru 10%, Yandex/Selectel preemptible и т.д. Fast-path + правила в system prompt. Soft UX: `ux-222`…`ux-224` в `scripts/eval/user-scenarios.ts` (`SOFT_SCENARIO_COUNT` = 224).
+
+### Калькулятор / Экономичные
+
+Вкладка «Экономичные» больше не форсит прерываемую + 100% (из‑за этого пропадали дешёвые Cloud.ru). Теперь по умолчанию: **обычная ВМ + доля 10% + HDD + 1/1** — в выдаче появляются эконом-флейворы Cloud.ru (~300 ₽/мес). Прерываемые Selectel/Yandex остаются через переключатель «Прерываемая».
+
+### Каталог / price audit (критические якоря)
+
+Прогнали инвентаризацию SKU и сверку с публичными прайсами.
+
+- **MWS GPT Model Hub:** в каталоге **осознанно оставляем тарифы с 01.08.2026** (короткую акцию до 31.07 не отражаем); в notes это зафиксировано.
+- **MWS Compute:** в notes явно прописан рост с 01.08.2026 (`futureHourlyAmount` уже был в dimensions).
+- Нулевые «бесплатные» SKU без пояснения получили `notes` (MWS interzone ingress, Selectel S3 ingress, T1 internet ingress).
+- Добавлены `npm run data:audit` и golden-тест `src/lib/catalog/price-anchors.test.ts` (YC/MWS/VK/Selectel/T1 якоря).
+
 ### Каталог / VK H200 card-only synthetic
 
 У VK Cloud в прайсе H200 только flavor «целиком» (×1 / ×8) — отдельной card-only строки нет. Добавили синтетическую SKU `vk.gpu.h200.unit.synthetic` (*): оценка «только GPU» = `GPU-44-256-H200-1` минус хост 44 vCPU / 256 GiB по unit-ставкам Cascade Lake. В каталоге рядом с Selectel/T1 «только GPU»; в калькуляторе не участвует (как Cloud.ru unit.synthetic).

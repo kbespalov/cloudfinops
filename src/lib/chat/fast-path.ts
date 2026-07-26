@@ -91,6 +91,17 @@ const ALIAS_PLANS: {id: string; match: RegExp; tools: FastPathTool[]}[] = [
     tools: [{name: 'recommend_inference_infra', args: {model: 'Kimi K2.6', maxConfigs: 3}}],
   },
   {
+    id: 'vm-cheapest-per-provider',
+    match:
+      /(?:экономичн[а-яё]*\s+вариант|самая?\s+деш[её]в[а-яё]*|самый\s+деш[её]в[а-яё]*|минимальн[а-яё]*\s+(?:вм|виртуал|конфигурац)).{0,64}(?:кажд[а-яё]*.{0,16}провайдер|у\s+всех|по\s+провайдер)|(?:у\s+каждого|кажд[а-яё]*.{0,16}провайдер|по\s+провайдер).{0,64}(?:экономичн|самая?\s+деш[её]в|самый\s+деш[её]в|минимальн[а-яё]*\s+(?:вм|виртуал))|(?:подбери|покажи|дай).{0,24}самое?\s+экономичн/i,
+    tools: [
+      {
+        name: 'get_quote',
+        args: {mode: 'cheapest-per-provider', period: 'month', diskGiB: 10},
+      },
+    ],
+  },
+  {
     id: 'vm-8-32',
     match: /(?:вм|vm).{0,40}8\s*vcpu.{0,20}32\s*gi?b/i,
     tools: [{name: 'get_quote', args: {vcpu: 8, ramGiB: 32, diskGiB: 100, period: 'month'}}],
@@ -1785,6 +1796,15 @@ export function formatFastPathAnswer(
       total: number | null;
       scope?: string;
       scopeNote?: string;
+      shape?: string;
+      vcpu?: number;
+      ramGiB?: number;
+      diskGiB?: number;
+      diskMedia?: string;
+      purchaseModel?: string;
+      vcpuShare?: string;
+      computeName?: string;
+      note?: string | null;
     };
     const quotes = (data.quotes as Q[])
       .filter((q) => q.provider && typeof q.total === 'number')
@@ -1793,6 +1813,7 @@ export function formatFastPathAnswer(
     if (!quotes.length) return null;
     const best = quotes[0].total as number;
     const req = (data.request ?? {}) as {
+      mode?: string;
       vcpu?: number;
       ramGiB?: number;
       diskGiB?: number;
@@ -1800,6 +1821,45 @@ export function formatFastPathAnswer(
       gpuModel?: string;
       gpuCount?: number;
     };
+
+    if (req.mode === 'cheapest-per-provider' || data.mode === 'cheapest-per-provider') {
+      const purchaseLabel = (pm?: string) =>
+        pm === 'preemptible' ? 'прерыв.' : pm === 'on-demand' ? 'обычн.' : pm ?? '—';
+      const rows = quotes
+        .map((q) => {
+          const shape =
+            q.shape ??
+            (q.vcpu != null && q.ramGiB != null ? `${q.vcpu}/${q.ramGiB}` : '—');
+          const disk =
+            q.diskMedia && q.diskGiB != null
+              ? `${q.diskMedia.toUpperCase()} ${q.diskGiB}`
+              : '—';
+          const share = q.vcpuShare ?? '—';
+          return `| ${q.provider} | ${shape} · ${share} · ${purchaseLabel(q.purchaseModel)} · ${disk} | ${formatRub(q.total as number)} | ${pctVsBest(q.total as number, best)} |`;
+        })
+        .join('\n');
+      const leader = quotes[0]!;
+      const leaderBits = [
+        leader.shape ?? `${leader.vcpu}/${leader.ramGiB}`,
+        leader.vcpuShare,
+        purchaseLabel(leader.purchaseModel),
+        leader.diskMedia && leader.diskGiB != null
+          ? `${leader.diskMedia.toUpperCase()} ${leader.diskGiB} GiB`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(', ');
+      return (
+        `**Самая дешёвая полноценная ВМ у каждого провайдера** (НДС вкл., 720 ч; системный диск без IP)\n\n` +
+        `| Провайдер | Конфиг | Итого / мес | к минимуму |\n|---|---|---:|---|\n${rows}\n\n` +
+        `${cheapestInCatalogLine({
+          provider: leader.provider,
+          priceText: `${formatRub(best)}/мес`,
+        })} — ${leaderBits}.\n\n` +
+        `У провайдеров разные минимальные shape / доля vCPU / preemptible — это ожидаемо для «что можно запустить дешевле всего». Не сравнивай как одинаковые ВМ.`
+      );
+    }
+
     const ipSuffix =
       typeof req.publicIpCount === 'number' && req.publicIpCount > 0
         ? ` / IP ×${req.publicIpCount}`

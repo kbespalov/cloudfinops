@@ -379,6 +379,27 @@ describe('calculator quote arbitration', () => {
     );
   });
 
+  it('UI low-cost defaults (on-demand 10% HDD 1/1) surface Cloud.ru economy flavors', () => {
+    const low = COMPUTE_PRESETS.find((p) => p.id === 'low-1-1');
+    assert.ok(low);
+    const result = quotePreset(
+      {
+        ...low,
+        purchaseModel: 'on-demand',
+        vcpuShare: '10%',
+        diskMedia: 'hdd',
+      },
+      'month',
+    );
+    assert.ok(result.best, 'expected Cloud.ru economy quote');
+    assert.equal(result.best!.provider, 'cloud-ru');
+    const core = result.best!.meters[0]!;
+    assert.equal(core.meter, 'compute.flavor');
+    assert.match(String(core.dimensions.guaranteedVcpuShare ?? ''), /^10%/);
+    // ~300₽ class: flavor + small HDD, not Selectel spot.
+    assert.ok(result.best!.total < 500, `expected sub-500₽ budget VM, got ${result.best!.total}`);
+  });
+
   it('explicit vcpuShare filters unit cores and clamps Yandex fractional sizes', () => {
     const base = COMPUTE_PRESETS.find((p) => p.id === 'gen-4-16');
     assert.ok(base);

@@ -7,6 +7,7 @@
     "prebuild": "npm run data:build",
     "data:build": "tsx scripts/build-catalog.ts",
     "data:embeddings": "tsx scripts/build-embeddings.ts",
+    "data:audit": "tsx scripts/eval/audit-catalog-prices.ts",
     "eval:retrieval": "tsx scripts/eval/retrieval-run.ts",
     "eval:smoke": "tsx scripts/eval/smoke.ts --suite",
     "eval:smoke:new": "tsx scripts/eval/smoke.ts --new",

@@ -13,6 +13,7 @@ import {
   type SearchParams,
 } from './search';
 import {addPublicIpParts, quotePreset, toViewQuote} from '@/lib/calculator/quote';
+import {quoteCheapestVmPerProvider} from '@/lib/calculator/quote-cheapest-vm';
 import {compareUnitPrice, type DiskMediaFilter, type UnitComponent} from './analytics';
 import {catalogAsOfIso} from '@/lib/catalog/compare-disclaimer';
 import {fitBudget, type FitBudgetProfile} from './fit-budget';
@@ -378,23 +379,29 @@ export const CHAT_TOOLS = [
     function: {
       name: 'get_quote',
       description:
-        'Shortcut: compose_solution(virtual_machine) для одной ВМ/GPU. Только полная машина: «N vCPU / M GiB», «собери ВМ», GPU-хост с паритетом. НЕ для одного компонента — compare_unit_price / search_catalog. Стек/K8s — compose_solution.',
+        'Shortcut: compose_solution(virtual_machine) для одной ВМ/GPU. Полная машина: «N vCPU / M GiB», «собери ВМ», GPU-хост. mode=cheapest-per-provider — самая дешёвая запускаемая ВМ у КАЖДОГО провайдера (разные shape/share/spot ок). НЕ для одного компонента — compare_unit_price. Стек/K8s — compose_solution. Не отвечай размытым обзором без этого tool.',
       parameters: {
         type: 'object',
         properties: {
+          mode: {
+            type: 'string',
+            enum: ['shape', 'cheapest-per-provider'],
+            description:
+              'shape (по умолчанию) — фиксированная конфигурация vcpu/ram. cheapest-per-provider — у каждого провайдера своя минимальная полноценная ВМ (vCPU+RAM+диск); для «самая дешёвая ВМ у всех / экономичный вариант по провайдерам».',
+          },
           vcpu: {
             type: 'integer',
-            description: 'Количество vCPU (для GPU можно опустить).',
+            description: 'Количество vCPU (для GPU можно опустить). Не нужно при mode=cheapest-per-provider.',
           },
           ramGiB: {
             type: 'integer',
             description:
-              'Объём RAM в GiB. Для обычной ВМ, если не задан — 4×vCPU (general). Для GPU можно опустить (подставится типовой хост).',
+              'Объём RAM в GiB. Для обычной ВМ, если не задан — 4×vCPU (general). Для GPU можно опустить (подставится типовой хост). Не нужно при mode=cheapest-per-provider.',
           },
           diskGiB: {
             type: 'integer',
             description:
-              'Системный диск в GiB. Если не задан — 100 (boot disk для сопоставимой ВМ). Не выдумывай объём сверх этого, пока пользователь не указал.',
+              'Системный диск в GiB. shape: если не задан — 100 GiB SSD. cheapest-per-provider: по умолчанию 10 GiB (минимальный boot).',
           },
           publicIpCount: {
             type: 'integer',
@@ -652,6 +659,50 @@ function runQuote(args: Record<string, unknown>): unknown {
   const period: PeriodMode =
     args.period === 'unit' || args.period === 'year' ? args.period : 'month';
   const publicIpCount = Math.max(0, Math.round(num(args.publicIpCount) ?? 0));
+  if (args.mode === 'cheapest-per-provider') {
+    const scanned = quoteCheapestVmPerProvider({
+      period,
+      diskGiB: num(args.diskGiB) ?? 10,
+      publicIpCount,
+    });
+    return {
+      ...scanned,
+      catalogAsOf: catalogAsOfIso(),
+      request: {
+        mode: 'cheapest-per-provider',
+        diskGiB: scanned.diskGiB,
+        publicIpCount,
+        period,
+      },
+      quotes: scanned.quotes.map((q) => ({
+        provider: q.providerName,
+        providerId: q.provider,
+        total: q.total,
+        scope: 'vm',
+        scopeNote: 'vCPU+RAM+системный диск (минимальная запускаемая ВМ провайдера)',
+        shape: `${q.vcpu} vCPU / ${q.ramGiB} GiB`,
+        vcpu: q.vcpu,
+        ramGiB: q.ramGiB,
+        diskGiB: q.diskGiB,
+        diskMedia: q.diskMedia,
+        purchaseModel: q.purchaseModel,
+        vcpuShare: q.vcpuShare,
+        computeName: q.computeName,
+        parts: q.parts,
+        note: q.note,
+      })),
+      best: scanned.best
+        ? {
+            provider: scanned.best.providerName,
+            total: scanned.best.total,
+            shape: `${scanned.best.vcpu} vCPU / ${scanned.best.ramGiB} GiB`,
+            purchaseModel: scanned.best.purchaseModel,
+            vcpuShare: scanned.best.vcpuShare,
+            diskMedia: scanned.best.diskMedia,
+          }
+        : null,
+    };
+  }
   const req: Record<string, unknown> = {
     vcpu: num(args.vcpu),
     ramGiB: num(args.ramGiB),

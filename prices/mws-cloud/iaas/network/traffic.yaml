@@ -71,11 +71,14 @@ spec:
     pricingMode: unit
     region: ru-central1
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-26'
     sourceRefs: [mws.all-prices, mws.vpc]
     dimensions:
       sourceService: vpc
       trafficScope: inter-zone
+      verificationStatus: verified
+      verifiedAt: '2026-07-26'
+      verificationMethod: official-pricelist
     pricing:
       rate:
         amount: '0'
@@ -83,6 +86,7 @@ spec:
         unit: {quantity: GiB, period: usage}
         vat: included
         byteBasis: binary
+    notes: Входящий межзональный трафик не тарифицируется (0 ₽) — публичный прайс MWS VPC.
   - sku: mws.traffic.interzone.egress
     name: Исходящий межзональный трафик
     meter: network.traffic.egress

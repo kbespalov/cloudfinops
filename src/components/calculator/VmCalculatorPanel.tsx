@@ -287,13 +287,13 @@ export function VmCalculatorPanel({
     let shapeRam = ramGiB;
 
     if (next === 'low-cost') {
-      // Budget path: cheapest comparable shelf is spot + HDD, shape 2/4.
-      // Cloud.ru 10%/30% flavors are on-demand only — incompatible with spot.
+      // Budget path: Cloud.ru economy flavors (10% on-demand + HDD), shape 1/1.
+      // Spot/100% hid those ~300₽ VMs — preemptible stays available via the toggle.
       nextDisk = 'hdd';
-      nextPurchase = 'preemptible';
-      if (nextShare === '10%' || nextShare === '30%') nextShare = '100%';
-      shapeVcpu = 2;
-      shapeRam = 4;
+      nextPurchase = 'on-demand';
+      nextShare = '10%';
+      shapeVcpu = 1;
+      shapeRam = 1;
       setAdvancedOpen(true);
     }
 
@@ -305,7 +305,12 @@ export function VmCalculatorPanel({
     setCustomRam(false);
     setForceCustomPreset(false);
     setVcpu(clamped.vcpu);
-    setRamGiB(defaultRamForShare(nextShare, next, clamped.vcpu));
+    // low-cost picks an explicit economy shape (1/1); other families keep ratio defaults.
+    setRamGiB(
+      next === 'low-cost'
+        ? clamped.ramGiB
+        : defaultRamForShare(nextShare, next, clamped.vcpu),
+    );
   }
 
   function onPurchaseModelChange(next: PurchaseModel) {

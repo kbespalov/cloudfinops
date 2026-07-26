@@ -82,8 +82,13 @@ function mapGetQuote(
     };
   }
 
-  const vcpu = Math.max(1, Math.round(num(args.vcpu) ?? 4));
-  const ramGiB = Math.max(1, Math.round(num(args.ramGiB) ?? vcpu * 4));
+  const cheapestMode = args.mode === 'cheapest-per-provider';
+  const vcpu = Math.max(1, Math.round(num(args.vcpu) ?? (cheapestMode ? 1 : 4)));
+  const ramGiB = Math.max(
+    1,
+    Math.round(num(args.ramGiB) ?? (cheapestMode ? 1 : vcpu * 4)),
+  );
+  const bootDiskGiB = cheapestMode ? (num(args.diskGiB) ?? 10) : diskGiB;
   const cdnEgressGiB = num(args.cdnEgressGiB);
   // Match get_quote / compose: no public IP unless the tool args say so.
   // (Classic VM tab still defaults to 1 IP — AI basket must stay in sync with chat.)
@@ -95,25 +100,31 @@ function mapGetQuote(
     period,
     vcpu,
     ramGiB,
-    diskGiB,
-    diskMedia: 'ssd',
-    family: 'general',
+    diskGiB: bootDiskGiB,
+    diskMedia: cheapestMode ? 'hdd' : 'ssd',
+    family: cheapestMode ? 'low-cost' : 'general',
     vmCount: 1,
     publicIpCount,
     purchaseModel: 'on-demand',
-    vcpuShare: '100%',
+    vcpuShare: cheapestMode ? '10%' : '100%',
     ...(cdnEgressGiB != null && cdnEgressGiB > 0
       ? {cdnEgressGiB: Math.round(cdnEgressGiB)}
       : {}),
   };
-  const baseLine = [
-    `${vcpu} vCPU`,
-    `${ramGiB} GiB`,
-    `SSD ${diskGiB} GiB`,
-    publicIpCount > 0 ? `IP ×${publicIpCount}` : null,
-  ]
-    .filter(Boolean)
-    .join(' · ');
+  const baseLine = cheapestMode
+    ? [
+        'Самая дешёвая ВМ / провайдер',
+        `${vcpu}/${ramGiB}`,
+        `${request.diskMedia!.toUpperCase()} ${bootDiskGiB} GiB`,
+      ].join(' · ')
+    : [
+        `${vcpu} vCPU`,
+        `${ramGiB} GiB`,
+        `SSD ${bootDiskGiB} GiB`,
+        publicIpCount > 0 ? `IP ×${publicIpCount}` : null,
+      ]
+        .filter(Boolean)
+        .join(' · ');
   return {
     kind: 'adhoc',
     request,

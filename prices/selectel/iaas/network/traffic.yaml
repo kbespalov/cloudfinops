@@ -96,12 +96,15 @@ spec:
     pricingMode: unit
     region: Россия / ru-1, ru-3, ru-7
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-26'
     sourceRefs: [selectel.prices, selectel.s3-rules]
     dimensions:
       sourceService: object-storage
       trafficScope: public-internet
       storageClassScope: all
+      verificationStatus: verified
+      verifiedAt: '2026-07-26'
+      verificationMethod: official-docs
     pricing:
       rate:
         amount: '0'
@@ -109,6 +112,7 @@ spec:
         unit: {quantity: GiB, period: usage}
         vat: included
         byteBasis: binary
+    notes: Входящий трафик и трафик внутри Selectel не тарифицируются (0 ₽) — docs S3 / payment.
   - sku: selectel.object-storage.standard.traffic.egress
     name: Исходящий интернет-трафик S3 Standard
     meter: network.traffic.egress

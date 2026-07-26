@@ -85,7 +85,7 @@ export function isFractionalShare(share: VcpuShare): boolean {
 /**
  * Map a free-form vCPU/RAM shape onto the closest family chip.
  * Keeps `low-cost` when the ratio still matches the cheap shelf (~2 GiB/vCPU);
- * never auto-enters `low-cost` from other families (that path also flips spot/HDD).
+ * never auto-enters `low-cost` from other families (that path also flips HDD + 10% share).
  */
 export function inferComputeFamily(
   vcpu: number,

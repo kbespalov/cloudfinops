@@ -67,7 +67,7 @@ export const COMPUTE_FAMILY_TITLE: Record<ComputeFamily, string> = {
 
 export const COMPUTE_FAMILY_HINT: Record<ComputeFamily, string> = {
   'low-cost':
-    'Бюджетный класс: прерываемая ВМ + сетевой HDD; доли 10%/30% — только обычные флейворы Cloud.ru',
+    'Бюджетный класс: эконом-флейворы Cloud.ru (доля 10%/30%, обычная ВМ) + сетевой HDD; прерываемые — переключателем, где есть в каталоге',
   general: 'Универсальные ВМ — 1 vCPU : 4 GiB RAM',
   'high-cpu': 'CPU-оптимизированные — 1 vCPU : 2 GiB RAM',
   'high-memory': 'Memory-оптимизированные — 1 vCPU : 8 GiB RAM',

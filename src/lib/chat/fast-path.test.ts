@@ -245,6 +245,22 @@ describe('matchFastPath', () => {
     assert.equal(b.tools[0]?.args.budgetMonthRub, 100_000);
   });
 
+  it('matches cheapest VM per provider to get_quote mode', () => {
+    for (const q of [
+      'Подбери самое экономичное вариант в каждом из провайдеров',
+      'Самая дешёвая ВМ у каждого провайдера',
+      'Минимальная виртуальная машина по провайдерам',
+    ]) {
+      const plan = matchFastPath(q);
+      assert.ok(plan, q);
+      assert.equal(plan.id, 'vm-cheapest-per-provider', q);
+      assert.equal(plan.tools[0]?.name, 'get_quote');
+      assert.equal(plan.tools[0]?.args.mode, 'cheapest-per-provider');
+    }
+    // Must not steal GPU cheapest queries.
+    assert.notEqual(matchFastPath('Самый дешёвый H100')?.id, 'vm-cheapest-per-provider');
+  });
+
   it('matches Qwen3 32B self-host to recommend_inference_infra', () => {
     const plan = matchFastPath(
       'Хочу поднять Qwen3 32B у себя на GPU в РФ — какую карту и сколько штук брать, с ценами?',

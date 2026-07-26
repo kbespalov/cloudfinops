@@ -76,7 +76,7 @@ function sc(
 }
 
 /** Expected corpus size — bump when appending cases. */
-export const SOFT_SCENARIO_COUNT = 221;
+export const SOFT_SCENARIO_COUNT = 224;
 
 /** Build the full soft UX corpus. */
 export function buildUserScenarios(): SoftScenario[] {
@@ -2902,6 +2902,57 @@ export function buildUserScenarios(): SoftScenario[] {
         answerIncludes: ['латент', 'ядр', 'RPS', '₽'],
       },
       'Teach concurrency = RPS×latency; contrast ~3–4 vs ~8–10 cores; quote both configs or explain delta then price the recommended one.',
+    ),
+
+    // ── Cheapest full VM per provider (not unit components) ─────────────
+    sc(
+      222,
+      'vm',
+      'Подбери самое экономичное вариант в каждом из провайдеров',
+      ['quote', 'vm', 'compare', 'economy'],
+      'medium',
+      {
+        toolsAny: ['get_quote'],
+        toolsAvoid: ['compare_unit_price', 'fit_budget'],
+        catalogAnchor: 'quote',
+        anchorParams: {mode: 'cheapest-per-provider', period: 'month', diskGiB: 10},
+        mustShowBreakdown: true,
+        answerIncludes: ['Cloud.ru', 'Yandex', 'Selectel', 'vCPU', '₽'],
+      },
+      'get_quote(mode=cheapest-per-provider): full launchable VM BOM per provider (shape/share/spot may differ). Not unit CPU/RAM, not vague «~400–600 ₽» without tools.',
+    ),
+    sc(
+      223,
+      'vm',
+      'Самая дешёвая виртуальная машина у каждого провайдера — именно полноценная ВМ (ядра+память+диск), не отдельные диски и не снимки.',
+      ['quote', 'vm', 'compare', 'economy'],
+      'medium',
+      {
+        toolsAny: ['get_quote'],
+        toolsAvoid: ['compare_unit_price'],
+        catalogAnchor: 'quote',
+        anchorParams: {mode: 'cheapest-per-provider', period: 'month', diskGiB: 10},
+        mustShowBreakdown: true,
+        answerIncludes: ['vCPU', 'GiB', '₽'],
+        forbiddenExtras: [],
+      },
+      'Must price whole VMs; mentioning disk/snapshot SKUs alone as «cheapest VM» is a miss.',
+    ),
+    sc(
+      224,
+      'vm',
+      'Не устраивай опросник — сразу покажи самую дешёвую ВМ по всем провайдерам: конфиг и цена в месяц.',
+      ['quote', 'vm', 'compare', 'economy'],
+      'trap',
+      {
+        toolsAny: ['get_quote'],
+        toolsAvoid: ['compare_unit_price', 'fit_budget'],
+        catalogAnchor: 'quote',
+        anchorParams: {mode: 'cheapest-per-provider', period: 'month', diskGiB: 10},
+        mustShowBreakdown: true,
+        answerIncludes: ['₽', 'vCPU'],
+      },
+      'Preview-first: priced table in the same turn; clarifying questions only as a short footnote, not instead of the BOM.',
     ),
   ];
 
