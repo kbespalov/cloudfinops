@@ -273,30 +273,37 @@ function buildConfigWhy(
   isPrimary: boolean,
 ): string {
   const weight = profile.weights.find((w) => w.dtype === rec.quant);
+  const quant = rec.quant.toUpperCase();
+  const noteBit = rec.notes?.trim().replace(/^\.+/, '') ?? '';
+  const priceBit = bestProvider
+    ? `В каталоге среди похожих узлов сейчас дешевле у ${bestProvider}.`
+    : 'Полной цены на такой узел в каталоге пока нет.';
+
+  // Prefer curated human notes; avoid stacking a second role label on top.
+  if (noteBit) {
+    return `${noteBit} ${priceBit}`.replace(/\s+/g, ' ').trim();
+  }
+
   const weightBit =
     weight != null
-      ? `веса ~${weight.weightsVramGiB} GiB в ${rec.quant.toUpperCase()}`
-      : `квант ${rec.quant.toUpperCase()}`;
+      ? `веса примерно ${weight.weightsVramGiB} ГиБ в ${quant}`
+      : `формат ${quant}`;
   const sizeBit =
     profile.parameterCountB == null
-      ? profile.parameterCountNote ?? 'размер параметров не раскрыт'
+      ? 'размер параметров вендор не раскрыл'
       : profile.activeParameterCountB != null
-        ? `${profile.parameterCountB}B MoE (~${profile.activeParameterCountB}B active)`
-        : `${profile.parameterCountB}B`;
+        ? `MoE ${profile.parameterCountB}B (активных ~${profile.activeParameterCountB}B)`
+        : `модель ${profile.parameterCountB}B`;
   const cards =
     rec.gpuCount === 1
-      ? `одной ${rec.gpuFamily} хватает под ${weightBit}`
-      : `${rec.gpuCount}×${rec.gpuFamily}: суммарно ~${rec.estimatedVramGiB} GiB под ${weightBit}`;
+      ? `на одной ${rec.gpuFamily} хватает места под ${weightBit}`
+      : `${rec.gpuCount}×${rec.gpuFamily} дают около ${rec.estimatedVramGiB} ГиБ суммарно под ${weightBit}`;
   const role = isPrimary
     ? profile.deployment === 'weights-pending'
-      ? 'Ориентир узла (веса ещё не вышли / cluster-scale)'
-      : 'Стартовый минимум из базы'
-    : 'Альтернатива (дороже/запас по VRAM или другой quant)';
-  const priceBit = bestProvider
-    ? `среди паритетных узлов в каталоге Cloud FinOps минимум у ${bestProvider}`
-    : 'в каталоге нет полной паритетной цены на этот shape';
-  const noteBit = rec.notes ? ` ${rec.notes}` : '';
-  return `${role}: ${sizeBit} → ${cards}; ${priceBit}.${noteBit}`.trim();
+      ? 'Пока ориентир по железу'
+      : 'С чего обычно начинают'
+    : 'Другой разумный вариант';
+  return `${role}: ${sizeBit} — ${cards}. ${priceBit}`;
 }
 
 function quoteConfig(

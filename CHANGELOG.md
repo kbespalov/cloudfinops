@@ -12,6 +12,8 @@
 
 Второй проход по рецептам: статус minimum / recommended / high-throughput / experimental в notes; переставили лестницы (Qwen3.6/32/Gemma → L4 INT4 first; Coder-480/MiniMax → 4×H200 FP8 min, 8×H200 high-throughput; Kimi → 4×H200 INT4 + 8×H200 FP8 как плотный FP8; GLM 5.2 → 4×H200 INT4 primary; Mixtral → 2×A100 INT4 primary, 1×A100 experimental).
 
+Подредактировали тексты рецептов и подсказок why: по-русски, без ярлыков Minimum/Recommended и англо-русской каши; цифры VRAM и quant оставили.
+
 ### Каталог / Yandex preemptible GPU (1/2/4)
 
 В Billing API у Yandex есть отдельные preemptible SKU на GPU. Добавили в каталог Gen2 / T4i / V100 Broadwell preemptible; у A100/V100/T4/Platform V4 поправили решётку на **1/2/4** (8× в spot обычно недоступна). Реальная скидка — у A100/V100/T4; у Gen2/T4i/Platform V4 ставка GPU как у on-demand. Добавили vCPU/RAM ставок GPU-платформ (`gpu-platforms.yaml`) и переключатель «Прерываемая» в калькуляторе GPU.
