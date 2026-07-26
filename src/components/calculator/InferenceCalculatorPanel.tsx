@@ -102,6 +102,7 @@ function planForConfig(
     weightVariant: weight,
     totalParametersB: profile.parameterCountB,
     activeParameterCountB: profile.activeParameterCountB,
+    arch: profile.arch,
     attention: profile.attention,
     contextDefault: profile.contextDefault,
     avgContextTokens,
@@ -163,7 +164,11 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
   const [quant, setQuant] = useState<QuantOption>(() =>
     parseSelfHostQuant(searchParams.get('quant')),
   );
-  const [concurrentRequests, setConcurrentRequests] = useState(4);
+  // Start at 1: with realistic KV, default 4× often marks L4/A100 "min" recipes impossible
+  // before the user has even touched the workload knobs.
+  const [concurrentRequests, setConcurrentRequests] = useState(1);
+  /** null while the field is cleared for multi-digit typing (e.g. 1 → 50). */
+  const [concurrentDraft, setConcurrentDraft] = useState<number | null>(1);
   const [maxContextTokens, setMaxContextTokens] = useState(128_000);
   const [avgContextTokens, setAvgContextTokens] = useState(32_768);
   const [rec, setRec] = useState<InferenceRecommendResult | null>(null);
@@ -470,14 +475,31 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
                 </div>
                 <NumberInput
                   size="l"
-                  min={1}
-                  max={128}
-                  value={concurrentRequests}
-                  onUpdate={(v) =>
-                    setConcurrentRequests(Math.max(1, Math.round(v ?? 1)))
-                  }
+                  // No min/max on the widget: Gravity clamps on clear and blocks typing 50.
+                  // Range is enforced on commit / blur instead.
+                  step={1}
+                  allowDecimal={false}
+                  value={concurrentDraft}
+                  onUpdate={(v) => {
+                    setConcurrentDraft(v);
+                    if (v == null || !Number.isFinite(v)) return;
+                    const next = Math.min(128, Math.max(1, Math.round(v)));
+                    setConcurrentRequests(next);
+                    setConcurrentDraft(next);
+                  }}
+                  onBlur={() => {
+                    if (concurrentDraft == null || !Number.isFinite(concurrentDraft)) {
+                      setConcurrentDraft(concurrentRequests);
+                      return;
+                    }
+                    const next = Math.min(128, Math.max(1, Math.round(concurrentDraft)));
+                    setConcurrentRequests(next);
+                    setConcurrentDraft(next);
+                  }}
                   controlProps={{
                     'aria-label': 'Параллельные запросы',
+                    'aria-valuemin': 1,
+                    'aria-valuemax': 128,
                   }}
                 />
               </div>
@@ -487,8 +509,8 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
                     Токены на запрос (вход + выход)
                   </Text>
                   <HelpMark aria-label="Про число токенов на запрос" iconSize="s">
-                    Средняя длина prompt + response для оценки KV cache. Не путать с максимальным
-                    контекстом модели.
+                    Средняя длина одного запроса (prompt + ответ). Именно она в первую очередь
+                    задаёт размер KV cache вместе с числом параллельных запросов.
                   </HelpMark>
                 </div>
                 <Select
@@ -525,8 +547,9 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
                       Макс. контекст модели
                     </Text>
                     <HelpMark aria-label="Про максимальный контекст" iconSize="s">
-                      Потолок токенов одного запроса. Влияет на резерв и допустимость конфигурации,
-                      но не заменяет «токены на запрос» для оценки среднего KV cache.
+                      Потолок длины одного запроса. Учитывается как запас к средним «токенам на
+                      запрос» (оценка ближе к p95): чем выше потолок относительно среднего, тем
+                      больше KV. Также ограничивает выбор средней длины сверху.
                     </HelpMark>
                   </div>
                   <Select
@@ -590,6 +613,7 @@ function InferenceCalculatorPanelInner({period}: {period: PeriodMode}) {
                       view="flat"
                       onClick={() => {
                         setConcurrentRequests(1);
+                        setConcurrentDraft(1);
                         const def = defaultAvgContext(profile?.contextDefault ?? 128_000);
                         setMaxContextTokens(profile?.contextDefault ?? 128_000);
                         setAvgContextTokens(def);

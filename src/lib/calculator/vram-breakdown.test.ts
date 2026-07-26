@@ -40,25 +40,57 @@ describe('vram-breakdown façade', () => {
 
   it('scales KV with context length, not weight bytes', () => {
     const base = {
-      weightsGiB: 100,
+      weightsGiB: 40,
       contextDefault: 32_768,
       batchSize: 1,
-      concurrentUsers: 1,
-      quant: 'fp8',
+      concurrentUsers: 4,
+      quant: 'int4',
       gpuCount: 1,
       gpuFamily: 'H200',
       gpuMemoryGb: 141,
-      attention: {type: 'gqa' as const, kvBytesPerTokenEstimated: 80},
+      totalParametersB: 70,
+      attention: {
+        type: 'gqa' as const,
+        numLayers: 80,
+        numKvHeads: 8,
+        headDim: 128,
+      },
     };
     const shortCtx = buildVramBreakdown({...base, avgContextTokens: 8_192, maxContextTokens: 32_768});
     const longCtx = buildVramBreakdown({...base, avgContextTokens: 131_072, maxContextTokens: 131_072});
     const kvShort = shortCtx.parts.find((p) => p.id === 'kv')!.gib;
     const kvLong = longCtx.parts.find((p) => p.id === 'kv')!.gib;
-    assert.ok(kvLong > kvShort * 3);
+    assert.ok(kvShort >= 1, `short KV should be visible GiB, got ${kvShort}`);
+    assert.ok(kvLong > kvShort * 2, `long=${kvLong} short=${kvShort}`);
     assert.equal(
       shortCtx.parts.find((p) => p.id === 'weights')!.gib,
       longCtx.parts.find((p) => p.id === 'weights')!.gib,
     );
+  });
+
+  it('raising max context above average increases KV (p95 blend)', () => {
+    const base = {
+      weightsGiB: 40,
+      contextDefault: 128_000,
+      batchSize: 1,
+      concurrentUsers: 4,
+      quant: 'int4',
+      gpuCount: 1,
+      gpuFamily: 'H200',
+      gpuMemoryGb: 141,
+      avgContextTokens: 32_768,
+      attention: {
+        type: 'gqa' as const,
+        numLayers: 80,
+        numKvHeads: 8,
+        headDim: 128,
+      },
+    };
+    const tightMax = buildVramBreakdown({...base, maxContextTokens: 32_768});
+    const wideMax = buildVramBreakdown({...base, maxContextTokens: 131_072});
+    const kvTight = tightMax.parts.find((p) => p.id === 'kv')!.gib;
+    const kvWide = wideMax.parts.find((p) => p.id === 'kv')!.gib;
+    assert.ok(kvWide > kvTight, `max context should lift KV: wide=${kvWide} tight=${kvTight}`);
   });
 
   it('picks the tightest adequate recipe, not host capacity', () => {

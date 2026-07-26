@@ -229,4 +229,43 @@ describe('KV bytes helpers', () => {
     assert.equal(r.bytes, 90);
     assert.equal(r.source, 'measured');
   });
+
+  it('fallback for unknown dense models is KiB-scale, not ~100 B/token', () => {
+    const r = resolveKvBytesPerToken({
+      kvCacheDtype: 'fp8',
+      totalParametersB: 70,
+    });
+    assert.equal(r.source, 'fallback');
+    // Llama-70B-class GQA is ~160 KiB/token FP8 — old formula gave ~168 B.
+    assert.ok(r.bytes >= 24_000, `fallback too small: ${r.bytes}`);
+    assert.ok(r.bytes <= 512_000, `fallback too large: ${r.bytes}`);
+  });
+
+  it('architectural GQA for Llama-70B is ~160 KiB/token FP8', () => {
+    const r = resolveKvBytesPerToken({
+      attention: {type: 'gqa', numLayers: 80, numKvHeads: 8, headDim: 128},
+      kvCacheDtype: 'fp8',
+    });
+    assert.equal(r.source, 'architectural');
+    assert.equal(r.bytes, 2 * 80 * 8 * 128);
+  });
+
+  it('does not invent hundreds of replicas on a weight-saturated GPU', () => {
+    const plan = sizeInferenceDeployment({
+      weightVariant: {dtype: 'int4', weightsVramGiB: 65, weightFormat: 'mxfp4'},
+      totalParametersB: 117,
+      kvCacheDtype: 'fp8',
+      gpuCount: 1,
+      gpuFamily: 'H100',
+      gpuMemoryGb: 80,
+      workload: {
+        concurrentSessions: 1,
+        averageResidentContext: 32_000,
+        maxContextTokens: 128_000,
+        residentMode: 'p95',
+      },
+    });
+    assert.equal(plan.kind, 'impossible');
+    assert.ok(plan.nodeCount <= 2);
+  });
 });

@@ -190,10 +190,12 @@ export function resolveKvBytesPerToken(args: {
     return {bytes: perToken, source: 'architectural'};
   }
 
-  // Rough GQA-scale floor when architecture is unknown. Previous min (~24 B/tok)
-  // rounded to 0 GiB at typical calculator defaults (few sessions × 32k).
-  const params = args.totalParametersB ?? 7;
-  const fallback = clamp(params * 2.4, 160, 1_200) * dtypeScale;
+  // Unknown architecture — assume dense GQA-scale KV (FP8 base, then × dtypeScale).
+  // Real ballpark: ~24–512 KiB/token (e.g. Llama-70B ≈ 160 KiB FP8).
+  // Old clamp(params×2.4, 160, 1200) was ~1000× too small, so context/concurrency
+  // knobs barely moved VRAM. MLA/MoE models should set attention.* instead.
+  const params = Math.max(1, args.totalParametersB ?? 7);
+  const fallback = clamp(params * 2_500, 24_000, 512_000) * dtypeScale;
   return {bytes: fallback, source: 'fallback'};
 }
 
@@ -268,6 +270,7 @@ export function sizeInferenceDeployment(args: {
   totalParametersB?: number | null;
   /** Must not affect weight size — logged in debug only. */
   activeParameterCountB?: number | null;
+  arch?: 'dense' | 'moe' | null;
   attention?: AttentionProfile | null;
   kvCacheDtype?: KvCacheDtype;
   gpuCount: number;
@@ -345,7 +348,12 @@ export function sizeInferenceDeployment(args: {
       : 0;
 
   let nodesForKvCapacity = 0;
-  if (weightsFit && kvCapacityTokensPerNode > 0) {
+  // Weight-saturated hosts (< ~1 GiB KV headroom) must not explode into hundreds of
+  // "replicas" — that shape simply cannot serve meaningful context; pick a fatter GPU.
+  const kvHeadroomGiB = emptyKvBudget.availableKvMemoryGiB;
+  if (weightsFit && kvHeadroomGiB < 1 && kvGiBTotal > Math.max(0, kvHeadroomGiB) + 0.05) {
+    nodesForKvCapacity = 0;
+  } else if (weightsFit && kvCapacityTokensPerNode > 0) {
     nodesForKvCapacity = Math.max(1, Math.ceil(residentTokens / kvCapacityTokensPerNode));
   } else if (weightsFit && kvGiBTotal <= 0.01) {
     nodesForKvCapacity = 1;

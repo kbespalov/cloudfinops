@@ -238,6 +238,12 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
       {dtype: 'fp8', weightsVramGiB: 34},
       {dtype: 'int4', weightsVramGiB: 18},
     ],
+    attention: {
+      type: 'gqa',
+      numLayers: 64,
+      numKvHeads: 8,
+      headDim: 128,
+    },
     contextDefault: 32_768,
     minGpuMemoryGiB: 24,
     recommended: [
@@ -280,6 +286,12 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
       {dtype: 'fp8', weightsVramGiB: 9},
       {dtype: 'int4', weightsVramGiB: 5},
     ],
+    attention: {
+      type: 'gqa',
+      numLayers: 36,
+      numKvHeads: 8,
+      headDim: 128,
+    },
     contextDefault: 32_768,
     minGpuMemoryGiB: 8,
     recommended: [
@@ -443,6 +455,12 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
       {dtype: 'fp8', weightsVramGiB: 235},
       {dtype: 'int4', weightsVramGiB: 120},
     ],
+    attention: {
+      type: 'gqa',
+      numLayers: 94,
+      numKvHeads: 4,
+      headDim: 128,
+    },
     contextDefault: 128_000,
     minGpuMemoryGiB: 160,
     recommended: [
@@ -634,6 +652,12 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
       {dtype: 'fp8', weightsVramGiB: 550},
       {dtype: 'int4', weightsVramGiB: 300},
     ],
+    attention: {
+      type: 'mla',
+      numLayers: 61,
+      latentDim: 512,
+      kvBytesPerTokenEstimated: 200,
+    },
     contextDefault: 128_000,
     minGpuMemoryGiB: 320,
     recommended: [
@@ -894,6 +918,12 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
         confidence: 'estimated',
       },
     ],
+    attention: {
+      type: 'mla',
+      numLayers: 60,
+      latentDim: 512,
+      kvBytesPerTokenEstimated: 140,
+    },
     contextDefault: 1_000_000,
     minGpuMemoryGiB: 160,
     recommended: [
@@ -1033,6 +1063,12 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
         confidence: 'estimated',
       },
     ],
+    attention: {
+      type: 'mla',
+      numLayers: 61,
+      latentDim: 512,
+      kvBytesPerTokenEstimated: 156,
+    },
     contextDefault: 128_000,
     minGpuMemoryGiB: 350,
     recommended: [
@@ -1105,6 +1141,12 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
         confidence: 'estimated',
       },
     ],
+    attention: {
+      type: 'mla',
+      numLayers: 61,
+      latentDim: 512,
+      kvBytesPerTokenEstimated: 156,
+    },
     contextDefault: 128_000,
     minGpuMemoryGiB: 350,
     recommended: [
@@ -1593,6 +1635,12 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
       {dtype: 'fp8', weightsVramGiB: 75},
       {dtype: 'int4', weightsVramGiB: 40},
     ],
+    attention: {
+      type: 'gqa',
+      numLayers: 80,
+      numKvHeads: 8,
+      headDim: 128,
+    },
     contextDefault: 128_000,
     minGpuMemoryGiB: 48,
     recommended: [
@@ -1639,6 +1687,12 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
       {dtype: 'fp8', weightsVramGiB: 145},
       {dtype: 'int4', weightsVramGiB: 75},
     ],
+    attention: {
+      type: 'gqa',
+      numLayers: 56,
+      numKvHeads: 8,
+      headDim: 128,
+    },
     contextDefault: 65_536,
     minGpuMemoryGiB: 80,
     recommended: [
@@ -1686,6 +1740,12 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
       {dtype: 'fp8', weightsVramGiB: 26},
       {dtype: 'int4', weightsVramGiB: 14},
     ],
+    attention: {
+      type: 'gqa',
+      numLayers: 40,
+      numKvHeads: 8,
+      headDim: 128,
+    },
     contextDefault: 32_768,
     minGpuMemoryGiB: 24,
     recommended: [

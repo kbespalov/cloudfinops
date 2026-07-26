@@ -357,6 +357,7 @@ function quoteConfig(
         weightVariant: weight,
         totalParametersB: profile.parameterCountB,
         activeParameterCountB: profile.activeParameterCountB,
+        arch: profile.arch,
         attention: profile.attention,
         recipeTotalGiB: canonicalRecipeTotalGiB(
           weight.weightsVramGiB,

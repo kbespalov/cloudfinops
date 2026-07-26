@@ -198,6 +198,7 @@ export type BuildVramArgs = {
   weightVariant?: WeightVariantLike;
   totalParametersB?: number | null;
   activeParameterCountB?: number | null;
+  arch?: 'dense' | 'moe' | null;
   attention?: AttentionProfile | null;
   kvCacheDtype?: KvCacheDtype;
 };
@@ -255,6 +256,7 @@ export function buildVramBreakdown(args: BuildVramArgs): VramBreakdown {
     weightVariant: {...variant, weightsVramGiB: args.weightsGiB},
     totalParametersB: args.totalParametersB,
     activeParameterCountB: args.activeParameterCountB,
+    arch: args.arch,
     attention: args.attention,
     kvCacheDtype: args.kvCacheDtype,
     gpuCount: args.gpuCount,
@@ -266,7 +268,8 @@ export function buildVramBreakdown(args: BuildVramArgs): VramBreakdown {
       averageResidentContext: avgContextTokens,
       maxContextTokens,
       averageOutputTokens: 0,
-      residentMode: 'average',
+      // p95: max context pulls KV up when it is far above the average request.
+      residentMode: 'p95',
     },
   });
 
@@ -276,6 +279,7 @@ export function buildVramBreakdown(args: BuildVramArgs): VramBreakdown {
     weightVariant: {...variant, weightsVramGiB: args.weightsGiB},
     totalParametersB: args.totalParametersB,
     activeParameterCountB: args.activeParameterCountB,
+    arch: args.arch,
     attention: args.attention,
     kvCacheDtype: args.kvCacheDtype,
     gpuCount: args.gpuCount,
@@ -287,7 +291,7 @@ export function buildVramBreakdown(args: BuildVramArgs): VramBreakdown {
       averageResidentContext: avgContextTokens,
       maxContextTokens,
       averageOutputTokens: 0,
-      residentMode: 'average',
+      residentMode: 'p95',
       // Force viewing all load on one node for breakdown totals:
       availabilityReserve: 0,
     },
@@ -306,6 +310,7 @@ export function buildVramBreakdown(args: BuildVramArgs): VramBreakdown {
     weightVariant: {...variant, weightsVramGiB: args.weightsGiB},
     totalParametersB: args.totalParametersB,
     activeParameterCountB: args.activeParameterCountB,
+    arch: args.arch,
     attention: args.attention,
     kvCacheDtype: args.kvCacheDtype,
     gpuCount: args.gpuCount,
@@ -317,7 +322,7 @@ export function buildVramBreakdown(args: BuildVramArgs): VramBreakdown {
       averageResidentContext: avgContextTokens,
       maxContextTokens,
       averageOutputTokens: 0,
-      residentMode: 'average',
+      residentMode: 'p95',
     },
   });
 
@@ -408,6 +413,7 @@ export function planInferenceNodes(args: BuildVramArgs): InferenceNodePlan {
     weightVariant: {...variant, weightsVramGiB: args.weightsGiB},
     totalParametersB: args.totalParametersB,
     activeParameterCountB: args.activeParameterCountB,
+    arch: args.arch,
     attention: args.attention,
     kvCacheDtype: args.kvCacheDtype,
     gpuCount: args.gpuCount,
@@ -419,7 +425,8 @@ export function planInferenceNodes(args: BuildVramArgs): InferenceNodePlan {
       averageResidentContext: avgContextTokens,
       maxContextTokens,
       averageOutputTokens: 0,
-      residentMode: 'average',
+      // Blend average request length with max context so both selectors move KV.
+      residentMode: 'p95',
     },
   });
 
