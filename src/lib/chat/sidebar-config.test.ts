@@ -43,6 +43,45 @@ describe('sidebarConfigFromTool', () => {
     assert.equal(payload.request.ramGiB, 32);
   });
 
+  it('does not invent a public IP for get_quote (sync with chat totals)', () => {
+    const payload = sidebarConfigFromTool(
+      'get_quote',
+      {vcpu: 4, ramGiB: 16},
+      'month',
+    );
+    assert.ok(payload && payload.kind === 'adhoc');
+    if (!payload || payload.kind !== 'adhoc' || payload.request.kind !== 'compute') return;
+    assert.equal(payload.request.publicIpCount, 0);
+    assert.equal(payload.request.diskGiB, 100);
+    assert.doesNotMatch(payload.summary.line, /IP/);
+  });
+
+  it('passes through publicIpCount when the tool requests it', () => {
+    const payload = sidebarConfigFromTool(
+      'get_quote',
+      {vcpu: 4, ramGiB: 16, diskGiB: 100, publicIpCount: 1},
+      'month',
+    );
+    assert.ok(payload && payload.kind === 'adhoc');
+    if (!payload || payload.kind !== 'adhoc' || payload.request.kind !== 'compute') return;
+    assert.equal(payload.request.publicIpCount, 1);
+    assert.match(payload.summary.line, /IP ×1/);
+  });
+
+  it('forwards publicIpCount from compose_solution requirements', () => {
+    const payload = sidebarConfigFromTool(
+      'compose_solution',
+      {
+        solutionType: 'web_application',
+        requirements: {vcpu: 2, ramGiB: 4, diskGiB: 50, publicIpCount: 1},
+      },
+      'month',
+    );
+    assert.ok(payload && payload.kind === 'adhoc');
+    if (!payload || payload.kind !== 'adhoc' || payload.request.kind !== 'compute') return;
+    assert.equal(payload.request.publicIpCount, 1);
+  });
+
   it('maps GPU quote', () => {
     const payload = sidebarConfigFromTool(
       'get_quote',

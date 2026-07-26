@@ -12,7 +12,7 @@ import {
   type PriceRow,
   type SearchParams,
 } from './search';
-import {quotePreset} from '@/lib/calculator/quote';
+import {addPublicIpParts, quotePreset, toViewQuote} from '@/lib/calculator/quote';
 import {compareUnitPrice, type DiskMediaFilter, type UnitComponent} from './analytics';
 import {catalogAsOfIso} from '@/lib/catalog/compare-disclaimer';
 import {fitBudget, type FitBudgetProfile} from './fit-budget';
@@ -391,7 +391,16 @@ export const CHAT_TOOLS = [
             description:
               'Объём RAM в GiB. Для обычной ВМ, если не задан — 4×vCPU (general). Для GPU можно опустить (подставится типовой хост).',
           },
-          diskGiB: {type: 'integer', description: 'Системный диск в GiB (по умолчанию 100).'},
+          diskGiB: {
+            type: 'integer',
+            description:
+              'Системный диск в GiB. Если не задан — 100 (boot disk для сопоставимой ВМ). Не выдумывай объём сверх этого, пока пользователь не указал.',
+          },
+          publicIpCount: {
+            type: 'integer',
+            description:
+              'Число публичных IPv4. Только если пользователь явно просил IP/«с белым адресом». Иначе 0 или опусти — не добавляй IP «для корзины».',
+          },
           gpuModel: {
             type: 'string',
             description: 'Модель GPU для GPU-инстанса, например H100, A100, L40S. Опустить для обычной ВМ.',
@@ -642,6 +651,7 @@ export type AssumedHost = {vcpu: number; ramGiB: number; diskGiB: number; source
 function runQuote(args: Record<string, unknown>): unknown {
   const period: PeriodMode =
     args.period === 'unit' || args.period === 'year' ? args.period : 'month';
+  const publicIpCount = Math.max(0, Math.round(num(args.publicIpCount) ?? 0));
   const req: Record<string, unknown> = {
     vcpu: num(args.vcpu),
     ramGiB: num(args.ramGiB),
@@ -650,9 +660,14 @@ function runQuote(args: Record<string, unknown>): unknown {
     gpuCount: num(args.gpuCount),
   };
   const {preset, assumedHost} = buildPresetFromRequirements(req);
-  const result = quotePreset(preset, period);
+  const base = quotePreset(preset, period);
+  // Same IP policy as sidebarConfigFromTool(mapGetQuote): only when requested.
+  const view =
+    publicIpCount > 0
+      ? addPublicIpParts(toViewQuote(base), publicIpCount, period)
+      : toViewQuote(base);
 
-  const toQuote = (q: (typeof result.quotes)[number]) => ({
+  const toQuote = (q: (typeof view.quotes)[number]) => ({
     provider: q.providerName,
     total: round(q.total),
     scope: q.scope,
@@ -663,7 +678,9 @@ function runQuote(args: Record<string, unknown>): unknown {
           ? 'конфигурация целиком (vCPU+RAM+GPU)'
           : q.scope === 'gpu-synthetic'
             ? 'GPU + собранный хост'
-            : 'vCPU+RAM+диск',
+            : publicIpCount > 0
+              ? 'vCPU+RAM+диск+IP'
+              : 'vCPU+RAM+диск',
     parts: q.parts.map((p) => ({label: p.label, amount: round(p.amount)})),
     note: q.note,
   });
@@ -671,7 +688,7 @@ function runQuote(args: Record<string, unknown>): unknown {
   // For GPU, primary quotes are one comparable scope; alternates are the other
   // scope (e.g. Cloud.ru bundles). Merge so the model sees every provider, but
   // keep them tagged by scope so it never treats bundle == gpu-only.
-  const quotes = [...result.quotes, ...result.alternateQuotes].map(toQuote);
+  const quotes = [...view.quotes, ...view.alternateQuotes].map(toQuote);
   const providerCount = new Set(quotes.map((q) => q.provider)).size;
 
   const hostVcpu = preset.kind === 'gpu' ? preset.vcpu ?? null : preset.vcpu;
@@ -692,12 +709,22 @@ function runQuote(args: Record<string, unknown>): unknown {
           } Провайдер, который продаёт этот GPU только флейвором иной формы, может отсутствовать — его родную цену смотри через search_prices (providersMatched).`
         : ' Внимание: хост не задан — строки могут быть «только GPU»; для сравнения по конфигурации задай vcpu и ramGiB.';
 
+  const diskNote =
+    preset.kind === 'compute' && num(args.diskGiB) == null
+      ? ' Системный диск не указан — в сравнение включено 100 GiB SSD (boot disk).'
+      : '';
+  const ipNote =
+    publicIpCount > 0
+      ? ` В итог включён публичный IP ×${publicIpCount}.`
+      : ' Публичный IP не включён (не запрашивался).';
+
   return {
     request: {
       kind: preset.kind,
       vcpu: hostVcpu,
       ramGiB: hostRam,
       diskGiB: preset.diskGiB ?? null,
+      publicIpCount: publicIpCount > 0 ? publicIpCount : 0,
       gpuModel: preset.kind === 'gpu' ? preset.gpuModelMatch : null,
       gpuCount: preset.kind === 'gpu' ? preset.gpuCount : null,
       period,
@@ -710,12 +737,14 @@ function runQuote(args: Record<string, unknown>): unknown {
     providerCount,
     note:
       'Каждая строка quotes — цена конкретного провайдера из каталога. Минимум формулируй как «в каталоге Cloud FinOps на catalogAsOf» среди публичных тарифов в выборке. scope=gpu-synthetic → составная цена из публичных unit-ставок (помечай как оценку сборки). Не добавляй отсутствующих провайдеров и не копируй цену между ними.' +
+      diskNote +
+      ipNote +
       gpuNote,
-    best: result.best
+    best: view.best
       ? {
-          provider: result.best.providerName,
-          total: round(result.best.total),
-          scope: result.best.scope,
+          provider: view.best.providerName,
+          total: round(view.best.total),
+          scope: view.best.scope,
         }
       : null,
     quotes,

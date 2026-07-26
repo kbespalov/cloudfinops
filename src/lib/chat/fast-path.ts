@@ -1796,13 +1796,18 @@ export function formatFastPathAnswer(
       vcpu?: number;
       ramGiB?: number;
       diskGiB?: number;
+      publicIpCount?: number;
       gpuModel?: string;
       gpuCount?: number;
     };
+    const ipSuffix =
+      typeof req.publicIpCount === 'number' && req.publicIpCount > 0
+        ? ` / IP ×${req.publicIpCount}`
+        : '';
     const title =
       req.gpuModel != null
         ? `Сравнение ${req.gpuCount ?? 1}×${req.gpuModel} по провайдерам за месяц (НДС вкл., 720 ч)`
-        : `Сравнение ВМ ${req.vcpu ?? '—'} vCPU / ${req.ramGiB ?? '—'} GiB / ${req.diskGiB ?? '—'} GiB SSD на месяц (НДС вкл., 720 ч)`;
+        : `Сравнение ВМ ${req.vcpu ?? '—'} vCPU / ${req.ramGiB ?? '—'} GiB / ${req.diskGiB ?? '—'} GiB SSD${ipSuffix} на месяц (НДС вкл., 720 ч)`;
     const rows = quotes
       .map(
         (q) =>

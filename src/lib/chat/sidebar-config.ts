@@ -85,6 +85,11 @@ function mapGetQuote(
   const vcpu = Math.max(1, Math.round(num(args.vcpu) ?? 4));
   const ramGiB = Math.max(1, Math.round(num(args.ramGiB) ?? vcpu * 4));
   const cdnEgressGiB = num(args.cdnEgressGiB);
+  // Match get_quote / compose: no public IP unless the tool args say so.
+  // (Classic VM tab still defaults to 1 IP — AI basket must stay in sync with chat.)
+  const rawIp = num(args.publicIpCount);
+  const publicIpCount =
+    rawIp != null && Number.isFinite(rawIp) ? Math.max(0, Math.round(rawIp)) : 0;
   const request: AdhocComputeQuoteRequest = {
     kind: 'compute',
     period,
@@ -94,14 +99,21 @@ function mapGetQuote(
     diskMedia: 'ssd',
     family: 'general',
     vmCount: 1,
-    publicIpCount: 1,
+    publicIpCount,
     purchaseModel: 'on-demand',
     vcpuShare: '100%',
     ...(cdnEgressGiB != null && cdnEgressGiB > 0
       ? {cdnEgressGiB: Math.round(cdnEgressGiB)}
       : {}),
   };
-  const baseLine = `${vcpu} vCPU · ${ramGiB} GiB · SSD ${diskGiB} GiB`;
+  const baseLine = [
+    `${vcpu} vCPU`,
+    `${ramGiB} GiB`,
+    `SSD ${diskGiB} GiB`,
+    publicIpCount > 0 ? `IP ×${publicIpCount}` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
   return {
     kind: 'adhoc',
     request,
@@ -201,6 +213,7 @@ function mapComposeSolution(
       gpuModel: req.gpuModel,
       gpuCount: req.gpuCount,
       cdnEgressGiB: req.cdnEgressGiB,
+      publicIpCount: req.publicIpCount,
     },
     period,
   );

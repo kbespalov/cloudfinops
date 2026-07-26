@@ -107,7 +107,8 @@ export const DOMAIN_CARD_COMPUTE = `## vCPU / RAM / диск (сопостави
 - vCPU разного типа несравнимы: preemptible vs on-demand; доля 5–50% vs 100%; shared vs выделенное. База «цена 1 vCPU» = on-demand 100%. providersMatched.cheapest часто preemptible — НЕ база.
 - Preemptible/долевые — отдельным блоком. MWS: для ядра бери строку vCPU, не RAM.
 - «Сравни SKU / Ice Lake / Sapphire preemptible vCPU с аналогами» → search_prices category=compute (+ compare_unit_price). Ice Lake ≠ S3 Ice. Для такого запроса providersMatched.cheapest = ближайший аналог по смыслу (платформа/доля/preemptible), не абсолютный минимум провайдера. Нет точного SKU — ближайшее с явными отличиями; не пустая таблица «ничего нет», если в каталоге есть соседние preemptible/100% vCPU.
-- get_quote — только ВМ/конфигурация целиком (оба: ядра+память, «собери», сайт с RAM). Nearest preset — назови отличия от запроса.`;
+- get_quote — только ВМ/конфигурация целиком (оба: ядра+память, «собери», сайт с RAM). Nearest preset — назови отличия от запроса.
+- get_quote по умолчанию: системный диск 100 GiB SSD (boot), без публичного IP. IP (publicIpCount) — только по явной просьбе. Не раздувай корзину «типовым» IP.`;
 
 export const DOMAIN_CARD_S3 = `## Object Storage / S3
 - Standard / Warm / Cold / Ice — разные продукты. Не ставь в одну таблицу как равнозначные; не объявляй Ice/Cold «самым дешёвым Standard».
