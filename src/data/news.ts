@@ -60,6 +60,18 @@ export const NEWS_TAG_TITLE: Record<NewsTag, string> = {
 export const newsItems: NewsItem[] = [
   // ——— Cloud FinOps (hub → blog / tools) ———
   {
+    id: 'cloudfinops-2026-07-kimi-k3-vs-glm-52',
+    date: '2026-07-26',
+    provider: 'market',
+    providerName: 'Cloud FinOps',
+    title: 'Kimi K3 vs GLM 5.2 для разработки: capability, цена и self-host',
+    summary:
+      'Сравниваем два open/near-frontier претендента для coding agents: где Kimi K3 сильнее GLM 5.2, как читать бенчмарки с разными harness и где тут Claude Opus 4.8 с Fable 5.',
+    tags: ['ai', 'finops'],
+    sourceUrl: 'https://cloudfinops.ru/blog/kimi-k3-vs-glm-5-2',
+    sourceLabel: 'Cloud FinOps · блог',
+  },
+  {
     id: 'cloudfinops-2026-07-slurm-kubernetes',
     date: '2026-07-26',
     provider: 'market',

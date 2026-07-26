@@ -1,4 +1,5 @@
 import {focusCloudDetailingPost} from '@/data/blog/posts/focus-cloud-detailing';
+import {kimiK3VsGlm52Post} from '@/data/blog/posts/kimi-k3-vs-glm-5-2';
 import {slurmVsKubernetesPost} from '@/data/blog/posts/slurm-vs-kubernetes';
 
 export type BlogTag = 'finops' | 'billing' | 'standards' | 'ai';
@@ -60,4 +61,8 @@ export function getBlogBySlug(slug: string): BlogPost | undefined {
   return blogPosts.find((p) => p.slug === slug);
 }
 
-export const blogPosts: BlogPost[] = [slurmVsKubernetesPost, focusCloudDetailingPost];
+export const blogPosts: BlogPost[] = [
+  kimiK3VsGlm52Post,
+  slurmVsKubernetesPost,
+  focusCloudDetailingPost,
+];
