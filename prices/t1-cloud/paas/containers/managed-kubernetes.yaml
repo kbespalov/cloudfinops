@@ -8,14 +8,17 @@ metadata:
   title: Managed Kubernetes
 spec:
   meters:
+  # Kubernetes as a Service (актуальный продукт). Legacy «Managed Service for
+  # Kubernetes» в том же PDF недоступен для нового заказа — Tiny и старые
+  # строки Containers сюда не переносим.
   - sku: t1.kubernetes.master-small
-    name: Master Small
+    name: Зональный мастер Small
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: fixed
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-27'
     sourceRefs:
     - t1.rates-pdf-2026-07-13
     - t1.kubernetes
@@ -29,6 +32,7 @@ spec:
       comparabilityClass: native-fixed
       comparableTier: basic
       masterCount: 1
+      masterSize: small
     pricing:
       rate:
         amount: '0.12539352'
@@ -47,8 +51,233 @@ spec:
         formula: 0.12539352 × 60 × 1.22 VAT
         vat: included
     notes: >
-      Готовый тариф T1 на зональный мастер Kubernetes (тариф Small) — одна
-      фиксированная цена. Сколько именно vCPU и RAM внутри мастера, в публичном
-      прайсе не указано: с пакетами «2 vCPU / 4 ГиБ» других облаков сравнивайте
-      только по итоговой сумме. Отказоустойчивого (HA) мастера в каталоге пока
-      нет. Рабочие ноды — отдельно.
+      Фиксированная цена за управляющий слой Kubernetes в T1 Cloud: один мастер
+      размера Small в одной зоне. В цену не входят рабочие ноды — их считают
+      отдельно. Точный объём CPU и памяти внутри пакета в публичном прайсе не
+      указан, поэтому с другими облаками удобнее сравнивать по итоговой сумме,
+      а не по «2 vCPU / 4 ГиБ».
+  - sku: t1.kubernetes.master-medium
+    name: Зональный мастер Medium
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: fixed
+    region: Россия
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-27'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    - t1.kubernetes
+    dimensions:
+      published30Days: 10026.11
+      vatRatePercent: 22
+      nativeVat: excluded
+      availability: zonal
+      faultTolerant: false
+      topology: zonal
+      comparabilityClass: native-fixed
+      comparableTier: basic
+      masterCount: 1
+      masterSize: medium
+    pricing:
+      rate:
+        amount: '0.23208588'
+        currency: RUB
+        unit:
+          quantity: master
+          period: minute
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '16.9886864'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: 0.23208588 × 60 × 1.22 VAT
+        vat: included
+    notes: >
+      Фиксированная цена за управляющий слой Kubernetes в T1 Cloud: один мастер
+      размера Medium в одной зоне. Рабочие ноды в эту сумму не входят. Сколько
+      именно CPU и памяти внутри пакета, в открытом прайсе не сказано — при
+      сравнении с другими облаками ориентируйтесь на итоговую стоимость, а не
+      на конфигурацию «2 vCPU / 4 ГиБ».
+  - sku: t1.kubernetes.master-large
+    name: Зональный мастер Large
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: fixed
+    region: Россия
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-27'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    - t1.kubernetes
+    dimensions:
+      published30Days: 19181.83
+      vatRatePercent: 22
+      nativeVat: excluded
+      availability: zonal
+      faultTolerant: false
+      topology: zonal
+      comparabilityClass: native-fixed
+      comparableTier: basic
+      masterCount: 1
+      masterSize: large
+    pricing:
+      rate:
+        amount: '0.44402384'
+        currency: RUB
+        unit:
+          quantity: master
+          period: minute
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '32.5025451'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: 0.44402384 × 60 × 1.22 VAT
+        vat: included
+    notes: >
+      Фиксированная цена за управляющий слой Kubernetes в T1 Cloud: один мастер
+      размера Large в одной зоне. Рабочие ноды оплачиваются отдельно. Объём CPU
+      и памяти внутри пакета в публичном прайсе не раскрыт — с другими облаками
+      сравнивайте по итоговой сумме, а не по типовым «2 vCPU / 4 ГиБ».
+  # HA: 3 × published Master rate (native-fixed). Cluster stays single-AZ per T1 docs.
+  - sku: t1.kubernetes.master-ha-small
+    name: Отказоустойчивый кластер Small, 3 master
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: fixed
+    region: Россия
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-27'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    - t1.kubernetes
+    dimensions:
+      published30Days: 16251
+      vatRatePercent: 22
+      nativeVat: excluded
+      availability: regional
+      faultTolerant: true
+      topology: high-availability
+      comparabilityClass: native-fixed
+      comparableTier: ha
+      masterCount: 3
+      masterSize: small
+    pricing:
+      rate:
+        amount: '0.37618056'
+        currency: RUB
+        unit:
+          quantity: master
+          period: minute
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '27.5364171'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: 3 × 0.12539352 × 60 × 1.22 VAT
+        vat: included
+    notes: >
+      Отказоустойчивый управляющий слой Kubernetes в T1 Cloud: три мастера
+      размера Small вместо одного. Так кластер переживает отказ отдельного
+      мастера. Сам кластер при этом размещается в одной зоне — если нужна
+      площадка в другой зоне, её обычно делают отдельным кластером. Рабочие
+      ноды в цену не входят; сравнивать с другими облаками удобнее по итоговой
+      сумме.
+  - sku: t1.kubernetes.master-ha-medium
+    name: Отказоустойчивый кластер Medium, 3 master
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: fixed
+    region: Россия
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-27'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    - t1.kubernetes
+    dimensions:
+      published30Days: 30078.33
+      vatRatePercent: 22
+      nativeVat: excluded
+      availability: regional
+      faultTolerant: true
+      topology: high-availability
+      comparabilityClass: native-fixed
+      comparableTier: ha
+      masterCount: 3
+      masterSize: medium
+    pricing:
+      rate:
+        amount: '0.69625764'
+        currency: RUB
+        unit:
+          quantity: master
+          period: minute
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '50.9660592'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: 3 × 0.23208588 × 60 × 1.22 VAT
+        vat: included
+    notes: >
+      Отказоустойчивый управляющий слой Kubernetes в T1 Cloud: три мастера
+      размера Medium. При сбое одного мастера кластер продолжает работать.
+      Размещение — в одной зоне; для второй площадки обычно поднимают ещё один
+      кластер. Рабочие ноды считаются отдельно — в эту цену они не входят.
+  - sku: t1.kubernetes.master-ha-large
+    name: Отказоустойчивый кластер Large, 3 master
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: fixed
+    region: Россия
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-07-27'
+    sourceRefs:
+    - t1.rates-pdf-2026-07-13
+    - t1.kubernetes
+    dimensions:
+      published30Days: 57545.49
+      vatRatePercent: 22
+      nativeVat: excluded
+      availability: regional
+      faultTolerant: true
+      topology: high-availability
+      comparabilityClass: native-fixed
+      comparableTier: ha
+      masterCount: 3
+      masterSize: large
+    pricing:
+      rate:
+        amount: '1.33207152'
+        currency: RUB
+        unit:
+          quantity: master
+          period: minute
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '97.5076353'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: 3 × 0.44402384 × 60 × 1.22 VAT
+        vat: included
+    notes: >
+      Отказоустойчивый управляющий слой Kubernetes в T1 Cloud: три мастера
+      размера Large. Это запас на случай отказа одного из мастеров. Кластер
+      живёт в одной зоне; географическую отказоустойчивость обычно собирают из
+      нескольких кластеров. Рабочие ноды оплачиваются отдельно и в эту сумму
+      не входят.

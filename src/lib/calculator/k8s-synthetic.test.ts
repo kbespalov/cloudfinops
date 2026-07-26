@@ -34,6 +34,50 @@ describe('k8s synthetic HA integrity', () => {
     );
   });
 
+  it('T1 Cloud HA is native-fixed 3 × Master Small/Medium/Large (not synthetic)', () => {
+    const cases = [
+      {
+        basic: 't1.kubernetes.master-small',
+        ha: 't1.kubernetes.master-ha-small',
+      },
+      {
+        basic: 't1.kubernetes.master-medium',
+        ha: 't1.kubernetes.master-ha-medium',
+      },
+      {
+        basic: 't1.kubernetes.master-large',
+        ha: 't1.kubernetes.master-ha-large',
+      },
+    ] as const;
+
+    for (const c of cases) {
+      const basic = catalog.meters.find((m) => m.sku === c.basic);
+      const ha = catalog.meters.find((m) => m.sku === c.ha);
+      assert.ok(basic, c.basic);
+      assert.ok(ha, c.ha);
+      assert.equal(ha.synthetic, false);
+      assert.equal(ha.comparableTier, 'ha');
+      assert.equal(ha.dimensions.comparabilityClass, 'native-fixed');
+      assert.equal(Number(ha.dimensions.masterCount), 3);
+      assert.equal(basic.comparableTier, 'basic');
+      assert.equal(basic.dimensions.comparabilityClass, 'native-fixed');
+      assert.doesNotMatch(ha.name, /\*/);
+      assert.doesNotMatch(ha.notes || '', /синтетич/i);
+      const basicHour = amountNumber(basic, 'unit');
+      const haHour = amountNumber(ha, 'unit');
+      assert.ok(basicHour != null && haHour != null);
+      assert.ok(
+        nearlyEqual(haHour, basicHour * 3),
+        `${c.ha}: expected ${basicHour}*3=${basicHour * 3}, got ${haHour}`,
+      );
+    }
+
+    const picked = pickK8sMasterMeter('t1-cloud', 'ha');
+    assert.ok(picked);
+    assert.equal(picked.meter.sku, 't1.kubernetes.master-ha-small');
+    assert.equal(picked.synthetic, false);
+  });
+
   it('Yandex / VK synthetic HA = 3 × synthetic basic 2/4', () => {
     const cases = [
       {
