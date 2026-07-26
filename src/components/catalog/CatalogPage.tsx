@@ -382,8 +382,13 @@ function parseSort(v: string | null): SortKey {
   return 'price-asc';
 }
 
-function priceColumnTitle(period: PeriodMode, category: CategoryFilter): string {
+function priceColumnTitle(
+  period: PeriodMode,
+  category: CategoryFilter,
+  cdnFacet: CdnFacet = 'all',
+): string {
   if (category === 'ai') return 'Цена / 1M ток.';
+  if (category === 'cdn' && cdnFacet === 'requests') return 'Цена / 10 тыс.';
   if (period === 'month') return 'Цена / мес';
   if (period === 'year') return 'Цена / год';
   return 'Цена / час';
@@ -1072,7 +1077,7 @@ export function CatalogPage() {
       },
       {
         id: 'price',
-        name: priceColumnTitle(period, category),
+        name: priceColumnTitle(period, category, cdnFacet),
         align: 'end',
         width: 140,
         className: styles.priceCol,
@@ -1089,7 +1094,7 @@ export function CatalogPage() {
     ];
 
     return cols;
-  }, [category, period, facet]);
+  }, [category, period, facet, cdnFacet]);
 
   const resetFilters = useCallback(() => {
     startTransition(() => {

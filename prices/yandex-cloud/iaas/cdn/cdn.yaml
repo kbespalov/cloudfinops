@@ -146,6 +146,14 @@ spec:
         unit: {quantity: 100k-request, period: usage}
         vat: included
         byteBasis: not-applicable
+      normalized:
+        amount: '0.1'
+        unit:
+          currency: RUB
+          quantity: 10k-request
+          period: usage
+        formula: 1 ₽ / 100 тыс. × 10 тыс. (единый pack каталога)
+        vat: included
       tiers:
       - from: '0'
         to: '100000000'
@@ -164,9 +172,9 @@ spec:
           vat: included
           byteBasis: not-applicable
     notes: >
-      Сверх 100 млн запросов/мес — 1 ₽ за каждые 100 тыс. запросов (с НДС).
-      Первые 100 млн не тарифицируются. У T1 пакет другой (10 тыс.) — не
-      сравнивайте числа без пересчёта. Источники: прайс-лист и docs.
+      Сверх 100 млн запросов/мес — 1 ₽ за каждые 100 тыс. запросов (с НДС);
+      в каталоге показываем 0,10 ₽ за 10 тыс. (единый pack с T1/S3). Первые
+      100 млн не тарифицируются. Источники: прайс-лист и docs.
 
   - sku: yc.cdn.origin.shielding
     name: Экранирование источников CDN

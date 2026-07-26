@@ -137,11 +137,24 @@ export function formatPlatform(family: string | null | undefined): string | null
     .join(' ');
 }
 
-/** Object API requests — comparable pack size (AWS S3 style). */
+/** Comparable request pack for S3 + CDN (AWS S3 style: ₽ / 10 000 ops). */
 export const REQUEST_PRICE_PACK = 10_000;
 
 export function isRequestMeter(meter: CatalogMeter): boolean {
-  return meter.unitQuantity === 'request' || meter.meter === 'storage.object.requests';
+  if (meter.meter === 'storage.object.requests' || meter.meter === 'cdn.requests') return true;
+  const q = meter.unitQuantity;
+  return q === 'request' || q === '10k-request' || q === '100k-request';
+}
+
+/** How many requests the native/normalized amount is priced for. */
+export function requestBillingPackSize(meter: CatalogMeter): number {
+  const q = meter.unitQuantity;
+  if (q === '100k-request') return 100_000;
+  if (q === '10k-request') return 10_000;
+  const dimPack = Number(meter.dimensions?.billablePackRequests);
+  if (Number.isFinite(dimPack) && dimPack > 0) return dimPack;
+  // Per-request native unit (typical S3): pack size 1.
+  return 1;
 }
 
 /** Traffic / one-shot usage — priced per quantity, not per wall-clock hour. */
@@ -181,15 +194,19 @@ export function isGatewayMeter(meter: CatalogMeter): boolean {
 }
 
 export function amountNumber(meter: CatalogMeter, period: PeriodMode): number | null {
-  // Requests: always price per 10_000 operations (ignore month/year toggle)
+  // Requests: always price per 10_000 operations (ignore month/year toggle).
+  // Convention: when normalizedAmount is set on a request meter, it is already ₽ / 10k
+  // (S3 auto-pack, T1 VAT on 10k, Yandex 100k→10k). Never rescale normalized by native pack.
   if (isRequestMeter(meter)) {
     if (meter.normalizedAmount != null) {
       const pack = Number(meter.normalizedAmount);
       return Number.isFinite(pack) ? pack : null;
     }
-    const perRequest = Number(meter.nativeAmount);
-    if (!Number.isFinite(perRequest)) return null;
-    return perRequest * REQUEST_PRICE_PACK;
+    const packSize = requestBillingPackSize(meter);
+    const native = Number(meter.nativeAmount);
+    if (!Number.isFinite(native)) return null;
+    if (packSize === 1) return native * REQUEST_PRICE_PACK;
+    return native * (REQUEST_PRICE_PACK / packSize);
   }
 
   const base = meter.normalizedAmount ?? meter.nativeAmount;
@@ -330,7 +347,8 @@ export function meterMatchesComputeFacet(meter: CatalogMeter, facet: ComputeFace
 
 /** Human-readable billing unit for the specs column (e.g. «GiB · час», «IP · час»). */
 export function billingUnitLabel(meter: CatalogMeter): string {
-  if (isRequestMeter(meter)) return 'request';
+  // Always the comparable pack — never mix 10k vs 100k in the params column.
+  if (isRequestMeter(meter)) return '10 тыс. запросов';
   if (isAiTokenMeter(meter)) {
     const direction = extractAiTokenDirection(meter);
     if (direction === 'input') return 'input · 1M ток.';
@@ -341,8 +359,6 @@ export function billingUnitLabel(meter: CatalogMeter): string {
     const q = meter.unitQuantity;
     if (q === 'GiB' || q === 'GB') return 'GiB';
     if (q === '1M-token') return '1M ток.';
-    if (q === '100k-request') return '100 тыс. запросов';
-    if (q === '10k-request') return '10 тыс. запросов';
     if (q) return q;
     return '—';
   }
