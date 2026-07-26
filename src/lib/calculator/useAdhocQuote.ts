@@ -32,6 +32,7 @@ export type AdhocGpuQuoteRequest = {
   /** Selectel dedicated nodes (e.g. B300) — bundle without host vCPU/RAM. */
   dedicated?: boolean;
   gpuMemoryGb?: number | null;
+  purchaseModel?: PurchaseModel;
 };
 
 export type AdhocQuoteRequest = AdhocComputeQuoteRequest | AdhocGpuQuoteRequest;

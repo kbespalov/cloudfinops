@@ -82,6 +82,14 @@ describe('calculator presets', () => {
       selectelFlavors.some((p) => p.gpuModelMatch === 'H200' && p.vcpu === 24 && p.ramGiB === 180),
       'Selectel H200 24/180',
     );
+    const yandexFlavors = all.filter((p) => p.shapeSource === 'yandex-cloud' && p.vcpu != null);
+    assert.ok(yandexFlavors.length >= 20, `expected Yandex GPU hosts, got ${yandexFlavors.length}`);
+    assert.ok(
+      yandexFlavors.some(
+        (p) => p.gpuModelMatch === 'Gen2' && p.gpuCount === 8 && p.vcpu === 180 && p.ramGiB === 1440,
+      ),
+      'Yandex Gen2 8× 180/1440',
+    );
 
     const cards = buildGpuCardPresets(all);
     assert.ok(cards.length >= 4);

@@ -29,6 +29,11 @@ export type ComputePreset = {
   purchaseModel?: PurchaseModel;
   /** Guaranteed vCPU share — default 100%. */
   vcpuShare?: VcpuShare;
+  /**
+   * When composing a GPU host, prefer vCPU/RAM SKUs for this Compute GPU platform
+   * (e.g. gpu-standard-v3). Ordinary VM quotes leave this unset.
+   */
+  gpuPlatformId?: string;
 };
 
 export type GpuPreset = {
@@ -54,6 +59,8 @@ export type GpuPreset = {
   dedicated?: boolean;
   gpuInterconnect?: string | null;
   gpuMemoryGb?: number | null;
+  /** On-demand vs preemptible GPU (+ host) — default on-demand. */
+  purchaseModel?: PurchaseModel;
 };
 
 export type CalculatorPreset = ComputePreset | GpuPreset;

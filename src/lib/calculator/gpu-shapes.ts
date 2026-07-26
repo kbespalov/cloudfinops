@@ -6,6 +6,7 @@
 import {catalog, type CatalogMeter} from '@/lib/catalog';
 import type {GpuPreset} from '@/lib/calculator/presets';
 import {buildSelectelGpuFlavorPresets} from '@/lib/calculator/selectel-gpu-flavors';
+import {buildYandexGpuFlavorPresets} from '@/lib/calculator/yandex-gpu-flavors';
 
 const SHAPE_SOURCE_PRIORITY: Record<string, number> = {
   'cloud-ru': 0,
@@ -19,6 +20,9 @@ const SHAPE_SOURCE_PRIORITY: Record<string, number> = {
 /** Short family token used for matching and row titles (H100, L4, B300…). */
 export function gpuFamilyToken(model: string): string | null {
   const m = model || '';
+  if (/Gen2/i.test(m)) return 'Gen2';
+  if (/Platform V4|platform-v4/i.test(m)) return 'Platform V4';
+  if (/T4i/i.test(m)) return 'T4i';
   if (/B300/i.test(m)) return 'B300';
   if (/H200/i.test(m)) return 'H200';
   if (/H100/i.test(m)) return 'H100';
@@ -200,7 +204,8 @@ let cachedFlavorPresets: GpuPreset[] | null = null;
 
 /**
  * Cloud.ru flavors first, then unique VK flavors, curated Selectel GPU Line hosts,
- * then Selectel B300 / remaining unit models. Skips vGPU. Dedupes by shapeKey.
+ * Yandex console host lattices (Gen2 / Platform V4 / …), then remaining unit models.
+ * Skips vGPU. Dedupes by shapeKey.
  */
 export function buildGpuFlavorPresets(): GpuPreset[] {
   if (cachedFlavorPresets) return cachedFlavorPresets;
@@ -226,6 +231,13 @@ export function buildGpuFlavorPresets(): GpuPreset[] {
 
   // Pass 2: Selectel GPU Line hosts (curated) — before unit fallbacks so A2/L4/… aren't unit-only.
   for (const preset of buildSelectelGpuFlavorPresets()) {
+    const key = preset.shapeKey;
+    if (!key || byKey.has(key)) continue;
+    byKey.set(key, preset);
+  }
+
+  // Pass 2b: Yandex Compute GPU host lattices from catalog hostConfigs.
+  for (const preset of buildYandexGpuFlavorPresets()) {
     const key = preset.shapeKey;
     if (!key || byKey.has(key)) continue;
     byKey.set(key, preset);

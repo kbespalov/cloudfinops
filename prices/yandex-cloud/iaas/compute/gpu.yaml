@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-27'
     sourceRefs:
     - yc.billing-api
     - yc.compute
@@ -28,6 +28,11 @@ spec:
       platformId: gpu-standard-v1
       purchaseModel: on-demand
       availableGpuCounts: [1, 2, 4]
+      # Docs + console: fixed host lattice (GPU × vCPU × RAM GiB).
+      hostConfigs:
+      - {gpuCount: 1, vcpu: 8, ramGiB: 96}
+      - {gpuCount: 2, vcpu: 16, ramGiB: 192}
+      - {gpuCount: 4, vcpu: 32, ramGiB: 384}
       yandexSkuId: dn2oroscvvtb6sqtt83i
       serviceId: dn28okfvqh19eiue6l2m
     pricing:
@@ -46,7 +51,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-27'
     sourceRefs:
     - yc.billing-api
     - yc.compute
@@ -59,6 +64,11 @@ spec:
       platformId: gpu-standard-v2
       purchaseModel: on-demand
       availableGpuCounts: [1, 2, 4, 8]
+      hostConfigs:
+      - {gpuCount: 1, vcpu: 8, ramGiB: 48}
+      - {gpuCount: 2, vcpu: 16, ramGiB: 96}
+      - {gpuCount: 4, vcpu: 32, ramGiB: 192}
+      - {gpuCount: 8, vcpu: 64, ramGiB: 384}
       yandexSkuId: dn2dlvuk2ecf6hu0kjtl
       serviceId: dn28okfvqh19eiue6l2m
     pricing:
@@ -77,7 +87,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-27'
     sourceRefs:
     - yc.billing-api
     - yc.compute
@@ -85,11 +95,16 @@ spec:
       gpuModel: NVIDIA A100
       gpuCount: 1
       gpuMemoryGb: 80
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: amd-epyc
       cpuPlatformNative: AMD EPYC
       platformId: gpu-standard-v3
       purchaseModel: on-demand
       availableGpuCounts: [1, 2, 4, 8]
+      hostConfigs:
+      - {gpuCount: 1, vcpu: 28, ramGiB: 119}
+      - {gpuCount: 2, vcpu: 56, ramGiB: 238}
+      - {gpuCount: 4, vcpu: 112, ramGiB: 476}
+      - {gpuCount: 8, vcpu: 224, ramGiB: 952}
       yandexSkuId: dn2395q10bihjmm2b0v6
       serviceId: dn28okfvqh19eiue6l2m
     pricing:
@@ -108,7 +123,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-27'
     sourceRefs:
     - yc.billing-api
     - yc.compute
@@ -116,9 +131,17 @@ spec:
       gpuModel: unknown
       gpuCount: 1
       gpuMemoryGb: 80
+      cpuPlatformFamily: amd-epyc
+      cpuPlatformNative: AMD EPYC 9474F
       platformId: gpu-standard-v3i
       purchaseModel: on-demand
       availableGpuCounts: [1, 2, 4, 8]
+      # Console «AMD Epyc 9474F with Gen2» + docs Compute → GPUs (gpu-standard-v3i).
+      hostConfigs:
+      - {gpuCount: 1, vcpu: 18, ramGiB: 144}
+      - {gpuCount: 2, vcpu: 36, ramGiB: 288}
+      - {gpuCount: 4, vcpu: 72, ramGiB: 576}
+      - {gpuCount: 8, vcpu: 180, ramGiB: 1440}
       yandexSkuId: dn2jfrjoic5h3nh7e6jh
       serviceId: dn28okfvqh19eiue6l2m
     pricing:
@@ -130,7 +153,11 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: В прайсе Yandex Cloud для платформы Gen2 указан объём памяти (80 ГБ), но модель GPU не названа.
+    notes: >
+      Gen2 (gpu-standard-v3i) — платформа Yandex Cloud на AMD EPYC 9474F; в публичном
+      прайсе указано 80 ГБ VRAM на GPU, модель чипа не названа (не размечаем как A100/H100).
+      Доступ к Gen2 — по запросу при технической возможности. vCPU и RAM оплачиваются отдельно.
+      Кластер Gen2: до 20 ВМ конфигурации 8 GPU / 180 vCPU / 1440 GiB (InfiniBand).
   - sku: yc.gpu.platform-v4
     name: GPU Platform V4
     meter: compute.gpu
@@ -138,7 +165,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-01-23'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-27'
     sourceRefs:
     - yc.billing-api
     - yc.compute
@@ -146,9 +173,16 @@ spec:
       gpuModel: unknown
       gpuCount: 1
       gpuMemoryGb: 141
+      cpuPlatformFamily: platform-v4
+      cpuPlatformNative: GPU Platform V4
       platformId: gpu-standard-v4
       purchaseModel: on-demand
       availableGpuCounts: [1, 2, 4, 8]
+      hostConfigs:
+      - {gpuCount: 1, vcpu: 22, ramGiB: 220}
+      - {gpuCount: 2, vcpu: 44, ramGiB: 440}
+      - {gpuCount: 4, vcpu: 88, ramGiB: 880}
+      - {gpuCount: 8, vcpu: 180, ramGiB: 1800}
       yandexSkuId: dn2qtqtmybqbpyihfxri
       serviceId: dn28okfvqh19eiue6l2m
     pricing:
@@ -172,7 +206,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-27'
     sourceRefs:
     - yc.billing-api
     - yc.compute
@@ -187,6 +221,12 @@ spec:
       purchaseModel: on-demand
       availableGpuCounts: [1]
       availableVcpuCounts: [4, 8, 16, 32]
+      # Console: только 1× T4; vCPU/RAM 4:1 (GiB).
+      hostConfigs:
+      - {gpuCount: 1, vcpu: 4, ramGiB: 16}
+      - {gpuCount: 1, vcpu: 8, ramGiB: 32}
+      - {gpuCount: 1, vcpu: 16, ramGiB: 64}
+      - {gpuCount: 1, vcpu: 32, ramGiB: 128}
       yandexSkuId: dn20ml8ifdps6m7048an
       serviceId: dn28okfvqh19eiue6l2m
     pricing:
@@ -205,12 +245,13 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-27'
     sourceRefs:
     - yc.billing-api
     - yc.compute
     dimensions:
       gpuModel: unknown
+      gpuInterconnect: PCIe
       gpuCount: 1
       gpuMemoryGb: 24
       cpuPlatformFamily: intel-ice-lake
@@ -219,6 +260,11 @@ spec:
       purchaseModel: on-demand
       availableGpuCounts: [1]
       availableVcpuCounts: [4, 8, 16, 32]
+      hostConfigs:
+      - {gpuCount: 1, vcpu: 4, ramGiB: 16}
+      - {gpuCount: 1, vcpu: 8, ramGiB: 32}
+      - {gpuCount: 1, vcpu: 16, ramGiB: 64}
+      - {gpuCount: 1, vcpu: 32, ramGiB: 128}
       yandexSkuId: dn2hql9evci880d8jq7i
       serviceId: dn28okfvqh19eiue6l2m
     pricing:
@@ -233,6 +279,7 @@ spec:
     notes: >
       T4i — обозначение платформы в Yandex Cloud; у NVIDIA отдельной карты с таким названием нет.
       Точная модель ускорителя в публичном прайсе не указана. vCPU и RAM оплачиваются отдельно.
+  # Preemptible GPU: docs recommend 1/2/4 (8× often unavailable). Rates from Billing API.
   - sku: yc.gpu.a100.preemptible
     name: NVIDIA A100, прерываемый
     meter: compute.gpu
@@ -240,17 +287,21 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-27'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       gpuModel: NVIDIA A100
       gpuCount: 1
       gpuMemoryGb: 80
-      cpuPlatformFamily: unknown
+      cpuPlatformFamily: amd-epyc
       cpuPlatformNative: AMD EPYC
       platformId: gpu-standard-v3
       purchaseModel: preemptible
-      availableGpuCounts: [1, 2, 4, 8]
+      availableGpuCounts: [1, 2, 4]
+      hostConfigs:
+      - {gpuCount: 1, vcpu: 28, ramGiB: 119}
+      - {gpuCount: 2, vcpu: 56, ramGiB: 238}
+      - {gpuCount: 4, vcpu: 112, ramGiB: 476}
       yandexSkuId: dn211dses9ju3abvq0bs
       serviceId: dn28okfvqh19eiue6l2m
     pricing:
@@ -260,7 +311,9 @@ spec:
         unit: {quantity: GPU, period: hour}
         vat: included
         byteBasis: not-applicable
-    notes: "Прерываемые GPU: vCPU и RAM оплачиваются отдельно; провайдер может остановить ВМ — не для критичных задач."
+    notes: >
+      Прерываемый A100 (~40% от on-demand). Практичные конфигурации 1/2/4 GPU
+      (8× в spot обычно нет в пуле). vCPU/RAM — ставки платформы AMD EPYC (GPU), отдельно.
   - sku: yc.gpu.v100-cascade-lake.preemptible
     name: NVIDIA V100, Intel Cascade Lake, прерываемый
     meter: compute.gpu
@@ -268,7 +321,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-27'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       gpuModel: NVIDIA V100
@@ -278,7 +331,11 @@ spec:
       cpuPlatformNative: Intel Cascade Lake
       platformId: gpu-standard-v2
       purchaseModel: preemptible
-      availableGpuCounts: [1, 2, 4, 8]
+      availableGpuCounts: [1, 2, 4]
+      hostConfigs:
+      - {gpuCount: 1, vcpu: 8, ramGiB: 48}
+      - {gpuCount: 2, vcpu: 16, ramGiB: 96}
+      - {gpuCount: 4, vcpu: 32, ramGiB: 192}
       yandexSkuId: dn23ppvthcls7rjt5pol
       serviceId: dn28okfvqh19eiue6l2m
     pricing:
@@ -288,7 +345,43 @@ spec:
         unit: {quantity: GPU, period: hour}
         vat: included
         byteBasis: not-applicable
-    notes: "Прерываемые GPU: vCPU и RAM оплачиваются отдельно; провайдер может остановить ВМ — не для критичных задач."
+    notes: >
+      Прерываемый V100 (~25% от on-demand). Каталог: 1/2/4 GPU; 8× в spot обычно
+      нет в пуле. vCPU/RAM оплачиваются отдельно.
+  - sku: yc.gpu.v100-broadwell.preemptible
+    name: NVIDIA V100, Intel Broadwell, прерываемый
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      gpuModel: NVIDIA V100
+      gpuCount: 1
+      gpuMemoryGb: 32
+      cpuPlatformFamily: intel-broadwell
+      cpuPlatformNative: Intel Broadwell
+      platformId: gpu-standard-v1
+      purchaseModel: preemptible
+      availableGpuCounts: [1, 2, 4]
+      hostConfigs:
+      - {gpuCount: 1, vcpu: 8, ramGiB: 96}
+      - {gpuCount: 2, vcpu: 16, ramGiB: 192}
+      - {gpuCount: 4, vcpu: 32, ramGiB: 384}
+      yandexSkuId: dn2lov15qqamcimfv84q
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate:
+        amount: '65.34'
+        currency: RUB
+        unit: {quantity: GPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+    notes: >
+      Прерываемый V100 на Broadwell (макс. 4 GPU на ВМ). Ставка GPU как у Cascade
+      preemptible. vCPU/RAM платформы — отдельно.
   - sku: yc.gpu.t4.preemptible
     name: NVIDIA T4, прерываемый
     meter: compute.gpu
@@ -296,7 +389,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-27'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       gpuModel: NVIDIA T4
@@ -309,6 +402,11 @@ spec:
       purchaseModel: preemptible
       availableGpuCounts: [1]
       availableVcpuCounts: [4, 8, 16, 32]
+      hostConfigs:
+      - {gpuCount: 1, vcpu: 4, ramGiB: 16}
+      - {gpuCount: 1, vcpu: 8, ramGiB: 32}
+      - {gpuCount: 1, vcpu: 16, ramGiB: 64}
+      - {gpuCount: 1, vcpu: 32, ramGiB: 128}
       yandexSkuId: dn2cpk4mc82b1vib72e5
       serviceId: dn28okfvqh19eiue6l2m
     pricing:
@@ -318,7 +416,81 @@ spec:
         unit: {quantity: GPU, period: hour}
         vat: included
         byteBasis: not-applicable
-    notes: "Прерываемые GPU: vCPU и RAM оплачиваются отдельно; провайдер может остановить ВМ — не для критичных задач."
+    notes: >
+      Прерываемый T4 (~25% от on-demand). Только 1 GPU на ВМ. vCPU/RAM — ставки
+      платформы Ice Lake with T4 (дешевле обычного Ice Lake preemptible).
+  - sku: yc.gpu.t4i.preemptible
+    name: T4i, прерываемый
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      gpuModel: unknown
+      gpuInterconnect: PCIe
+      gpuCount: 1
+      gpuMemoryGb: 24
+      cpuPlatformFamily: intel-ice-lake
+      cpuPlatformNative: Intel Ice Lake
+      platformId: standard-v3-t4i
+      purchaseModel: preemptible
+      availableGpuCounts: [1]
+      availableVcpuCounts: [4, 8, 16, 32]
+      hostConfigs:
+      - {gpuCount: 1, vcpu: 4, ramGiB: 16}
+      - {gpuCount: 1, vcpu: 8, ramGiB: 32}
+      - {gpuCount: 1, vcpu: 16, ramGiB: 64}
+      - {gpuCount: 1, vcpu: 32, ramGiB: 128}
+      yandexSkuId: dn2qlml2u48bng4jgilh
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate:
+        amount: '158.11'
+        currency: RUB
+        unit: {quantity: GPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+    notes: >
+      Прерываемый T4i: в Billing API ставка GPU совпадает с on-demand (скидки нет).
+      Только 1 GPU. Чип в прайсе не назван.
+  - sku: yc.gpu.gen2.preemptible
+    name: Gen2 GPU, прерываемый
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      gpuModel: unknown
+      gpuCount: 1
+      gpuMemoryGb: 80
+      cpuPlatformFamily: amd-epyc
+      cpuPlatformNative: AMD EPYC 9474F
+      platformId: gpu-standard-v3i
+      purchaseModel: preemptible
+      availableGpuCounts: [1, 2, 4]
+      hostConfigs:
+      - {gpuCount: 1, vcpu: 18, ramGiB: 144}
+      - {gpuCount: 2, vcpu: 36, ramGiB: 288}
+      - {gpuCount: 4, vcpu: 72, ramGiB: 576}
+      yandexSkuId: dn2qvcfe8i5vqlrvterc
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate:
+        amount: '757.63'
+        currency: RUB
+        unit: {quantity: GPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+    notes: >
+      Прерываемый Gen2: ставка GPU/vCPU/RAM в Billing API совпадает с on-demand
+      (скидки нет). Практичные конфигурации 1/2/4 GPU; 8× в spot обычно нет в пуле.
+      Чип не назван.
   - sku: yc.gpu.platform-v4.preemptible
     name: GPU Platform V4, прерываемый
     meter: compute.gpu
@@ -326,15 +498,21 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-01-23'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-27'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       gpuModel: unknown
       gpuCount: 1
       gpuMemoryGb: 141
+      cpuPlatformFamily: platform-v4
+      cpuPlatformNative: GPU Platform V4
       platformId: gpu-standard-v4
       purchaseModel: preemptible
-      availableGpuCounts: [1, 2, 4, 8]
+      availableGpuCounts: [1, 2, 4]
+      hostConfigs:
+      - {gpuCount: 1, vcpu: 22, ramGiB: 220}
+      - {gpuCount: 2, vcpu: 44, ramGiB: 440}
+      - {gpuCount: 4, vcpu: 88, ramGiB: 880}
       yandexSkuId: dn2azjbhk7j6jwi5agdv
       serviceId: dn28okfvqh19eiue6l2m
     pricing:
@@ -345,5 +523,6 @@ spec:
         vat: included
         byteBasis: not-applicable
     notes: >
-      GPU Platform V4 без названия чипа NVIDIA (как on-demand). Не размечаем как H200.
-      Для прерываемого тарифа ставка совпадает с обычным (скидки нет). vCPU и RAM отдельно.
+      GPU Platform V4 без названия чипа NVIDIA. Не размечаем как H200.
+      Прерываемый тариф: ставка GPU совпадает с on-demand (скидки нет).
+      Каталог: 1/2/4 GPU. vCPU и RAM отдельно.

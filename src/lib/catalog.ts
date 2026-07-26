@@ -639,7 +639,7 @@ export function gpuDisplayIdentity(meter: CatalogMeter): GpuDisplayIdentity | nu
   if (
     /gpu-standard-v3i/i.test(platformId) ||
     /^Gen2\b/i.test(meter.name) ||
-    /\.gen2$/i.test(meter.sku)
+    /\.gen2(?:\.|$)/i.test(meter.sku)
   ) {
     return {
       vendor: 'Yandex',
@@ -650,7 +650,11 @@ export function gpuDisplayIdentity(meter: CatalogMeter): GpuDisplayIdentity | nu
       unknownChip: true,
     };
   }
-  if (/t4i/i.test(platformId) || /\.t4i$/i.test(meter.sku) || /^T4i\b/i.test(meter.name)) {
+  if (
+    /t4i/i.test(platformId) ||
+    /\.t4i(?:\.|$)/i.test(meter.sku) ||
+    /^T4i\b/i.test(meter.name)
+  ) {
     return {
       vendor: 'Yandex',
       card: 'T4i',

@@ -1,0 +1,597 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: yandex-cloud
+  layer: iaas
+  service: compute
+  category: iaas.compute.general
+  title: GPU platform host compute
+spec:
+  # vCPU/RAM billed with GPU platforms (separate Billing SKUs from generic Ice/Cascade).
+  # dimensions.gpuHostOnly — excluded from ordinary VM quotes; used when composing GPU hosts.
+  meters:
+  - sku: yc.compute.gpu-a100.vcpu
+    name: AMD EPYC (GPU A100), 100% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: amd-epyc
+      cpuPlatformNative: AMD EPYC
+      platformId: gpu-standard-v3
+      gpuPlatformId: gpu-standard-v3
+      gpuHostOnly: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      yandexSkuId: dn28c1erut6m9f9uem08
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '0.9882', currency: RUB, unit: {quantity: vCPU, period: hour}, vat: included, byteBasis: not-applicable}
+    notes: Ядра хоста для GPU-платформы A100 (gpu-standard-v3), не для обычных ВМ.
+  - sku: yc.compute.gpu-a100.ram
+    name: AMD EPYC (GPU A100), RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: amd-epyc
+      cpuPlatformNative: AMD EPYC
+      platformId: gpu-standard-v3
+      gpuPlatformId: gpu-standard-v3
+      gpuHostOnly: true
+      purchaseModel: on-demand
+      yandexSkuId: dn21jcm82510bfa6is22
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '0.3074', currency: RUB, unit: {quantity: GiB, period: hour}, vat: included, byteBasis: iec}
+  - sku: yc.compute.gpu-a100.preemptible-vcpu
+    name: AMD EPYC (GPU A100), 100% preemptible vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: amd-epyc
+      cpuPlatformNative: AMD EPYC
+      platformId: gpu-standard-v3
+      gpuPlatformId: gpu-standard-v3
+      gpuHostOnly: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: preemptible
+      yandexSkuId: dn2tvs05nnrib706hgnt
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '0.3952', currency: RUB, unit: {quantity: vCPU, period: hour}, vat: included, byteBasis: not-applicable}
+  - sku: yc.compute.gpu-a100.preemptible-ram
+    name: AMD EPYC (GPU A100), preemptible RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: amd-epyc
+      cpuPlatformNative: AMD EPYC
+      platformId: gpu-standard-v3
+      gpuPlatformId: gpu-standard-v3
+      gpuHostOnly: true
+      purchaseModel: preemptible
+      yandexSkuId: dn2m4gusa7m7t4hl6vo2
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '0.1207', currency: RUB, unit: {quantity: GiB, period: hour}, vat: included, byteBasis: iec}
+
+  - sku: yc.compute.gpu-gen2.vcpu
+    name: Gen2 (GPU), 100% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-01-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: amd-epyc
+      cpuPlatformNative: AMD EPYC 9474F
+      platformId: gpu-standard-v3i
+      gpuPlatformId: gpu-standard-v3i
+      gpuHostOnly: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      yandexSkuId: dn2fd3g50rub98vfprlt
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '0.915', currency: RUB, unit: {quantity: vCPU, period: hour}, vat: included, byteBasis: not-applicable}
+  - sku: yc.compute.gpu-gen2.ram
+    name: Gen2 (GPU), RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: amd-epyc
+      cpuPlatformNative: AMD EPYC 9474F
+      platformId: gpu-standard-v3i
+      gpuPlatformId: gpu-standard-v3i
+      gpuHostOnly: true
+      purchaseModel: on-demand
+      yandexSkuId: dn2h5gi2u2l3bdclrput
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '0.2846', currency: RUB, unit: {quantity: GiB, period: hour}, vat: included, byteBasis: iec}
+  - sku: yc.compute.gpu-gen2.preemptible-vcpu
+    name: Gen2 (GPU), 100% preemptible vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-01-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: amd-epyc
+      cpuPlatformNative: AMD EPYC 9474F
+      platformId: gpu-standard-v3i
+      gpuPlatformId: gpu-standard-v3i
+      gpuHostOnly: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: preemptible
+      yandexSkuId: dn2o9fiqemifmch1dq7c
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '0.915', currency: RUB, unit: {quantity: vCPU, period: hour}, vat: included, byteBasis: not-applicable}
+    notes: Ставка совпадает с on-demand Gen2 (скидки на preemptible нет).
+  - sku: yc.compute.gpu-gen2.preemptible-ram
+    name: Gen2 (GPU), preemptible RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: amd-epyc
+      cpuPlatformNative: AMD EPYC 9474F
+      platformId: gpu-standard-v3i
+      gpuPlatformId: gpu-standard-v3i
+      gpuHostOnly: true
+      purchaseModel: preemptible
+      yandexSkuId: dn2mgiub24223fh5mvgv
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '0.2846', currency: RUB, unit: {quantity: GiB, period: hour}, vat: included, byteBasis: iec}
+    notes: Ставка совпадает с on-demand Gen2 (скидки на preemptible нет).
+
+  - sku: yc.compute.gpu-platform-v4.vcpu
+    name: GPU Platform V4, 100% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-01-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: platform-v4
+      cpuPlatformNative: GPU Platform V4
+      platformId: gpu-standard-v4
+      gpuPlatformId: gpu-standard-v4
+      gpuHostOnly: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      yandexSkuId: dn2shelhculi2g5o5ogy
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '0.915', currency: RUB, unit: {quantity: vCPU, period: hour}, vat: included, byteBasis: not-applicable}
+  - sku: yc.compute.gpu-platform-v4.ram
+    name: GPU Platform V4, RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: platform-v4
+      cpuPlatformNative: GPU Platform V4
+      platformId: gpu-standard-v4
+      gpuPlatformId: gpu-standard-v4
+      gpuHostOnly: true
+      purchaseModel: on-demand
+      yandexSkuId: dn2pvxnj2udp3unyhz2b
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '0.2846', currency: RUB, unit: {quantity: GiB, period: hour}, vat: included, byteBasis: iec}
+  - sku: yc.compute.gpu-platform-v4.preemptible-vcpu
+    name: GPU Platform V4, 100% preemptible vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-01-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: platform-v4
+      cpuPlatformNative: GPU Platform V4
+      platformId: gpu-standard-v4
+      gpuPlatformId: gpu-standard-v4
+      gpuHostOnly: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: preemptible
+      yandexSkuId: dn2kllf2dqxte3qnj7vq
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '0.915', currency: RUB, unit: {quantity: vCPU, period: hour}, vat: included, byteBasis: not-applicable}
+    notes: Ставка совпадает с on-demand Platform V4.
+  - sku: yc.compute.gpu-platform-v4.preemptible-ram
+    name: GPU Platform V4, preemptible RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: platform-v4
+      cpuPlatformNative: GPU Platform V4
+      platformId: gpu-standard-v4
+      gpuPlatformId: gpu-standard-v4
+      gpuHostOnly: true
+      purchaseModel: preemptible
+      yandexSkuId: dn2puxcaylhhmezidpko
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '0.2846', currency: RUB, unit: {quantity: GiB, period: hour}, vat: included, byteBasis: iec}
+
+  - sku: yc.compute.gpu-t4.vcpu
+    name: Intel Ice Lake (GPU T4), 100% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: intel-ice-lake
+      cpuPlatformNative: Intel Ice Lake
+      platformId: standard-v3-t4
+      gpuPlatformId: standard-v3-t4
+      gpuHostOnly: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      yandexSkuId: dn24b7m6qol7tb7tukga
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '1.15', currency: RUB, unit: {quantity: vCPU, period: hour}, vat: included, byteBasis: not-applicable}
+  - sku: yc.compute.gpu-t4.ram
+    name: Intel Ice Lake (GPU T4), RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: intel-ice-lake
+      cpuPlatformNative: Intel Ice Lake
+      platformId: standard-v3-t4
+      gpuPlatformId: standard-v3-t4
+      gpuHostOnly: true
+      purchaseModel: on-demand
+      yandexSkuId: dn2lg2hrvbn5b8lm7em4
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '0.3074', currency: RUB, unit: {quantity: GiB, period: hour}, vat: included, byteBasis: iec}
+  - sku: yc.compute.gpu-t4.preemptible-vcpu
+    name: Intel Ice Lake (GPU T4), 100% preemptible vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: intel-ice-lake
+      cpuPlatformNative: Intel Ice Lake
+      platformId: standard-v3-t4
+      gpuPlatformId: standard-v3-t4
+      gpuHostOnly: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: preemptible
+      yandexSkuId: dn2lsfskfirek2985fnd
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '0.3184', currency: RUB, unit: {quantity: vCPU, period: hour}, vat: included, byteBasis: not-applicable}
+  - sku: yc.compute.gpu-t4.preemptible-ram
+    name: Intel Ice Lake (GPU T4), preemptible RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: intel-ice-lake
+      cpuPlatformNative: Intel Ice Lake
+      platformId: standard-v3-t4
+      gpuPlatformId: standard-v3-t4
+      gpuHostOnly: true
+      purchaseModel: preemptible
+      yandexSkuId: dn2im0g43iedeohe4sac
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '0.0768', currency: RUB, unit: {quantity: GiB, period: hour}, vat: included, byteBasis: iec}
+
+  - sku: yc.compute.gpu-t4i.vcpu
+    name: Intel Ice Lake (GPU T4i), 100% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: intel-ice-lake
+      cpuPlatformNative: Intel Ice Lake
+      platformId: standard-v3-t4i
+      gpuPlatformId: standard-v3-t4i
+      gpuHostOnly: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      yandexSkuId: dn242l2ivnhdd5so2oga
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '1.15', currency: RUB, unit: {quantity: vCPU, period: hour}, vat: included, byteBasis: not-applicable}
+  - sku: yc.compute.gpu-t4i.ram
+    name: Intel Ice Lake (GPU T4i), RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: intel-ice-lake
+      cpuPlatformNative: Intel Ice Lake
+      platformId: standard-v3-t4i
+      gpuPlatformId: standard-v3-t4i
+      gpuHostOnly: true
+      purchaseModel: on-demand
+      yandexSkuId: dn290pbmohupnus9ajb7
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '0.3074', currency: RUB, unit: {quantity: GiB, period: hour}, vat: included, byteBasis: iec}
+  - sku: yc.compute.gpu-t4i.preemptible-vcpu
+    name: Intel Ice Lake (GPU T4i), 100% preemptible vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: intel-ice-lake
+      cpuPlatformNative: Intel Ice Lake
+      platformId: standard-v3-t4i
+      gpuPlatformId: standard-v3-t4i
+      gpuHostOnly: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: preemptible
+      yandexSkuId: dn2960mi7268n67o8iae
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '1.15', currency: RUB, unit: {quantity: vCPU, period: hour}, vat: included, byteBasis: not-applicable}
+    notes: Ставка совпадает с on-demand T4i.
+  - sku: yc.compute.gpu-t4i.preemptible-ram
+    name: Intel Ice Lake (GPU T4i), preemptible RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: intel-ice-lake
+      cpuPlatformNative: Intel Ice Lake
+      platformId: standard-v3-t4i
+      gpuPlatformId: standard-v3-t4i
+      gpuHostOnly: true
+      purchaseModel: preemptible
+      yandexSkuId: dn25rffeums4j1ku5649
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '0.3074', currency: RUB, unit: {quantity: GiB, period: hour}, vat: included, byteBasis: iec}
+
+  - sku: yc.compute.gpu-v100-cascade.vcpu
+    name: Intel Cascade Lake (GPU V100), 100% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: intel-cascade-lake
+      cpuPlatformNative: Intel Cascade Lake
+      platformId: gpu-standard-v2
+      gpuPlatformId: gpu-standard-v2
+      gpuHostOnly: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      yandexSkuId: dn2udmu2aa9jm5a8f4ug
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '1.24', currency: RUB, unit: {quantity: vCPU, period: hour}, vat: included, byteBasis: not-applicable}
+  - sku: yc.compute.gpu-v100-cascade.ram
+    name: Intel Cascade Lake (GPU V100), RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: intel-cascade-lake
+      cpuPlatformNative: Intel Cascade Lake
+      platformId: gpu-standard-v2
+      gpuPlatformId: gpu-standard-v2
+      gpuHostOnly: true
+      purchaseModel: on-demand
+      yandexSkuId: dn2qtp90p3r8l8vakmm6
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '0.3246', currency: RUB, unit: {quantity: GiB, period: hour}, vat: included, byteBasis: iec}
+  - sku: yc.compute.gpu-v100-cascade.preemptible-vcpu
+    name: Intel Cascade Lake (GPU V100), 100% preemptible vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: intel-cascade-lake
+      cpuPlatformNative: Intel Cascade Lake
+      platformId: gpu-standard-v2
+      gpuPlatformId: gpu-standard-v2
+      gpuHostOnly: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: preemptible
+      yandexSkuId: dn2h4u30djq3jhh8dqh8
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '0.335', currency: RUB, unit: {quantity: vCPU, period: hour}, vat: included, byteBasis: not-applicable}
+  - sku: yc.compute.gpu-v100-cascade.preemptible-ram
+    name: Intel Cascade Lake (GPU V100), preemptible RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: intel-cascade-lake
+      cpuPlatformNative: Intel Cascade Lake
+      platformId: gpu-standard-v2
+      gpuPlatformId: gpu-standard-v2
+      gpuHostOnly: true
+      purchaseModel: preemptible
+      yandexSkuId: dn2hotj7skno0turhbq1
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '0.0733', currency: RUB, unit: {quantity: GiB, period: hour}, vat: included, byteBasis: iec}
+
+  - sku: yc.compute.gpu-v100-broadwell.vcpu
+    name: Intel Broadwell (GPU V100), 100% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: intel-broadwell
+      cpuPlatformNative: Intel Broadwell
+      platformId: gpu-standard-v1
+      gpuPlatformId: gpu-standard-v1
+      gpuHostOnly: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      yandexSkuId: dn2sfcnkn3jlhmq568ac
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '1.17', currency: RUB, unit: {quantity: vCPU, period: hour}, vat: included, byteBasis: not-applicable}
+  - sku: yc.compute.gpu-v100-broadwell.ram
+    name: Intel Broadwell (GPU V100), RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: intel-broadwell
+      cpuPlatformNative: Intel Broadwell
+      platformId: gpu-standard-v1
+      gpuPlatformId: gpu-standard-v1
+      gpuHostOnly: true
+      purchaseModel: on-demand
+      yandexSkuId: dn2nccae8nra81iqphdn
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '0.4083', currency: RUB, unit: {quantity: GiB, period: hour}, vat: included, byteBasis: iec}
+  - sku: yc.compute.gpu-v100-broadwell.preemptible-vcpu
+    name: Intel Broadwell (GPU V100), 100% preemptible vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: intel-broadwell
+      cpuPlatformNative: Intel Broadwell
+      platformId: gpu-standard-v1
+      gpuPlatformId: gpu-standard-v1
+      gpuHostOnly: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: preemptible
+      yandexSkuId: dn2t7aa68lehsmvo5mss
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '0.356', currency: RUB, unit: {quantity: vCPU, period: hour}, vat: included, byteBasis: not-applicable}
+  - sku: yc.compute.gpu-v100-broadwell.preemptible-ram
+    name: Intel Broadwell (GPU V100), preemptible RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs: [yc.billing-api, yc.compute]
+    dimensions:
+      cpuPlatformFamily: intel-broadwell
+      cpuPlatformNative: Intel Broadwell
+      platformId: gpu-standard-v1
+      gpuPlatformId: gpu-standard-v1
+      gpuHostOnly: true
+      purchaseModel: preemptible
+      yandexSkuId: dn2k0omvmglh857u60vu
+      serviceId: dn28okfvqh19eiue6l2m
+    pricing:
+      rate: {amount: '0.1256', currency: RUB, unit: {quantity: GiB, period: hour}, vat: included, byteBasis: iec}

@@ -3,7 +3,7 @@
 import {useEffect, useMemo, useRef, useState} from 'react';
 import {Flex, Icon, PlaceholderContainer, Text} from '@gravity-ui/uikit';
 import {Cpu, HardDrive, Layers3Diagonal} from '@gravity-ui/icons';
-import type {GpuPreset} from '@/lib/calculator/presets';
+import type {GpuPreset, PurchaseModel} from '@/lib/calculator/presets';
 import {
   formatGiBCapacity,
   formatQuoteAmount,
@@ -19,13 +19,20 @@ type Props = {
   period: PeriodMode;
   activePresetId: string | null;
   onSelect: (preset: GpuPreset) => void;
+  purchaseModel?: PurchaseModel;
 };
 
 function modelLabel(preset: GpuPreset): string {
   return preset.title.replace(/^\d+×\s*/, '');
 }
 
-export function GpuPresetGrid({presets, period, activePresetId, onSelect}: Props) {
+export function GpuPresetGrid({
+  presets,
+  period,
+  activePresetId,
+  onSelect,
+  purchaseModel = 'on-demand',
+}: Props) {
   const [totals, setTotals] = useState<Record<string, number | null>>({});
   const [loading, setLoading] = useState(false);
   const seq = useRef(0);
@@ -49,6 +56,7 @@ export function GpuPresetGrid({presets, period, activePresetId, onSelect}: Props
           diskGiB: preset.diskGiB,
           dedicated: preset.dedicated === true,
           gpuMemoryGb: preset.gpuMemoryGb ?? null,
+          purchaseModel,
         };
         try {
           const res = await fetch('/api/calculator/quote', {
@@ -68,7 +76,7 @@ export function GpuPresetGrid({presets, period, activePresetId, onSelect}: Props
       setTotals(Object.fromEntries(entries));
       setLoading(false);
     });
-  }, [period, presetKey, presets]);
+  }, [period, presetKey, presets, purchaseModel]);
 
   if (presets.length === 0) {
     return (

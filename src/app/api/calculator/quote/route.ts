@@ -48,6 +48,7 @@ type GpuBody = {
   diskGiB?: number;
   gpuInterconnect?: string | null;
   dedicated?: boolean;
+  purchaseModel?: PurchaseModel;
   gpuMemoryGb?: number | null;
 };
 
@@ -156,12 +157,16 @@ export async function POST(request: Request) {
     const ramGiB = body.ramGiB != null ? parsePositiveInt(body.ramGiB) : undefined;
     const diskGiB = body.diskGiB != null ? parsePositiveInt(body.diskGiB) : undefined;
     const dedicated = body.dedicated === true;
+    const purchaseModel: PurchaseModel =
+      body.purchaseModel && PURCHASE_MODELS.has(body.purchaseModel)
+        ? body.purchaseModel
+        : 'on-demand';
     const gpuMemoryGb =
       typeof body.gpuMemoryGb === 'number' && Number.isFinite(body.gpuMemoryGb)
         ? body.gpuMemoryGb
         : undefined;
     const preset: GpuPreset = {
-      id: `adhoc-gpu-${gpuModelMatch}-${gpuCount}${dedicated ? '-dedicated' : ''}`,
+      id: `adhoc-gpu-${gpuModelMatch}-${gpuCount}${dedicated ? '-dedicated' : ''}-${purchaseModel}`,
       kind: 'gpu',
       title: `${gpuModelMatch} ×${gpuCount}`,
       subtitle: 'Calculator ad-hoc GPU',
@@ -174,6 +179,7 @@ export async function POST(request: Request) {
       gpuInterconnect: body.gpuInterconnect ?? null,
       dedicated: dedicated || undefined,
       gpuMemoryGb: gpuMemoryGb ?? null,
+      purchaseModel,
     };
     const view = toViewQuote(quotePreset(preset, body.period));
     return NextResponse.json(view);

@@ -346,6 +346,14 @@ function pickDiskForRegion(
  * every component shares one region and vCPU/RAM share a CPU platform, so the
  * quoted price is something a client can actually provision.
  */
+function isGpuHostOnlyMeter(meter: CatalogMeter): boolean {
+  return meter.dimensions.gpuHostOnly === true || meter.dimensions.gpuHostOnly === 'true';
+}
+
+function meterGpuPlatformId(meter: CatalogMeter): string {
+  return String(meter.dimensions.gpuPlatformId || meter.dimensions.platformId || '');
+}
+
 function pickUnitComputeCombo(
   provider: string,
   preset: ComputePreset,
@@ -355,6 +363,7 @@ function pickUnitComputeCombo(
   const preference = purchaseModelOf(preset);
   const share = vcpuShareOf(preset);
   const fractional = isFractionalShare(share);
+  const wantGpuPlatform = preset.gpuPlatformId?.trim() || '';
   const vcpuPred = (m: CatalogMeter) => {
     if (!matchesComputePurchase(m, preference)) return false;
     if (!matchesVcpuShare(m, share)) return false;
@@ -377,6 +386,13 @@ function pickUnitComputeCombo(
     period,
     (m) => notSynthetic(m) && vcpuPred(m),
   );
+  // GPU-platform host SKUs must not win ordinary VM quotes (cheaper AMD EPYC, etc.).
+  if (wantGpuPlatform) {
+    const matched = vcpus.filter((x) => meterGpuPlatformId(x.m) === wantGpuPlatform);
+    vcpus = matched.length ? matched : vcpus.filter((x) => !isGpuHostOnlyMeter(x.m));
+  } else {
+    vcpus = vcpus.filter((x) => !isGpuHostOnlyMeter(x.m));
+  }
   // For dedicated 100% tiers prefer guaranteed cores; fractional shares are already exact.
   if (!fractional && !lowCost) {
     const dedicated = vcpus.filter((x) => isDedicatedVcpu(x.m));
@@ -384,12 +400,18 @@ function pickUnitComputeCombo(
   }
   if (!vcpus.length) return null;
 
-  const rams = pricedList(
+  let rams = pricedList(
     provider,
     'compute.ram',
     period,
     (m) => notSynthetic(m) && ramPred(m),
   );
+  if (wantGpuPlatform) {
+    const matched = rams.filter((x) => meterGpuPlatformId(x.m) === wantGpuPlatform);
+    rams = matched.length ? matched : rams.filter((x) => !isGpuHostOnlyMeter(x.m));
+  } else {
+    rams = rams.filter((x) => !isGpuHostOnlyMeter(x.m));
+  }
   const disks = pricedList(provider, 'storage.block.capacity', period, diskPred);
   const providerHasDisks = disks.length > 0;
 
@@ -580,6 +602,32 @@ function quoteCompute(preset: ComputePreset, period: PeriodMode): ProviderQuote[
 
 function gpuModelMatches(meter: CatalogMeter, match: string): boolean {
   const model = String(meter.dimensions.gpuModel || meter.name || '');
+  const hay = [
+    meter.dimensions.gpuModel,
+    meter.name,
+    meter.sku,
+    meter.dimensions.platformId,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  // Yandex unnamed platforms: gpuModel is "unknown" — match sku / platformId / name.
+  if (match === 'Gen2') {
+    return /gpu-standard-v3i|\.gen2(?:\.|\b)|^Gen2\b/i.test(hay);
+  }
+  if (match === 'Platform V4') {
+    return /gpu-standard-v4|platform-v4|Platform V4/i.test(hay);
+  }
+  if (match === 'T4i') {
+    return /t4i/i.test(hay);
+  }
+  if (match.toUpperCase() === 'T4') {
+    return (
+      (/\bT4\b|Tesla\s*T4/i.test(model) || /standard-v3-t4/i.test(hay)) &&
+      !/t4i/i.test(hay)
+    );
+  }
+
   if (match.toUpperCase() === 'L4') {
     return /\bL4\b/i.test(model) && !/L40/i.test(model) && !/vGPU/i.test(model);
   }
@@ -643,7 +691,20 @@ function unitGpuAmount(
   return null;
 }
 
-function hostPresetForGpu(preset: GpuPreset): ComputePreset | null {
+function purchaseModelOfGpu(preset: GpuPreset): 'on-demand' | 'preemptible' {
+  return preset.purchaseModel === 'preemptible' ? 'preemptible' : 'on-demand';
+}
+
+function gpuCountAllowed(meter: CatalogMeter, gpuCount: number): boolean {
+  const raw = meter.dimensions.availableGpuCounts;
+  if (!Array.isArray(raw) || raw.length === 0) return true;
+  return raw.some((n) => Number(n) === gpuCount);
+}
+
+function hostPresetForGpu(
+  preset: GpuPreset,
+  gpuPlatformId?: string | null,
+): ComputePreset | null {
   if (preset.vcpu == null || preset.ramGiB == null) return null;
   return {
     id: `gpu-host-${preset.id}`,
@@ -654,6 +715,8 @@ function hostPresetForGpu(preset: GpuPreset): ComputePreset | null {
     vcpu: preset.vcpu,
     ramGiB: preset.ramGiB,
     diskGiB: preset.diskGiB ?? 100,
+    purchaseModel: purchaseModelOfGpu(preset),
+    gpuPlatformId: gpuPlatformId?.trim() || undefined,
   };
 }
 
@@ -809,7 +872,7 @@ function quoteGpu(
   const primary: ProviderQuote[] = [];
   const alternate: ProviderQuote[] = [];
   const index = getMeterIndex();
-  const hostShape = hostPresetForGpu(preset);
+  const preference = purchaseModelOfGpu(preset);
 
   for (const provider of catalog.providers) {
     const candidates = (index.gpuByProvider.get(provider.id) ?? []).filter((m) => {
@@ -817,7 +880,8 @@ function quoteGpu(
       if (!isConfirmedAvailable(m)) return false;
       // Catalog-only derived GPU unit estimates must not enter calculator quotes.
       if (m.synthetic) return false;
-      if (!isOnDemand(m) && !preset.dedicated) return false;
+      if (preset.dedicated) return true;
+      if (preference === 'preemptible' ? !isPreemptible(m) : !isOnDemand(m)) return false;
       return gpuModelMatches(m, preset.gpuModelMatch);
     });
 
@@ -834,6 +898,7 @@ function quoteGpu(
       }
       if (preset.dedicated) continue;
       if (meterGpuCount(m) !== 1 && meterGpuCount(m) !== preset.gpuCount) continue;
+      if (!gpuCountAllowed(m, preset.gpuCount)) continue;
       if (!gpuMemoryMatches(m, preset)) continue;
       const amount = unitGpuAmount(m, period, preset);
       if (amount == null) continue;
@@ -847,15 +912,22 @@ function quoteGpu(
 
     if (preset.dedicated) continue;
 
-    if (bestUnit && hostShape) {
-      const host = pickComputeCombo(provider.id, hostShape, period, false);
-      if (host) {
-        primary.push(buildComposedGpuQuote(provider, preset, bestUnit, host));
+    if (bestUnit) {
+      const platformId =
+        typeof bestUnit.m.dimensions.platformId === 'string'
+          ? bestUnit.m.dimensions.platformId
+          : null;
+      const hostShape = hostPresetForGpu(preset, platformId);
+      if (hostShape) {
+        const host = pickComputeCombo(provider.id, hostShape, period, false);
+        if (host) {
+          primary.push(buildComposedGpuQuote(provider, preset, bestUnit, host));
+        } else {
+          alternate.push(buildBareGpuQuote(provider, preset, bestUnit.m, bestUnit.amount));
+        }
       } else {
-        alternate.push(buildBareGpuQuote(provider, preset, bestUnit.m, bestUnit.amount));
+        primary.push(buildBareGpuQuote(provider, preset, bestUnit.m, bestUnit.amount));
       }
-    } else if (bestUnit) {
-      primary.push(buildBareGpuQuote(provider, preset, bestUnit.m, bestUnit.amount));
     }
   }
 
@@ -935,6 +1007,7 @@ function explainComputeMiss(
 /** Short RU reason when GPU quoting skips a provider. */
 function explainGpuMiss(providerId: string, preset: GpuPreset, _period: PeriodMode): string {
   const index = getMeterIndex();
+  const preference = purchaseModelOfGpu(preset);
   const allGpu = (index.gpuByProvider.get(providerId) ?? []).filter(
     (m) => m.status === 'available' && isConfirmedAvailable(m) && !m.synthetic,
   );
@@ -943,9 +1016,17 @@ function explainGpuMiss(providerId: string, preset: GpuPreset, _period: PeriodMo
     return `нет ${preset.gpuModelMatch} в каталоге`;
   }
 
-  const billable = modelMatches.filter((m) => isOnDemand(m) || preset.dedicated);
+  const billable = modelMatches.filter((m) =>
+    preset.dedicated
+      ? true
+      : preference === 'preemptible'
+        ? isPreemptible(m)
+        : isOnDemand(m),
+  );
   if (!billable.length) {
-    return `нет on-demand тарифа ${preset.gpuModelMatch}`;
+    return preference === 'preemptible'
+      ? `нет прерываемого тарифа ${preset.gpuModelMatch}`
+      : `нет on-demand тарифа ${preset.gpuModelMatch}`;
   }
 
   if (preset.dedicated) {
@@ -962,7 +1043,16 @@ function explainGpuMiss(providerId: string, preset: GpuPreset, _period: PeriodMo
     }
   }
 
-  const units = billable.filter((m) => !isGpuBundle(m) && gpuMemoryMatches(m, preset));
+  const units = billable.filter(
+    (m) =>
+      !isGpuBundle(m) &&
+      gpuMemoryMatches(m, preset) &&
+      gpuCountAllowed(m, preset.gpuCount),
+  );
+  if (!units.length && preference === 'preemptible') {
+    return `нет прерываемого ${preset.gpuModelMatch} ×${preset.gpuCount} (обычно 1/2/4)`;
+  }
+
   const bundles = billable.filter((m) => isGpuBundle(m) && bundleMatchesShape(m, preset));
   if (!bundles.length && units.length && hostPresetForGpu(preset)) {
     return 'есть GPU, но нет подходящего хоста vCPU/RAM';

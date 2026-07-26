@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-07-27
+
+### Каталог / Yandex preemptible GPU (1/2/4)
+
+В Billing API у Yandex есть отдельные preemptible SKU на GPU. Добавили в каталог Gen2 / T4i / V100 Broadwell preemptible; у A100/V100/T4/Platform V4 поправили решётку на **1/2/4** (8× в spot обычно недоступна). Реальная скидка — у A100/V100/T4; у Gen2/T4i/Platform V4 ставка GPU как у on-demand. Добавили vCPU/RAM ставок GPU-платформ (`gpu-platforms.yaml`) и переключатель «Прерываемая» в калькуляторе GPU.
+
+### Каталог / Yandex GPU host lattices (Gen2 ×8)
+
+В YAML Yandex GPU добавили `hostConfigs` — допустимые конфигурации из консоли и [доки Compute GPUs](https://yandex.cloud/en/docs/compute/concepts/gpus): Gen2 (`gpu-standard-v3i`, AMD EPYC 9474F) 1/2/4/8 GPU включая **8× · 180 vCPU · 1440 GiB**, Platform V4, A100, V100, T4/T4i. Новая SKU не нужна — `yc.gpu.gen2` уже был; чип по-прежнему «не указан». Калькулятор публикует эти формы как flavor-пресеты и собирает цену GPU + vCPU + RAM.
+
 ## 2026-07-26
 
 ### Каталог / H200 synthetic без чужого провайдера в slug

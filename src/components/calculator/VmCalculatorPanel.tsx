@@ -238,6 +238,7 @@ export function VmCalculatorPanel({
         diskGiB: activeGpu.diskGiB,
         dedicated: activeGpu.dedicated === true,
         gpuMemoryGb: activeGpu.gpuMemoryGb ?? null,
+        purchaseModel,
       };
     }
     return {
@@ -556,11 +557,49 @@ export function VmCalculatorPanel({
                 </div>
               </div>
 
+              <div className={`${styles.diskTypeRow} ${styles.compactToggleRow}`}>
+                <Flex alignItems="center" gap={2} className={styles.diskTypeLabel}>
+                  <Icon data={Server} size={16} className={styles.fieldIcon} />
+                  <Text variant="body-1" className={styles.compactFieldLabel}>
+                    Тип
+                  </Text>
+                  <HelpMark aria-label="Про прерываемые GPU" iconSize="s">
+                    Обычная GPU-ВМ работает постоянно. Прерываемая дешевле у части карт (у Yandex —
+                    A100/V100/T4; у Gen2/T4i/Platform V4 ставка GPU как у обычной). Spot обычно
+                    есть для 1/2/4 GPU; 8× в пуле редко. В каталоге preemptible GPU — у Yandex и
+                    Selectel.
+                  </HelpMark>
+                </Flex>
+                <SegmentedRadioGroup
+                  size="l"
+                  value={purchaseModel}
+                  onUpdate={(v) => onPurchaseModelChange(v as PurchaseModel)}
+                  aria-label="Тип GPU-ВМ"
+                  className={styles.compactToggle}
+                >
+                  <SegmentedRadioGroup.Option value="on-demand">
+                    <Flex alignItems="center" gap={1}>
+                      <Icon data={ShieldCheck} size={14} className={styles.toggleIcon} />
+                      <span className={styles.toggleLabelFull}>Обычная</span>
+                      <span className={styles.toggleLabelShort}>Обычная</span>
+                    </Flex>
+                  </SegmentedRadioGroup.Option>
+                  <SegmentedRadioGroup.Option value="preemptible">
+                    <Flex alignItems="center" gap={1}>
+                      <Icon data={CirclePause} size={14} className={styles.toggleIcon} />
+                      <span className={styles.toggleLabelFull}>Прерываемая</span>
+                      <span className={styles.toggleLabelShort}>Spot</span>
+                    </Flex>
+                  </SegmentedRadioGroup.Option>
+                </SegmentedRadioGroup>
+              </div>
+
               <GpuPresetGrid
                 presets={filteredGpuPresets}
                 period={period}
                 activePresetId={activeGpu?.id ?? null}
                 onSelect={applyGpuPreset}
+                purchaseModel={purchaseModel}
               />
             </>
           ) : (
@@ -844,6 +883,7 @@ export function VmCalculatorPanel({
           isGpu && activeGpu
             ? {
                 line: [
+                  purchaseModel === 'preemptible' ? 'Spot' : null,
                   `${activeGpu.gpuCount}× ${activeGpu.gpuModelMatch}`,
                   activeGpu.vcpu != null ? `${activeGpu.vcpu} vCPU` : null,
                   activeGpu.ramGiB != null ? formatGiBCapacity(activeGpu.ramGiB) : null,
