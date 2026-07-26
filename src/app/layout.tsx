@@ -9,6 +9,7 @@ import '@gravity-ui/aikit/styles';
 import '@/styles/illustrations.css';
 import './globals.css';
 import {AppProviders} from '@/components/AppProviders';
+import {SiteFooter} from '@/components/SiteFooter';
 import {YandexMetrika} from '@/components/YandexMetrika';
 import {THEME_BOOT_SCRIPT} from '@/lib/theme-boot';
 
@@ -121,6 +122,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
         <script dangerouslySetInnerHTML={{__html: THEME_BOOT_SCRIPT}} />
         <AppProviders>
           {children}
+          <SiteFooter />
           <Suspense fallback={null}>
             <YandexMetrika />
           </Suspense>

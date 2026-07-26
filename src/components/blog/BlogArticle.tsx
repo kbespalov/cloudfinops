@@ -18,6 +18,7 @@ function tagTheme(tag: BlogTag): 'info' | 'success' | 'warning' | 'utility' | 'n
   if (tag === 'finops') return 'success';
   if (tag === 'billing') return 'info';
   if (tag === 'standards') return 'utility';
+  if (tag === 'ai') return 'utility';
   return 'normal';
 }
 

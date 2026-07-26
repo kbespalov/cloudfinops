@@ -1,6 +1,7 @@
 import {focusCloudDetailingPost} from '@/data/blog/posts/focus-cloud-detailing';
+import {slurmVsKubernetesPost} from '@/data/blog/posts/slurm-vs-kubernetes';
 
-export type BlogTag = 'finops' | 'billing' | 'standards';
+export type BlogTag = 'finops' | 'billing' | 'standards' | 'ai';
 
 export type BlogBlock =
   | {type: 'p'; text: string}
@@ -38,6 +39,7 @@ export const BLOG_TAG_TITLE: Record<BlogTag, string> = {
   finops: 'FinOps',
   billing: 'Биллинг',
   standards: 'Стандарты',
+  ai: 'AI',
 };
 
 export function formatBlogDate(isoDate: string): string {
@@ -58,4 +60,4 @@ export function getBlogBySlug(slug: string): BlogPost | undefined {
   return blogPosts.find((p) => p.slug === slug);
 }
 
-export const blogPosts: BlogPost[] = [focusCloudDetailingPost];
+export const blogPosts: BlogPost[] = [slurmVsKubernetesPost, focusCloudDetailingPost];

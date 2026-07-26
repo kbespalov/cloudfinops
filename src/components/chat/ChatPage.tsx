@@ -19,6 +19,7 @@ const ChatContainer = dynamic(
   {ssr: false},
 );
 import {AppHeader} from '@/components/AppHeader';
+import {PRICING_DISCLAIMER} from '@/lib/pricing-disclaimer';
 import {
   CHAT_STATUS_THINKING,
   createChatStreamParser,
@@ -463,7 +464,7 @@ export function ChatPage() {
               emptyStateSuggestionsTitle: 'Примеры',
               promptPlaceholder: 'Спросите про цены облаков…',
               errorText: 'Не удалось получить ответ. Попробуйте ещё раз.',
-              disclaimerText: 'Ассистент может ошибаться — проверяйте важные цифры.',
+              disclaimerText: `${PRICING_DISCLAIMER} Ассистент может ошибаться.`,
             }}
           />
         </div>

@@ -172,6 +172,19 @@
   transform: translateY(-6vh);
 }
 
+.disclaimer {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  padding: 0 20px calc(16px + env(safe-area-inset-bottom, 0px));
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--cf-ink-muted) 78%, transparent);
+  max-width: 36rem;
+  align-self: center;
+}
+
 .core {
   position: relative;
   z-index: 3;

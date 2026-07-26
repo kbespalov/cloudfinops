@@ -60,6 +60,18 @@ export const NEWS_TAG_TITLE: Record<NewsTag, string> = {
 export const newsItems: NewsItem[] = [
   // ——— Cloud FinOps (hub → blog / tools) ———
   {
+    id: 'cloudfinops-2026-07-slurm-kubernetes',
+    date: '2026-07-26',
+    provider: 'market',
+    providerName: 'Cloud FinOps',
+    title: 'Slurm и Kubernetes: что есть что для обучения и инференса',
+    summary:
+      'Новая статья в духе «для тех, кто только входит в тему»: почему «поднимем на кубе» и Slurm в GPU-облаке — не одно и то же. Аналогии, gang scheduling, обучение vs инференс и где в биллинге горят простаивающие GPU.',
+    tags: ['ai', 'kubernetes', 'finops'],
+    sourceUrl: 'https://cloudfinops.ru/blog/slurm-vs-kubernetes',
+    sourceLabel: 'Cloud FinOps · блог',
+  },
+  {
     id: 'cloudfinops-2026-07-focus-detailing',
     date: '2026-07-25',
     provider: 'market',

@@ -6,6 +6,7 @@ import {useRouter} from 'next/navigation';
 import {Button, Flex, Icon, Text, TextInput} from '@gravity-ui/uikit';
 import {ArrowRight, Magnifier} from '@gravity-ui/icons';
 import {AppHeader} from '@/components/AppHeader';
+import {PRICING_DISCLAIMER} from '@/lib/pricing-disclaimer';
 import {
   HOME_EXAMPLES,
   HOME_SEARCH_PLACEHOLDER,
@@ -97,6 +98,8 @@ export function HomeLanding() {
             </div>
           </div>
         </main>
+
+        <p className={styles.disclaimer}>{PRICING_DISCLAIMER}</p>
       </div>
     </div>
   );

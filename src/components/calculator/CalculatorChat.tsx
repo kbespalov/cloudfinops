@@ -18,6 +18,7 @@ import {
   type SidebarConfigPayload,
 } from '@/lib/chat/sidebar-config';
 import type {PeriodMode} from '@/lib/calculator/quote-view';
+import {PRICING_DISCLAIMER} from '@/lib/pricing-disclaimer';
 import chatStyles from '@/components/chat/ChatPage.module.css';
 import styles from './CalculatorChat.module.css';
 
@@ -369,7 +370,7 @@ export function CalculatorChat({
           emptyStateSuggestionsTitle: 'Примеры',
           promptPlaceholder: 'Например: хочу 52 ядра и 128 ГиБ…',
           errorText: 'Не удалось получить ответ. Попробуйте ещё раз.',
-          disclaimerText: 'Цены справа — из калькулятора; ассистент может ошибаться в тексте.',
+          disclaimerText: `${PRICING_DISCLAIMER} Цены справа — из калькулятора; ассистент может ошибаться в тексте.`,
         }}
       />
     </div>

@@ -166,11 +166,7 @@ export function GpuModelPage({def}: {def: GpuLandingDef}) {
         </section>
 
         <footer className={styles.disclaimer}>
-          <p>
-            Цены рассчитаны по публичным тарифам, доступным в каталоге Cloud FinOps на{' '}
-            {stats.updatedLabel}. Итоговая стоимость может отличаться из-за конфигурации, скидок и
-            условий провайдера.
-          </p>
+          <p>Срез каталога Cloud FinOps на {stats.updatedLabel}.</p>
           <LegalMetaNotice className={styles.legalMeta} />
         </footer>
       </main>
