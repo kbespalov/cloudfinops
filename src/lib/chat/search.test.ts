@@ -324,6 +324,32 @@ describe('searchPricesDetailed GPU', () => {
     assert.ok(r.rows.some((row) => /GB-GPU|1\s*GB\s*GPU/i.test(`${row.unit} ${row.name}`)));
   });
 
+  it('VM flavor 4vCPU/32GB nearestAnalog never returns unit/GPU RAM as peers', () => {
+    const prompt =
+      'Сравни с другими провайдерами: «Виртуальная машина 4vCPU/32GB RAM» (cloudru.compute.4vcpu-32gb) у Cloud.ru. Категория: Compute. Конфигурация: 4 vCPU · 32 GiB RAM.';
+    const r = searchPricesDetailed({
+      query: prompt,
+      category: 'compute',
+      nearestAnalog: true,
+      limit: 20,
+    });
+    // Catalog publishes few non-Cloud.ru compute.flavor rows — cross-provider VM
+    // parity is get_quote's job. search_prices must still refuse unit/GPU RAM junk.
+    assert.ok(r.providers.length >= 1);
+    for (const p of r.providers) {
+      assert.doesNotMatch(
+        `${p.cheapest.name} ${p.cheapest.sku} ${p.cheapest.config}`,
+        /GiB-RAM|preemptible RAM|gpu-v100|GPU V100/i,
+        `${p.providerName} must not surface unit/GPU RAM as VM analog: ${p.cheapest.name}`,
+      );
+      assert.match(p.cheapest.config, /\d+\s*vCPU/i);
+      assert.match(p.cheapest.config, /\d+\s*GiB/i);
+    }
+    const cloudRu = r.providers.find((p) => p.provider === 'cloud-ru');
+    assert.ok(cloudRu);
+    assert.match(cloudRu!.cheapest.sku, /4vcpu-32gb/i);
+  });
+
   it('B300 ×8 SKU compare picks datacenter peers, not GTX 1080 / L4 / T4', () => {
     const prompt =
       'Сравни с другими провайдерами: «NVIDIA B300 288 ГБ · ×8» (selectel.dedicated.hgx-b300-8) у Selectel. Категория: GPU.';

@@ -118,6 +118,10 @@
   border-color: var(--g-color-line-brand);
 }
 
+.card[data-loading='true'] .price {
+  opacity: 0.55;
+}
+
 .card:focus-visible {
   outline: 2px solid var(--g-color-line-focus);
   outline-offset: 2px;

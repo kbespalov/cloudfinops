@@ -56,11 +56,14 @@ export function VmPresetGrid({
   const [totals, setTotals] = useState<Record<string, number | null>>({});
   const [loading, setLoading] = useState(false);
   const seq = useRef(0);
+  /** Only accept click if pointerdown started on the same card (blocks layout-shift steals). */
+  const armedPresetId = useRef<string | null>(null);
 
   useEffect(() => {
     const mySeq = ++seq.current;
     setLoading(true);
-    setTotals({});
+    // Keep previous totals while refetching — clearing caused card reflow under the cursor
+    // when disk/period toggles, which could land a click on gen-2-8 / first preset.
 
     Promise.all(
       presets.map(async (preset) => {
@@ -127,7 +130,15 @@ export function VmPresetGrid({
               aria-selected={active}
               className={styles.card}
               data-active={active ? 'true' : 'false'}
-              onClick={() => onSelect(preset)}
+              data-loading={loading ? 'true' : undefined}
+              onPointerDown={() => {
+                armedPresetId.current = preset.id;
+              }}
+              onClick={() => {
+                if (armedPresetId.current !== preset.id) return;
+                armedPresetId.current = null;
+                onSelect(preset);
+              }}
               title={`${preset.vcpu} vCPU и ${preset.ramGiB} GiB RAM на одну ВМ`}
             >
               <Text variant="body-2">

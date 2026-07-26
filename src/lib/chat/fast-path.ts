@@ -566,7 +566,31 @@ function ssdVolumeGiBFromPlanId(planId: string): number | null {
   return tb > 0 ? tb * 1024 : null;
 }
 
-/** Product-page CTA «Сравни с другими провайдерами» → focused search_prices. */
+/**
+ * Full VM flavor from product CTA («4 vCPU · 32 GiB RAM», «4vCPU/32GB», sku 4vcpu-32gb).
+ * Must not match unit-CPU lines like «vCPU · 100% · Ice Lake» (no machine-size digits).
+ */
+export function parseVmFlavorShapeFromText(
+  text: string,
+): {vcpu: number; ramGiB: number} | null {
+  const config = text.match(
+    /(\d+)\s*vCPU[^0-9]{0,48}?(\d+)\s*GiB\s*RAM/i,
+  );
+  if (config) {
+    return {vcpu: Number(config[1]), ramGiB: Number(config[2])};
+  }
+  const slash = text.match(/(\d+)\s*vCPU\s*[/·]\s*(\d+)\s*(?:GB|GiB)\b/i);
+  if (slash) {
+    return {vcpu: Number(slash[1]), ramGiB: Number(slash[2])};
+  }
+  const sku = text.match(/(\d+)vcpu-(\d+)gb/i);
+  if (sku) {
+    return {vcpu: Number(sku[1]), ramGiB: Number(sku[2])};
+  }
+  return null;
+}
+
+/** Product-page CTA «Сравни с другими провайдерами» → focused search_prices / get_quote. */
 function matchSkuComparePlan(userText: string): FastPathPlan | null {
   if (!/Сравни с другими провайдерами\s*:/i.test(userText)) return null;
   const quoted = userText.match(/[«"]([^»"]{3,120})[»"]/);
@@ -594,6 +618,28 @@ function matchSkuComparePlan(userText: string): FastPathPlan | null {
                 : catRaw === 'kubernetes'
                   ? 'kubernetes'
                   : undefined;
+
+  // VM flavor (4/32 etc.) → full-machine quote, not cheapest unit RAM / GPU-host RAM.
+  const vmShape =
+    category === 'compute' ? parseVmFlavorShapeFromText(userText) : null;
+  if (vmShape) {
+    return {
+      id: 'sku-compare',
+      tools: [
+        {
+          name: 'get_quote',
+          args: {
+            vcpu: vmShape.vcpu,
+            ramGiB: vmShape.ramGiB,
+            // Flavor list prices are often CPU+RAM only; add a small boot disk for a runnable VM.
+            diskGiB: 10,
+            period: 'month',
+          },
+        },
+      ],
+    };
+  }
+
   // Soft family hint for GPU (B300 → peer H200/H100 via nearestAnalog); not a hard-only filter.
   const gpuModelMatch =
     category === 'gpu'
@@ -819,6 +865,174 @@ export function lastUserQuestion(messages: ChatMessage[]): string {
 
 function formatRub(n: number): string {
   return `${n.toLocaleString('ru-RU', {maximumFractionDigits: 2})} ₽`;
+}
+
+/** Display names as returned by get_quote (`provider` field). */
+const PROVIDER_FOCUS_RULES: {match: RegExp; names: string[]}[] = [
+  {match: /cloud\.?\s*ru|cloudru|сбер(?:банк|тех)?|эволюшн|evolution/i, names: ['Cloud.ru']},
+  {match: /\bmws\b|мвс|мтс|\bmts\b/i, names: ['MWS Cloud', 'MWS Cloud Platform']},
+  {match: /selectel|селектел/i, names: ['Selectel']},
+  {match: /yandex|яндекс|ycloud/i, names: ['Yandex Cloud']},
+  {match: /\bvk\b|вк|mail\.ru/i, names: ['VK Cloud']},
+  {match: /\bt1\b|т1|ростелеком/i, names: ['T1 Cloud']},
+];
+
+/**
+ * Follow-ups like «покажи только Cloud.ru» / «а у MWS?» — not a fresh all-provider compare.
+ */
+export function detectProviderFocusFollowUp(text: string): string[] | null {
+  const t = text.trim();
+  if (!t) return null;
+  // Fresh multi-provider compare stays unfiltered.
+  if (
+    /сравни.{0,48}(?:все|всем|провайдер)|по\s+всем\s+провайдер/i.test(t) &&
+    !/только|лишь/i.test(t)
+  ) {
+    return null;
+  }
+  // Avoid JS `\b` with Cyrillic: `\w` is ASCII-only, so «покажи только» / «а у» never match.
+  const focusCue =
+    /(?:покажи|оставь|выведи|дай|фильтр\w*)\s+только(?:\s|$|[?.!,;:])|(?:^|\s)только\s+(?:у\s+)?|(?:^|\s)лишь\s+|(?:^|\s)а\s+у(?:\s|$|[?.!,;:])|(?:^|\s)а\s+как\s+у(?:\s|$|[?.!,;:])|(?:^|\s)что\s+у(?:\s|$|[?.!,;:])|(?:^|\s)а\s+(?:про|насчёт|начет)(?:\s|$|[?.!,;:])/i.test(
+      t,
+    ) ||
+    /^(?:cloud\.?\s*ru|mws|selectel|yandex|vk|t1|сбер|яндекс|селектел|мвс|т1)\s*\??$/i.test(t);
+  if (!focusCue) return null;
+
+  const names: string[] = [];
+  for (const rule of PROVIDER_FOCUS_RULES) {
+    if (rule.match.test(t)) names.push(...rule.names);
+  }
+  return names.length ? [...new Set(names)] : null;
+}
+
+export function quoteMatchesProviderFocus(
+  provider: string,
+  focusNames: string[],
+): boolean {
+  const p = provider.toLowerCase();
+  return focusNames.some((name) => {
+    const n = name.toLowerCase();
+    if (p === n || p.includes(n) || n.includes(p)) return true;
+    if (n.includes('cloud.ru') && (p.includes('cloud.ru') || p.includes('cloudru'))) return true;
+    if (n.includes('mws') && p.includes('mws')) return true;
+    if (n.includes('yandex') && p.includes('yandex')) return true;
+    if (n.includes('vk') && (p.includes('vk') || p.startsWith('vk '))) return true;
+    if (n.includes('t1') && p.includes('t1')) return true;
+    if (n.includes('selectel') && p.includes('selectel')) return true;
+    return false;
+  });
+}
+
+function findLatestGetQuotePayload(
+  messages: ChatMessage[],
+): {name: string; content: string; arguments?: string} | null {
+  const payloads = extractLastToolPayloads(messages);
+  const fromLast = payloads.find((p) => p.name === 'get_quote');
+  if (fromLast) return fromLast;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+    if (m.role !== 'tool' || typeof m.content !== 'string') continue;
+    if (m.name && m.name !== 'get_quote') continue;
+    try {
+      const parsed = JSON.parse(m.content) as {quotes?: unknown};
+      if (Array.isArray(parsed.quotes)) {
+        return {name: 'get_quote', content: m.content};
+      }
+    } catch {
+      // continue
+    }
+  }
+  return null;
+}
+
+type QuotePart = {label?: string; amount?: number | null};
+type QuoteWithParts = {
+  provider: string;
+  total: number;
+  parts?: QuotePart[];
+};
+
+type ComponentBucket = 'compute' | 'vcpu' | 'ram' | 'disk' | 'gpu' | 'ip' | 'other';
+
+const COMPONENT_ROW_ORDER: {id: ComponentBucket; label: string}[] = [
+  {id: 'compute', label: 'vCPU+RAM (flavor)'},
+  {id: 'vcpu', label: 'vCPU'},
+  {id: 'ram', label: 'RAM'},
+  {id: 'disk', label: 'Диск'},
+  {id: 'gpu', label: 'GPU'},
+  {id: 'ip', label: 'Публичный IP'},
+  {id: 'other', label: 'Прочее'},
+];
+
+/** Map get_quote line items onto comparable component rows. */
+export function classifyQuotePartLabel(label: string): ComponentBucket {
+  const s = label.trim();
+  if (/^ВМ\s*:/i.test(s) || /vCPU\s*[·+]\s*.*RAM|flavor/i.test(s)) return 'compute';
+  if (/^CPU\s*:/i.test(s) || /^vCPU\b/i.test(s)) return 'vcpu';
+  if (/^RAM\s*:/i.test(s) || /\bRAM\b/i.test(s)) return 'ram';
+  if (/^Диск\s*:/i.test(s) || /\bSSD\b|\bNVMe\b|\bHDD\b/i.test(s)) return 'disk';
+  if (/^GPU\s*:/i.test(s) || /\bGPU\b|H100|H200|A100|L40/i.test(s)) return 'gpu';
+  if (/IP|адрес/i.test(s)) return 'ip';
+  return 'other';
+}
+
+/**
+ * Second table for fixed-shape VM compare: rows = components, columns = providers.
+ * Skips when parts are missing or only a single opaque total exists.
+ */
+export function formatVmComponentMatrix(quotes: QuoteWithParts[]): string | null {
+  if (quotes.length < 2) return null;
+  const withParts = quotes.filter((q) => Array.isArray(q.parts) && q.parts.length > 0);
+  if (withParts.length < 2) return null;
+
+  const providers = withParts.map((q) => q.provider);
+  const matrix = new Map<ComponentBucket, Map<string, number>>();
+  const used = new Set<ComponentBucket>();
+
+  for (const q of withParts) {
+    const byBucket = new Map<ComponentBucket, number>();
+    for (const part of q.parts ?? []) {
+      if (typeof part.amount !== 'number' || !Number.isFinite(part.amount)) continue;
+      const label = typeof part.label === 'string' ? part.label : '';
+      if (!label) continue;
+      const bucket = classifyQuotePartLabel(label);
+      byBucket.set(bucket, (byBucket.get(bucket) ?? 0) + part.amount);
+      used.add(bucket);
+    }
+    for (const [bucket, amount] of byBucket) {
+      if (!matrix.has(bucket)) matrix.set(bucket, new Map());
+      matrix.get(bucket)!.set(q.provider, amount);
+    }
+  }
+
+  const rows = COMPONENT_ROW_ORDER.filter((r) => used.has(r.id));
+  if (!rows.length) return null;
+
+  const header = `| Компонент | ${providers.join(' | ')} |`;
+  const sep = `|---|${providers.map(() => '---:').join('|')}|`;
+  const body = rows
+    .map((r) => {
+      const cells = providers.map((p) => {
+        const amount = matrix.get(r.id)?.get(p);
+        return amount != null ? formatRub(amount) : '—';
+      });
+      return `| ${r.label} | ${cells.join(' | ')} |`;
+    })
+    .join('\n');
+  const totalRow = `| **Итого** | ${providers
+    .map((p) => {
+      const q = withParts.find((x) => x.provider === p)!;
+      return `**${formatRub(q.total)}**`;
+    })
+    .join(' | ')} |`;
+
+  const flavorNote = used.has('compute')
+    ? '\n\n«vCPU+RAM (flavor)» — у провайдера одна цена на ядра и память; отдельные строки vCPU/RAM у него пустые.'
+    : '';
+
+  return (
+    `**По компонентам** (те же провайдеры, столбцы)\n\n${header}\n${sep}\n${body}\n${totalRow}${flavorNote}`
+  );
 }
 
 const COMPOSE_ROLE_LABELS: Record<string, string> = {
@@ -1698,6 +1912,7 @@ export function formatStackFastPathAnswer(
 export function formatFastPathAnswer(
   planId: string,
   toolPayloads: {name: string; content: string; arguments?: string}[],
+  userText?: string,
 ): string | null {
   // Multi-SKU stacks: composed table (never render only the first tool).
   if (planId.startsWith('stack-') || toolPayloads.length > 1) {
@@ -1708,6 +1923,7 @@ export function formatFastPathAnswer(
   if (!primary) return null;
   const data = parseJson(primary.content);
   if (!data || data.error) return null;
+  const providerFocus = userText ? detectProviderFocusFollowUp(userText) : null;
 
   if (primary.name === 'recommend_inference_infra' && data.ok && data.model) {
     const formatted = formatRecommendInferenceAnswer(data);
@@ -1805,12 +2021,20 @@ export function formatFastPathAnswer(
       vcpuShare?: string;
       computeName?: string;
       note?: string | null;
+      parts?: QuotePart[];
     };
-    const quotes = (data.quotes as Q[])
+    let quotes = (data.quotes as Q[])
       .filter((q) => q.provider && typeof q.total === 'number')
       .slice()
       .sort((a, b) => (a.total as number) - (b.total as number));
     if (!quotes.length) return null;
+    const focusFiltered =
+      providerFocus != null
+        ? quotes.filter((q) => quoteMatchesProviderFocus(q.provider, providerFocus))
+        : null;
+    if (focusFiltered && focusFiltered.length > 0) {
+      quotes = focusFiltered;
+    }
     const best = quotes[0].total as number;
     const req = (data.request ?? {}) as {
       mode?: string;
@@ -1821,6 +2045,12 @@ export function formatFastPathAnswer(
       gpuModel?: string;
       gpuCount?: number;
     };
+    const focusNote =
+      focusFiltered && focusFiltered.length > 0 && focusFiltered.length < (data.quotes as Q[]).length
+        ? `\n\nПоказан${focusFiltered.length === 1 ? '' : 'ы'} по уточнению: **${focusFiltered
+            .map((q) => q.provider)
+            .join(', ')}**.`
+        : '';
 
     if (req.mode === 'cheapest-per-provider' || data.mode === 'cheapest-per-provider') {
       const purchaseLabel = (pm?: string) =>
@@ -1889,11 +2119,32 @@ export function formatFastPathAnswer(
             .map((m) => `${m.provider} — ${m.reason}`)
             .join('; ')}.`
         : '';
-    return `**${title}**\n\n| Провайдер | Итого / мес | к минимуму |\n|---|---:|---|\n${rows}\n\n${cheapestInCatalogLine({
-      provider: quotes[0].provider,
-      priceText: `${formatRub(best)}/мес`,
-      composed: composedWinner,
-    })}${missingBlock}`;
+    // Fixed-shape VM/GPU quotes: second table = components × providers.
+    const componentMatrix = formatVmComponentMatrix(
+      quotes.map((q) => ({
+        provider: q.provider,
+        total: q.total as number,
+        parts: q.parts,
+      })),
+    );
+    const byProviderTable = `| Провайдер | Итого / мес | к минимуму |\n|---|---:|---|\n${rows}`;
+    const catalogLine =
+      focusFiltered && focusFiltered.length === 1
+        ? `**${quotes[0].provider}** — ${formatRub(best)}/мес (НДС вкл., 720 ч).`
+        : cheapestInCatalogLine({
+            provider: quotes[0].provider,
+            priceText: `${formatRub(best)}/мес`,
+            composed: composedWinner,
+          });
+    const sections = [
+      `**${title}**`,
+      focusFiltered && focusFiltered.length === 1
+        ? byProviderTable
+        : `**По провайдерам**\n\n${byProviderTable}`,
+      componentMatrix,
+      `${catalogLine}${missingBlock}${focusNote}`,
+    ].filter(Boolean);
+    return sections.join('\n\n');
   }
 
   if (primary.name === 'compare_unit_price') {
@@ -2512,7 +2763,7 @@ export function tryFormatAgentToolAnswer(options: {
     options.userText,
   );
   if (!planId) return null;
-  return formatFastPathAnswer(planId, payloads);
+  return formatFastPathAnswer(planId, payloads, options.userText);
 }
 
 function inferPlanIdFromAgentTool(
@@ -2637,15 +2888,15 @@ function inferPlanIdFromAgentTool(
 }
 
 /**
- * Chat fast-path sampling rate. Default 0 — prefer the agent (stronger model).
+ * Chat fast-path sampling rate. Default 0.2 — ~20% chip/alias → fast-path, ~80% agent/LLM.
  * Override with CHAT_FAST_PATH_PROBABILITY=0|1|0.25 for eval/A-B.
  * Calculator surface still always keeps fast-path (sidebar needs get_quote ASAP).
  */
 export function fastPathProbabilityFromEnv(): number {
   const raw = process.env.CHAT_FAST_PATH_PROBABILITY;
-  if (raw == null || raw === '') return 0;
+  if (raw == null || raw === '') return 0.2;
   const n = Number(raw);
-  if (!Number.isFinite(n)) return 0;
+  if (!Number.isFinite(n)) return 0.2;
   return Math.min(1, Math.max(0, n));
 }
 
@@ -2666,7 +2917,7 @@ export function shouldUseFastPath(options?: {
 /**
  * If this is a first-turn chip/alias query, run tools locally and one short final LLM call.
  * Returns null when the query should use the normal tool loop.
- * Chat surface: off by default (CHAT_FAST_PATH_PROBABILITY, default 0).
+ * Chat surface: ~20% by default (CHAT_FAST_PATH_PROBABILITY, default 0.2).
  */
 export async function tryRunFastPath(options: {
   messages: ChatMessage[];
@@ -2675,9 +2926,44 @@ export async function tryRunFastPath(options: {
   /** calculator → rewrite GPU search chips to get_quote for the price sidebar */
   surface?: 'chat' | 'calculator';
 }): Promise<FastPathResult | null> {
-  if (userTurnCount(options.messages) !== 1) return null;
-
   const userText = lastUserText(options.messages);
+  const turns = userTurnCount(options.messages);
+
+  // Follow-up «только Cloud.ru» / «а у MWS?» — reuse prior get_quote, do not dump full table.
+  if (turns >= 2) {
+    const focus = detectProviderFocusFollowUp(userText);
+    if (focus) {
+      const prior = findLatestGetQuotePayload(options.messages);
+      const priorData = prior ? parseJson(prior.content) : null;
+      const priorQuotes = Array.isArray(priorData?.quotes)
+        ? (priorData!.quotes as {provider?: string}[]).filter(
+            (q) => typeof q.provider === 'string',
+          )
+        : [];
+      const matchedQuotes = priorQuotes.filter((q) =>
+        quoteMatchesProviderFocus(q.provider!, focus),
+      );
+      if (prior && matchedQuotes.length > 0 && matchedQuotes.length < priorQuotes.length) {
+        const rendered = formatFastPathAnswer('vm', [prior], userText);
+        if (rendered) {
+          return {
+            finalText: rendered,
+            messages: options.messages,
+            toolRounds: 0,
+            toolCallsTotal: 0,
+            leaksRecovered: 0,
+            leaksRetried: 0,
+            leaksDropped: 0,
+            fastPathId: 'quote-provider-focus',
+          };
+        }
+      }
+    }
+    return null;
+  }
+
+  if (turns !== 1) return null;
+
   const matched = matchFastPath(userText);
   if (!matched) return null;
 
@@ -2733,6 +3019,7 @@ export async function tryRunFastPath(options: {
       content: result,
       arguments: call.function.arguments,
     })),
+    userText,
   );
   if (rendered) {
     return {

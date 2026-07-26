@@ -20,6 +20,10 @@ import {
   formatPlatform,
   isRequestMeter,
   isVcpuMeter,
+  isRamMeter,
+  isFlavorMeter,
+  extractVcpu,
+  extractRamGiB,
   CATEGORY_TITLE,
   type CatalogMeter,
   type CategoryKey,
@@ -580,6 +584,41 @@ function looksLikeVcpuUnitQuery(query: string | undefined, searchTokens: string[
   );
 }
 
+/**
+ * Full VM flavor shape from compare prompts («4 vCPU · 32 GiB», sku 4vcpu-32gb).
+ * Excludes unit-CPU lines without a machine size.
+ */
+export function detectVmFlavorShape(
+  query: string | undefined,
+): {vcpu: number; ramGiB: number} | null {
+  if (!query) return null;
+  const config = query.match(/(\d+)\s*vCPU[^0-9]{0,48}?(\d+)\s*GiB\s*RAM/i);
+  if (config) return {vcpu: Number(config[1]), ramGiB: Number(config[2])};
+  const slash = query.match(/(\d+)\s*vCPU\s*[/·]\s*(\d+)\s*(?:GB|GiB)\b/i);
+  if (slash) return {vcpu: Number(slash[1]), ramGiB: Number(slash[2])};
+  const sku = query.match(/(\d+)vcpu-(\d+)gb/i);
+  if (sku) return {vcpu: Number(sku[1]), ramGiB: Number(sku[2])};
+  return null;
+}
+
+function isVmFlavorCandidate(meter: CatalogMeter): boolean {
+  if (isVcpuMeter(meter) || isRamMeter(meter)) return false;
+  if (isFlavorMeter(meter) || meter.pricingMode === 'bundle') return true;
+  const v = extractVcpu(meter);
+  const r = extractRamGiB(meter);
+  return v != null && v > 1 && r != null && r > 1;
+}
+
+function flavorShapeDistance(
+  meter: CatalogMeter,
+  target: {vcpu: number; ramGiB: number},
+): number {
+  const v = extractVcpu(meter) ?? target.vcpu;
+  const r = extractRamGiB(meter) ?? target.ramGiB;
+  // Prefer exact vCPU; RAM within 2× is soft.
+  return Math.abs(v - target.vcpu) * 4 + Math.abs(Math.log2((r || 1) / target.ramGiB));
+}
+
 /** Product-page «сравни с другими» includes the source provider name — do not filter to it. */
 function isCrossProviderCompareQuery(query: string | undefined): boolean {
   if (!query) return false;
@@ -757,6 +796,11 @@ function collectCandidates(params: SearchParams): FilterContext {
     Boolean(params.nearestAnalog) ||
     crossProviderCompare ||
     /ближайш\w*\s+аналог|аналог\w*\s+у\s+других/i.test(params.query ?? '');
+  const vmFlavorShape =
+    !vcpuUnitOnly && (category === 'compute' || category == null)
+      ? detectVmFlavorShape(effectiveQuery)
+      : null;
+  const vmFlavorAnalog = Boolean(vmFlavorShape && nearestAnalogAsk);
   /** Expand B300 → H200/H100 peers; never let «NVIDIA» crown GTX 1080. */
   const gpuPeerMode = Boolean(
     queryGpuFamily &&
@@ -823,6 +867,14 @@ function collectCandidates(params: SearchParams): FilterContext {
       continue;
     }
     if (vcpuUnitOnly && !isVcpuMeter(meter)) continue;
+    // VM flavor compare: never surface unit RAM / GPU-host RAM / lone vCPU as «аналог».
+    if (vmFlavorAnalog) {
+      if (!isVmFlavorCandidate(meter)) continue;
+      if (/\bgpu\b|v100|a100|h100|h200|l40|l4\b/i.test(hay) && !/виртуальн|flavor|вм\b/i.test(hay)) {
+        // Keep only if it is still a general compute flavor with matching CPU/RAM dims.
+        if ((extractVcpu(meter) ?? 0) < 1 || (extractRamGiB(meter) ?? 0) < 1) continue;
+      }
+    }
     if (aiModel && !aiModelMatchesNeedle(aiModel, meter, hay)) continue;
     if (storageClass) {
       const cls = (extractStorageClass(meter) ?? '').toLowerCase();
@@ -858,6 +910,16 @@ function collectCandidates(params: SearchParams): FilterContext {
         lexical += 1;
       }
     }
+    if (vmFlavorAnalog && vmFlavorShape) {
+      const dist = flavorShapeDistance(meter, vmFlavorShape);
+      // Always give flavor candidates a floor so they survive token-hit filtering
+      // when the query names Cloud.ru «Виртуальная машина…» but peers use other titles.
+      lexical += 1.5 + Math.max(0, 6 - dist);
+      if (extractVcpu(meter) === vmFlavorShape.vcpu) lexical += 2;
+      if (extractRamGiB(meter) === vmFlavorShape.ramGiB) lexical += 1.5;
+      // Prefer general-purpose flavors over GPU-host Cascade leftovers.
+      if (/gpu|v100|a100|h100/i.test(hay)) lexical -= 3;
+    }
     if (gpuPeerMode && queryGpuFamily) {
       lexical += gpuPeerLexicalBoost(
         queryGpuFamily,
@@ -890,7 +952,7 @@ function collectCandidates(params: SearchParams): FilterContext {
     meterKind,
     preferCapacity,
     k8sTier,
-    nearestMatchPerProvider: vcpuUnitOnly || gpuNearestPerProvider,
+    nearestMatchPerProvider: vcpuUnitOnly || gpuNearestPerProvider || vmFlavorAnalog,
   };
 }
 

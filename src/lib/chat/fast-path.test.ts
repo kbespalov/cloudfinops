@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import {
   adaptFastPathForSurface,
+  detectProviderFocusFollowUp,
   extractAllToolPayloads,
   formatAiTokenPairAnswer,
   formatComposeSolutionAnswer,
@@ -10,9 +11,10 @@ import {
   matchFastPath,
   shouldUseFastPath,
   tryFormatAgentToolAnswer,
+  tryRunFastPath,
 } from './fast-path';
 import type {ChatMessage} from './gigachat';
-import {runTool} from './tools';
+import {runTool, runToolSync} from './tools';
 
 describe('shouldUseFastPath', () => {
   it('is always on for calculator surface', () => {
@@ -24,11 +26,11 @@ describe('shouldUseFastPath', () => {
     assert.equal(shouldUseFastPath({surface: 'chat', probability: 1, random: () => 0.99}), true);
   });
 
-  it('defaults chat fast-path off (agent-first)', () => {
-    // Explicit undefined probability → env default (0) via shouldUseFastPath path
-    // when callers pass probability: 0 from tests; coin-flip still works if p=0.5.
+  it('samples chat fast-path at configured probability (~20% default)', () => {
     assert.equal(shouldUseFastPath({surface: 'chat', probability: 0.5, random: () => 0.49}), true);
     assert.equal(shouldUseFastPath({surface: 'chat', probability: 0.5, random: () => 0.5}), false);
+    assert.equal(shouldUseFastPath({surface: 'chat', probability: 0.2, random: () => 0.19}), true);
+    assert.equal(shouldUseFastPath({surface: 'chat', probability: 0.2, random: () => 0.2}), false);
   });
 });
 
@@ -97,6 +99,19 @@ describe('matchFastPath', () => {
     assert.match(String(plan.tools[0]?.args.query), /Ice Lake.*preemptible|preemptible.*Ice Lake/i);
     assert.doesNotMatch(String(plan.tools[0]?.args.query), /Сравни с другими/);
     assert.equal(plan.tools[0]?.args.nearestAnalog, true);
+  });
+
+  it('matches product-page VM flavor SKU compare to get_quote shape, not unit RAM', () => {
+    const prompt =
+      'Сравни с другими провайдерами: «Виртуальная машина 4vCPU/32GB RAM» (cloudru.compute.4vcpu-32gb) у Cloud.ru. Категория: Compute. Конфигурация: 4 vCPU · 32 GiB RAM · Cascade / Ice Lake. Платформа: Cascade / Ice Lake. Цена сейчас: 8 669,81 ₽ в месяц. Найди ближайшие аналоги у других провайдеров';
+    const plan = matchFastPath(prompt);
+    assert.ok(plan);
+    assert.equal(plan.id, 'sku-compare');
+    assert.equal(plan.tools[0]?.name, 'get_quote');
+    assert.equal(plan.tools[0]?.args.vcpu, 4);
+    assert.equal(plan.tools[0]?.args.ramGiB, 32);
+    assert.equal(plan.tools[0]?.args.diskGiB, 10);
+    assert.equal(plan.tools[0]?.args.period, 'month');
   });
 
   it('matches product-page B300 SKU compare with gpuModel + nearestAnalog', () => {
@@ -341,6 +356,140 @@ describe('matchFastPath', () => {
     assert.match(md, /\bmin\b/);
     assert.match(md, /каталоге Cloud FinOps/);
     assert.match(md, /\+20%/);
+    assert.match(md, /По провайдерам/);
+  });
+
+  it('detects provider-focus follow-ups', () => {
+    assert.deepEqual(detectProviderFocusFollowUp('покажи только cloud ru'), ['Cloud.ru']);
+    assert.ok(detectProviderFocusFollowUp('а у MWS?')?.some((n) => /MWS/i.test(n)));
+    assert.equal(detectProviderFocusFollowUp('Сравни 4 vCPU / 16 GiB по всем провайдерам'), null);
+  });
+
+  it('tryRunFastPath filters prior get_quote on provider-focus follow-up', async () => {
+    const quoteRaw = runToolSync(
+      'get_quote',
+      JSON.stringify({vcpu: 4, ramGiB: 16, diskGiB: 100, period: 'month'}),
+    );
+    const messages: ChatMessage[] = [
+      {role: 'user', content: 'Сравни 4 vCPU / 16 GiB по всем провайдерам'},
+      {
+        role: 'assistant',
+        content: '',
+        tool_calls: [
+          {
+            id: 'c1',
+            type: 'function',
+            function: {
+              name: 'get_quote',
+              arguments: JSON.stringify({vcpu: 4, ramGiB: 16, diskGiB: 100}),
+            },
+          },
+        ],
+      },
+      {role: 'tool', tool_call_id: 'c1', name: 'get_quote', content: quoteRaw},
+      {
+        role: 'assistant',
+        content: 'полный ответ со всеми провайдерами',
+      },
+      {role: 'user', content: 'покажи только cloud ru'},
+    ];
+    const result = await tryRunFastPath({messages, surface: 'chat'});
+    assert.ok(result);
+    assert.equal(result!.fastPathId, 'quote-provider-focus');
+    assert.ok(result!.finalText);
+    assert.match(result!.finalText!, /Cloud\.ru/);
+    assert.doesNotMatch(result!.finalText!, /MWS Cloud/);
+    assert.doesNotMatch(result!.finalText!, /Selectel/);
+  });
+
+  it('filters get_quote table on follow-up «только Cloud.ru» / «а у MWS?»', () => {
+    const payload = {
+      name: 'get_quote',
+      content: JSON.stringify({
+        request: {vcpu: 4, ramGiB: 16, diskGiB: 100},
+        quotes: [
+          {
+            provider: 'Cloud.ru',
+            total: 6886.66,
+            parts: [
+              {label: 'ВМ: 4 vCPU · 16 GiB RAM', amount: 5744.74},
+              {label: 'Диск: NVMe, 100 GiB', amount: 1141.92},
+            ],
+          },
+          {
+            provider: 'MWS Cloud',
+            total: 7665.12,
+            parts: [
+              {label: 'CPU: 4 vCPU', amount: 3318.34},
+              {label: 'RAM: 16 GiB', amount: 3533.18},
+              {label: 'Диск: NVMe, 100 GiB', amount: 813.6},
+            ],
+          },
+          {provider: 'Selectel', total: 8112.67, parts: [{label: 'CPU: 4 vCPU', amount: 2900}]},
+        ],
+      }),
+    };
+    const onlyCloud = formatFastPathAnswer('vm', [payload], 'покажи только cloud ru');
+    assert.ok(onlyCloud);
+    assert.match(onlyCloud!, /Cloud\.ru/);
+    assert.doesNotMatch(onlyCloud!, /MWS Cloud/);
+    assert.doesNotMatch(onlyCloud!, /Selectel/);
+    assert.match(onlyCloud!, /уточнению|Cloud\.ru/);
+
+    const onlyMws = formatFastPathAnswer('vm', [payload], 'а у MWS?');
+    assert.ok(onlyMws);
+    assert.match(onlyMws!, /MWS Cloud/);
+    assert.doesNotMatch(onlyMws!, /Cloud\.ru/);
+    assert.doesNotMatch(onlyMws!, /Selectel/);
+  });
+
+  it('adds component×provider matrix for fixed-shape VM quotes', () => {
+    const md = formatFastPathAnswer('vm', [
+      {
+        name: 'get_quote',
+        content: JSON.stringify({
+          request: {vcpu: 4, ramGiB: 16, diskGiB: 100},
+          quotes: [
+            {
+              provider: 'Cloud.ru',
+              total: 6886.66,
+              parts: [
+                {label: 'ВМ: 4 vCPU · 16 GiB RAM', amount: 5744.74},
+                {label: 'Диск: NVMe, 100 GiB', amount: 1141.92},
+              ],
+            },
+            {
+              provider: 'MWS Cloud',
+              total: 7665.12,
+              parts: [
+                {label: 'CPU: 4 vCPU', amount: 3318.34},
+                {label: 'RAM: 16 GiB', amount: 3533.18},
+                {label: 'Диск: NVMe, 100 GiB', amount: 813.6},
+              ],
+            },
+            {
+              provider: 'Selectel',
+              total: 8112.67,
+              parts: [
+                {label: 'CPU: 4 vCPU', amount: 2900.45},
+                {label: 'RAM: 16 GiB', amount: 4218.62},
+                {label: 'Диск: SSD, 100 GiB', amount: 993.6},
+              ],
+            },
+          ],
+        }),
+      },
+    ]);
+    assert.ok(md);
+    assert.match(md, /По провайдерам/);
+    assert.match(md, /По компонентам/);
+    assert.match(md, /vCPU\+RAM \(flavor\)/);
+    assert.match(md, /\| vCPU \|/);
+    assert.match(md, /\| RAM \|/);
+    assert.match(md, /\| Диск \|/);
+    // Flavor provider: compute filled, unit vCPU/RAM empty in that column.
+    assert.match(md, /vCPU\+RAM \(flavor\).*5[\s\u00a0]?744/);
+    assert.match(md, /flavor/);
   });
 
   it('appends short missingProviders footnotes to get_quote answers', () => {

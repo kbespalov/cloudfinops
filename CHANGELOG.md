@@ -2,6 +2,16 @@
 
 ## 2026-07-27
 
+### Калькулятор ВМ / степперы vCPU и RAM
+
+Починили кнопки ± у NumberInput: draft показывал 9/17, а в расчёт уходило 12/24 (или откатывало на 8). Spinbutton теперь сразу показывает ступень лестницы. На узкой ширине у vCPU/RAM тоже compact −/+. Повторный клик по активному семейству больше не сбрасывает shape.
+
+Смена SSD/HDD больше не должна сбрасывать vCPU/RAM: пресеты не очищают цены (нет reflow/ложного клика на `2/8`), клик по пресету только с pointerdown на той же карточке, пресет не трогает объём диска. Lakehouse сидит на том же `SliderField` — степпер там тоже починился.
+
+### E-ассистент / fast-path ~20%
+
+В чате sample rate fast-path по умолчанию **0.2** (~каждый пятый chip/alias), остальное — agent/LLM. Override: `CHAT_FAST_PATH_PROBABILITY`. Калькулятор по-прежнему всегда on.
+
 ### Self-host / open-weight top модели июля 2026
 
 В каталог inference добавили популярные open-weight модели, которых не хватало для топ-15 по HF/ранжированиям июля: **DeepSeek V4 Flash/Pro**, **Gemma 4 31B**, **Qwen3.5 122B-A10B**, **MiniMax M3**, **Nemotron 3 Super**, **IBM Granite 4.1 8B**. Обновили Popular в picker; алиас `deepseek` ведёт на V4 Flash.
@@ -17,6 +27,18 @@
 ### Self-host калькулятор / нагрузка реально двигает KV
 
 Починили оценку KV cache: fallback был ~100–1000 B/токен вместо десятков–сотен KiB, из‑за чего «токены на запрос» и контекст почти не влияли на VRAM/цену. Добавили attention-профили (GQA/MLA) для популярных моделей; расчёт нагрузки — p95-смесь среднего и макс. контекста. В поле «параллельные запросы» можно нормально набрать 50 (больше не сбрасывает в 1 при очистке).
+
+### E-ассистент / compare VM flavor ≠ unit RAM
+
+CTA «Сравни с другими провайдерами» для Cloud.ru `cloudru.compute.4vcpu-32gb` (и других flavor N vCPU / M GiB) больше не отвечает unit RAM / GPU V100 preemptible RAM. Fast-path → `get_quote(vcpu, ramGiB)`; `search_prices`+nearestAnalog для flavor тоже фильтрует unit-компоненты. Soft eval `ux-225` (`SOFT_SCENARIO_COUNT` = 225).
+
+### E-ассистент / две таблицы в сравнении ВМ
+
+Для фиксированного shape (`Сравни 4 vCPU / 16 GiB…`) в ответе две таблицы: **по провайдерам** (итог) и **по компонентам** (строки vCPU / RAM / диск / flavor, столбцы — провайдеры). У Cloud.ru flavor vCPU+RAM одной строкой — в матрице это отмечено.
+
+### E-ассистент / follow-up «только Cloud.ru» / «а у MWS?»
+
+После сравнения ВМ уточнение по одному провайдеру больше не повторяет полную таблицу: фильтруем предыдущий `get_quote` (fast-path `quote-provider-focus`). Soft eval `ux-226`→`ux-227` (`SOFT_SCENARIO_COUNT` = 227).
 
 ### Каталог / Yandex preemptible GPU (1/2/4)
 
@@ -94,7 +116,7 @@
 Агент умеет собирать мультикомпонентные стеки (ВМ + IP + S3 + CDN + K8s…) через параллельные tool calls и итоговую таблицу по провайдерам.
 
 - Дефолтная модель: **Google Gemini 3.1 Flash Lite** (`google/gemini-3.1-flash-lite`).
-- Fast path в чате **выключен по умолчанию** (`CHAT_FAST_PATH_PROBABILITY=0`, agent-first); калькулятор — всегда on для сайдбара. Для latency A/B: `CHAT_FAST_PATH_PROBABILITY=1`. Одиночный S3/volume fast path больше не «съедает» стековые вопросы.
+- Fast path в чате sample **~20%** по умолчанию (`CHAT_FAST_PATH_PROBABILITY=0.2`); калькулятор — всегда on для сайдбара. Для полного agent/LLM: `=0`, для latency A/B: `=1`. Одиночный S3/volume fast path больше не «съедает» стековые вопросы.
 - Recovery: русские лейблы tool (`прайс-листа` и т.п.) → правильный tool по форме args; финальный ответ по стеку — digest LLM / compose, без слияния tool results из прошлых ходов.
 - Калькулятор «AI-конфигурация»: follow-up «докинь / докинем CDN» → `category=cdn`, **мерж в корзину** (CDN egress), не Object Storage / network ingress. `get_quote` без RAM → 4×vCPU (как сайдбар).
 - Пошаговая сборка в чате/калькуляторе: CPU / RAM / диск / IP / CDN / S3 по одному → `compare_unit_price` или `search_prices`; `get_quote` только для полной ВМ. «Ice Lake» не путается с S3 Ice.

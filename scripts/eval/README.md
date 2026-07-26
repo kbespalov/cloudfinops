@@ -3,7 +3,7 @@
 Два слоя:
 
 1. **Grounded bench** (`questions.ts` + `eval:bench`) — жёсткий gold из каталожных tools, `pass/fail` по cheapest / no-halluc.
-2. **Soft UX scenarios** (`user-scenarios.ts` + `eval:scenarios`) — корпус естественных запросов (сейчас 224) с мягкими рубриками (score/signals). **Не** vitest и **не** frozen prices.
+2. **Soft UX scenarios** (`user-scenarios.ts` + `eval:scenarios`) — корпус естественных запросов (сейчас 227) с мягкими рубриками (score/signals). **Не** vitest и **не** frozen prices.
 
 ## Файлы
 
@@ -121,7 +121,7 @@ npm run eval:scenarios -- --compare \
 - `warnings` — слабые сигналы (нет breakdown, cheapest не упомянут при catalogAnchor).
 - `signals.catalog` — live cheapest/hallucination из tools; **не** golden в git.
 - Revise-кейсы (`ux-191`…`ux-200`) сначала гоняют `seedId`, затем follow-up с `history`.
-- Platform/SKU compare (`ux-201`…`ux-208`, `ux-221`): Ice Lake ≠ S3 Ice, nearest preemptible analogs, non-empty tables; `ux-221` — B300×8 HGX peers to H200/H100 ×8, never GTX 1080 / T4 / L4.
+- Platform/SKU compare (`ux-201`…`ux-208`, `ux-221`, `ux-225`…`ux-227`): Ice Lake ≠ S3 Ice, nearest preemptible analogs, non-empty tables; `ux-221` — B300×8 HGX peers to H200/H100 ×8, never GTX 1080 / T4 / L4; `ux-225` — Cloud.ru VM flavor 4vCPU/32GB → get_quote shape peers, never unit/GPU RAM; `ux-226`/`ux-227` — 4/16 compare then «только Cloud.ru» must not re-dump all providers.
 - Cheapest full VM per provider (`ux-222`…`ux-224`): `get_quote(mode=cheapest-per-provider)` — полноценная ВМ у каждого провайдера, не unit-компоненты и не размытая вилка без BOM.
 - Unit price (`ux-209`…`ux-213`): Cloud.ru via `derivedFromFlavors` with `*` / оценка — не «нет в каталоге».
   - `ux-211` — полная таблица min 1 vCPU + разброс (все 6, Cloud.ru*)

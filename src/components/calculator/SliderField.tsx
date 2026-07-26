@@ -3,6 +3,7 @@
 import {useEffect, useState} from 'react';
 import {Cpu, Minus, Plus} from '@gravity-ui/icons';
 import {Button, Flex, HelpMark, Icon, NumberInput, Slider, Text} from '@gravity-ui/uikit';
+import {bump, nearestIn, nearestIndex, resolveSliderInput} from './sliderFieldModel';
 import styles from './SliderField.module.css';
 
 type IconData = typeof Cpu;
@@ -27,31 +28,6 @@ type SliderFieldProps = {
   onUpdate: (next: number) => void;
   'aria-label'?: string;
 };
-
-function nearestIn(options: number[], value: number): number {
-  if (!options.length) return value;
-  let best = options[0]!;
-  let bestDist = Math.abs(best - value);
-  for (const opt of options) {
-    const d = Math.abs(opt - value);
-    if (d < bestDist) {
-      best = opt;
-      bestDist = d;
-    }
-  }
-  return best;
-}
-
-function nearestIndex(options: number[], value: number): number {
-  const nearest = nearestIn(options, value);
-  return Math.max(0, options.indexOf(nearest));
-}
-
-function bump(options: number[], value: number, delta: number): number {
-  const idx = nearestIndex(options, value);
-  const next = Math.min(options.length - 1, Math.max(0, idx + delta));
-  return options[next] ?? value;
-}
 
 function toPos(value: number): number {
   return Math.log2(Math.max(value, 1));
@@ -129,30 +105,6 @@ function CompactValue({
   );
 }
 
-function commitTypedValue(
-  next: number,
-  value: number,
-  options: number[],
-  absMin: number,
-  absMax: number,
-  onUpdate: (next: number) => void,
-): boolean {
-  const rounded = Math.round(next);
-  if (rounded < absMin || rounded > absMax) return false;
-  if (rounded === value + 1) {
-    onUpdate(bump(options, value, 1));
-    return true;
-  }
-  if (rounded === value - 1) {
-    onUpdate(bump(options, value, -1));
-    return true;
-  }
-  // Prefer ladder steps when close; otherwise keep typed value in range.
-  const nearest = nearestIn(options, rounded);
-  onUpdate(Math.abs(nearest - rounded) <= Math.max(1, rounded * 0.05) ? nearest : rounded);
-  return true;
-}
-
 export function SliderField({
   icon,
   label,
@@ -182,6 +134,8 @@ export function SliderField({
   const idx = nearestIndex(options, value);
   const fieldAria = ariaLabel ?? label;
   const inputValue = editing ? draft : value;
+  const displayed =
+    editing && draft != null && Number.isFinite(draft) ? Math.round(draft) : value;
 
   useEffect(() => {
     if (!editing) setDraft(value);
@@ -194,20 +148,38 @@ export function SliderField({
   }
 
   function handleInput(next: number | null) {
-    setEditing(true);
-    setDraft(next);
     if (next == null || !Number.isFinite(next)) {
       // Empty / partial clear while typing — keep parent value until blur/commit.
+      setEditing(true);
+      setDraft(next);
       setRangeError(null);
       return;
     }
-    const rounded = Math.round(next);
-    if (rounded < absMin || rounded > absMax) {
+    const resolved = resolveSliderInput({
+      raw: next,
+      committed: value,
+      displayed,
+      options,
+      absMin,
+      absMax,
+    });
+    if (!resolved.ok) {
+      setEditing(true);
+      setDraft(next);
       setRangeError(`Допустимо от ${absMin} до ${absMax}`);
       return;
     }
     setRangeError(null);
-    commitTypedValue(rounded, value, options, absMin, absMax, onUpdate);
+    if (resolved.settle) {
+      // Spinbuttons: show the ladder step immediately (avoid draft=9 while value=12).
+      setEditing(false);
+      setDraft(resolved.next);
+      onUpdate(resolved.next);
+      return;
+    }
+    setEditing(true);
+    setDraft(next);
+    onUpdate(resolved.next);
   }
 
   function handleBlur() {
@@ -218,12 +190,35 @@ export function SliderField({
       setEditing(false);
       return;
     }
-    const ok = commitTypedValue(Math.round(draft), value, options, absMin, absMax, onUpdate);
-    if (!ok) {
+    const rounded = Math.round(draft);
+    if (rounded < absMin || rounded > absMax) {
+      setDraft(value);
+      setRangeError(`Допустимо от ${absMin} до ${absMax}`);
+      setEditing(false);
+      return;
+    }
+    // Spinbutton already committed the ladder step; draft may still be the ±1 echo.
+    if (Math.abs(rounded - value) === 1) {
+      setDraft(value);
+      setRangeError(null);
+      setEditing(false);
+      return;
+    }
+    const resolved = resolveSliderInput({
+      raw: rounded,
+      committed: value,
+      displayed: value,
+      options,
+      absMin,
+      absMax,
+    });
+    if (!resolved.ok) {
       setDraft(value);
       setRangeError(`Допустимо от ${absMin} до ${absMax}`);
     } else {
       setRangeError(null);
+      setDraft(resolved.next);
+      onUpdate(resolved.next);
     }
     setEditing(false);
   }
@@ -388,11 +383,20 @@ export function IntegerSliderField({
             allowDecimal={false}
             value={inputValue}
             onUpdate={(next) => {
-              setEditing(true);
-              setDraft(next);
-              if (next == null || !Number.isFinite(next)) return;
+              if (next == null || !Number.isFinite(next)) {
+                setEditing(true);
+                setDraft(next);
+                return;
+              }
               const rounded = Math.round(next);
-              if (rounded < min || rounded > safeMax) return;
+              if (rounded < min || rounded > safeMax) {
+                setEditing(true);
+                setDraft(next);
+                return;
+              }
+              // Settle immediately so ± arrows never leave a stale draft.
+              setEditing(false);
+              setDraft(rounded);
               onUpdate(rounded);
             }}
             onBlur={() => {
@@ -400,7 +404,9 @@ export function IntegerSliderField({
               if (draft == null || !Number.isFinite(draft)) {
                 setDraft(clamped);
               } else {
-                onUpdate(Math.min(safeMax, Math.max(min, Math.round(draft))));
+                const next = Math.min(safeMax, Math.max(min, Math.round(draft)));
+                setDraft(next);
+                onUpdate(next);
               }
               setEditing(false);
             }}

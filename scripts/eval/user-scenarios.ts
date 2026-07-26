@@ -76,7 +76,7 @@ function sc(
 }
 
 /** Expected corpus size — bump when appending cases. */
-export const SOFT_SCENARIO_COUNT = 224;
+export const SOFT_SCENARIO_COUNT = 227;
 
 /** Build the full soft UX corpus. */
 export function buildUserScenarios(): SoftScenario[] {
@@ -2953,6 +2953,59 @@ export function buildUserScenarios(): SoftScenario[] {
         answerIncludes: ['₽', 'vCPU'],
       },
       'Preview-first: priced table in the same turn; clarifying questions only as a short footnote, not instead of the BOM.',
+    ),
+    sc(
+      225,
+      'sku-compare',
+      'Сравни с другими провайдерами: «Виртуальная машина 4vCPU/32GB RAM» (cloudru.compute.4vcpu-32gb) у Cloud.ru. Категория: Compute. Конфигурация: 4 vCPU · 32 GiB RAM · Cascade / Ice Lake. Платформа: Cascade / Ice Lake. Цена сейчас: 8 669,81 ₽ в месяц. Найди ближайшие аналоги у других провайдеров (если точного SKU нет — ближайшее по смыслу: тот же тип ресурса, платформа и доля ядра где применимо) и сравни цены в одной таблице. Отметь отличия, если аналоги неполные.',
+      ['price', 'compare', 'compute', 'vm'],
+      'hard',
+      {
+        toolsAny: ['get_quote'],
+        toolsAvoid: ['compare_unit_price'],
+        catalogAnchor: 'quote',
+        anchorParams: {vcpu: 4, ramGiB: 32, diskGiB: 10, period: 'month'},
+        mustShowBreakdown: true,
+        answerIncludes: ['4', '32', 'Cloud.ru', 'Selectel', 'vCPU'],
+        forbiddenExtras: [
+          'GiB-RAM',
+          'preemptible RAM',
+          'GPU V100',
+          'gpu-v100',
+          'только RAM',
+        ],
+      },
+      'Product CTA VM flavor 4/32: full-machine get_quote peers — never unit RAM / GPU-host Cascade RAM as «аналог».',
+    ),
+    sc(
+      226,
+      'vm',
+      'Сравни 4 vCPU / 16 GiB по всем провайдерам',
+      ['quote', 'vm', 'compare'],
+      'easy',
+      {
+        toolsAny: ['get_quote'],
+        catalogAnchor: 'quote',
+        anchorParams: {vcpu: 4, ramGiB: 16, diskGiB: 100, period: 'month'},
+        mustShowBreakdown: true,
+        answerIncludes: ['Cloud.ru', 'MWS', '4', '16'],
+      },
+      'Fixed-shape VM compare across providers (seed for provider-focus revise).',
+    ),
+    sc(
+      227,
+      'revise',
+      'покажи только cloud ru',
+      ['revise', 'vm', 'compare'],
+      'medium',
+      {
+        seedId: 'ux-226',
+        toolsAny: ['get_quote'],
+        reviseSignals: ['Cloud.ru', 'cloud'],
+        answerIncludes: ['Cloud.ru'],
+        forbiddenExtras: ['MWS Cloud', 'Selectel', 'Yandex Cloud', 'VK Cloud', 'T1 Cloud'],
+      },
+      'After full 4/16 compare, «только Cloud.ru» must not re-dump every provider.',
     ),
   ];
 

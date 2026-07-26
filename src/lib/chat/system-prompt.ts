@@ -62,6 +62,7 @@ FUNCTION CALLING: инструменты — ТОЛЬКО native tool_calls. Б�
 - IP → search_prices network/IP. CDN → category=cdn (+ volumeGiB). S3 → storage+storageClass. K8s-мастер отдельно → kubernetes. AI-токены → ai. GPU card-only → search_prices gpu (+gpuModel). НЕ выдавай Cloud.ru «1 GB GPU» / GB-GPU за аренду целой карты (это доля памяти, не H100).
 - get_quote — ТОЛЬКО одна ВМ/GPU целиком: «N vCPU / M GiB», «собери ВМ», GPU-хост с паритетом. Иначе get_quote запрещён.
 - Follow-up «а теперь RAM / диск / CDN» — снова только компонент (или патч CDN); не пересчитывай всю ВМ, пока не попросили собрать.
+- Follow-up «покажи только Cloud.ru» / «а у MWS?» после сравнения ВМ → ответ про этого провайдера (итого + компоненты), не повторяй полную таблицу всех провайдеров.
 
 ## СТЕК / VALIDATE / PRICE
 A) Один ресурс → compare_unit_price | search_catalog | get_product_details. НЕ compose.
@@ -109,6 +110,7 @@ export const DOMAIN_CARD_COMPUTE = `## vCPU / RAM / диск (сопостави
 - vCPU разного типа несравнимы: preemptible vs on-demand; доля 5–50% vs 100%; shared vs выделенное. База «цена 1 vCPU» = on-demand 100%. providersMatched.cheapest часто preemptible — НЕ база.
 - Preemptible/долевые — отдельным блоком. MWS: для ядра бери строку vCPU, не RAM.
 - «Сравни SKU / Ice Lake / Sapphire preemptible vCPU с аналогами» → search_prices category=compute (+ compare_unit_price). Ice Lake ≠ S3 Ice. Для такого запроса providersMatched.cheapest = ближайший аналог по смыслу (платформа/доля/preemptible), не абсолютный минимум провайдера. Нет точного SKU — ближайшее с явными отличиями; не пустая таблица «ничего нет», если в каталоге есть соседние preemptible/100% vCPU.
+- «Сравни SKU / Виртуальная машина N vCPU / M GiB» (flavor целиком) → get_quote(vcpu, ramGiB), НЕ search_prices unit RAM и НЕ GPU-host Cascade RAM. В таблице — полноценные ВМ того же shape; unit-компоненты и GPU-полки не аналоги.
 - get_quote — только ВМ/конфигурация целиком (оба: ядра+память, «собери», сайт с RAM). Nearest preset — назови отличия от запроса.
 - «Самая дешёвая ВМ у всех / по провайдерам» → get_quote(mode=cheapest-per-provider); в ответе таблица: провайдер · конфиг (vCPU/RAM, доля, обычная/прерываемая, диск) · ₽/мес. Не compare_unit_price и не усреднённые «вилки» без BOM.
 - get_quote по умолчанию: системный диск 100 GiB SSD (boot), без публичного IP. IP (publicIpCount) — только по явной просьбе. Не раздувай корзину «типовым» IP.

@@ -134,20 +134,6 @@ function ipv4Compact(count: number): string | null {
   return `${count} IPv4`;
 }
 
-function nearestIn(options: number[], value: number): number {
-  if (!options.length) return value;
-  let best = options[0]!;
-  let bestDist = Math.abs(best - value);
-  for (const opt of options) {
-    const d = Math.abs(opt - value);
-    if (d < bestDist) {
-      best = opt;
-      bestDist = d;
-    }
-  }
-  return best;
-}
-
 function pickDefaultGpu(presets: GpuPreset[]): GpuPreset | null {
   if (presets.length === 0) return null;
   return (
@@ -272,6 +258,8 @@ export function VmCalculatorPanel({
   const {result, loading} = useAdhocQuote(request);
 
   function applyMode(next: VmMode) {
+    // Re-clicking the active chip must not reset vCPU/RAM (e.g. after a disk toggle re-render).
+    if (next === mode) return;
     setMode(next);
     if (next === 'gpu') {
       if (!selectedGpu && defaultGpu) setSelectedGpu(defaultGpu);
@@ -384,7 +372,7 @@ export function VmCalculatorPanel({
     setForceCustomPreset(false);
     setVcpu(clamped.vcpu);
     setRamGiB(clamped.ramGiB);
-    setDiskGiB(nearestIn(DISK_STEPS, preset.diskGiB));
+    // Keep current disk size/media — preset cards only set vCPU/RAM shape.
   }
 
   function applyGpuPreset(preset: GpuPreset) {
@@ -460,6 +448,7 @@ export function VmCalculatorPanel({
                 size="l"
                 width="auto"
                 className={styles.familyGroup}
+                name="vm-family"
                 value={mode}
                 onUpdate={(v) => applyMode(v as VmMode)}
                 aria-label="Семейство ВМ"
@@ -633,6 +622,7 @@ export function VmCalculatorPanel({
                         : 128
                     }
                     unit="vCPU"
+                    compactStepper
                     hint={
                       isFractionalShare(vcpuShare)
                         ? `Количество vCPU при доле ${vcpuShare}. Для долей Yandex Cloud доступны только 2 или 4 ядра.`
@@ -652,6 +642,7 @@ export function VmCalculatorPanel({
                         : 1024
                     }
                     unit="GiB"
+                    compactStepper
                     hint={
                       isFractionalShare(vcpuShare)
                         ? `Объём RAM при доле ${vcpuShare}; лимит зависит от провайдера и числа ядер.`
@@ -668,8 +659,13 @@ export function VmCalculatorPanel({
                     </Flex>
                     <SegmentedRadioGroup
                       size="l"
+                      name="vm-disk-media"
                       value={diskMedia}
-                      onUpdate={(v) => setDiskMedia(v as DiskMedia)}
+                      onUpdate={(v) => {
+                        setDiskMedia(v as DiskMedia);
+                        // Disk toggle must never re-bind to a shape preset.
+                        setForceCustomPreset(true);
+                      }}
                       aria-label="Тип диска"
                       className={styles.compactToggle}
                     >
