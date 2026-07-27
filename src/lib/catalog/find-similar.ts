@@ -8,6 +8,7 @@ import {
   extractCdnKind,
   extractCdnTrafficDirection,
   extractDiskMedia,
+  extractGpuCount,
   extractGpuInterconnect,
   extractGpuModel,
   extractKubernetesAvailability,
@@ -54,6 +55,8 @@ export type ComparableCatalogFilter = {
   gpuInterconnectFacet: GpuInterconnectFacet;
   /** Set for GPU finds: keep card-only with card-only, host flavors with host flavors. */
   gpuPriceBasis: GpuPriceBasisFilter | null;
+  /** Exact card count (×N). Null = any count. */
+  gpuCount: number | null;
   storageFacet: StorageFacet;
   storageKindFacet: StorageKindFacet;
   /** Object-storage request verb (GET/PUT/…) when kind=operations. */
@@ -76,6 +79,7 @@ const EMPTY_NESTED = {
   gpuFacet: 'all' as GpuFacet,
   gpuInterconnectFacet: 'all' as GpuInterconnectFacet,
   gpuPriceBasis: null as GpuPriceBasisFilter | null,
+  gpuCount: null as number | null,
   storageFacet: 'all' as StorageFacet,
   storageKindFacet: 'all' as StorageKindFacet,
   storageOperation: null as string | null,
@@ -154,11 +158,13 @@ export function comparableFilterFromMeter(meter: CatalogMeter): ComparableCatalo
       const basis = gpuPriceBasisLabel(meter);
       if (!basis) return null;
       const link = interconnectFacetFromMeter(meter);
+      const count = extractGpuCount(meter);
       const parts = [
         'GPU',
         gpu.toUpperCase(),
         basis,
         link ? (link === 'nvlink' ? 'NVLink' : 'PCIe') : null,
+        count != null ? `×${count}` : null,
       ].filter(Boolean);
       return {
         ...EMPTY_NESTED,
@@ -167,6 +173,7 @@ export function comparableFilterFromMeter(meter: CatalogMeter): ComparableCatalo
         // Card-only compares across fabrics; host flavors keep fabric when known.
         gpuInterconnectFacet: basis === 'целиком' ? (link ?? 'all') : 'all',
         gpuPriceBasis: basis,
+        gpuCount: count,
         summary: parts.join(' · '),
       };
     }

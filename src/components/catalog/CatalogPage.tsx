@@ -57,6 +57,7 @@ import {
   meterMatchesAiModel,
   extractDiskMedia,
   extractDiskVariant,
+  extractGpuCount,
   formatGpuLabel,
   gpuPriceBasisLabel,
   extractRamGiB,
@@ -479,6 +480,8 @@ export function CatalogPage() {
   const [similarSummary, setSimilarSummary] = useState<string | null>(null);
   /** Extra GPU constraint from find-similar: card-only vs full host. */
   const [gpuPriceBasis, setGpuPriceBasis] = useState<GpuPriceBasisFilter | null>(null);
+  /** Extra GPU constraint from find-similar: exact ×N card count. */
+  const [gpuCount, setGpuCount] = useState<number | null>(null);
   /** Extra storage constraint from find-similar: GET/PUT/… */
   const [storageOperation, setStorageOperation] = useState<string | null>(null);
   const [hoveredSimilar, setHoveredSimilar] = useState<CatalogMeter | null>(null);
@@ -884,6 +887,9 @@ export function CatalogPage() {
       if (category === 'gpu' && gpuPriceBasis && gpuPriceBasisLabel(m) !== gpuPriceBasis) {
         return false;
       }
+      if (category === 'gpu' && gpuCount != null && extractGpuCount(m) !== gpuCount) {
+        return false;
+      }
       if (category === 'storage' && !meterMatchesStorageKindFacet(m, storageKindFacet)) {
         return false;
       }
@@ -928,6 +934,7 @@ export function CatalogPage() {
     gpuFacet,
     gpuInterconnectFacet,
     gpuPriceBasis,
+    gpuCount,
     storageFacet,
     storageKindFacet,
     storageOperation,
@@ -962,6 +969,7 @@ export function CatalogPage() {
     gpuFacet,
     gpuInterconnectFacet,
     gpuPriceBasis,
+    gpuCount,
     storageFacet,
     storageKindFacet,
     storageOperation,
@@ -1068,6 +1076,7 @@ export function CatalogPage() {
       setGpuFacet(next.gpuFacet);
       setGpuInterconnectFacet(next.gpuInterconnectFacet);
       setGpuPriceBasis(next.gpuPriceBasis);
+      setGpuCount(next.gpuCount);
       setStorageFacet(next.storageFacet);
       setStorageKindFacet(next.storageKindFacet);
       setStorageOperation(next.storageOperation);
@@ -1251,6 +1260,7 @@ export function CatalogPage() {
       setGpuFacet('all');
       setGpuInterconnectFacet('all');
       setGpuPriceBasis(null);
+      setGpuCount(null);
       setStorageFacet('all');
       setStorageKindFacet('all');
       setStorageOperation(null);
@@ -1279,6 +1289,7 @@ export function CatalogPage() {
     gpuFacet !== 'all' ||
     gpuInterconnectFacet !== 'all' ||
     gpuPriceBasis != null ||
+    gpuCount != null ||
     storageFacet !== 'all' ||
     storageKindFacet !== 'all' ||
     storageOperation != null ||
@@ -1335,6 +1346,7 @@ export function CatalogPage() {
                 setSimilarSeedId(null);
                 setSimilarSummary(null);
                 setGpuPriceBasis(null);
+                setGpuCount(null);
                 setStorageOperation(null);
                 // All-tab chips are single-select; multi from other tabs collapses to first.
                 if (next === 'all') {
@@ -1350,6 +1362,7 @@ export function CatalogPage() {
                   setGpuFacet('all');
                   setGpuInterconnectFacet('all');
                   setGpuPriceBasis(null);
+                  setGpuCount(null);
                 }
                 if (next !== 'storage') {
                   setStorageFacet('all');

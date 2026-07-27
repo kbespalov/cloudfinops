@@ -11,6 +11,7 @@ import {
   meterMatchesCdnTrafficFacet,
   meterMatchesComputeFacet,
   meterMatchesDiskFacet,
+  extractGpuCount,
   meterMatchesGpuFacet,
   meterMatchesGpuInterconnectFacet,
   meterMatchesKubernetesAvailabilityFacet,
@@ -63,6 +64,9 @@ function peersMatching(filter: ComparableCatalogFilter): CatalogMeter[] {
     }
     if (filter.category === 'gpu' && filter.gpuPriceBasis) {
       if (gpuPriceBasisLabel(m) !== filter.gpuPriceBasis) return false;
+    }
+    if (filter.category === 'gpu' && filter.gpuCount != null) {
+      if (extractGpuCount(m) !== filter.gpuCount) return false;
     }
     if (filter.category === 'storage' && !meterMatchesStorageKindFacet(m, filter.storageKindFacet)) {
       return false;
@@ -210,13 +214,38 @@ describe('comparableFilterFromMeter', () => {
     );
   });
 
+  it('filters GPU peers by exact card count (×N)', () => {
+    const host = catalog.meters.find(
+      (x) =>
+        x.categoryKey === 'gpu' &&
+        x.provider === 'cloud-ru' &&
+        extractGpuCount(x) === 5 &&
+        /H100/i.test(`${x.name} ${x.sku}`) &&
+        gpuPriceBasisLabel(x) === 'целиком',
+    );
+    const f = requireFilter(host);
+    assert.equal(f.gpuCount, 5);
+    assert.match(f.summary, /×5/);
+
+    const peers = peersMatching(f);
+    assert.ok(peers.length >= 1);
+    for (const p of peers) {
+      assert.equal(extractGpuCount(p), 5, p.sku);
+      assert.equal(gpuPriceBasisLabel(p), 'целиком');
+    }
+    assert.equal(
+      peers.some((p) => extractGpuCount(p) === 1 || extractGpuCount(p) === 8),
+      false,
+    );
+  });
+
   it('filters kubernetes HA masters to regional peers only', () => {
     const m = catalog.meters.find(
       (x) => x.categoryKey === 'kubernetes' && x.comparableTier === 'ha',
     );
     const f = requireFilter(m);
     assert.equal(f.kubernetesAvailabilityFacet, 'regional');
-    assert.match(f.summary, /Региональный|HA/i);
+    assert.match(f.summary, /региональный/i);
 
     const peers = peersMatching(f);
     assert.ok(peers.length >= 2, 'expect HA masters from multiple providers');
