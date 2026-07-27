@@ -3,7 +3,10 @@ import {describe, it} from 'node:test';
 import {
   aiModelMatchesNeedle,
   compactAiModelId,
+  blendTokenPricePerMillion,
   detectAiModelNeedle,
+  detectTokenMixShares,
+  resolveAiModelNeedle,
   detectStorageClass,
   searchPricesDetailed,
 } from './search';
@@ -208,6 +211,53 @@ describe('AI model matching', () => {
     assert.equal(compactAiModelId('Qwen3.6-35B-A3B').startsWith('qwen36'), true);
     assert.equal(detectAiModelNeedle('Сравни цены Qwen 3.6 за 1M токенов'), 'qwen 3.6');
     assert.equal(detectAiModelNeedle('qwen3.6 у Cloud.ru'), 'qwen 3.6');
+  });
+
+  it('detects gpt-oss-120b from spaced / hyphenated asks', () => {
+    assert.equal(detectAiModelNeedle('gpt oss 120b'), 'gpt-oss-120b');
+    assert.equal(detectAiModelNeedle('цена gpt-oss-120b за 1M'), 'gpt-oss-120b');
+    assert.equal(
+      detectAiModelNeedle(
+        'цена за 1 млн при паттерне 70 (input) / 30 (output) возьми gpt oss 120b',
+      ),
+      'gpt-oss-120b',
+    );
+  });
+
+  it('parses 70/30 token mix and blends ₽/1M', () => {
+    const mix = detectTokenMixShares('паттерн 70 (input) / 30 (output)');
+    assert.ok(mix);
+    assert.equal(mix!.inputShare, 0.7);
+    assert.equal(mix!.outputShare, 0.3);
+    assert.equal(blendTokenPricePerMillion(13.42, 54.9, mix!), 0.7 * 13.42 + 0.3 * 54.9);
+    assert.equal(detectTokenMixShares('просто gpt-oss'), null);
+  });
+
+  it('query gpt-oss wins over bad tool aiModel (120B / Qwen)', () => {
+    const q =
+      'цена за 1 млн токенов при паттерне 70 (input) / 30 (output) возьми gpt oss 120b';
+    assert.equal(resolveAiModelNeedle(q, '120B'), 'gpt-oss-120b');
+    assert.equal(resolveAiModelNeedle(q, 'Qwen'), 'gpt-oss-120b');
+    assert.equal(resolveAiModelNeedle(q, 'Qwen3-Coder-Next'), 'gpt-oss-120b');
+
+    for (const badArg of ['120B', 'Qwen', 'Qwen3-Coder-Next'] as const) {
+      const r = searchPricesDetailed({
+        query: q,
+        category: 'ai',
+        aiModel: badArg,
+        limit: 20,
+      });
+      const skus = r.rows.map((row) => row.sku);
+      assert.ok(
+        skus.some((s) => s.includes('gpt-oss-120b')),
+        `expected gpt-oss-120b rows despite aiModel=${badArg}, got ${skus.join(',')}`,
+      );
+      assert.equal(
+        skus.some((s) => /qwen/i.test(s)),
+        false,
+        `must not return Qwen for gpt-oss ask (aiModel=${badArg})`,
+      );
+    }
   });
 
   it('matches Yandex / Cloud.ru / MWS Qwen 3.6 SKUs to one needle', () => {

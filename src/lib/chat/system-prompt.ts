@@ -140,7 +140,9 @@ export const DOMAIN_CARD_CDN = `## CDN
 - CDN без объёма → нельзя полной оценки; уточни или пометь unresolved.`;
 
 export const DOMAIN_CARD_AI = `## AI / inference / токены
-- Цена токенов API → search_prices category=ai + aiModel с версией. Input и output — пара ставок одной модели (₽/1M), в одной строке; не ранжируй output как «+N% к минимуму» против input. Не подменяй соседней версией.
+- Цена токенов API → search_prices category=ai + aiModel с версией (gpt-oss-120b, GLM 5.2, Qwen…). Input и output — пара ставок одной модели (₽/1M), в одной строке; не ранжируй output как «+N% к минимуму» против input. Не подменяй соседней версией.
+- Паттерн смеси входа/выхода (70/30, 80/20, «70 input / 30 output») → ₽ за **1M смешанных** токенов = share_in×input + share_out×output (на 1M total). Пример 70/30: 0,7×input + 0,3×output. Таблица по провайдерам + raw input/output.
+- gpt-oss-120b / gpt-oss-20b **есть** в каталоге (Yandex, MWS, Cloud.ru — input и output). aiModel в tool = как в запросе («gpt-oss-120b»), не «120B» и не «Qwen». Если search_prices вернул gpt-oss — считай 70/30 по ним. **Запрещено** подменять Qwen/«аналог 80B», писать «прямых тарифов 120B нет» или уходить в self-host, пока tool не пуст. Self-host — только по явной просьбе «развернуть / свои GPU».
 - «Развернуть / self-host / инфраструктура / online|batch inference для GLM|Qwen|Kimi|Llama» → recommend_inference_infra (+ compose/get_quote при необходимости). Не рой card-only GPU как итог. Не откладывай tool ради длинного опроса — baseline + assumptions сразу.
 - Критичные уточнения (≤2): версия/размер модели, inference vs train, concurrent users, контекст, tok/s, квант. Иначе — явный baseline.
 - Можно предложить min / balanced / performance; факты пользователя ≠ твои допущения.
@@ -255,12 +257,21 @@ export function matchPlanningDomains(text: string): PlanningDomain[] {
       t,
     ) || capacitySizing;
 
-  if (
-    /(?:\bai\b|токен|1m\s*токен|₽\s*\/\s*1m|qwen|квен|glm|злм|kimi|кими|llama|deepseek|gigachat|giga\s*chat)/i.test(
+  const tokenPriceAsk =
+    /(?:токен|1\s*m\s*токен|1\s*млн|за\s+1\s*млн|₽\s*\/\s*1m|паттерн\s*\d+|70\s*[/\\:]\s*30|\binput\b[\s\S]{0,40}\boutput\b|\boutput\b[\s\S]{0,40}\binput\b)/i.test(
       t,
-    )
-  ) {
-    if (workloadInfra || /(?:запуск|развернуть|self[-\s]?host|инфраструктур|vram|свои[хм]\s+gpu)/i.test(t)) {
+    );
+  const namedAiModel =
+    /(?:gpt[-\s]?oss|qwen|квен|glm|злм|kimi|кими|llama|deepseek|gigachat|giga\s*chat|yandexgpt|alice|gemma)/i.test(
+      t,
+    );
+  const selfHostIntent =
+    /(?:развернуть|self[-\s]?host|подбери\s+инфраструктур|собери\s+(?:сервер|инфраструктур)|vram|свои[хм]\s+gpu)/i.test(
+      t,
+    );
+  if (tokenPriceAsk || namedAiModel || /(?:\bai\b|токен|1m\s*токен|₽\s*\/\s*1m)/i.test(t)) {
+    // Token/API price wins over bare «инференс» in workloadInfra — don't invent GPU rent.
+    if (!tokenPriceAsk && (selfHostIntent || workloadInfra)) {
       out.add('gpu');
       out.add('stack');
     } else {
@@ -286,8 +297,10 @@ export function matchPlanningDomains(text: string): PlanningDomain[] {
 
   // Product SKU compare says «в одной таблице» but is a single-resource ask, not a stack.
   const skuCompareAsk = /Сравни с другими провайдерами\s*:/i.test(t);
+  // Pure hosted-token asks («₽/1M», 70/30) must not inherit stack/GPU from «инференс».
   if (
     !skuCompareAsk &&
+    !tokenPriceAsk &&
     (/собери\s+решени|мультикомпонент|стек\s+из|в\s+одной\s+таблиц|compose_solution|под\s+бюджет.{0,40}kubernetes|kubernetes.{0,40}бюджет|подбери\s+инфраструктур|lakehouse|clickhouse|кликхаус|serverless/i.test(
       t,
     ) ||

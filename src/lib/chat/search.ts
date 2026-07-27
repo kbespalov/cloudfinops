@@ -281,17 +281,103 @@ export function aiModelMatchesNeedle(
   return family.includes(n) || id.includes(n) || blob.includes(n);
 }
 
-/** Infer "Qwen 3.6" / "GLM 5.2" from free text when tool omits aiModel. */
+/** Infer "Qwen 3.6" / "GLM 5.2" / "gpt-oss-120b" from free text when tool omits aiModel. */
 export function detectAiModelNeedle(query: string | undefined): string | null {
   if (!query) return null;
   const q = normalize(query);
+  // gpt-oss-120b / gpt oss 120b / GPT-OSS 120B
+  const gptOss = q.match(/\bgpt\s*-?\s*oss\s*-?\s*(\d+)\s*b?\b/i);
+  if (gptOss) return `gpt-oss-${gptOss[1]}b`;
   const spaced = q.match(
-    /\b(qwen|glm|gigachat|deepseek|gemma|kimi|yandexgpt|alice|gpt-oss)\s+([0-9]+(?:[.\-][0-9]+)*)\b/i,
+    /\b(qwen|glm|gigachat|deepseek|gemma|kimi|yandexgpt|alice)\s+([0-9]+(?:[.\-][0-9]+)*)\b/i,
   );
   if (spaced) return `${spaced[1]} ${spaced[2].replace(/-/g, '.')}`;
   const glued = q.match(/\b(qwen|glm|gigachat|deepseek)(\d+(?:\.\d+)+)/i);
   if (glued) return `${glued[1]} ${glued[2]}`;
   return null;
+}
+
+/** Bare size / generic tokens that must not override a named model in the query. */
+export function isVagueAiModelNeedle(needle: string): boolean {
+  const c = compactAiModelId(needle);
+  return /^(?:\d{1,4}b?|model|llm|ai)$/i.test(c);
+}
+
+/**
+ * Prefer the model named in the user query over a bad/vague tool `aiModel`
+ * (e.g. aiModel=«120B» or «Qwen» when the user said gpt-oss-120b).
+ */
+export function resolveAiModelNeedle(
+  query: string | undefined,
+  explicit?: string | null,
+): string | null {
+  const fromQuery = detectAiModelNeedle(query);
+  const fromArg = explicit?.trim() ? explicit.trim().toLowerCase() : null;
+  if (!fromArg) return fromQuery;
+  if (!fromQuery) return fromArg;
+  if (compactAiModelId(fromArg) === compactAiModelId(fromQuery)) return fromQuery;
+  if (isVagueAiModelNeedle(fromArg)) return fromQuery;
+
+  const q = compactAiModelId(fromQuery);
+  const a = compactAiModelId(fromArg);
+  // Different family than the one the user typed → trust the query.
+  const families = ['gptoss', 'qwen', 'glm', 'kimi', 'gemma', 'deepseek', 'gigachat', 'yandexgpt', 'alice'] as const;
+  const qFam = families.find((f) => q.includes(f));
+  const aFam = families.find((f) => a.includes(f));
+  if (qFam && aFam && qFam !== aFam) return fromQuery;
+
+  const argHits = catalog.meters.filter(
+    (m) =>
+      m.categoryKey === 'ai' &&
+      m.status === 'available' &&
+      aiModelMatchesNeedle(fromArg, m, `${m.name} ${m.sku}`),
+  ).length;
+  if (argHits === 0) return fromQuery;
+  return fromArg;
+}
+
+/**
+ * Input/output mix for blended ₽/1M, e.g. 70/30 → {inputShare: 0.7, outputShare: 0.3}.
+ * Null when the ask does not specify a mix.
+ */
+export function detectTokenMixShares(
+  query: string | undefined,
+): {inputShare: number; outputShare: number} | null {
+  if (!query) return null;
+  const q = query.toLowerCase().replace(/ё/g, 'е');
+  const labeled = q.match(
+    /(\d{1,2})\s*%?\s*(?:\(|\b)?\s*input\s*(?:\)|\b)?\s*[/\\:]\s*(\d{1,2})\s*%?\s*(?:\(|\b)?\s*output/i,
+  );
+  const bare = q.match(
+    /(?:паттерн|смес[ьи]|доля|mix)\s*(\d{1,2})\s*[/\\:]\s*(\d{1,2})|(\d{1,2})\s*[/\\:]\s*(\d{1,2})\s*(?:\(|\b)(?:input|вход)/i,
+  );
+  const a = labeled
+    ? Number(labeled[1])
+    : bare
+      ? Number(bare[1] ?? bare[3])
+      : NaN;
+  const b = labeled
+    ? Number(labeled[2])
+    : bare
+      ? Number(bare[2] ?? bare[4])
+      : NaN;
+  if (!Number.isFinite(a) || !Number.isFinite(b) || a + b <= 0) return null;
+  if (a + b > 100 + 1e-9 && Math.abs(a + b - 1) > 1e-9) return null;
+  const sum = a + b;
+  // Accept 70/30 or 0.7/0.3
+  const inputShare = sum > 1.5 ? a / 100 : a / sum;
+  const outputShare = sum > 1.5 ? b / 100 : b / sum;
+  if (inputShare <= 0 || outputShare <= 0) return null;
+  return {inputShare, outputShare};
+}
+
+/** ₽ per 1M mixed tokens for a given input/output mix. */
+export function blendTokenPricePerMillion(
+  inputPerMillion: number,
+  outputPerMillion: number,
+  shares: {inputShare: number; outputShare: number},
+): number {
+  return inputPerMillion * shares.inputShare + outputPerMillion * shares.outputShare;
 }
 
 /**
@@ -787,8 +873,7 @@ function collectCandidates(params: SearchParams): FilterContext {
 
   const category = params.category ?? null;
   const gpuModel = params.gpuModel?.trim().toLowerCase() || null;
-  const aiModel =
-    params.aiModel?.trim().toLowerCase() || detectAiModelNeedle(effectiveQuery) || null;
+  const aiModel = resolveAiModelNeedle(effectiveQuery, params.aiModel);
   const vcpuUnitOnly = looksLikeVcpuUnitQuery(effectiveQuery, searchTokens);
   const queryGpuFamily = detectGpuFamilyNeedle(effectiveQuery, params.gpuModel);
   const queryGpuCount = detectGpuCountNeedle(effectiveQuery);

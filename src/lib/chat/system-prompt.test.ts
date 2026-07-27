@@ -132,6 +132,23 @@ describe('matchPlanningDomains', () => {
     assert.match(prompt, /assumptions|допущен/i);
   });
 
+  it('gpt-oss 70/30 token mix attaches AI card, not self-host GPU', () => {
+    const q =
+      'цена за 1 млн при паттерне 70 (input) / 30 (output) возьми gpt oss 120b';
+    const d = matchPlanningDomains(q);
+    assert.ok(d.includes('ai'), d.join(','));
+    assert.ok(!d.includes('gpu'), `must not invent GPU rent: ${d.join(',')}`);
+    const prompt = buildSystemPrompt(q);
+    assert.match(prompt, /search_prices category=ai|gpt-oss-120b|70\/30/i);
+    assert.match(prompt, /Запрещено|есть.*в каталоге/i);
+  });
+
+  it('named model + 1M tokens stays on AI even if «инференс» appears', () => {
+    const d = matchPlanningDomains('Сколько стоит инференс gpt-oss-120b за 1M токенов?');
+    assert.ok(d.includes('ai'), d.join(','));
+    assert.ok(!d.includes('gpu'), d.join(','));
+  });
+
   it('core encodes intent-first modes and clarification rules', () => {
     assert.match(SYSTEM_PROMPT_CORE, /INTENT/);
     assert.match(SYSTEM_PROMPT_CORE, /Отдельная цена/);
