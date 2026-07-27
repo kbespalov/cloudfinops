@@ -24,6 +24,7 @@ import {
   TabProvider,
   Text,
   TextInput,
+  Tooltip,
 } from '@gravity-ui/uikit';
 import {
   AntennaSignal,
@@ -37,6 +38,7 @@ import {
   Gpu,
   HardDrive,
   Layers3Diagonal,
+  MagicWand,
   Magnifier,
   Picture,
   Server,
@@ -56,6 +58,7 @@ import {
   extractDiskMedia,
   extractDiskVariant,
   formatGpuLabel,
+  gpuPriceBasisLabel,
   extractKubernetesAvailability,
   extractRamGiB,
   extractStorageClass,
@@ -113,6 +116,11 @@ import {SkuDrawer} from '@/components/catalog/SkuDrawer';
 import {ProviderMark} from '@/components/catalog/ProviderMark';
 import {AppHeader} from '@/components/AppHeader';
 import {catalogEmptyIllustration} from '@/components/ui/emptyIllustration';
+import {
+  canFindSimilar,
+  comparableFilterFromMeter,
+  type GpuPriceBasisFilter,
+} from '@/lib/catalog/find-similar';
 import styles from './CatalogPage.module.css';
 
 const PROVIDER_FACET_ORDER = [
@@ -467,6 +475,21 @@ export function CatalogPage() {
   const [sort, setSort] = useState<SortKey>(() => parseSort(searchParams.get('sort')));
   const [page, setPage] = useState(1);
   const [activeMeter, setActiveMeter] = useState<CatalogMeter | null>(null);
+  /** Banner after «Найти похожие» — cleared on full reset. */
+  const [similarActive, setSimilarActive] = useState(false);
+  const [similarSeedId, setSimilarSeedId] = useState<string | null>(null);
+  const [similarSummary, setSimilarSummary] = useState<string | null>(null);
+  /** Extra GPU constraint from find-similar: card-only vs full host. */
+  const [gpuPriceBasis, setGpuPriceBasis] = useState<GpuPriceBasisFilter | null>(null);
+  /** Extra storage constraint from find-similar: GET/PUT/… */
+  const [storageOperation, setStorageOperation] = useState<string | null>(null);
+  const [hoveredSimilar, setHoveredSimilar] = useState<CatalogMeter | null>(null);
+  const [similarFabTop, setSimilarFabTop] = useState<number | null>(null);
+  const tableShellRef = useRef<HTMLDivElement | null>(null);
+  const hoveredRowRef = useRef<HTMLElement | null>(null);
+  const similarHideTimerRef = useRef<number | null>(null);
+  const similarActiveRef = useRef(similarActive);
+  similarActiveRef.current = similarActive;
 
   // Debounced URL sync — avoid router thrash on every keystroke
   useEffect(() => {
@@ -860,10 +883,20 @@ export function CatalogPage() {
       if (category === 'gpu' && !meterMatchesGpuInterconnectFacet(m, gpuInterconnectFacet)) {
         return false;
       }
+      if (category === 'gpu' && gpuPriceBasis && gpuPriceBasisLabel(m) !== gpuPriceBasis) {
+        return false;
+      }
       if (category === 'storage' && !meterMatchesStorageKindFacet(m, storageKindFacet)) {
         return false;
       }
       if (category === 'storage' && !meterMatchesStorageFacet(m, storageFacet)) return false;
+      if (
+        category === 'storage' &&
+        storageOperation &&
+        String(m.dimensions.operation ?? '').trim().toUpperCase() !== storageOperation
+      ) {
+        return false;
+      }
       if (category === 'network' && !meterMatchesNetworkFacet(m, networkFacet)) return false;
       if (category === 'cdn' && !meterMatchesCdnFacet(m, cdnFacet)) return false;
       if (
@@ -896,8 +929,10 @@ export function CatalogPage() {
     vcpuPlatformFacet,
     gpuFacet,
     gpuInterconnectFacet,
+    gpuPriceBasis,
     storageFacet,
     storageKindFacet,
+    storageOperation,
     networkFacet,
     cdnFacet,
     cdnTrafficFacet,
@@ -928,8 +963,10 @@ export function CatalogPage() {
     vcpuPlatformFacet,
     gpuFacet,
     gpuInterconnectFacet,
+    gpuPriceBasis,
     storageFacet,
     storageKindFacet,
+    storageOperation,
     networkFacet,
     cdnFacet,
     cdnTrafficFacet,
@@ -973,6 +1010,84 @@ export function CatalogPage() {
       window.cancelAnimationFrame(frame2);
     };
   }, [category, facet]);
+
+  const cancelSimilarHide = useCallback(() => {
+    if (similarHideTimerRef.current != null) {
+      window.clearTimeout(similarHideTimerRef.current);
+      similarHideTimerRef.current = null;
+    }
+  }, []);
+
+  const syncSimilarFabTop = useCallback(() => {
+    const row = hoveredRowRef.current;
+    const shell = tableShellRef.current;
+    if (!row || !shell || similarActiveRef.current) {
+      setSimilarFabTop(null);
+      return;
+    }
+    const shellRect = shell.getBoundingClientRect();
+    const rowRect = row.getBoundingClientRect();
+    // Hide if the row scrolled out of the visible table band.
+    if (rowRect.bottom < shellRect.top + 8 || rowRect.top > shellRect.bottom - 8) {
+      setSimilarFabTop(null);
+      return;
+    }
+    setSimilarFabTop(rowRect.top - shellRect.top + rowRect.height / 2);
+  }, []);
+
+  const clearSimilarHover = useCallback(() => {
+    cancelSimilarHide();
+    hoveredRowRef.current = null;
+    setHoveredSimilar(null);
+    setSimilarFabTop(null);
+  }, [cancelSimilarHide]);
+
+  /** Delay hide so the pointer can travel from the row to the floating button. */
+  const scheduleSimilarHide = useCallback(() => {
+    cancelSimilarHide();
+    similarHideTimerRef.current = window.setTimeout(() => {
+      similarHideTimerRef.current = null;
+      hoveredRowRef.current = null;
+      setHoveredSimilar(null);
+      setSimilarFabTop(null);
+    }, 700);
+  }, [cancelSimilarHide]);
+
+  useEffect(() => {
+    return () => cancelSimilarHide();
+  }, [cancelSimilarHide]);
+
+  const applyFindSimilar = useCallback((meter: CatalogMeter) => {
+    const next = comparableFilterFromMeter(meter);
+    if (!next) return;
+    clearSimilarHover();
+    startTransition(() => {
+      setCategory(next.category);
+      setFacet(next.facet);
+      setDiskFacet(next.diskFacet);
+      setVcpuShareFacet(next.vcpuShareFacet);
+      setVcpuPlatformFacet(next.vcpuPlatformFacet);
+      setGpuFacet(next.gpuFacet);
+      setGpuInterconnectFacet(next.gpuInterconnectFacet);
+      setGpuPriceBasis(next.gpuPriceBasis);
+      setStorageFacet(next.storageFacet);
+      setStorageKindFacet(next.storageKindFacet);
+      setStorageOperation(next.storageOperation);
+      setNetworkFacet(next.networkFacet);
+      setCdnFacet(next.cdnFacet);
+      setCdnTrafficFacet(next.cdnTrafficFacet);
+      setKubernetesAvailabilityFacet(next.kubernetesAvailabilityFacet);
+      setAiFacet(next.aiFacet);
+      setAiFamilyFacet(next.aiFamilyFacet);
+      setAiModel('');
+      setSearch('');
+      setProviders([]);
+      setSort('price-asc');
+      setSimilarActive(true);
+      setSimilarSeedId(meter.id);
+      setSimilarSummary(next.summary);
+    });
+  }, [clearSimilarHover]);
 
   const columns = useMemo(() => {
     // Stable column skeleton across tabs — prevents «Тариф» from shifting
@@ -1143,8 +1258,10 @@ export function CatalogPage() {
       setVcpuPlatformFacet('all');
       setGpuFacet('all');
       setGpuInterconnectFacet('all');
+      setGpuPriceBasis(null);
       setStorageFacet('all');
       setStorageKindFacet('all');
+      setStorageOperation(null);
       setNetworkFacet('all');
       setCdnFacet('all');
       setCdnTrafficFacet('all');
@@ -1155,6 +1272,9 @@ export function CatalogPage() {
       setSearch('');
       setProviders([]);
       setSort('price-asc');
+      setSimilarActive(false);
+      setSimilarSeedId(null);
+      setSimilarSummary(null);
     });
   }, []);
 
@@ -1166,8 +1286,10 @@ export function CatalogPage() {
     vcpuPlatformFacet !== 'all' ||
     gpuFacet !== 'all' ||
     gpuInterconnectFacet !== 'all' ||
+    gpuPriceBasis != null ||
     storageFacet !== 'all' ||
     storageKindFacet !== 'all' ||
+    storageOperation != null ||
     networkFacet !== 'all' ||
     cdnFacet !== 'all' ||
     cdnTrafficFacet !== 'all' ||
@@ -1177,8 +1299,8 @@ export function CatalogPage() {
     Boolean(aiModel) ||
     search.trim() !== '' ||
     providers.length > 0 ||
-    sort !== 'price-asc';
-
+    sort !== 'price-asc' ||
+    similarActive;
   const EmptyIllustration = catalogEmptyIllustration(
     category,
     facet,
@@ -1217,6 +1339,11 @@ export function CatalogPage() {
               startTransition(() => {
                 const next = v as CategoryFilter;
                 setCategory(next);
+                setSimilarActive(false);
+                setSimilarSeedId(null);
+                setSimilarSummary(null);
+                setGpuPriceBasis(null);
+                setStorageOperation(null);
                 // All-tab chips are single-select; multi from other tabs collapses to first.
                 if (next === 'all') {
                   setProviders((prev) => (prev.length > 1 ? [prev[0]!] : prev));
@@ -1230,10 +1357,12 @@ export function CatalogPage() {
                 if (next !== 'gpu') {
                   setGpuFacet('all');
                   setGpuInterconnectFacet('all');
+                  setGpuPriceBasis(null);
                 }
                 if (next !== 'storage') {
                   setStorageFacet('all');
                   setStorageKindFacet('all');
+                  setStorageOperation(null);
                 }
                 if (next !== 'network') setNetworkFacet('all');
                 if (next !== 'cdn') {
@@ -1325,7 +1454,7 @@ export function CatalogPage() {
                 disabled={!hasFilters}
                 className={styles.resetButton}
               >
-                Сбросить
+                Сбросить все
               </Button>
             </Flex>
 
@@ -1794,58 +1923,128 @@ export function CatalogPage() {
             </div>
           </div>
 
-          <div className={styles.tableCard}>
-            {filtered.length === 0 ? (
-              <PlaceholderContainer
-                title="Ничего не найдено"
-                description="Сбросьте фильтры или измените запрос."
-                size="m"
-                align="center"
-                image={<EmptyIllustration width="100%" height="100%" aria-hidden />}
-                actions={
-                  hasFilters
-                    ? [
-                        {
-                          text: 'Сбросить фильтры',
-                          view: 'action',
-                          size: 'm',
-                          onClick: resetFilters,
-                        },
-                      ]
-                    : undefined
-                }
-              />
-            ) : (
-              <>
-                <div className={styles.tableWrap}>
-                  <Table
-                    data={pageItems}
-                    columns={columns}
-                    getRowId={(m) => m.id}
-                    verticalAlign="middle"
-                    width="max"
-                    edgePadding
-                    onRowClick={(item) => setActiveMeter(item)}
-                    getRowDescriptor={() => ({interactive: true})}
-                  />
-                </div>
-                {filtered.length > PAGE_SIZE ? (
-                  <Flex justifyContent="space-between" alignItems="center" className={styles.pager}>
-                    <Text variant="body-1" color="secondary">
-                      {(safePage - 1) * PAGE_SIZE + 1}–
-                      {Math.min(safePage * PAGE_SIZE, filtered.length)} из {filtered.length}
-                    </Text>
-                    <Pagination
-                      page={safePage}
-                      pageSize={PAGE_SIZE}
-                      total={filtered.length}
-                      onUpdate={(nextPage) => setPage(nextPage)}
-                      compact
+          {similarActive ? (
+            <div className={styles.similarBar}>
+              <Flex alignItems="center" gap={2} wrap>
+                <Icon data={MagicWand} size={16} className={styles.similarBarIcon} />
+                <Text variant="body-1" className={styles.similarBarText}>
+                  {similarSummary
+                    ? `${similarSummary} · все провайдеры`
+                    : 'Только сопоставимые позиции того же класса · все провайдеры'}
+                </Text>
+                <Button view="flat-secondary" size="s" onClick={resetFilters}>
+                  Сбросить все
+                </Button>
+              </Flex>
+            </div>
+          ) : null}
+
+          <div
+            ref={tableShellRef}
+            className={styles.tableShell}
+            onMouseLeave={() => {
+              if (!similarActiveRef.current) scheduleSimilarHide();
+            }}
+          >
+            <div className={styles.tableCard}>
+              {filtered.length === 0 ? (
+                <PlaceholderContainer
+                  title="Ничего не найдено"
+                  description="Сбросьте фильтры или измените запрос."
+                  size="m"
+                  align="center"
+                  image={<EmptyIllustration width="100%" height="100%" aria-hidden />}
+                  actions={
+                    hasFilters
+                      ? [
+                          {
+                            text: 'Сбросить все',
+                            view: 'action',
+                            size: 'm',
+                            onClick: resetFilters,
+                          },
+                        ]
+                      : undefined
+                  }
+                />
+              ) : (
+                <>
+                  <div
+                    className={styles.tableWrap}
+                    onScroll={() => {
+                      if (!similarActiveRef.current) syncSimilarFabTop();
+                    }}
+                  >
+                    <Table
+                      data={pageItems}
+                      columns={columns}
+                      getRowId={(m) => m.id}
+                      verticalAlign="middle"
+                      width="max"
+                      edgePadding
+                      onRowClick={(item) => setActiveMeter(item)}
+                      onRowMouseEnter={(item, _index, event) => {
+                        // In compare mode the FAB is off — nothing to aim for.
+                        if (similarActiveRef.current) return;
+                        if (!canFindSimilar(item)) {
+                          clearSimilarHover();
+                          return;
+                        }
+                        // Instant move to the new row; cancel any pending hide.
+                        cancelSimilarHide();
+                        hoveredRowRef.current = event.currentTarget;
+                        setHoveredSimilar(item);
+                        window.requestAnimationFrame(syncSimilarFabTop);
+                      }}
+                      getRowDescriptor={(item) => ({
+                        interactive: true,
+                        classNames:
+                          similarSeedId && item.id === similarSeedId
+                            ? [styles.similarSeedRow]
+                            : undefined,
+                      })}
                     />
-                  </Flex>
-                ) : null}
-              </>
-            )}
+                  </div>
+                  {filtered.length > PAGE_SIZE ? (
+                    <Flex justifyContent="space-between" alignItems="center" className={styles.pager}>
+                      <Text variant="body-1" color="secondary">
+                        {(safePage - 1) * PAGE_SIZE + 1}–
+                        {Math.min(safePage * PAGE_SIZE, filtered.length)} из {filtered.length}
+                      </Text>
+                      <Pagination
+                        page={safePage}
+                        pageSize={PAGE_SIZE}
+                        total={filtered.length}
+                        onUpdate={(nextPage) => setPage(nextPage)}
+                        compact
+                      />
+                    </Flex>
+                  ) : null}
+                </>
+              )}
+            </div>
+
+            {!similarActive && hoveredSimilar && similarFabTop != null ? (
+              <div
+                key={hoveredSimilar.id}
+                className={styles.similarFab}
+                style={{top: similarFabTop}}
+                onMouseEnter={cancelSimilarHide}
+              >
+                <Tooltip content="Найти похожие" openDelay={120} placement="left">
+                  <Button
+                    view="outlined"
+                    size="m"
+                    pin="circle-circle"
+                    className={styles.similarFabBtn}
+                    aria-label="Найти похожие"
+                    onClick={() => applyFindSimilar(hoveredSimilar)}
+                  >
+                    <Icon data={MagicWand} size={16} className={styles.similarFabIcon} />
+                  </Button>
+                </Tooltip>
+              </div>
+            ) : null}
           </div>
 
           <Text variant="caption-2" color="secondary">

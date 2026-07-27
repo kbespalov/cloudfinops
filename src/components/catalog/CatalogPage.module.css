@@ -96,6 +96,33 @@
   opacity: 0.9;
 }
 
+/* Status chrome — not the same fill as the seed row, so they don't blend. */
+.similarBar {
+  margin: 0 0 8px;
+  padding: 7px 12px;
+  border-radius: var(--g-border-radius-m);
+  border: 1px solid var(--g-color-line-info);
+  background: var(--g-color-base-background);
+  color: var(--g-color-text-primary);
+}
+
+.similarBarIcon {
+  color: var(--g-color-text-info);
+  flex: 0 0 auto;
+}
+
+.similarBarText {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.tableShell {
+  position: relative;
+  /* Gutter for the floating «Найти похожие» FAB — table columns stay unchanged. */
+  padding-left: 44px;
+  margin-left: -44px;
+}
+
 .tableCard {
   border: 1px solid var(--g-color-line-generic);
   border-radius: var(--g-border-radius-l);
@@ -115,6 +142,67 @@
 
 .tableWrap tbody tr {
   cursor: pointer;
+}
+
+/* Seed row: quiet mark (left rail), not a full info-light slab like the old bar. */
+.similarSeedRow {
+  background: var(--g-color-base-generic);
+  box-shadow: inset 3px 0 0 0 var(--g-color-text-info);
+}
+
+.similarFab {
+  position: absolute;
+  left: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  /* Wide hit-bridge from the table edge to the button. */
+  width: 52px;
+  height: 44px;
+  margin-top: -22px;
+  padding-right: 12px;
+  animation: similarFabIn 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.similarFabBtn {
+  /* Keep the hit/paint box round — box-shadow on the square Button root looked like a tile. */
+  border-radius: 50%;
+  background: var(--g-color-base-background);
+  transition: transform 160ms ease;
+}
+
+.similarFabBtn:hover {
+  transform: scale(1.06);
+}
+
+.similarFabIcon {
+  color: var(--g-color-text-info);
+  animation: similarFabSpark 900ms ease-in-out 120ms 1;
+}
+
+@keyframes similarFabIn {
+  from {
+    opacity: 0;
+    transform: translateX(-6px) scale(0.72);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes similarFabSpark {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  35% {
+    transform: rotate(-12deg) scale(1.12);
+  }
+  65% {
+    transform: rotate(8deg) scale(1.06);
+  }
 }
 
 .nameCol {
@@ -183,6 +271,11 @@
     flex: 1 1 calc(50% - 8px);
     width: auto;
     min-width: 140px;
+  }
+
+  .tableShell {
+    padding-left: 36px;
+    margin-left: -12px;
   }
 
   .nameCol {
