@@ -10,6 +10,7 @@ import {PRICING_DISCLAIMER} from '@/lib/pricing-disclaimer';
 import {
   HOME_EXAMPLES,
   HOME_SEARCH_PLACEHOLDER,
+  chatUrlForExample,
   chatUrlForQuery,
 } from './homePrompts';
 import styles from './HomeLanding.module.css';
@@ -29,6 +30,10 @@ export function HomeLanding() {
   const goToChat = (text: string) => {
     const next = text.trim();
     router.push(next ? chatUrlForQuery(next) : '/chat');
+  };
+
+  const goToChip = (example: (typeof HOME_EXAMPLES)[number]) => {
+    router.push(chatUrlForExample(example));
   };
 
   const onSubmit = (event: FormEvent) => {
@@ -84,7 +89,7 @@ export function HomeLanding() {
                         type="button"
                         className={styles.chip}
                         style={{animationDelay: `${0.16 + index * 0.04}s`}}
-                        onClick={() => goToChat(example.prompt)}
+                        onClick={() => goToChip(example)}
                       >
                         <span className={styles.chipIcon} aria-hidden>
                           <Icon data={example.icon} size={16} />

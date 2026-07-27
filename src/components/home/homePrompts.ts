@@ -16,7 +16,7 @@ export const HOME_SEARCH_PLACEHOLDER = 'Опишите конфигурацию 
 export type HomeExample = {
   id: string;
   label: string;
-  /** Full question sent to /chat?q=… */
+  /** Display / chat user text (NL). Chip routing uses `id` via `fp`, not regex on prompt. */
   prompt: string;
   icon: typeof Boxes3;
 };
@@ -102,4 +102,14 @@ export function chatUrlForQuery(query: string): string {
   const q = query.trim();
   if (!q) return '/chat';
   return `/chat?q=${encodeURIComponent(q)}`;
+}
+
+/** Homepage chip → chat deep-link with typed fast-path id (`fp`). */
+export function chatUrlForExample(example: Pick<HomeExample, 'id' | 'prompt'>): string {
+  const q = example.prompt.trim();
+  if (!q) return '/chat';
+  const params = new URLSearchParams();
+  params.set('q', q);
+  params.set('fp', example.id);
+  return `/chat?${params.toString()}`;
 }

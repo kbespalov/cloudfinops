@@ -2,6 +2,19 @@
 
 ## 2026-07-27
 
+### E-ассистент / FastPath precision + typed chips
+
+FastPath больше не раздуваем regex-NLU: чипы с главной идут типизированно (`/chat?q=…&fp=<id>` → `fastPathId` в API), сервер резолвит allowlist без разбора текста. Чипы всегда on (не зависят от sample rate ~20%).
+
+Починили уверенные false positive и потерю параметров:
+- дробные ТБ (`55,5`, `0,4`) больше не округляются в целые TB / не отваливаются — объём в `meta.volumeGiB`;
+- ВМ `8 vCPU / 32 GiB / 500 ГБ` передаёт реальный `diskGiB`, а не жёсткие 100; regex не режет `16 GiB` в `6`;
+- широкие матчеры сузили: L40S / «кубер» / advisory «что лучше» → агент; budget+GPU не уезжает в `fit_budget(general)` или `h100-cheapest`;
+- `тёплый` S3 с «ё» распознаётся как warm; H100 матчится и когда цена после модели;
+- history не мутируется in-place, tool-call id уникальные, abort обрывает fast-path, `Promise.allSettled`.
+
+Расширили тестовый корпус (false-positive, parameter fidelity, typed chips, messy/random asks) — precision важнее recall.
+
 ### AI-конфигурация / корзина сайдбара (merge)
 
 Сайдбар `/calculator/ai` — корзина с merge, не replace: follow-up «докинь CDN» / «RAM 32» / «150 TiB» не затирает остальные части. Общий normalize алиасов (`objectStorageGiB`/`storageGiB`/`lakeTiB`, `egressGiB`, worker*). После tool result шлём второй `sidebar_config` из resolved request. В adhoc quote — Object Storage + internet egress parts. Смена типа диска (`diskMedia=hdd|ssd|nvme`) доходит до сайдбара; `get_quote` принимает и возвращает `diskMedia`.

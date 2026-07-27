@@ -229,7 +229,10 @@ export function ChatPage() {
   }, []);
 
   const onSendMessage = useCallback(
-    async (data: TSubmitData, options?: {forceNew?: boolean}) => {
+    async (
+      data: TSubmitData,
+      options?: {forceNew?: boolean; fastPathId?: string | null},
+    ) => {
       const content = data.content.trim();
       if (
         !content ||
@@ -277,11 +280,19 @@ export function ChatPage() {
       const abort = new AbortController();
       abortRef.current = abort;
 
+      const fastPathId =
+        typeof options?.fastPathId === 'string' && options.fastPathId.trim()
+          ? options.fastPathId.trim()
+          : undefined;
+
       try {
         const res = await fetch('/api/chat', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({messages: requestMessages}),
+          body: JSON.stringify({
+            messages: requestMessages,
+            ...(fastPathId ? {fastPathId} : {}),
+          }),
           signal: abort.signal,
         });
 
@@ -353,31 +364,40 @@ export function ChatPage() {
     [activeChatId, messagesByChat, status, appendToAssistant, setAssistantContent, clearProgressAssistant],
   );
 
-  // Landing / shared links: /chat?q=… → new chat + auto-send, then strip query.
+  // Landing / shared links: /chat?q=…&fp=… → new chat + auto-send, then strip query.
   useEffect(() => {
     if (!storageReady || deeplinkHandled.current) return;
     const q = searchParams.get('q')?.trim();
     if (!q) return;
+    const fp = searchParams.get('fp')?.trim() || null;
 
-    // Guard React Strict Mode remount + rapid re-entry with the same q.
+    // Guard React Strict Mode remount + rapid re-entry with the same q(+fp).
     try {
       const raw = sessionStorage.getItem('cf-chat-deeplink');
       if (raw) {
-        const prev = JSON.parse(raw) as {q?: string; at?: number};
-        if (prev.q === q && typeof prev.at === 'number' && Date.now() - prev.at < 4000) {
+        const prev = JSON.parse(raw) as {q?: string; fp?: string | null; at?: number};
+        if (
+          prev.q === q &&
+          (prev.fp ?? null) === fp &&
+          typeof prev.at === 'number' &&
+          Date.now() - prev.at < 4000
+        ) {
           router.replace('/chat', {scroll: false});
           deeplinkHandled.current = true;
           return;
         }
       }
-      sessionStorage.setItem('cf-chat-deeplink', JSON.stringify({q, at: Date.now()}));
+      sessionStorage.setItem(
+        'cf-chat-deeplink',
+        JSON.stringify({q, fp, at: Date.now()}),
+      );
     } catch {
       // sessionStorage unavailable — fall through with ref-only guard.
     }
 
     deeplinkHandled.current = true;
     router.replace('/chat', {scroll: false});
-    void onSendMessage({content: q}, {forceNew: true});
+    void onSendMessage({content: q}, {forceNew: true, fastPathId: fp});
   }, [storageReady, searchParams, router, onSendMessage]);
 
   const onCancel = useCallback(async () => {

@@ -127,6 +127,12 @@ export async function POST(req: Request) {
   const surface =
     (body as {surface?: unknown})?.surface === 'calculator' ? 'calculator' : 'chat';
 
+  const fastPathChipIdRaw = (body as {fastPathId?: unknown})?.fastPathId;
+  const fastPathChipId =
+    typeof fastPathChipIdRaw === 'string' && /^[a-z0-9][a-z0-9_-]{0,63}$/i.test(fastPathChipIdRaw)
+      ? fastPathChipIdRaw
+      : null;
+
   const history = sanitized.messages;
   const userText = lastUserText(history);
   const recentUserText = history
@@ -413,14 +419,18 @@ export async function POST(req: Request) {
           signal: abort.signal,
           onEvent: onToolEvent,
           surface,
+          fastPathId: fastPathChipId,
         });
 
-        const userQuestion = lastUserQuestion(messages);
+        // Fast-path returns a copied history with tool turns — adopt it when present.
+        let workingMessages = fast?.messages ?? messages;
+
+        const userQuestion = lastUserQuestion(workingMessages);
         const multiStack = looksMultiComponentStack(userQuestion);
         const loop =
           fast ??
           (await runToolLoop({
-            messages,
+            messages: workingMessages,
             tools: planningTools,
             // Simple first-turn asks: 1–2 rounds. Multi-SKU stacks need full headroom.
             maxRounds:
@@ -432,6 +442,8 @@ export async function POST(req: Request) {
           }));
 
         if (fast) fastPathId = fast.fastPathId;
+        // Tool-loop mutates its messages array in place; keep a single working reference.
+        if (!fast) workingMessages = messages;
         toolRounds = loop.toolRounds;
         toolCallsTotal = loop.toolCallsTotal;
         leaksRecovered = loop.leaksRecovered;
@@ -445,8 +457,8 @@ export async function POST(req: Request) {
           const formatted = tryFormatAgentToolAnswer({
             userText: userQuestion,
             toolPayloads: multiStack
-              ? extractAllToolPayloads(messages)
-              : extractLastToolPayloads(messages),
+              ? extractAllToolPayloads(workingMessages)
+              : extractLastToolPayloads(workingMessages),
             allowStackCompose: multiStack,
           });
           if (formatted) finalText = formatted;
@@ -458,21 +470,23 @@ export async function POST(req: Request) {
           // Multi-SKU stacks: compact digest (messagesForStackFinal), not raw history.
           // Fall back to non-stream if the SSE body has no content deltas.
           const stackPayloads =
-            multiStack && loop.toolCallsTotal > 0 ? extractAllToolPayloads(messages) : [];
+            multiStack && loop.toolCallsTotal > 0
+              ? extractAllToolPayloads(workingMessages)
+              : [];
           const stackFinal =
             stackPayloads.length >= 2
               ? messagesForStackFinal({userText: userQuestion, toolPayloads: stackPayloads})
               : null;
 
           if (!stackFinal) {
-            const alreadyNudged = messages.some(
+            const alreadyNudged = workingMessages.some(
               (m) =>
                 m.role === 'user' &&
                 typeof m.content === 'string' &&
                 m.content.includes('Данные инструментов уже в истории'),
             );
             if (!alreadyNudged && loop.toolCallsTotal > 0) {
-              messages.push({
+              workingMessages.push({
                 role: 'user',
                 content:
                   'Данные инструментов уже в истории. Дай пользователю полный ответ на русском: markdown-таблица и вывод. Без вызова инструментов и без пустого ответа.',
@@ -483,7 +497,7 @@ export async function POST(req: Request) {
           send({type: 'status', text: CHAT_STATUS_COMPOSING});
           composingAnnounced = true;
 
-          const finalMessages = stackFinal ?? messagesForShortFinal(messages);
+          const finalMessages = stackFinal ?? messagesForShortFinal(workingMessages);
           let rawStreamed = '';
           const sanitizer = createAnswerStreamSanitizer();
           try {
