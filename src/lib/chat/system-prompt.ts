@@ -273,7 +273,8 @@ export function matchPlanningDomains(text: string): PlanningDomain[] {
       /(?:\bs3\b|объектн|object\s*storage|hotbox|coldbox|(?:\bice\b(?![-\s]*lake))|\bcold\b|\bwarm\b|storageClass)/i.test(
         t,
       ));
-  if (wantsS3Card && storageIntent !== 'block') {
+  // wantsS3Card already excludes storageIntent==='block' (TS narrows to object|both|none).
+  if (wantsS3Card) {
     out.add('s3');
   }
 
