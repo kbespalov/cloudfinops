@@ -124,6 +124,14 @@ describe('matchPlanningDomains', () => {
     assert.ok(!prompt.includes('## Object Storage / S3'));
   });
 
+  it('fixed-shape VM get_quote prompt requires component matrix from parts', () => {
+    const prompt = buildSystemPrompt('Сравни 4 vCPU / 16 GiB по всем провайдерам');
+    assert.ok(matchPlanningDomains('Сравни 4 vCPU / 16 GiB по всем провайдерам').includes('compute'));
+    assert.match(prompt, /По компонентам/);
+    assert.match(prompt, /quotes\[\]\.parts|vCPU\+RAM \(flavor\)/);
+    assert.match(prompt, /ДВЕ таблицы|две таблицы/i);
+  });
+
   it('slippery storage domain cards: block / object / both', () => {
     const blockOnly = matchPlanningDomains(
       'Нужен блочный SSD 100 ТБ, не путать с S3 / объектным хранилищем',

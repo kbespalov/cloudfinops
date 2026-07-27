@@ -384,7 +384,7 @@ export const CHAT_TOOLS = [
     function: {
       name: 'get_quote',
       description:
-        'Shortcut: compose_solution(virtual_machine) для одной ВМ/GPU. Полная машина: «N vCPU / M GiB», «собери ВМ», GPU-хост. mode=cheapest-per-provider — самая дешёвая запускаемая ВМ у КАЖДОГО провайдера (разные shape/share/spot ок). НЕ для одного компонента — compare_unit_price. Стек/K8s — compose_solution. Не отвечай размытым обзором без этого tool.',
+        'Shortcut: compose_solution(virtual_machine) для одной ВМ/GPU. Полная машина: «N vCPU / M GiB», «собери ВМ», GPU-хост — в ответе итоги + матрица компонентов из quotes[].parts (vCPU/RAM/Диск; flavor «ВМ:…» = vCPU+RAM). mode=cheapest-per-provider — самая дешёвая ВМ у каждого провайдера (разные shape ок): одна таблица конфиг·₽/мес, БЕЗ кросс-провайдерной матрицы компонентов. НЕ для одного компонента — compare_unit_price. Стек/K8s — compose_solution. Не отвечай размытым обзором без этого tool.',
       parameters: {
         type: 'object',
         properties: {
