@@ -8,6 +8,8 @@ metadata:
   title: Managed Kubernetes
 spec:
   meters:
+  # Native «Зональный Мастер» configs from tariff PDF (full vCPU). Worker VM
+  # rows in the same PDF (2/4 … 64/256) are node flavors, not control plane.
   - sku: cloudru.kubernetes.master-zonal-2-4
     name: Мастер Kubernetes · зональный · 2 vCPU / 4 ГиБ
     meter: containers.kubernetes.control-plane
@@ -15,7 +17,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-27'
     sourceRefs:
     - cloudru.k8s-pdf
     dimensions:
@@ -49,6 +51,129 @@ spec:
     notes: >
       Готовый тариф Cloud.ru на один мастер-узел Kubernetes: 2 vCPU и 4 ГиБ
       памяти в одной зоне доступности. Рабочие (worker) ноды в эту цену не входят.
+  - sku: cloudru.kubernetes.master-zonal-4-8
+    name: Мастер Kubernetes · зональный · 4 vCPU / 8 ГиБ
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-19'
+    checkedAt: '2026-07-27'
+    sourceRefs:
+    - cloudru.k8s-pdf
+    dimensions:
+      nativeName: Зональный мастер 4 vCPU / 8 ГиБ
+      vcpu: 4
+      ramGb: 8
+      availability: zonal
+      faultTolerant: false
+      topology: zonal
+      ramGiB: 8
+      comparabilityClass: native-bundle
+      comparableTier: basic
+      masterCount: 1
+    pricing:
+      rate:
+        amount: '11.6876'
+        currency: RUB
+        unit:
+          quantity: master
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '11.6876'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: native hourly master rate
+        vat: included
+    notes: >
+      Готовый тариф Cloud.ru на один мастер-узел Kubernetes: 4 vCPU и 8 ГиБ
+      памяти в одной зоне доступности. Рабочие (worker) ноды в эту цену не входят.
+  - sku: cloudru.kubernetes.master-zonal-8-16
+    name: Мастер Kubernetes · зональный · 8 vCPU / 16 ГиБ
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-19'
+    checkedAt: '2026-07-27'
+    sourceRefs:
+    - cloudru.k8s-pdf
+    dimensions:
+      nativeName: Зональный мастер 8 vCPU / 16 ГиБ
+      vcpu: 8
+      ramGb: 16
+      availability: zonal
+      faultTolerant: false
+      topology: zonal
+      ramGiB: 16
+      comparabilityClass: native-bundle
+      comparableTier: basic
+      masterCount: 1
+    pricing:
+      rate:
+        amount: '23.363'
+        currency: RUB
+        unit:
+          quantity: master
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '23.363'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: native hourly master rate
+        vat: included
+    notes: >
+      Готовый тариф Cloud.ru на один мастер-узел Kubernetes: 8 vCPU и 16 ГиБ
+      памяти в одной зоне доступности. Рабочие (worker) ноды в эту цену не входят.
+  - sku: cloudru.kubernetes.master-zonal-16-32
+    name: Мастер Kubernetes · зональный · 16 vCPU / 32 ГиБ
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-19'
+    checkedAt: '2026-07-27'
+    sourceRefs:
+    - cloudru.k8s-pdf
+    dimensions:
+      nativeName: Зональный мастер 16 vCPU / 32 ГиБ
+      vcpu: 16
+      ramGb: 32
+      availability: zonal
+      faultTolerant: false
+      topology: zonal
+      ramGiB: 32
+      comparabilityClass: native-bundle
+      comparableTier: basic
+      masterCount: 1
+    pricing:
+      rate:
+        amount: '46.7382'
+        currency: RUB
+        unit:
+          quantity: master
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '46.7382'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: native hourly master rate
+        vat: included
+    notes: >
+      Готовый тариф Cloud.ru на один мастер-узел Kubernetes: 16 vCPU и 32 ГиБ
+      памяти в одной зоне доступности. Рабочие (worker) ноды в эту цену не входят.
   # Synthetic HA for apples-to-apples compare with Yandex/VK/Selectel/MWS HA.
   # Native tariff lists only «Зональный Мастер» configs; HA is N masters × that rate.
   # Docs: https://cloud.ru/docs/kubernetes-evolution/ug/topics/guides__cluster__create
@@ -60,7 +185,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-24'
+    checkedAt: '2026-07-27'
     sourceRefs:
     - cloudru.k8s-pdf
     - cloudru.k8s-docs
@@ -82,7 +207,7 @@ spec:
       vatRatePercent: 22
       verificationStatus: derived-verified
       verificationMethod: 3x-native-zonal-master-bundle
-      verifiedAt: '2026-07-24'
+      verifiedAt: '2026-07-27'
     pricing:
       rate:
         amount: '25.803'
@@ -106,3 +231,159 @@ spec:
       мастеров (обычно 3, можно 5), без отдельного пакета «HA». Берём 3 × 2/4,
       чтобы сравнить отказоустойчивый слой с другими облаками. Как считаем:
       3 × 8,601 = 25,803 ₽/ч с НДС. Рабочие ноды не входят.
+  - sku: cloudru.kubernetes.master-ha-4-8.synthetic
+    name: Мастер Kubernetes · региональный · 3 × 4 vCPU / 8 ГиБ *
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-19'
+    checkedAt: '2026-07-27'
+    sourceRefs:
+    - cloudru.k8s-pdf
+    - cloudru.k8s-docs
+    priceProvenance: derived
+    dimensions:
+      nativeName: Отказоустойчивый мастер 3×(4 vCPU / 8 ГиБ) *
+      vcpu: 4
+      ramGb: 8
+      ramGiB: 8
+      availability: regional
+      faultTolerant: true
+      topology: regional
+      masterCount: 3
+      comparabilityClass: synthetic-bundle
+      comparableTier: ha
+      synthetic: true
+      syntheticFrom:
+      - cloudru.kubernetes.master-zonal-4-8
+      vatRatePercent: 22
+      verificationStatus: derived-verified
+      verificationMethod: 3x-native-zonal-master-bundle
+      verifiedAt: '2026-07-27'
+    pricing:
+      rate:
+        amount: '35.0628'
+        currency: RUB
+        unit:
+          quantity: master
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '35.0628'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: 3 × 11.6876 (zonal master 4 vCPU / 8 GiB, VAT included)
+        vat: included
+    notes: >
+      Синтетическая оценка Cloud FinOps (*), не отдельная строка прайса Cloud.ru.
+      Зачем: HA = несколько зональных мастеров 4/8 (обычно 3, можно 5). Берём
+      3 × 4/8 для сравнения отказоустойчивого слоя. Как считаем:
+      3 × 11,6876 = 35,0628 ₽/ч с НДС. Рабочие ноды не входят.
+  - sku: cloudru.kubernetes.master-ha-8-16.synthetic
+    name: Мастер Kubernetes · региональный · 3 × 8 vCPU / 16 ГиБ *
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-19'
+    checkedAt: '2026-07-27'
+    sourceRefs:
+    - cloudru.k8s-pdf
+    - cloudru.k8s-docs
+    priceProvenance: derived
+    dimensions:
+      nativeName: Отказоустойчивый мастер 3×(8 vCPU / 16 ГиБ) *
+      vcpu: 8
+      ramGb: 16
+      ramGiB: 16
+      availability: regional
+      faultTolerant: true
+      topology: regional
+      masterCount: 3
+      comparabilityClass: synthetic-bundle
+      comparableTier: ha
+      synthetic: true
+      syntheticFrom:
+      - cloudru.kubernetes.master-zonal-8-16
+      vatRatePercent: 22
+      verificationStatus: derived-verified
+      verificationMethod: 3x-native-zonal-master-bundle
+      verifiedAt: '2026-07-27'
+    pricing:
+      rate:
+        amount: '70.089'
+        currency: RUB
+        unit:
+          quantity: master
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '70.089'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: 3 × 23.363 (zonal master 8 vCPU / 16 GiB, VAT included)
+        vat: included
+    notes: >
+      Синтетическая оценка Cloud FinOps (*), не отдельная строка прайса Cloud.ru.
+      Зачем: HA = несколько зональных мастеров 8/16 (обычно 3, можно 5). Берём
+      3 × 8/16 для сравнения отказоустойчивого слоя. Как считаем:
+      3 × 23,363 = 70,089 ₽/ч с НДС. Рабочие ноды не входят.
+  - sku: cloudru.kubernetes.master-ha-16-32.synthetic
+    name: Мастер Kubernetes · региональный · 3 × 16 vCPU / 32 ГиБ *
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-06-19'
+    checkedAt: '2026-07-27'
+    sourceRefs:
+    - cloudru.k8s-pdf
+    - cloudru.k8s-docs
+    priceProvenance: derived
+    dimensions:
+      nativeName: Отказоустойчивый мастер 3×(16 vCPU / 32 ГиБ) *
+      vcpu: 16
+      ramGb: 32
+      ramGiB: 32
+      availability: regional
+      faultTolerant: true
+      topology: regional
+      masterCount: 3
+      comparabilityClass: synthetic-bundle
+      comparableTier: ha
+      synthetic: true
+      syntheticFrom:
+      - cloudru.kubernetes.master-zonal-16-32
+      vatRatePercent: 22
+      verificationStatus: derived-verified
+      verificationMethod: 3x-native-zonal-master-bundle
+      verifiedAt: '2026-07-27'
+    pricing:
+      rate:
+        amount: '140.2146'
+        currency: RUB
+        unit:
+          quantity: master
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '140.2146'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: 3 × 46.7382 (zonal master 16 vCPU / 32 GiB, VAT included)
+        vat: included
+    notes: >
+      Синтетическая оценка Cloud FinOps (*), не отдельная строка прайса Cloud.ru.
+      Зачем: HA = несколько зональных мастеров 16/32 (обычно 3, можно 5). Берём
+      3 × 16/32 для сравнения отказоустойчивого слоя. Как считаем:
+      3 × 46,7382 = 140,2146 ₽/ч с НДС. Рабочие ноды не входят.

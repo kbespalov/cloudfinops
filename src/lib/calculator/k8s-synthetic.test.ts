@@ -14,24 +14,39 @@ function nearlyEqual(a: number, b: number, eps = 1e-6): boolean {
 }
 
 describe('k8s synthetic HA integrity', () => {
-  it('Cloud.ru HA = 3 × zonal basic master (VAT-incl. hourly)', () => {
-    const basic = catalog.meters.find((m) => m.sku === 'cloudru.kubernetes.master-zonal-2-4');
-    const ha = catalog.meters.find((m) => m.sku === 'cloudru.kubernetes.master-ha-2-4.synthetic');
-    assert.ok(basic, 'basic zonal master');
-    assert.ok(ha, 'synthetic HA master');
-    assert.equal(ha.synthetic, true);
-    assert.equal(ha.comparableTier, 'ha');
-    assert.equal(ha.priceProvenance, 'derived');
-    assert.equal(Number(ha.dimensions.masterCount), 3);
-    assert.ok((ha.notes || '').length > 40, 'HA synthetic must carry provenance notes');
+  it('Cloud.ru HA = 3 × zonal basic master for every native shape (VAT-incl. hourly)', () => {
+    const shapes = [
+      {basic: 'cloudru.kubernetes.master-zonal-2-4', ha: 'cloudru.kubernetes.master-ha-2-4.synthetic', vcpu: 2, ramGiB: 4},
+      {basic: 'cloudru.kubernetes.master-zonal-4-8', ha: 'cloudru.kubernetes.master-ha-4-8.synthetic', vcpu: 4, ramGiB: 8},
+      {basic: 'cloudru.kubernetes.master-zonal-8-16', ha: 'cloudru.kubernetes.master-ha-8-16.synthetic', vcpu: 8, ramGiB: 16},
+      {basic: 'cloudru.kubernetes.master-zonal-16-32', ha: 'cloudru.kubernetes.master-ha-16-32.synthetic', vcpu: 16, ramGiB: 32},
+    ] as const;
 
-    const basicHour = amountNumber(basic, 'unit');
-    const haHour = amountNumber(ha, 'unit');
-    assert.ok(basicHour != null && haHour != null);
-    assert.ok(
-      nearlyEqual(haHour, basicHour * 3),
-      `expected ${basicHour}*3=${basicHour * 3}, got ${haHour}`,
-    );
+    for (const c of shapes) {
+      const basic = catalog.meters.find((m) => m.sku === c.basic);
+      const ha = catalog.meters.find((m) => m.sku === c.ha);
+      assert.ok(basic, c.basic);
+      assert.ok(ha, c.ha);
+      assert.equal(ha.synthetic, true);
+      assert.equal(ha.comparableTier, 'ha');
+      assert.equal(basic.comparableTier, 'basic');
+      assert.equal(ha.priceProvenance, 'derived');
+      assert.equal(Number(ha.dimensions.masterCount), 3);
+      assert.equal(Number(basic.dimensions.vcpu), c.vcpu);
+      assert.equal(Number(basic.dimensions.ramGiB), c.ramGiB);
+      assert.ok((ha.notes || '').length > 40, `${c.ha}: notes`);
+
+      const basicHour = amountNumber(basic, 'unit');
+      const haHour = amountNumber(ha, 'unit');
+      assert.ok(basicHour != null && haHour != null);
+      assert.ok(
+        nearlyEqual(haHour, basicHour * 3),
+        `${c.ha}: expected ${basicHour}*3=${basicHour * 3}, got ${haHour}`,
+      );
+    }
+
+    assert.equal(pickK8sMasterMeter('cloud-ru', 'basic')?.meter.sku, 'cloudru.kubernetes.master-zonal-2-4');
+    assert.equal(pickK8sMasterMeter('cloud-ru', 'ha')?.meter.sku, 'cloudru.kubernetes.master-ha-2-4.synthetic');
   });
 
   it('T1 Cloud HA is native-fixed 3 × Master Small/Medium/Large (not synthetic)', () => {
