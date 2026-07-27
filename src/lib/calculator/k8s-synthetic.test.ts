@@ -93,13 +93,43 @@ describe('k8s synthetic HA integrity', () => {
     assert.equal(picked.synthetic, false);
   });
 
-  it('Yandex exposes 2/8 · 2/6; VK exposes 2/6 · 2/8 · 2/4; HA = 3 × basic', () => {
+  it('Yandex exposes orderable presets + 2/6 parity; VK exposes 2/6 · 2/8 · 2/4; HA = 3 × basic', () => {
     const cases = [
       {
         basic: 'yc.kubernetes.master-basic-2-8.synthetic',
         ha: 'yc.kubernetes.master-ha-2-8.synthetic',
         vcpu: 2,
         ramGiB: 8,
+      },
+      {
+        basic: 'yc.kubernetes.master-basic-4-8.synthetic',
+        ha: 'yc.kubernetes.master-ha-4-8.synthetic',
+        vcpu: 4,
+        ramGiB: 8,
+      },
+      {
+        basic: 'yc.kubernetes.master-basic-4-16.synthetic',
+        ha: 'yc.kubernetes.master-ha-4-16.synthetic',
+        vcpu: 4,
+        ramGiB: 16,
+      },
+      {
+        basic: 'yc.kubernetes.master-basic-8-16.synthetic',
+        ha: 'yc.kubernetes.master-ha-8-16.synthetic',
+        vcpu: 8,
+        ramGiB: 16,
+      },
+      {
+        basic: 'yc.kubernetes.master-basic-8-32.synthetic',
+        ha: 'yc.kubernetes.master-ha-8-32.synthetic',
+        vcpu: 8,
+        ramGiB: 32,
+      },
+      {
+        basic: 'yc.kubernetes.master-basic-16-32.synthetic',
+        ha: 'yc.kubernetes.master-ha-16-32.synthetic',
+        vcpu: 16,
+        ramGiB: 32,
       },
       {
         basic: 'yc.kubernetes.master-basic-2-6.synthetic',

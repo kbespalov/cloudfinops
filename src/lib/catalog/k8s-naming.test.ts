@@ -103,6 +103,14 @@ describe('Kubernetes catalog naming', () => {
       bySku('yc.kubernetes.master-basic-2-6.synthetic').name,
       'Мастер Kubernetes · зональный · 2 vCPU / 6 ГиБ *',
     );
+    assert.equal(
+      bySku('yc.kubernetes.master-basic-4-8.synthetic').name,
+      'Мастер Kubernetes · зональный · 4 vCPU / 8 ГиБ *',
+    );
+    assert.equal(
+      bySku('yc.kubernetes.master-ha-16-32.synthetic').name,
+      'Мастер Kubernetes · региональный · 3 × 16 vCPU / 32 ГиБ *',
+    );
   });
 
 
