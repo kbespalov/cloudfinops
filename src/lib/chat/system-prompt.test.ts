@@ -48,6 +48,20 @@ describe('matchPlanningDomains', () => {
     assert.ok(prompt.includes('## GPU'));
   });
 
+  it('treats «сервер целиком / не просто карту» as GPU domain', () => {
+    assert.ok(
+      matchPlanningDomains('супер, а ты можешь попробовать собрать сервер целиком ? не просто карту')
+        .includes('gpu'),
+    );
+    const prompt = buildSystemPrompt(
+      'супер, а ты можешь попробовать собрать сервер целиком ? не просто карту',
+      {historyText: 'Самый дешёвый H100 в месяц'},
+    );
+    assert.ok(prompt.includes('## GPU'));
+    assert.match(prompt, /не\s+просто\s+карт|сервер целиком|cheapest-per-provider/i);
+    assert.match(prompt, /ЗАПРЕЩЕНО после GPU|get_quote\(gpuModel/i);
+  });
+
   it('attaches compute for Russian word-numbers (ядрах / гигах)', () => {
     const d = matchPlanningDomains(
       'Сайт на шестнадцати ядрах и тридцати двух гигах памяти — сравни провайдеров',

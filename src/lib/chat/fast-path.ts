@@ -3063,7 +3063,8 @@ function inferPlanIdFromAgentTool(
 /**
  * Chat fast-path sampling rate. Default 0.2 — ~20% chip/alias → fast-path, ~80% agent/LLM.
  * Override with CHAT_FAST_PATH_PROBABILITY=0|1|0.25 for eval/A-B.
- * Calculator surface still always keeps fast-path (sidebar needs get_quote ASAP).
+ * `0` = hard off for first-turn chips/aliases. Multi-turn helpers (provider-focus,
+ * GPU full-server) still run. Calculator surface always keeps fast-path.
  */
 export function fastPathProbabilityFromEnv(): number {
   const raw = process.env.CHAT_FAST_PATH_PROBABILITY;
@@ -3087,11 +3088,55 @@ export function shouldUseFastPath(options?: {
   return (options?.random ?? Math.random)() < p;
 }
 
+/** Follow-up after GPU card-only: «собери сервер целиком», «не просто карту». */
+export function looksGpuFullServerFollowUp(text: string): boolean {
+  return /(?:сервер\w*\s+целиком|целиком\s+(?:сервер|нод)|не\s+просто\s+карт|с\s+хостом|gpu\s*\+\s*хост|полноценн\w*\s+(?:gpu|сервер|нод)|конфигураци\w*\s+целиком|паритет\w*\s+(?:по\s+)?конфигурац|таблиц\w*\s+с\s+паритет)/i.test(
+    text,
+  );
+}
+
+const PRIOR_GPU_MODEL_RE =
+  /\b(H100|H200|A100|L40S|L40|L4|B200|B300|V100|T4|A10)\b/i;
+
+/** Recover gpuModel from earlier tool_calls or user turns (follow-up has no model name). */
+export function findPriorGpuModel(messages: ChatMessage[]): string | null {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const m = messages[i];
+    if (m.role === 'assistant' && Array.isArray(m.tool_calls)) {
+      for (const tc of m.tool_calls) {
+        const raw = tc.function?.arguments;
+        if (typeof raw !== 'string') continue;
+        try {
+          const args = JSON.parse(raw) as Record<string, unknown>;
+          if (typeof args.gpuModel === 'string' && args.gpuModel.trim()) {
+            return args.gpuModel.trim();
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+    if (m.role === 'user' && typeof m.content === 'string') {
+      const hit = m.content.match(PRIOR_GPU_MODEL_RE);
+      if (hit?.[1]) {
+        const raw = hit[1];
+        // Preserve canonical casing used in catalog filters.
+        if (/^l40s$/i.test(raw)) return 'L40S';
+        if (/^l40$/i.test(raw)) return 'L40';
+        if (/^l4$/i.test(raw)) return 'L4';
+        return raw.toUpperCase();
+      }
+    }
+  }
+  return null;
+}
+
 /**
  * If this is a first-turn chip/alias query, run tools locally and one short final LLM call.
  * Returns null when the query should use the normal tool loop.
  * Chat surface: ~20% by default (CHAT_FAST_PATH_PROBABILITY, default 0.2).
  * Typed homepage chips pass `fastPathId` and skip NL matching.
+ * `CHAT_FAST_PATH_PROBABILITY=0` disables first-turn chips/aliases; multi-turn helpers stay on.
  */
 export async function tryRunFastPath(options: {
   messages: ChatMessage[];
@@ -3102,8 +3147,15 @@ export async function tryRunFastPath(options: {
   /** Homepage chip id from `/chat?fp=` — allowlisted plan, no regex. */
   fastPathId?: string | null;
 }): Promise<FastPathResult | null> {
+  const surface = options.surface === 'calculator' ? 'calculator' : 'chat';
   const userText = lastUserText(options.messages);
   const turns = userTurnCount(options.messages);
+
+  // Hard off for local/debug: first-turn chips/aliases only.
+  // Multi-turn helpers (provider-focus, GPU full-server) stay available.
+  const chatFastPathOff = surface === 'chat' && fastPathProbabilityFromEnv() <= 0;
+
+  let plan: FastPathPlan | null = null;
 
   // Follow-up «только Cloud.ru» / «а у MWS?» — reuse prior get_quote, do not dump full table.
   if (turns >= 2) {
@@ -3135,21 +3187,44 @@ export async function tryRunFastPath(options: {
         }
       }
     }
+
+    // After H100 card-only: «собери сервер целиком» → full host get_quote, not cheapest VM.
+    if (looksGpuFullServerFollowUp(userText)) {
+      const gpuModel = findPriorGpuModel(options.messages);
+      if (gpuModel) {
+        plan = {
+          id: `gpu-full-server-${gpuModel.toLowerCase()}`,
+          tools: [
+            {
+              name: 'get_quote',
+              args: {
+                gpuModel,
+                gpuCount: gpuCountFromText(userText, 1),
+                period: 'month',
+              },
+            },
+          ],
+        };
+      }
+    }
+    if (!plan) return null;
+  } else if (turns === 1) {
+    if (chatFastPathOff) return null;
+
+    const fromChip = options.fastPathId ? planFromHomeChipId(options.fastPathId) : null;
+    const matched = fromChip ?? matchFastPath(userText);
+    if (!matched) return null;
+
+    // Product-page SKU compare + typed homepage chips stay on when sampling is partial.
+    const alwaysOn = matched.id === 'sku-compare' || Boolean(fromChip);
+    if (!alwaysOn && !shouldUseFastPath({surface})) return null;
+
+    plan = adaptFastPathForSurface(matched, surface, userText);
+  } else {
     return null;
   }
 
-  if (turns !== 1) return null;
-
-  const fromChip = options.fastPathId ? planFromHomeChipId(options.fastPathId) : null;
-  const matched = fromChip ?? matchFastPath(userText);
-  if (!matched) return null;
-
-  const surface = options.surface === 'calculator' ? 'calculator' : 'chat';
-  // Product-page SKU compare + typed homepage chips stay on even when chat sampling is off.
-  const alwaysOn = matched.id === 'sku-compare' || Boolean(fromChip);
-  if (!alwaysOn && !shouldUseFastPath({surface})) return null;
-
-  const plan = adaptFastPathForSurface(matched, surface, userText);
+  if (!plan) return null;
 
   // Copy — never mutate the caller's history array.
   const messages = options.messages.slice();

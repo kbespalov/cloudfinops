@@ -2,6 +2,10 @@
 
 ## 2026-07-27
 
+### E-ассистент / GPU «сервер целиком» после card-only
+
+Follow-up вроде «собери сервер целиком / не просто карту» после H100 card-only больше не уезжает в `get_quote(mode=cheapest-per-provider)` (крошечные CPU-ВМ ~300 ₽). Берём `gpuModel` из истории и считаем полный хост через `get_quote`. В system prompt — явный запрет путать эти сценарии. `CHAT_FAST_PATH_PROBABILITY=0` глушит только first-turn chips/aliases; multi-turn helpers (provider-focus, GPU full-server) остаются.
+
 ### E-ассистент / FastPath precision + typed chips
 
 FastPath больше не раздуваем regex-NLU: чипы с главной идут типизированно (`/chat?q=…&fp=<id>` → `fastPathId` в API), сервер резолвит allowlist без разбора текста. Чипы всегда on (не зависят от sample rate ~20%).

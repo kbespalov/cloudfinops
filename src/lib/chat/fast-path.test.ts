@@ -4,10 +4,12 @@ import {
   adaptFastPathForSurface,
   detectProviderFocusFollowUp,
   extractAllToolPayloads,
+  findPriorGpuModel,
   formatAiTokenPairAnswer,
   formatComposeSolutionAnswer,
   formatFastPathAnswer,
   formatStackFastPathAnswer,
+  looksGpuFullServerFollowUp,
   matchFastPath,
   planFromHomeChipId,
   shouldUseFastPath,
@@ -1292,9 +1294,30 @@ describe('typed homepage chips (fastPathId)', () => {
     assert.equal(planFromHomeChipId('not-a-chip'), null);
   });
 
-  it('typed chip bypasses chat sampling and does not mutate caller messages', async () => {
+  it('probability 0 hard-disables typed chips on chat surface', async () => {
     const prev = process.env.CHAT_FAST_PATH_PROBABILITY;
     process.env.CHAT_FAST_PATH_PROBABILITY = '0';
+    try {
+      const result = await tryRunFastPath({
+        messages: [
+          {
+            role: 'user',
+            content: 'Сравни ВМ 8 vCPU / 32 GiB / 100 ГБ SSD на месяц по провайдерам',
+          },
+        ],
+        surface: 'chat',
+        fastPathId: 'vm',
+      });
+      assert.equal(result, null);
+    } finally {
+      if (prev === undefined) delete process.env.CHAT_FAST_PATH_PROBABILITY;
+      else process.env.CHAT_FAST_PATH_PROBABILITY = prev;
+    }
+  });
+
+  it('typed chip runs when sampling is on and does not mutate caller messages', async () => {
+    const prev = process.env.CHAT_FAST_PATH_PROBABILITY;
+    process.env.CHAT_FAST_PATH_PROBABILITY = '1';
     try {
       const messages: ChatMessage[] = [
         {
@@ -1332,6 +1355,98 @@ describe('typed homepage chips (fastPathId)', () => {
         fastPathId: 'not-a-real-chip',
       });
       assert.equal(result, null);
+    } finally {
+      if (prev === undefined) delete process.env.CHAT_FAST_PATH_PROBABILITY;
+      else process.env.CHAT_FAST_PATH_PROBABILITY = prev;
+    }
+  });
+});
+
+describe('GPU full-server follow-up', () => {
+  it('detects full-server phrasing and recovers prior H100', () => {
+    assert.ok(
+      looksGpuFullServerFollowUp(
+        'супер, а ты можешь попробовать собрать сервер целиком ? не просто карту',
+      ),
+    );
+    assert.ok(!looksGpuFullServerFollowUp('Самый дешёвый H100 в месяц'));
+
+    const messages: ChatMessage[] = [
+      {role: 'user', content: 'Самый дешёвый H100 в месяц'},
+      {
+        role: 'assistant',
+        content: '',
+        tool_calls: [
+          {
+            id: 't1',
+            type: 'function',
+            function: {
+              name: 'search_prices',
+              arguments: JSON.stringify({
+                query: 'H100',
+                gpuModel: 'H100',
+                category: 'gpu',
+              }),
+            },
+          },
+        ],
+      },
+      {role: 'tool', tool_call_id: 't1', name: 'search_prices', content: '{}'},
+      {
+        role: 'user',
+        content: 'супер, а ты можешь попробовать собрать сервер целиком ? не просто карту',
+      },
+    ];
+    assert.equal(findPriorGpuModel(messages), 'H100');
+  });
+
+  it('tryRunFastPath upgrades card-only H100 follow-up to get_quote host (even when p=0)', async () => {
+    const prev = process.env.CHAT_FAST_PATH_PROBABILITY;
+    process.env.CHAT_FAST_PATH_PROBABILITY = '0';
+    try {
+      const messages: ChatMessage[] = [
+        {role: 'user', content: 'Самый дешёвый H100 в месяц'},
+        {
+          role: 'assistant',
+          content: 'Аренда GPU H100…',
+          tool_calls: [
+            {
+              id: 't1',
+              type: 'function',
+              function: {
+                name: 'search_prices',
+                arguments: JSON.stringify({
+                  query: 'H100',
+                  gpuModel: 'H100',
+                  category: 'gpu',
+                }),
+              },
+            },
+          ],
+        },
+        {
+          role: 'tool',
+          tool_call_id: 't1',
+          name: 'search_prices',
+          content: JSON.stringify({rows: []}),
+        },
+        {
+          role: 'assistant',
+          content: 'таблица card-only',
+        },
+        {
+          role: 'user',
+          content: 'супер, а ты можешь попробовать собрать сервер целиком ? не просто карту',
+        },
+      ];
+      const result = await tryRunFastPath({messages, surface: 'chat'});
+      assert.ok(result);
+      assert.match(result!.fastPathId, /^gpu-full-server-h100$/i);
+      assert.ok(result!.finalText);
+      assert.doesNotMatch(result!.finalText!, /Самая дешёвая полноценная ВМ/i);
+      assert.match(result!.finalText!, /H100|GPU|хост|конфигурац/i);
+      // Must not look like cheapest tiny VM table.
+      assert.doesNotMatch(result!.finalText!, /324[,.]72|1 vCPU \/ 1 GiB/);
     } finally {
       if (prev === undefined) delete process.env.CHAT_FAST_PATH_PROBABILITY;
       else process.env.CHAT_FAST_PATH_PROBABILITY = prev;
