@@ -120,6 +120,7 @@ import {catalogEmptyIllustration} from '@/components/ui/emptyIllustration';
 import {
   canFindSimilar,
   comparableFilterFromMeter,
+  meterMatchesKubernetesSimilar,
   type DiskBillingKindFilter,
   type GpuPriceBasisFilter,
 } from '@/lib/catalog/find-similar';
@@ -495,6 +496,8 @@ export function CatalogPage() {
   /** Extra K8s constraint from find-similar: exact master vCPU / RAM. */
   const [kubernetesMasterVcpu, setKubernetesMasterVcpu] = useState<number | null>(null);
   const [kubernetesMasterRamGiB, setKubernetesMasterRamGiB] = useState<number | null>(null);
+  const [kubernetesShapelessOnly, setKubernetesShapelessOnly] = useState(false);
+  const [kubernetesMasterSize, setKubernetesMasterSize] = useState<string | null>(null);
   /** Extra storage constraint from find-similar: GET/PUT/… */
   const [storageOperation, setStorageOperation] = useState<string | null>(null);
   const [hoveredSimilar, setHoveredSimilar] = useState<CatalogMeter | null>(null);
@@ -927,20 +930,23 @@ export function CatalogPage() {
       ) {
         return false;
       }
-      if (
+      if (category === 'kubernetes' && similarActive) {
+        if (
+          !meterMatchesKubernetesSimilar(m, {
+            kubernetesAvailabilityFacet,
+            kubernetesMasterVcpu,
+            kubernetesMasterRamGiB,
+            kubernetesShapelessOnly,
+            kubernetesMasterSize,
+          })
+        ) {
+          return false;
+        }
+      } else if (
         category === 'kubernetes' &&
         !meterMatchesKubernetesAvailabilityFacet(m, kubernetesAvailabilityFacet)
       ) {
         return false;
-      }
-      if (category === 'kubernetes' && kubernetesMasterVcpu != null) {
-        const v = Number(m.dimensions.vcpu);
-        // Native-fixed masters without a published shape stay; mismatched shapes drop.
-        if (Number.isFinite(v) && v !== kubernetesMasterVcpu) return false;
-      }
-      if (category === 'kubernetes' && kubernetesMasterRamGiB != null) {
-        const ram = Number(m.dimensions.ramGiB ?? m.dimensions.ramGb);
-        if (Number.isFinite(ram) && ram !== kubernetesMasterRamGiB) return false;
       }
       if (category === 'ai' && !meterMatchesAiFacet(m, aiFacet)) return false;
       if (category === 'ai' && !meterMatchesAiFamilyFacet(m, aiFamilyFacet)) return false;
@@ -971,6 +977,9 @@ export function CatalogPage() {
     kubernetesAvailabilityFacet,
     kubernetesMasterVcpu,
     kubernetesMasterRamGiB,
+    kubernetesShapelessOnly,
+    kubernetesMasterSize,
+    similarActive,
     aiFacet,
     aiFamilyFacet,
     aiModel,
@@ -1134,6 +1143,8 @@ export function CatalogPage() {
       setKubernetesAvailabilityFacet(next.kubernetesAvailabilityFacet);
       setKubernetesMasterVcpu(next.kubernetesMasterVcpu);
       setKubernetesMasterRamGiB(next.kubernetesMasterRamGiB);
+      setKubernetesShapelessOnly(next.kubernetesShapelessOnly);
+      setKubernetesMasterSize(next.kubernetesMasterSize);
       setAiFacet(next.aiFacet);
       setAiFamilyFacet(next.aiFamilyFacet);
       setAiModel(next.aiModelId ?? '');
@@ -1345,6 +1356,8 @@ export function CatalogPage() {
       setKubernetesAvailabilityFacet('all');
       setKubernetesMasterVcpu(null);
       setKubernetesMasterRamGiB(null);
+      setKubernetesShapelessOnly(false);
+      setKubernetesMasterSize(null);
       setAiFacet('all');
       setAiFamilyFacet('all');
       setAiModel('');
@@ -1377,6 +1390,8 @@ export function CatalogPage() {
     kubernetesAvailabilityFacet !== 'all' ||
     kubernetesMasterVcpu != null ||
     kubernetesMasterRamGiB != null ||
+    kubernetesShapelessOnly ||
+    kubernetesMasterSize != null ||
     aiFacet !== 'all' ||
     aiFamilyFacet !== 'all' ||
     Boolean(aiModel) ||
@@ -1430,6 +1445,8 @@ export function CatalogPage() {
                 setDiskBillingKind(null);
                 setKubernetesMasterVcpu(null);
                 setKubernetesMasterRamGiB(null);
+                setKubernetesShapelessOnly(false);
+                setKubernetesMasterSize(null);
                 setStorageOperation(null);
                 // All-tab chips are single-select; multi from other tabs collapses to first.
                 if (next === 'all') {
@@ -1462,6 +1479,8 @@ export function CatalogPage() {
                   setKubernetesAvailabilityFacet('all');
                   setKubernetesMasterVcpu(null);
                   setKubernetesMasterRamGiB(null);
+                  setKubernetesShapelessOnly(false);
+                  setKubernetesMasterSize(null);
                 }
                 if (next !== 'ai') {
                   setAiFacet('all');

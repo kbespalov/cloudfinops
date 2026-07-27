@@ -16,7 +16,6 @@ import {
   extractGpuCount,
   meterMatchesGpuFacet,
   meterMatchesGpuInterconnectFacet,
-  meterMatchesKubernetesAvailabilityFacet,
   meterMatchesNetworkFacet,
   meterMatchesStorageFacet,
   meterMatchesStorageKindFacet,
@@ -27,6 +26,7 @@ import {
 import {
   canFindSimilar,
   comparableFilterFromMeter,
+  meterMatchesKubernetesSimilar,
   type ComparableCatalogFilter,
 } from './find-similar';
 
@@ -92,19 +92,18 @@ function peersMatching(filter: ComparableCatalogFilter): CatalogMeter[] {
     if (filter.category === 'cdn' && !meterMatchesCdnTrafficFacet(m, filter.cdnTrafficFacet)) {
       return false;
     }
-    if (
-      filter.category === 'kubernetes' &&
-      !meterMatchesKubernetesAvailabilityFacet(m, filter.kubernetesAvailabilityFacet)
-    ) {
-      return false;
-    }
-    if (filter.category === 'kubernetes' && filter.kubernetesMasterVcpu != null) {
-      const v = Number(m.dimensions.vcpu);
-      if (Number.isFinite(v) && v !== filter.kubernetesMasterVcpu) return false;
-    }
-    if (filter.category === 'kubernetes' && filter.kubernetesMasterRamGiB != null) {
-      const ram = Number(m.dimensions.ramGiB ?? m.dimensions.ramGb);
-      if (Number.isFinite(ram) && ram !== filter.kubernetesMasterRamGiB) return false;
+    if (filter.category === 'kubernetes') {
+      if (
+        !meterMatchesKubernetesSimilar(m, {
+          kubernetesAvailabilityFacet: filter.kubernetesAvailabilityFacet,
+          kubernetesMasterVcpu: filter.kubernetesMasterVcpu,
+          kubernetesMasterRamGiB: filter.kubernetesMasterRamGiB,
+          kubernetesShapelessOnly: filter.kubernetesShapelessOnly,
+          kubernetesMasterSize: filter.kubernetesMasterSize,
+        })
+      ) {
+        return false;
+      }
     }
     if (filter.category === 'ai' && !meterMatchesAiFacet(m, filter.aiFacet)) return false;
     if (filter.category === 'ai' && !meterMatchesAiFamilyFacet(m, filter.aiFamilyFacet)) {
@@ -296,6 +295,7 @@ describe('comparableFilterFromMeter', () => {
     const f = requireFilter(m);
     assert.equal(f.kubernetesAvailabilityFacet, 'zonal');
     assert.equal(f.kubernetesMasterRamGiB, 8);
+    assert.equal(f.kubernetesShapelessOnly, false);
 
     const peers = peersMatching(f);
     assert.ok(peers.length >= 1);
@@ -303,6 +303,7 @@ describe('comparableFilterFromMeter', () => {
       assert.equal(extractKubernetesAvailability(p), 'zonal');
       const ram = Number(p.dimensions.ramGiB);
       if (Number.isFinite(ram)) assert.equal(ram, 8, p.sku);
+      assert.notEqual(p.comparableTier, 'fixed-component');
     }
     assert.equal(
       peers.some((p) => extractKubernetesAvailability(p) === 'regional'),
@@ -312,6 +313,40 @@ describe('comparableFilterFromMeter', () => {
       peers.some((p) => Number(p.dimensions.ramGiB) === 4),
       false,
     );
+  });
+
+  it('shapeless native-fixed zonal (MWS) only pairs with entry packages, not shaped masters', () => {
+    const seed = catalog.meters.find((x) => x.sku === 'mws.kubernetes.master-basic');
+    const f = requireFilter(seed);
+    assert.equal(f.kubernetesShapelessOnly, true);
+    assert.equal(f.kubernetesMasterVcpu, null);
+    assert.match(f.summary, /фикс|форма не раскрыта/i);
+
+    const peers = peersMatching(f);
+    assert.ok(peers.some((p) => p.sku === 'mws.kubernetes.master-basic'));
+    assert.ok(peers.some((p) => p.sku === 'selectel.kubernetes.master-basic'));
+    assert.ok(peers.some((p) => p.sku === 't1.kubernetes.master-small'));
+    assert.equal(
+      peers.some((p) => p.sku === 't1.kubernetes.master-medium' || p.sku === 't1.kubernetes.master-large'),
+      false,
+      'Medium/Large are not entry packages',
+    );
+    assert.equal(
+      peers.some((p) => Number(p.dimensions.vcpu) > 0 && Number(p.dimensions.ramGiB) > 0),
+      false,
+      'must not mix with 2/4 · 2/8 shaped rows',
+    );
+    assert.equal(
+      peers.some((p) => p.comparableTier === 'fixed-component' || p.sku === 'yc.kubernetes.master-zonal'),
+      false,
+    );
+  });
+
+  it('Yandex 0₽ fixed-component cannot seed find-similar', () => {
+    const fee = catalog.meters.find((x) => x.sku === 'yc.kubernetes.master-zonal');
+    assert.ok(fee);
+    assert.equal(comparableFilterFromMeter(fee!), null);
+    assert.equal(canFindSimilar(fee!), false);
   });
 
   it('filters network public IP separately from egress', () => {

@@ -75,6 +75,13 @@ export type ComparableCatalogFilter = {
   /** Exact master shape when known (e.g. 2 vCPU / 4 GiB ≠ 2/8). */
   kubernetesMasterVcpu: number | null;
   kubernetesMasterRamGiB: number | null;
+  /**
+   * Seed has no published vCPU/RAM (Selectel/MWS/T1 package).
+   * Peers must also be shapeless — do not mix with 2/4 · 2/8 synthetics.
+   */
+  kubernetesShapelessOnly: boolean;
+  /** T-shirt size when known (small/medium/large). */
+  kubernetesMasterSize: string | null;
   aiFacet: AiFacet;
   aiFamilyFacet: AiFamilyFacet;
   /** Exact modelId / modelFamily key (gpt-oss-120b ≠ gpt-oss-20b). */
@@ -102,6 +109,8 @@ const EMPTY_NESTED = {
   kubernetesAvailabilityFacet: 'all' as KubernetesAvailabilityFacet,
   kubernetesMasterVcpu: null as number | null,
   kubernetesMasterRamGiB: null as number | null,
+  kubernetesShapelessOnly: false,
+  kubernetesMasterSize: null as string | null,
   aiFacet: 'all' as AiFacet,
   aiFamilyFacet: 'all' as AiFamilyFacet,
   aiModelId: null as string | null,
@@ -148,6 +157,70 @@ function diskBillingKindOf(meter: CatalogMeter): DiskBillingKindFilter | null {
   if (!isDiskMeter(meter)) return null;
   if (meter.meter === 'storage.block.iops' || meter.unitQuantity === 'IOPS') return 'iops';
   return 'capacity';
+}
+
+/** True when master publishes concrete vCPU + RAM (synthetic/native bundle). */
+export function kubernetesMasterHasShape(meter: CatalogMeter): boolean {
+  const vcpu = Number(meter.dimensions.vcpu);
+  const ram = Number(meter.dimensions.ramGiB ?? meter.dimensions.ramGb);
+  return Number.isFinite(vcpu) && vcpu > 0 && Number.isFinite(ram) && ram > 0;
+}
+
+export function extractKubernetesMasterSize(meter: CatalogMeter): string | null {
+  const raw = meter.dimensions.masterSize;
+  if (typeof raw !== 'string') return null;
+  const s = raw.trim().toLowerCase();
+  return s || null;
+}
+
+/**
+ * Like-for-like peer check for Kubernetes find-similar.
+ * Excludes 0₽ fixed-component rows; shapeless packages stay with shapeless.
+ */
+export function meterMatchesKubernetesSimilar(
+  meter: CatalogMeter,
+  filter: Pick<
+    ComparableCatalogFilter,
+    | 'kubernetesAvailabilityFacet'
+    | 'kubernetesMasterVcpu'
+    | 'kubernetesMasterRamGiB'
+    | 'kubernetesShapelessOnly'
+    | 'kubernetesMasterSize'
+  >,
+): boolean {
+  if (meter.categoryKey !== 'kubernetes') return false;
+  if (meter.comparableTier === 'fixed-component') return false;
+  if (filter.kubernetesAvailabilityFacet !== 'all') {
+    const availability = extractKubernetesAvailability(meter);
+    if (availability !== filter.kubernetesAvailabilityFacet) return false;
+  }
+
+  if (filter.kubernetesShapelessOnly) {
+    if (kubernetesMasterHasShape(meter)) return false;
+    const peerSize = extractKubernetesMasterSize(meter);
+    if (filter.kubernetesMasterSize) {
+      if (peerSize) return peerSize === filter.kubernetesMasterSize;
+      // Selectel/MWS (no size) only pair with T1 Small as entry package.
+      return filter.kubernetesMasterSize === 'small';
+    }
+    // Seed is Selectel/MWS: keep entry tier (no size or Small), drop Medium/Large.
+    return peerSize == null || peerSize === 'small';
+  }
+
+  if (filter.kubernetesMasterVcpu != null) {
+    const v = Number(meter.dimensions.vcpu);
+    if (Number.isFinite(v) && v !== filter.kubernetesMasterVcpu) return false;
+  }
+  if (filter.kubernetesMasterRamGiB != null) {
+    const ram = Number(meter.dimensions.ramGiB ?? meter.dimensions.ramGb);
+    if (Number.isFinite(ram) && ram !== filter.kubernetesMasterRamGiB) return false;
+  }
+  // Shaped seed may still include shapeless native-fixed entry packages.
+  if (!kubernetesMasterHasShape(meter)) {
+    const peerSize = extractKubernetesMasterSize(meter);
+    if (peerSize && peerSize !== 'small') return false;
+  }
+  return true;
 }
 
 /** Returns null when the meter has no strict comparable class to filter by. */
@@ -234,22 +307,30 @@ export function comparableFilterFromMeter(meter: CatalogMeter): ComparableCatalo
       };
     }
     case 'kubernetes': {
+      if (meter.comparableTier === 'fixed-component') return null;
       const availability = extractKubernetesAvailability(meter);
       if (!availability) return null;
+      const hasShape = kubernetesMasterHasShape(meter);
       const vcpu = Number(meter.dimensions.vcpu);
       const ramGiB = Number(meter.dimensions.ramGiB ?? meter.dimensions.ramGb);
-      const shapeVcpu = Number.isFinite(vcpu) && vcpu > 0 ? vcpu : null;
-      const shapeRam = Number.isFinite(ramGiB) && ramGiB > 0 ? ramGiB : null;
+      const shapeVcpu = hasShape ? vcpu : null;
+      const shapeRam = hasShape ? ramGiB : null;
+      const masterSize = extractKubernetesMasterSize(meter);
       const topo = availability === 'zonal' ? 'зональный' : 'региональный';
-      const shape =
-        shapeVcpu != null && shapeRam != null ? ` · ${shapeVcpu} vCPU / ${shapeRam} ГиБ` : '';
+      let detail = '';
+      if (hasShape) detail = ` · ${shapeVcpu} vCPU / ${shapeRam} ГиБ`;
+      else if (masterSize) {
+        detail = ` · ${masterSize.charAt(0).toUpperCase()}${masterSize.slice(1)}`;
+      } else detail = ' · фикс (форма не раскрыта)';
       return {
         ...EMPTY_NESTED,
         category: 'kubernetes',
         kubernetesAvailabilityFacet: availability,
         kubernetesMasterVcpu: shapeVcpu,
         kubernetesMasterRamGiB: shapeRam,
-        summary: `Kubernetes · ${topo}${shape}`,
+        kubernetesShapelessOnly: !hasShape,
+        kubernetesMasterSize: masterSize,
+        summary: `Kubernetes · ${topo}${detail}`,
       };
     }
     case 'ai': {
