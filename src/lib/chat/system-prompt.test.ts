@@ -109,8 +109,52 @@ describe('matchPlanningDomains', () => {
     assert.ok(!disk.includes('stack'));
 
     const prompt = buildSystemPrompt('начнём с диска SSD');
-    assert.match(prompt, /compare_unit_price\(ssd\)|diskMedia/);
+    assert.match(prompt, /compare_unit_price\(ssd\)|diskMedia|блочн/i);
     assert.match(prompt, /get_quote — ТОЛЬКО одна ВМ\/GPU целиком/);
+  });
+
+  it('100 TiB block SSD ask is compute, not S3 card', () => {
+    const q = 'Сколько стоит 100 ТБ SSD (блочный диск) в месяц по провайдерам?';
+    const d = matchPlanningDomains(q);
+    assert.ok(d.includes('compute'), d.join(','));
+    assert.ok(!d.includes('s3'), `must not attach S3 card: ${d.join(',')}`);
+    const prompt = buildSystemPrompt(q);
+    assert.match(prompt, /Блочный диск|блочный SSD|не подставляй S3/i);
+    assert.match(prompt, /volumeGiB|volumeEstimates/);
+    assert.ok(!prompt.includes('## Object Storage / S3'));
+  });
+
+  it('slippery storage domain cards: block / object / both', () => {
+    const blockOnly = matchPlanningDomains(
+      'Нужен блочный SSD 100 ТБ, не путать с S3 / объектным хранилищем',
+    );
+    assert.ok(blockOnly.includes('compute'), blockOnly.join(','));
+    assert.ok(!blockOnly.includes('s3'), `negated S3 must not attach card: ${blockOnly.join(',')}`);
+
+    const objectOnly = matchPlanningDomains(
+      'Только Object Storage Standard 100 ТБ, блочный диск ВМ не считай',
+    );
+    assert.ok(objectOnly.includes('s3'), objectOnly.join(','));
+    assert.ok(
+      !objectOnly.includes('compute'),
+      `negated block must not attach compute: ${objectOnly.join(',')}`,
+    );
+    const objectPrompt = buildSystemPrompt(
+      'Только Object Storage Standard 100 ТБ, блочный диск ВМ не считай',
+    );
+    assert.ok(objectPrompt.includes('## Object Storage / S3'));
+    assert.ok(!objectPrompt.includes('## vCPU / RAM / диск'));
+
+    const both = matchPlanningDomains(
+      'Сравни блочный SSD и объектное хранилище Standard на 100 ТБ в одной таблице',
+    );
+    assert.ok(both.includes('compute'), `both needs compute: ${both.join(',')}`);
+    assert.ok(both.includes('s3'), `both needs s3: ${both.join(',')}`);
+
+    const followUpBlock = buildSystemPrompt('а теперь то же для блочного SSD', {
+      historyText: 'Сколько стоит 100 ТБ объектного хранилища Standard?',
+    });
+    assert.match(followUpBlock, /## vCPU \/ RAM \/ диск|блочн/i);
   });
 
   it('attaches stack for kubernetes workers / compose asks', () => {

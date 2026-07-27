@@ -7,6 +7,7 @@
  */
 
 import {buildCatalogFactsAddendum} from '@/lib/chat/catalog-facts';
+import {classifyStorageVolumeIntent} from '@/lib/chat/search';
 
 export type PlanningDomain =
   | 'gpu'
@@ -63,8 +64,12 @@ FUNCTION CALLING: инструменты — ТОЛЬКО native tool_calls. Б�
 ## ПОШАГОВАЯ СБОРКА / ОДИН КОМПОНЕНТ (не раздувай в полную ВМ)
 - Один ресурс или «начнём с …» → ТОЛЬКО он. Не додумывай RAM/диск/IP «для корзины».
 - CPU / ядра / Ice Lake / Sapphire → compare_unit_price(vcpu) (± search по платформе).
-- RAM → compare_unit_price(ram). SSD/NVMe → compare_unit_price(ssd)+diskMedia. HDD → search_prices блочный HDD, не S3.
-- IP → search_prices network/IP. CDN → category=cdn (+ volumeGiB). S3 → storage+storageClass. K8s-мастер отдельно → kubernetes. AI-токены → ai. GPU card-only → search_prices gpu (+gpuModel). НЕ выдавай Cloud.ru «1 GB GPU» / GB-GPU за аренду целой карты (это доля памяти, не H100).
+- RAM → compare_unit_price(ram).
+- Блочный диск (SSD/NVMe/HDD к ВМ) ≠ Object Storage / S3. Никогда не подставляй S3 Standard/Cold/Ice вместо блочного диска и не наоборот.
+  - Unit «1 GiB SSD/NVMe» → compare_unit_price(ssd)+diskMedia.
+  - Объём («N ТБ/ТиБ блочного SSD/NVMe/HDD», «сетевой диск») → search_prices query=«блочный SSD|NVMe|HDD диск» + volumeGiB (1 ТБ→1024 GiB; 100 ТБ→102400). Итог из volumeEstimates. НЕ category=storage, НЕ storageClass.
+  - HDD без S3 в запросе → только блочный HDD.
+- IP → search_prices network/IP. CDN → category=cdn (+ volumeGiB). S3/объектное → category=storage + storageClass (+ volumeGiB). K8s-мастер отдельно → kubernetes. AI-токены → ai. GPU card-only → search_prices gpu (+gpuModel). НЕ выдавай Cloud.ru «1 GB GPU» / GB-GPU за аренду целой карты (это доля памяти, не H100).
 - get_quote — ТОЛЬКО одна ВМ/GPU целиком: «N vCPU / M GiB», «собери ВМ», GPU-хост с паритетом. Иначе get_quote запрещён.
 - Follow-up после GPU card-only («собери сервер целиком», «не просто карту», «полноценный сервер/нода», «с хостом», «паритет») → get_quote(gpuModel из контекста диалога, обычно gpuCount=1). Не search_prices card-only повторно как финал и не mode=cheapest-per-provider.
 - Follow-up «а теперь RAM / диск / CDN» — снова только компонент (или патч CDN); не пересчитывай всю ВМ, пока не попросили собрать.
@@ -112,7 +117,7 @@ export const DOMAIN_CARD_COMPUTE = `## vCPU / RAM / диск (сопостави
 - Один компонент без полной ВМ:
   - CPU / ядра / Ice Lake / Sapphire → compare_unit_price(vcpu) (± search_prices платформы). Таблица ₽/vCPU·мес (×N по желанию).
   - RAM / память → compare_unit_price(ram). Таблица ₽/GiB·мес.
-  - SSD/NVMe → compare_unit_price(ssd)+diskMedia. HDD → search_prices блочный HDD, не S3.
+  - Блочный SSD/NVMe/HDD (диск ВМ, network disk, NBS) ≠ S3/объектное. Unit → compare_unit_price(ssd)+diskMedia; объём N ТБ/ТиБ → search_prices «блочный … диск» + volumeGiB, итог из volumeEstimates. Запрещено: category=storage, storageClass, ответы ~1.8–2.6 ₽/GiB·мес как «блочный SSD» (это S3 Standard).
 - Не подменяй component-only полным get_quote и не додумывай соседние ресурсы.
 - vCPU разного типа несравнимы: preemptible vs on-demand; доля 5–50% vs 100%; shared vs выделенное. База «цена 1 vCPU» = on-demand 100%. providersMatched.cheapest часто preemptible — НЕ база.
 - Preemptible/долевые — отдельным блоком. MWS: для ядра бери строку vCPU, не RAM.
@@ -124,11 +129,14 @@ export const DOMAIN_CARD_COMPUTE = `## vCPU / RAM / диск (сопостави
 - missingProviders из get_quote — коротко в конце ответа («X — reason»), не разворачивай в абзацы.`;
 
 export const DOMAIN_CARD_S3 = `## Object Storage / S3
+- Только при явной просьбе про объектное / S3 / бакет / Hotbox / Cold / Ice. «SSD», «NVMe», «блочный диск», «диск ВМ» → НЕ эта карточка (см. compute / блочный диск).
 - Standard / Warm / Cold / Ice — разные продукты. Не ставь в одну таблицу как равнозначные; не объявляй Ice/Cold «самым дешёвым Standard».
-- Standard/Hotbox → search_prices storageClass=standard, meterKind=capacity. Cold/Ice/Warm — свой storageClass. Объём без класса → standard, НЕ самый дешёвый Ice. Заголовок = applied.storageClass / volumeEstimates[].storageClass.
+- Standard/Hotbox → search_prices category=storage, storageClass=standard, meterKind=capacity. Cold/Ice/Warm — свой storageClass. Объём без класса → standard, НЕ самый дешёвый Ice. Заголовок = applied.storageClass / volumeEstimates[].storageClass.
 - requests (PUT/GET) ≠ хранение; 0 ₽ за запрос ≠ нет тарифа capacity. Для хранения бери capacity.
-- Объём: volumeGiB (1 ТиБ/ТБ → ×1024; «50 ТБ» → 51200); итог из volumeEstimates. Операции/egress — только если просили.
-- Нет capacity у провайдера для класса — скажи честно; не подставляй Ice/Cold и не «—». Single-zone/multi-zone внутри Standard сравнимы с пометкой; не с Cold/Ice.`;
+- Объём: volumeGiB (1 ТиБ/ТБ → ×1024; «50 ТБ» → 51200; «100 ТБ» → 102400); итог из volumeEstimates. Операции/egress — только если просили.
+- Нет capacity у провайдера для класса — скажи честно; не подставляй Ice/Cold и не «—». Single-zone/multi-zone внутри Standard сравнимы с пометкой; не с Cold/Ice.
+- Если в истории только что считали S3, а follow-up про «блочный SSD / диск ВМ» — новый search_prices по блоку, не переиспользуй S3 volumeEstimates.
+- «Сравни блочный диск и S3 / Object Storage» (оба продукта) → два search_prices (блок + object) или compose; не один вызов и не одна колонка.`;
 
 export const DOMAIN_CARD_K8S = `## Managed Kubernetes
 - Кластер / workers / бюджет / «собери K8s» → compose_solution(solutionType=kubernetes) + validate_solution (+ price_solution). Не длинный опрос без compose.
@@ -154,7 +162,7 @@ export const DOMAIN_CARD_AI = `## AI / inference / токены
 - Hosted API vs self-host — сравнивай на явной базе нагрузки через compare_inference_tco (не смешивай сырой ₽/1M и ₽/мес GPU).`;
 
 export const DOMAIN_CARD_AGGREGATES = `## Агрегаты / среднее / compare_unit_price / похожие
-- «Начнём с CPU/RAM/диска», «цена 1 vCPU / 1 GiB RAM / 1 GiB SSD» → compare_unit_price с нужным component. Не get_quote.
+- «Начнём с CPU/RAM/диска», «цена 1 vCPU / 1 GiB RAM / 1 GiB SSD» → compare_unit_price с нужным component. Не get_quote. Объём блочного диска (N ТБ) → search_prices + volumeGiB, не S3.
 - Среднее ≠ рыночная цена: только на сопоставимой базе, назови базу и N провайдеров, дай мин–макс.
 - Не усредняй разные типы (preemptible+on-demand). Нет сопоставимой строки — не молчи: найди повторным поиском или перечисли исключения.
 - «Дороже в N раз» только внутри одного типа.
@@ -226,18 +234,28 @@ export function matchPlanningDomains(text: string): PlanningDomain[] {
     );
   if (hasCompute) out.add('compute');
 
+  const storageIntent = classifyStorageVolumeIntent(t);
   const hasBlockDisk =
-    /(?:\bssd\b|\bnvme\b|\bhdd\b|блочн\w*\s+диск|network\s*disk|диск\s+dd|быстр\w*\s+диск)/i.test(
+    storageIntent === 'block' ||
+    storageIntent === 'both' ||
+    /(?:\bssd\b|\bnvme\b|\bhdd\b|блочн\w*\s+диск|network\s*disk|диск\s+dd|быстр\w*\s+диск|сетев\w*\s+диск)/i.test(
       t,
-    ) && !/(?:\bs3\b|объектн)/i.test(t);
-  if (hasBlockDisk) out.add('compute'); // diskMedia / compare_unit_price ssd rules live with compute+core
+    );
+  if (hasBlockDisk && storageIntent !== 'object') {
+    out.add('compute'); // diskMedia / block volume rules live with compute+core
+    out.add('aggregates');
+  }
 
   // «Ice Lake» / ice-lake (CPU platform) must not match S3 Ice storage class.
-  if (
-    /(?:\bs3\b|объектн|object\s*storage|hotbox|coldbox|(?:\bice\b(?![-\s]*lake))|\bcold\b|\bwarm\b|storageClass)/i.test(
-      t,
-    )
-  ) {
+  // Pure block SSD/NVMe/HDD asks must not attach the S3 card; mixed «both» attaches both.
+  const wantsS3Card =
+    storageIntent === 'object' ||
+    storageIntent === 'both' ||
+    (storageIntent === 'none' &&
+      /(?:\bs3\b|объектн|object\s*storage|hotbox|coldbox|(?:\bice\b(?![-\s]*lake))|\bcold\b|\bwarm\b|storageClass)/i.test(
+        t,
+      ));
+  if (wantsS3Card && storageIntent !== 'block') {
     out.add('s3');
   }
 
@@ -288,15 +306,18 @@ export function matchPlanningDomains(text: string): PlanningDomain[] {
   }
 
   // Component-only / unit-price exploration (CPU, RAM, disk) — attach aggregates card.
+  // Skip disk→compute when storage intent is pure object (negated block / S3-only).
   if (
     /(?:средн[а-яё]*|медиан|разброс|в\s+среднем|compare_unit|цена\s+1\s*(?:vcpu|ядра|gib|ram|ssd)|unit\s*price|начн[а-яё]*\s+с\s+(?:cpu|ram|памят|диск|ssd|nvme)|только\s+(?:cpu|ram|памят|диск)|(?:^|[^\wа-яё])(?:ram|озу|памят)(?:$|[^\wа-яё]))/i.test(
       t,
     ) ||
-    (/(?:ssd|nvme|hdd|блочн)/i.test(t) &&
-      !/(?:\bs3\b|объектн|vcpu|ядер|ram\s*\/|\/\s*\d+\s*gi)/i.test(t))
+    (storageIntent !== 'object' &&
+      /(?:ssd|nvme|hdd|блочн)/i.test(t) &&
+      !/(?:\bs3\b|объектн|object\s*storage|vcpu|ядер|ram\s*\/|\/\s*\d+\s*gi)/i.test(t))
   ) {
     out.add('aggregates');
     if (
+      storageIntent !== 'object' &&
       /(?:vcpu|ядра|ядро|ram|озу|памят|ssd|nvme|hdd|диск|cpu|ice\s*lake|sapphire)/i.test(t)
     ) {
       out.add('compute');
@@ -337,18 +358,63 @@ export function assembleSystemPrompt(domains: readonly PlanningDomain[]): string
 }
 
 /**
+ * Adjust domain cards when an external storage intent (LLM/regex override) disagrees
+ * with the lexical matcher — keeps compute↔s3 gating consistent.
+ */
+export function applyStorageIntentToDomains(
+  domains: readonly PlanningDomain[],
+  intent: 'block' | 'object' | 'both' | 'none',
+  haystack: string,
+): PlanningDomain[] {
+  const out = new Set(domains);
+  const hasVmComputeCue =
+    /(?:\bvcpu\b|ядер\w*|ядра\w*|вм\b|\bvm\b|flavor|gpu|h100|a100|kubernetes|\bk8s\b)/i.test(
+      haystack,
+    );
+
+  if (intent === 'block') {
+    out.add('compute');
+    out.add('aggregates');
+    out.delete('s3');
+  } else if (intent === 'object') {
+    out.add('s3');
+    if (!hasVmComputeCue) {
+      out.delete('compute');
+      out.delete('aggregates');
+    }
+  } else if (intent === 'both') {
+    out.add('compute');
+    out.add('aggregates');
+    out.add('s3');
+  }
+  return ALL_DOMAINS.filter((d) => out.has(d));
+}
+
+/**
  * Production planning prompt: CORE + matched domain cards + live catalog facts.
  * `historyText` — recent user turns so follow-ups keep the right cards.
+ * `storageIntent` — optional override from resolveStorageIntent (LLM/regex).
+ * `storageIntentAddendum` — machine hint block appended after facts.
  */
 export function buildSystemPrompt(
   userText: string,
-  opts?: {historyText?: string},
+  opts?: {
+    historyText?: string;
+    storageIntent?: 'block' | 'object' | 'both' | 'none';
+    storageIntentAddendum?: string;
+  },
 ): string {
   const haystack = [opts?.historyText, userText].filter(Boolean).join('\n');
-  const domains = matchPlanningDomains(haystack);
+  let domains = matchPlanningDomains(haystack);
+  if (opts?.storageIntent) {
+    domains = applyStorageIntentToDomains(domains, opts.storageIntent, haystack);
+  }
   const base = assembleSystemPrompt(domains);
   const facts = buildCatalogFactsAddendum(domains, userText);
-  return facts ? `${base}\n\n${facts}` : base;
+  const parts = [base];
+  if (facts) parts.push(facts);
+  if (opts?.storageIntentAddendum?.trim()) parts.push(opts.storageIntentAddendum.trim());
+  return parts.join('\n\n');
 }
 
 /**

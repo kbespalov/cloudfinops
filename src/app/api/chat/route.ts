@@ -14,6 +14,11 @@ import {
 import {chatLog, clientIp} from '@/lib/chat/log';
 import {buildSystemPrompt} from '@/lib/chat/system-prompt';
 import {
+  formatStorageIntentAddendum,
+  resolveStorageIntent,
+  storageIntentLlmModeFromEnv,
+} from '@/lib/chat/storage-intent-llm';
+import {
   extractAllToolPayloads,
   extractLastToolPayloads,
   isChatLlmOnlyFromEnv,
@@ -158,7 +163,23 @@ export async function POST(req: Request) {
     surface === 'calculator'
       ? '\n\nКонтекст: калькулятор «AI конфигурация» (корзина справа). ПОШАГОВО: «начнём с CPU/RAM/диска/IP/CDN/S3» или один компонент → только этот ресурс (compare_unit_price для vcpu|ram|ssd; search_prices для IP/CDN/S3/HDD/K8s/AI). НЕ get_quote и НЕ додумывай остальную ВМ «чтобы заполнить корзину». Корзину через get_quote обновляй только когда явно собрали конфигурацию («N vCPU / M GiB», «собери ВМ», gpuModel; RAM по умолчанию 4×vCPU; системный диск по умолчанию 100 GiB SSD; публичный IP — ТОЛЬКО если просили, иначе publicIpCount=0 / не передавай). Lakehouse → get_lakehouse_quote. Follow-up «докинь CDN [N ТБ]» → search_prices category=cdn, volumeGiB (1 ТБ→1024), патч корзины; НЕ S3/network ingress, НЕ пересчёт всей ВМ. Без опросника.'
       : '';
-  const planningPrompt = buildSystemPrompt(userText, {historyText: recentUserText});
+  // Ambiguous block↔object only; default off. llmOnly skips all regex/LLM intent gates.
+  const storageIntentMode = llmOnly ? 'off' : storageIntentLlmModeFromEnv();
+  const storageIntent = await resolveStorageIntent(userText, {
+    historyText: recentUserText,
+    mode: storageIntentMode,
+  });
+  const storageIntentAddendum = formatStorageIntentAddendum(storageIntent);
+  const planningPrompt = buildSystemPrompt(userText, {
+    historyText: recentUserText,
+    // Override domain cards only when mode=on actually adopted LLM/regex resolution.
+    storageIntent:
+      storageIntentMode === 'on' && storageIntent.storage !== 'none'
+        ? storageIntent.storage
+        : undefined,
+    storageIntentAddendum:
+      storageIntentMode === 'on' && storageIntentAddendum ? storageIntentAddendum : undefined,
+  });
   const systemContent =
     (inferenceIntent.matched
       ? `${planningPrompt}\n\n${INFERENCE_SYSTEM_ADDENDUM}`
@@ -212,6 +233,12 @@ export async function POST(req: Request) {
     historyTruncated: sanitized.truncated,
     inferenceIntent: inferenceIntent.matched,
     inferenceReason: inferenceIntent.reason,
+    storageIntentMode,
+    storageIntent: storageIntent.storage,
+    storageIntentSource: storageIntent.source,
+    storageIntentLlmCalled: storageIntent.llmCalled,
+    storageIntentDisagree:
+      storageIntent.llmStorage != null && storageIntent.llmStorage !== storageIntent.regexStorage,
     ...chatRateLimiter.snapshot(),
   });
 

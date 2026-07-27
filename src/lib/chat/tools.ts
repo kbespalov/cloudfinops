@@ -326,13 +326,13 @@ export const CHAT_TOOLS = [
           query: {
             type: 'string',
             description:
-              'Поисковый запрос на русском или английском: название услуги, модель GPU/AI, класс диска и т.д. Например: «H100», «GLM 5.2», «объектное хранилище», «исходящий трафик CDN», «публичный IP».',
+              'Поисковый запрос: услуга / GPU / AI / диск. Примеры: «H100», «GLM 5.2», «объектное хранилище», «блочный SSD диск», «исходящий трафик CDN», «публичный IP». Для диска ВМ пиши «блочный … диск», не голое «SSD» с category=storage.',
           },
           category: {
             type: 'string',
             enum: CATEGORIES,
             description:
-              'Ограничить категорией: compute, gpu, storage, network, kubernetes, ai, cdn. Для CDN-трафика всегда category=cdn (не network).',
+              'compute|gpu|storage|network|kubernetes|ai|cdn. storage = только Object Storage/S3. Блочный SSD/NVMe/HDD — без category=storage (в каталоге они в compute) или query «блочный … диск». CDN-трафик: category=cdn.',
           },
           provider: {
             type: 'string',
@@ -357,18 +357,18 @@ export const CHAT_TOOLS = [
             type: 'string',
             enum: ['standard', 'warm', 'cold', 'ice'],
             description:
-              'Жёсткий фильтр по SKU-dimension storageClass (не по названию строки). Для сравнения Standard/Cold/Ice/Warm передавай явно — так отсекаются несопоставимые классы.',
+              'Только Object Storage: фильтр storageClass (standard/warm/cold/ice). НЕ передавай для блочного SSD/NVMe/HDD — иначе уйдёшь в S3.',
           },
           meterKind: {
             type: 'string',
             enum: ['capacity', 'requests'],
             description:
-              'Для S3: capacity — хранение ₽/GiB·мес; requests — операции PUT/GET. По умолчанию для объектного хранилища берётся capacity.',
+              'S3: capacity=хранение, requests=PUT/GET. Для блочного диска с объёмом — capacity (storage.block.capacity). Не путай блок и S3.',
           },
           volumeGiB: {
             type: 'number',
             description:
-              'Объём в GiB (двоичные: 1 ТиБ = 1024 GiB). Если задан — вернётся volumeEstimates: ставка × объём за месяц по каждому провайдеру (S3 capacity и CDN egress). Для «50 ТБ» → 51200, для «100 ТБ» → 102400.',
+              'Объём в GiB (1 ТиБ/ТБ = 1024 GiB; «100 ТБ» → 102400). Даёт volumeEstimates = ставка × объём: Object Storage capacity, блочный disk capacity, CDN egress. Для блочного SSD/NVMe query вроде «блочный SSD диск» без category=storage и без storageClass.',
           },
           limit: {
             type: 'integer',

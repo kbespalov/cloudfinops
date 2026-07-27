@@ -51,7 +51,7 @@ export type PriceRow = {
   month: number | null;
   year: number | null;
   note: string | null;
-  /** Object-storage meter kind when applicable. */
+  /** Capacity/requests kind for object OR block volume meters. */
   meterKind?: 'capacity' | 'requests' | 'other';
   storageClass?: string | null;
   /** Kubernetes control-plane: basic (zonal) | ha (regional) | fixed-component | null. */
@@ -455,9 +455,92 @@ function detectMeterKind(
 }
 
 function objectMeterKind(meter: CatalogMeter): 'capacity' | 'requests' | 'other' {
-  if (meter.meter === 'storage.object.capacity') return 'capacity';
-  if (meter.meter === 'storage.object.requests' || isRequestMeter(meter)) return 'requests';
+  // Block + object GiB capacity both participate in volumeEstimates (₽/GiB·мес × volumeGiB).
+  if (meter.meter === 'storage.object.capacity' || meter.meter === 'storage.block.capacity') {
+    return 'capacity';
+  }
+  if (
+    meter.meter === 'storage.object.requests' ||
+    meter.meter === 'storage.block.iops' ||
+    isRequestMeter(meter)
+  ) {
+    return 'requests';
+  }
   return 'other';
+}
+
+const OBJECT_STORAGE_CUE =
+  /(?:\bs3\b|объектн|object\s*storage|hotbox|coldbox|бакет|\bbucket\b)/i;
+
+const BLOCK_DISK_CUE =
+  /(?:блочн|network\s*disk|network-ssd|network-hdd|nbs-|ceph-ssd|ceph-hdd|\bef-nvme\b|подключаем\w*\s+диск|сетев\w*\s+диск|диск\s+вм|диск\s+для\s+вм)|(?:\b(?:ssd|nvme|hdd)\b.{0,40}диск|диск.{0,40}\b(?:ssd|nvme|hdd)\b)|(?:\bssd\b|\bnvme\b|\bhdd\b).{0,24}(?:\d+\s*(?:тиб|тб|tib|tb|gib|гиБ)|хранени|ёмкост|емкост)|(?:\d+\s*(?:тиб|тб|tib|tb|gib|гиБ).{0,24}(?:\bssd\b|\bnvme\b|\bhdd\b))/i;
+
+/** «не S3 / не объектное / S3 не нужно» рядом с диском — block wins over object cues. */
+const OBJECT_NEGATED =
+  /(?:не\s+(?:путать\s+с\s+|с\s+)?(?:s3|объектн\w*|бакет\w*|object\s*storage)|(?:а\s+)?не\s+(?:s3|объектн\w*|бакет\w*)|(?:без|кроме)\s+(?:s3|объектн\w*|бакет\w*)|(?:s3|объектн\w*|бакет\w*).{0,16}не\s+(?:нуж|надо|счита)|вместо\s+(?:s3|объектн\w*))/i;
+
+/** «не блочный / не диск ВМ» — object wins when both cues appear. */
+const BLOCK_NEGATED =
+  /(?:не\s+(?:путать\s+с\s+|с\s+)?(?:блочн\w*|сетев\w*\s+диск|disk\s+для\s+вм)|(?:а\s+)?не\s+(?:блочн\w*|ssd[- ]?диск)|(?:без|кроме)\s+(?:блочн\w*|диск\w*\s+вм|ssd[- ]?диск)|(?:блочн\w*|ssd[- ]?диск|диск\s+(?:для\s+)?вм).{0,40}не\s+(?:нуж|надо|счита))/i;
+
+export type StorageVolumeIntent = 'block' | 'object' | 'both' | 'none';
+
+/**
+ * Resolve block-disk vs object-storage intent when the user text is ambiguous
+ * or mentions both (disclaimers, «сравни A и B», «не S3 а диск»).
+ */
+export function classifyStorageVolumeIntent(query: string | undefined): StorageVolumeIntent {
+  if (!query?.trim()) return 'none';
+  const q = query.toLowerCase();
+  const hasObject = OBJECT_STORAGE_CUE.test(q);
+  const hasBlock = BLOCK_DISK_CUE.test(q);
+  if (!hasObject && !hasBlock) return 'none';
+
+  const objectNegated = OBJECT_NEGATED.test(q);
+  const blockNegated = BLOCK_NEGATED.test(q);
+
+  if (hasBlock && objectNegated && !blockNegated) return 'block';
+  if (hasObject && blockNegated && !objectNegated) return 'object';
+  if (hasBlock && hasObject) return 'both';
+  if (hasBlock) return 'block';
+  return 'object';
+}
+
+/** Block/VM disk ask — must not fall through to S3 Standard via category=storage. */
+export function looksLikeBlockDiskQuery(query: string | undefined): boolean {
+  // Force block-only search path only for pure/negated-object block asks.
+  // «both» stays false so one search_prices call does not drop S3 or invent a merge.
+  return classifyStorageVolumeIntent(query) === 'block';
+}
+
+function blockDiskMediaHint(query: string | undefined): 'ssd' | 'nvme' | 'hdd' | null {
+  if (!query) return null;
+  const q = query.toLowerCase();
+  if (/\bnvme\b|io-m3|fast-ssd|nbs-pl/i.test(q)) return 'nvme';
+  if (/\bhdd\b|network-hdd|ceph-hdd|диск\s+dd/i.test(q)) return 'hdd';
+  if (/\bssd\b|network-ssd|ceph-ssd|universal-ssd|basic\s*ssd/i.test(q)) return 'ssd';
+  return null;
+}
+
+function meterBlockMedia(meter: CatalogMeter): 'ssd' | 'nvme' | 'hdd' | null {
+  if (!meter.meter.startsWith('storage.block')) return null;
+  const media = String(meter.dimensions.storageMedia ?? '').toLowerCase();
+  const tier = String(meter.dimensions.performanceTier ?? '').toLowerCase();
+  const iface = String(meter.dimensions.storageInterface ?? '').toLowerCase();
+  const diskType = String(meter.dimensions.diskType ?? '').toLowerCase();
+  if (media === 'hdd' || tier === 'hdd' || diskType.includes('hdd')) return 'hdd';
+  if (
+    tier === 'nvme' ||
+    iface === 'nvme' ||
+    diskType.includes('nvme') ||
+    diskType.includes('fast-ssd') ||
+    diskType.includes('io-m3') ||
+    diskType.includes('nbs-pl')
+  ) {
+    return 'nvme';
+  }
+  if (media === 'ssd' || tier === 'ssd' || diskType.includes('ssd')) return 'ssd';
+  return null;
 }
 
 function k8sComparabilityClass(meter: CatalogMeter): string | null {
@@ -898,12 +981,16 @@ function collectCandidates(params: SearchParams): FilterContext {
   const gpuNearestPerProvider = Boolean(
     queryGpuFamily && (category === 'gpu' || nearestAnalogAsk || gpuPeerMode),
   );
+  const blockDiskAsk = looksLikeBlockDiskQuery(effectiveQuery);
+  const blockMediaHint = blockDiskAsk ? blockDiskMediaHint(effectiveQuery) : null;
   let storageClass =
     params.storageClass?.trim().toLowerCase() || detectStorageClass(effectiveQuery);
   // Model often sets storageClass=ice from «Ice Lake» / ice-lake SKU — drop for CPU unit asks.
+  // Block-disk asks must never inherit S3 Standard/Cold/Ice classes.
   if (
     storageClass &&
     (vcpuUnitOnly ||
+      blockDiskAsk ||
       category === 'compute' ||
       /ice\s*lake|ice-lake|preemptible\s*vcpu/i.test(effectiveQuery ?? ''))
   ) {
@@ -911,12 +998,13 @@ function collectCandidates(params: SearchParams): FilterContext {
   }
   let meterKind = detectMeterKind(effectiveQuery, params.meterKind);
   const looksLikeObject =
-    category === 'storage' ||
-    searchTokens.some((t) =>
-      ['storage.object', 's3', 'object', 'объектное', 'объектного', 'бакет', 'bucket'].includes(t),
-    ) ||
-    Boolean(storageClass);
-  if (!meterKind && looksLikeObject) meterKind = 'capacity';
+    !blockDiskAsk &&
+    (category === 'storage' ||
+      searchTokens.some((t) =>
+        ['storage.object', 's3', 'object', 'объектное', 'объектного', 'бакет', 'bucket'].includes(t),
+      ) ||
+      Boolean(storageClass));
+  if (!meterKind && (looksLikeObject || blockDiskAsk)) meterKind = 'capacity';
   // Volume capacity asks without an explicit class must not fall through to Ice/Cold
   // (cheapest-across-classes) and then get labeled «Standard» in the answer.
   const hasVolume =
@@ -933,9 +1021,25 @@ function collectCandidates(params: SearchParams): FilterContext {
   const k8sComparableOnly = Boolean(k8sContext && k8sTier && !wantsK8sUnitComponents(effectiveQuery));
   const candidates: Candidate[] = [];
   const peerFamilies = queryGpuFamily ? GPU_PEER_GROUPS[queryGpuFamily] : undefined;
+  // Block disks live under categoryKey=compute in the catalog — ignore mistaken category=storage.
+  const effectiveCategory =
+    blockDiskAsk && category === 'storage' ? null : category;
 
   for (const {meter, hay} of entries) {
-    if (category && meter.categoryKey !== category) continue;
+    if (effectiveCategory && meter.categoryKey !== effectiveCategory) continue;
+    if (blockDiskAsk) {
+      if (!meter.meter.startsWith('storage.block')) continue;
+      // Volume / «SSD диск» — capacity only; IOPS add-ons are not ₽/GiB storage.
+      if (preferCapacity && meter.meter !== 'storage.block.capacity') continue;
+      if (blockMediaHint) {
+        const media = meterBlockMedia(meter);
+        if (blockMediaHint === 'hdd' && media !== 'hdd') continue;
+        // «NVMe» → only nvme-tier (Cloud.ru ssd-nvme counts as nvme via diskType/interface).
+        if (blockMediaHint === 'nvme' && media !== 'nvme') continue;
+        // «SSD» → ssd or nvme block capacity, never HDD.
+        if (blockMediaHint === 'ssd' && media === 'hdd') continue;
+      }
+    }
     if (providerFilter && meter.provider !== providerFilter) continue;
     if (gpuPeerMode && peerFamilies && queryGpuFamily) {
       const family = meterGpuFamily(meter);

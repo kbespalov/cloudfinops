@@ -4,10 +4,12 @@ import {
   aiModelMatchesNeedle,
   compactAiModelId,
   blendTokenPricePerMillion,
+  classifyStorageVolumeIntent,
   detectAiModelNeedle,
   detectTokenMixShares,
   resolveAiModelNeedle,
   detectStorageClass,
+  looksLikeBlockDiskQuery,
   searchPricesDetailed,
 } from './search';
 import {catalog} from '@/lib/catalog';
@@ -202,6 +204,196 @@ describe('searchPricesDetailed object storage', () => {
     const cloud = r.volumeEstimates!.find((v) => v.provider === 'cloud-ru');
     assert.ok(cloud);
     assert.ok(cloud.rateGiBMonth > 1, 'Standard Cloud.ru is ~1.84, not Ice 0.49');
+  });
+
+  it('block SSD volumeEstimates use disk capacity, not S3 Standard', () => {
+    const volumeGiB = 100 * 1024;
+    const r = searchPricesDetailed({
+      query: '100 ТБ SSD (блочный диск)',
+      // Model often wrongly passes category=storage — must still resolve to block.
+      category: 'storage',
+      storageClass: 'standard',
+      volumeGiB,
+      limit: 30,
+    });
+    assert.equal(r.applied?.storageClass, null);
+    assert.ok((r.volumeEstimates?.length ?? 0) >= 4, JSON.stringify(r.volumeEstimates));
+    for (const v of r.volumeEstimates!) {
+      assert.match(v.sku, /disk|nbs/i, v.sku);
+      assert.ok(
+        !/object-storage|hotbox/i.test(v.sku),
+        `S3 leaked into block estimates: ${v.sku}`,
+      );
+      // Block SSD is ~8–14 ₽/GiB·мес, S3 Standard ~1.8–2.6.
+      assert.ok(v.rateGiBMonth > 5, `${v.provider} rate ${v.rateGiBMonth} looks like S3`);
+    }
+    const t1 = r.volumeEstimates!.find((v) => v.provider === 't1-cloud');
+    assert.ok(t1);
+    assert.ok(t1.totalMonth > 700_000, `expected ~818k, got ${t1.totalMonth}`);
+  });
+});
+
+describe('classifyStorageVolumeIntent (block vs object)', () => {
+  const cases: Array<{
+    name: string;
+    q: string;
+    intent: 'block' | 'object' | 'both' | 'none';
+    blockSearch: boolean;
+  }> = [
+    {
+      name: 'pure block SSD volume',
+      q: 'Сколько стоит 100 ТБ SSD (блочный диск) в месяц?',
+      intent: 'block',
+      blockSearch: true,
+    },
+    {
+      name: 'pure object Standard volume',
+      q: 'Сколько стоит 100 ТБ в объектном хранилище Standard?',
+      intent: 'object',
+      blockSearch: false,
+    },
+    {
+      name: 'disclaimer: not S3, need block',
+      q: 'Нужен блочный SSD на 50 ТБ, не путать с объектным хранилищем / S3',
+      intent: 'block',
+      blockSearch: true,
+    },
+    {
+      name: 'disclaimer: not block, need S3',
+      q: 'Считай только Object Storage / S3 Standard 100 ТБ, блочный диск ВМ не нужен',
+      intent: 'object',
+      blockSearch: false,
+    },
+    {
+      name: 'compare both side by side',
+      q: 'Сравни блочный SSD и объектное хранилище Standard на 100 ТБ по провайдерам',
+      intent: 'both',
+      blockSearch: false,
+    },
+    {
+      name: 'S3 then contrast with VM disk',
+      q: 'В бакете S3 20 ТиБ Standard, а отдельно сколько выйдет сетевой SSD-диск 20 ТиБ?',
+      intent: 'both',
+      blockSearch: false,
+    },
+    {
+      name: 'instead of S3 take block NVMe',
+      q: 'Вместо S3 возьми блочный NVMe диск 10 ТБ — сколько в месяц?',
+      intent: 'block',
+      blockSearch: true,
+    },
+    {
+      name: 'Hotbox without block cues',
+      q: 'Цена Hotbox 5 ТиБ у VK',
+      intent: 'object',
+      blockSearch: false,
+    },
+    {
+      name: 'network-hdd without object',
+      q: 'Сетевой HDD 2 ТиБ — сравни провайдеров',
+      intent: 'block',
+      blockSearch: true,
+    },
+    {
+      name: 'bare volume+SSD (no «блочный» word)',
+      q: 'Оцени 80 ТБ SSD в месяц по облакам РФ',
+      intent: 'block',
+      blockSearch: true,
+    },
+    {
+      name: 'bucket + SSD word in S3 product name context still object when negated block',
+      q: 'Бакет S3 Standard 40 ТБ, SSD-диск для ВМ кроме этого не считай',
+      intent: 'object',
+      blockSearch: false,
+    },
+    {
+      name: 'without S3 — only block',
+      q: 'Без S3: только блочный диск NVMe 1 ТиБ',
+      intent: 'block',
+      blockSearch: true,
+    },
+    {
+      name: 'Ice Lake CPU is not storage intent',
+      q: 'Intel Ice Lake 100% preemptible vCPU',
+      intent: 'none',
+      blockSearch: false,
+    },
+    {
+      name: 'unit GiB NVMe (component) counts as block cue',
+      q: 'Сравни цену 1 GiB NVMe диска по провайдерам',
+      intent: 'block',
+      blockSearch: true,
+    },
+    {
+      name: 'MWS NBS-PL2 SKU wording',
+      q: 'Сколько стоит NBS-PL2 на 500 GiB?',
+      intent: 'block',
+      blockSearch: true,
+    },
+    {
+      name: 'English object storage vs block disk compare',
+      q: 'Compare object storage Standard vs block SSD for 100 TiB',
+      intent: 'both',
+      blockSearch: false,
+    },
+  ];
+
+  for (const c of cases) {
+    it(c.name, () => {
+      assert.equal(
+        classifyStorageVolumeIntent(c.q),
+        c.intent,
+        `intent for: ${c.q}`,
+      );
+      assert.equal(
+        looksLikeBlockDiskQuery(c.q),
+        c.blockSearch,
+        `looksLikeBlockDiskQuery for: ${c.q}`,
+      );
+    });
+  }
+
+  it('negated-object block ask still returns disk volumeEstimates under category=storage', () => {
+    const volumeGiB = 50 * 1024;
+    const r = searchPricesDetailed({
+      query: 'Нужен блочный SSD на 50 ТБ, не объектное хранилище',
+      category: 'storage',
+      storageClass: 'standard',
+      volumeGiB,
+      limit: 20,
+    });
+    assert.equal(r.applied?.storageClass, null);
+    assert.ok((r.volumeEstimates?.length ?? 0) >= 3);
+    assert.ok(r.volumeEstimates!.every((v) => /disk|nbs/i.test(v.sku)));
+    assert.ok(r.volumeEstimates!.every((v) => v.rateGiBMonth > 5));
+  });
+
+  it('pure object ask is unchanged (Standard ~1.8–2.6 ₽/GiB·мес)', () => {
+    const volumeGiB = 100 * 1024;
+    const r = searchPricesDetailed({
+      query: 'объектное хранилище Standard 100 ТБ',
+      category: 'storage',
+      volumeGiB,
+      limit: 20,
+    });
+    assert.equal(r.applied?.storageClass, 'standard');
+    assert.ok((r.volumeEstimates?.length ?? 0) >= 4);
+    assert.ok(r.volumeEstimates!.every((v) => v.rateGiBMonth < 4));
+    assert.ok(r.volumeEstimates!.every((v) => /object-storage|hotbox/i.test(v.sku)));
+  });
+
+  it('both-intent query must not collapse to block-only volumeEstimates', () => {
+    // Single search cannot answer both; at least do not force block-only filter.
+    assert.equal(
+      classifyStorageVolumeIntent(
+        'Сравни блочный SSD и объектное хранилище Standard на 100 ТБ',
+      ),
+      'both',
+    );
+    assert.equal(
+      looksLikeBlockDiskQuery('Сравни блочный SSD и объектное хранилище Standard на 100 ТБ'),
+      false,
+    );
   });
 });
 
