@@ -215,7 +215,7 @@ describe('formatStorageIntentAddendum', () => {
         reason: null,
         llmCalled: false,
       }),
-      /Два search_prices/i,
+      /Два search_prices[\s\S]*capacity-only[\s\S]*meterKind=requests/i,
     );
     assert.equal(
       formatStorageIntentAddendum({

@@ -124,7 +124,7 @@ export function formatStorageIntentAddendum(resolution: StorageIntentResolution)
     );
   } else if (resolution.storage === 'both') {
     lines.push(
-      'Нужны ОБА продукта. Два search_prices (block и object) или compose; не одна колонка и не один storageClass.',
+      'Нужны ОБА продукта. Два search_prices (block и object) или compose; не одна колонка и не один storageClass. Сначала capacity-only; ops (meterKind=requests) и egress — вторым слоем, если спрашивают про интенсивность/TCO. Цифры только из tools; не утверждай, что ops «съедят» выгоду S3 без расчёта gap.',
     );
   }
   return lines.join('\n');

@@ -139,10 +139,22 @@ export const DOMAIN_CARD_S3 = `## Object Storage / S3
 - Standard / Warm / Cold / Ice — разные продукты. Не ставь в одну таблицу как равнозначные; не объявляй Ice/Cold «самым дешёвым Standard».
 - Standard/Hotbox → search_prices category=storage, storageClass=standard, meterKind=capacity. Cold/Ice/Warm — свой storageClass. Объём без класса → standard, НЕ самый дешёвый Ice. Заголовок = applied.storageClass / volumeEstimates[].storageClass.
 - requests (PUT/GET) ≠ хранение; 0 ₽ за запрос ≠ нет тарифа capacity. Для хранения бери capacity.
-- Объём: volumeGiB (1 ТиБ/ТБ → ×1024; «50 ТБ» → 51200; «100 ТБ» → 102400); итог из volumeEstimates. Операции/egress — только если просили.
+- Объём: volumeGiB (1 ТиБ/ТБ → ×1024; «50 ТБ» → 51200; «100 ТБ» → 102400); итог из volumeEstimates. Операции/egress — если просили явно ИЛИ сравнивают TCO / «съедят ли запросы выгоду» / hot workload / полное скачивание.
 - Нет capacity у провайдера для класса — скажи честно; не подставляй Ice/Cold и не «—». Single-zone/multi-zone внутри Standard сравнимы с пометкой; не с Cold/Ice.
 - Если в истории только что считали S3, а follow-up про «блочный SSD / диск ВМ» — новый search_prices по блоку, не переиспользуй S3 volumeEstimates.
-- «Сравни блочный диск и S3 / Object Storage» (оба продукта) → два search_prices (блок + object) или compose; не один вызов и не одна колонка.`;
+- «Сравни блочный диск и S3 / Object Storage» (оба продукта) → два search_prices (блок + object) или compose; не один вызов и не одна колонка.
+
+### S3 vs блочный диск (кейсы и TCO)
+- Порядок ёмкости (типично): блочный SSD ≫ блочный HDD > S3 Standard ≫ Cold/Ice. Цифры — только из tools (volumeEstimates), не из памяти; SSD/HDD у провайдеров разные — таблица или диапазон, не одна «средняя по рынку».
+- Сначала capacity-only на одинаковом объёме. Ops и egress — второй слой, не смешивай в одну цифру без явной просьбы/опасения про интенсивность.
+- TCO «просто хранить файлы»: блочный диск обычно нужен с ВМ для монтирования; S3 — нет. Если сценарий без сервера — не сравнивай «голый HDD» и S3 как полные альтернативы без этой оговорки.
+- Кейсы выбора:
+  - Бэкапы / медиа / крупные объекты, редко читают → S3 (часто Cold/Ice); capacity доминирует, ops малы.
+  - Миллионы мелких файлов, частый random R/W, БД/ОС → блочный SSD/NVMe; S3 проигрывает по latency и может по PUT/LIST.
+  - Нужен путь ФС (/mnt/…) и приложение нельзя менять → блочный. s3fs/rclone — только некритичный/эксперимент, не замена hot disk (latency, consistency).
+- Операции: ставки — search_prices meterKind=requests (PUT/GET своего класса). Запрещено голословно «миллионы GET сравняют S3 с HDD». Считай: gap = HDD_capacity − S3_capacity; ops_cost = ставка×ops из tool; сравни с gap. GET Standard обычно дёшевы; дороже — массовые PUT/LIST и Cold/Ice ops. Полный egress объёма часто сопоставим с месяцем хранения или больше — считай network/CDN отдельно, не путай с API.
+- Ice/Cold: дешевле capacity, но выше ops и часто minimum storage duration / early-delete (notes SKU в tool). Не рекомендуй Ice «просто потому дешевле» без оговорки о сроке и паттерне доступа.
+- Паттерн неизвестен, а пользователь боится ops: ≤2 вопроса (что хранят; редко/часто или ops/мес; размер объектов; нужен ли egress) + capacity preview из tools. Можно 1–2 численных сценария (cold archive vs hot small files) со ставками из tool, не выдуманными ₽.`
 
 export const DOMAIN_CARD_K8S = `## Managed Kubernetes
 - Кластер / workers / бюджет / «собери K8s» → compose_solution(solutionType=kubernetes) + validate_solution (+ price_solution). Не длинный опрос без compose.

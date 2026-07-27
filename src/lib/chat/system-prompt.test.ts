@@ -4,6 +4,7 @@ import {
   DOMAIN_CARD_AI,
   DOMAIN_CARD_GPU,
   DOMAIN_CARD_K8S,
+  DOMAIN_CARD_S3,
   SYSTEM_PROMPT,
   SYSTEM_PROMPT_CORE,
   assembleSystemPrompt,
@@ -205,6 +206,21 @@ describe('matchPlanningDomains', () => {
     assert.ok(!/gpt-oss-120b\s*\/\s*gpt-oss-20b\s*\*\*есть\*\*/.test(DOMAIN_CARD_AI));
     assert.ok(!/Yandex,\s*MWS,\s*Cloud\.ru/.test(DOMAIN_CARD_AI));
     assert.ok(!/~\s*300\s*₽|~\s*340к/.test(DOMAIN_CARD_GPU));
+    assert.ok(!/~\s*\d[\d\s]*₽|22\s*500|106\s*400/.test(DOMAIN_CARD_S3));
+  });
+
+  it('S3 card encodes block-vs-object reasoning, ops break-even, Ice/s3fs caveats', () => {
+    assert.match(DOMAIN_CARD_S3, /S3 vs блочный|capacity-only/i);
+    assert.match(DOMAIN_CARD_S3, /meterKind=requests/);
+    assert.match(DOMAIN_CARD_S3, /gap\s*=\s*HDD_capacity/);
+    assert.match(DOMAIN_CARD_S3, /minimum storage|early-delete/i);
+    assert.match(DOMAIN_CARD_S3, /s3fs|rclone/i);
+    const prompt = buildSystemPrompt(
+      'Сравни 10 ТБ блочного HDD и объектного хранилища — а если учесть операции?',
+    );
+    assert.ok(prompt.includes('## Object Storage / S3'));
+    assert.ok(prompt.includes('## vCPU / RAM / диск'));
+    assert.match(prompt, /capacity-only|ops_cost|meterKind=requests/i);
   });
 
   it('k8s ask injects live master defaults into planning prompt', () => {
