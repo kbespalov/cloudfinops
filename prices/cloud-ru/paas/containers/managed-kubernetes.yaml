@@ -31,6 +31,7 @@ spec:
       comparabilityClass: native-bundle
       comparableTier: basic
       masterCount: 1
+      masterSize: small
     pricing:
       rate:
         amount: '8.601'
@@ -72,6 +73,7 @@ spec:
       comparabilityClass: native-bundle
       comparableTier: basic
       masterCount: 1
+      masterSize: medium
     pricing:
       rate:
         amount: '11.6876'
@@ -113,6 +115,7 @@ spec:
       comparabilityClass: native-bundle
       comparableTier: basic
       masterCount: 1
+      masterSize: large
     pricing:
       rate:
         amount: '23.363'
@@ -154,6 +157,7 @@ spec:
       comparabilityClass: native-bundle
       comparableTier: basic
       masterCount: 1
+      masterSize: large
     pricing:
       rate:
         amount: '46.7382'
@@ -199,6 +203,7 @@ spec:
       faultTolerant: true
       topology: regional
       masterCount: 3
+      masterSize: small
       comparabilityClass: synthetic-bundle
       comparableTier: ha
       synthetic: true
@@ -252,6 +257,7 @@ spec:
       faultTolerant: true
       topology: regional
       masterCount: 3
+      masterSize: medium
       comparabilityClass: synthetic-bundle
       comparableTier: ha
       synthetic: true
@@ -304,6 +310,7 @@ spec:
       faultTolerant: true
       topology: regional
       masterCount: 3
+      masterSize: large
       comparabilityClass: synthetic-bundle
       comparableTier: ha
       synthetic: true
@@ -356,6 +363,7 @@ spec:
       faultTolerant: true
       topology: regional
       masterCount: 3
+      masterSize: large
       comparabilityClass: synthetic-bundle
       comparableTier: ha
       synthetic: true

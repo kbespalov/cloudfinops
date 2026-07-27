@@ -26,6 +26,7 @@ spec:
       availability: zonal
       faultTolerant: false
       masterCount: 1
+      masterSize: small
       poolDependent: true
       comparabilityClass: native-fixed
       comparableTier: basic
@@ -69,6 +70,7 @@ spec:
       availability: regional
       faultTolerant: true
       masterCount: 3
+      masterSize: small
       poolDependent: true
       comparabilityClass: native-fixed
       comparableTier: ha

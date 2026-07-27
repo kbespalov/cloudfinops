@@ -167,6 +167,7 @@ spec:
       faultTolerant: false
       topology: zonal
       masterCount: 1
+      masterSize: small
       vcpu: 2
       ramGiB: 8
       synthetic: true
@@ -219,6 +220,7 @@ spec:
       faultTolerant: true
       topology: regional
       masterCount: 3
+      masterSize: small
       vcpu: 2
       ramGiB: 8
       synthetic: true
@@ -272,6 +274,7 @@ spec:
       faultTolerant: false
       topology: zonal
       masterCount: 1
+      masterSize: medium
       vcpu: 4
       ramGiB: 8
       synthetic: true
@@ -324,6 +327,7 @@ spec:
       faultTolerant: true
       topology: regional
       masterCount: 3
+      masterSize: medium
       vcpu: 4
       ramGiB: 8
       synthetic: true
@@ -375,6 +379,7 @@ spec:
       faultTolerant: false
       topology: zonal
       masterCount: 1
+      masterSize: medium
       vcpu: 4
       ramGiB: 16
       synthetic: true
@@ -427,6 +432,7 @@ spec:
       faultTolerant: true
       topology: regional
       masterCount: 3
+      masterSize: medium
       vcpu: 4
       ramGiB: 16
       synthetic: true
@@ -478,6 +484,7 @@ spec:
       faultTolerant: false
       topology: zonal
       masterCount: 1
+      masterSize: large
       vcpu: 8
       ramGiB: 16
       synthetic: true
@@ -530,6 +537,7 @@ spec:
       faultTolerant: true
       topology: regional
       masterCount: 3
+      masterSize: large
       vcpu: 8
       ramGiB: 16
       synthetic: true
@@ -581,6 +589,7 @@ spec:
       faultTolerant: false
       topology: zonal
       masterCount: 1
+      masterSize: large
       vcpu: 8
       ramGiB: 32
       synthetic: true
@@ -633,6 +642,7 @@ spec:
       faultTolerant: true
       topology: regional
       masterCount: 3
+      masterSize: large
       vcpu: 8
       ramGiB: 32
       synthetic: true
@@ -684,6 +694,7 @@ spec:
       faultTolerant: false
       topology: zonal
       masterCount: 1
+      masterSize: large
       vcpu: 16
       ramGiB: 32
       synthetic: true
@@ -736,6 +747,7 @@ spec:
       faultTolerant: true
       topology: regional
       masterCount: 3
+      masterSize: large
       vcpu: 16
       ramGiB: 32
       synthetic: true
@@ -788,6 +800,7 @@ spec:
       faultTolerant: false
       topology: zonal
       masterCount: 1
+      masterSize: small
       vcpu: 2
       ramGiB: 6
       synthetic: true
@@ -840,6 +853,7 @@ spec:
       faultTolerant: true
       topology: regional
       masterCount: 3
+      masterSize: small
       vcpu: 2
       ramGiB: 6
       synthetic: true

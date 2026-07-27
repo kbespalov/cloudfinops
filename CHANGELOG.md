@@ -6,9 +6,9 @@
 
 Запросы вроде «цена за 1 млн, паттерн 70/30, gpt oss 120b» больше не остаются без AI-карточки (domains=`[]`) и не уводят в аренду GPU. Распознаём gpt-oss / 1 млн / input·output mix; в prompt — формула смеси и запрет «в РФ нет тарифа за 1M», пока search_prices не пуст. Если модель в tool подставила aiModel=`120B` / `Qwen`, search всё равно берёт **gpt-oss-120b** из текста запроса — не подменяем «аналогом 80B».
 
-### Каталог / «Найти похожие» K8s: фикс без формы ≠ все зональные
+### Каталог / K8s find-similar: Small / Medium / Large
 
-Для Selectel/MWS/T1 без опубликованных vCPU/RAM find-similar больше не тащит все зональные формы (2/4…16/32) и 0₽ «фиксированную плату» Yandex. Только shapeless entry-пакеты той же топологии (T1 — Small). Если у сида есть форма — по-прежнему same shape; shapeless peers только entry.
+У мастеров разметили `masterSize` (Small/Medium/Large) у всех провайдеров: T1 как в прайсе; Selectel/MWS/VK entry → Small; Cloud.ru/Yandex 2/x→Small, 4/x→Medium, ≥8/x→Large. «Найти похожие» калибрует по тиру + топологии (клик Medium → Cloud.ru 4/8, Yandex 4/8·4/16, T1 Medium), а не только 2–3 фикса и не все формы подряд.
 
 ### Каталог / Yandex Managed Kubernetes — больше пресетов мастера
 

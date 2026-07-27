@@ -173,9 +173,43 @@ export function extractKubernetesMasterSize(meter: CatalogMeter): string | null 
   return s || null;
 }
 
+export type KubernetesMasterSizeTier = 'small' | 'medium' | 'large';
+
+const SIZE_TIER_TITLE: Record<KubernetesMasterSizeTier, string> = {
+  small: 'Small',
+  medium: 'Medium',
+  large: 'Large',
+};
+
+/**
+ * Small / Medium / Large calibration tier for control-plane compare.
+ * Explicit `masterSize` wins; else infer from vCPU (2→S, 4→M, ≥8→L);
+ * native-fixed packages without shape default to Small.
+ */
+export function kubernetesMasterSizeTier(meter: CatalogMeter): KubernetesMasterSizeTier | null {
+  if (meter.categoryKey !== 'kubernetes') return null;
+  if (meter.comparableTier === 'fixed-component') return null;
+  const explicit = extractKubernetesMasterSize(meter);
+  if (explicit === 'small' || explicit === 'medium' || explicit === 'large') return explicit;
+  if (kubernetesMasterHasShape(meter)) {
+    const vcpu = Number(meter.dimensions.vcpu);
+    if (!Number.isFinite(vcpu) || vcpu <= 0) return null;
+    if (vcpu <= 2) return 'small';
+    if (vcpu <= 4) return 'medium';
+    return 'large';
+  }
+  if (
+    meter.dimensions.comparabilityClass === 'native-fixed' &&
+    (meter.comparableTier === 'basic' || meter.comparableTier === 'ha')
+  ) {
+    return 'small';
+  }
+  return null;
+}
+
 /**
  * Like-for-like peer check for Kubernetes find-similar.
- * Excludes 0₽ fixed-component rows; shapeless packages stay with shapeless.
+ * Primary axis: topology + Small/Medium/Large (not exact 4/8 vs 4/16).
  */
 export function meterMatchesKubernetesSimilar(
   meter: CatalogMeter,
@@ -195,18 +229,14 @@ export function meterMatchesKubernetesSimilar(
     if (availability !== filter.kubernetesAvailabilityFacet) return false;
   }
 
-  if (filter.kubernetesShapelessOnly) {
-    if (kubernetesMasterHasShape(meter)) return false;
-    const peerSize = extractKubernetesMasterSize(meter);
-    if (filter.kubernetesMasterSize) {
-      if (peerSize) return peerSize === filter.kubernetesMasterSize;
-      // Selectel/MWS (no size) only pair with T1 Small as entry package.
-      return filter.kubernetesMasterSize === 'small';
-    }
-    // Seed is Selectel/MWS: keep entry tier (no size or Small), drop Medium/Large.
-    return peerSize == null || peerSize === 'small';
+  if (filter.kubernetesMasterSize) {
+    return kubernetesMasterSizeTier(meter) === filter.kubernetesMasterSize;
   }
 
+  // Legacy exact-shape path (when size tier unknown on seed).
+  if (filter.kubernetesShapelessOnly) {
+    return kubernetesMasterSizeTier(meter) === 'small';
+  }
   if (filter.kubernetesMasterVcpu != null) {
     const v = Number(meter.dimensions.vcpu);
     if (Number.isFinite(v) && v !== filter.kubernetesMasterVcpu) return false;
@@ -214,11 +244,6 @@ export function meterMatchesKubernetesSimilar(
   if (filter.kubernetesMasterRamGiB != null) {
     const ram = Number(meter.dimensions.ramGiB ?? meter.dimensions.ramGb);
     if (Number.isFinite(ram) && ram !== filter.kubernetesMasterRamGiB) return false;
-  }
-  // Shaped seed may still include shapeless native-fixed entry packages.
-  if (!kubernetesMasterHasShape(meter)) {
-    const peerSize = extractKubernetesMasterSize(meter);
-    if (peerSize && peerSize !== 'small') return false;
   }
   return true;
 }
@@ -310,27 +335,27 @@ export function comparableFilterFromMeter(meter: CatalogMeter): ComparableCatalo
       if (meter.comparableTier === 'fixed-component') return null;
       const availability = extractKubernetesAvailability(meter);
       if (!availability) return null;
+      const sizeTier = kubernetesMasterSizeTier(meter);
+      if (!sizeTier) return null;
       const hasShape = kubernetesMasterHasShape(meter);
       const vcpu = Number(meter.dimensions.vcpu);
       const ramGiB = Number(meter.dimensions.ramGiB ?? meter.dimensions.ramGb);
-      const shapeVcpu = hasShape ? vcpu : null;
-      const shapeRam = hasShape ? ramGiB : null;
-      const masterSize = extractKubernetesMasterSize(meter);
       const topo = availability === 'zonal' ? 'зональный' : 'региональный';
-      let detail = '';
-      if (hasShape) detail = ` · ${shapeVcpu} vCPU / ${shapeRam} ГиБ`;
-      else if (masterSize) {
-        detail = ` · ${masterSize.charAt(0).toUpperCase()}${masterSize.slice(1)}`;
-      } else detail = ' · фикс (форма не раскрыта)';
+      const sizeTitle = SIZE_TIER_TITLE[sizeTier];
+      const shapeDetail =
+        hasShape && Number.isFinite(vcpu) && Number.isFinite(ramGiB)
+          ? ` · ${vcpu} vCPU / ${ramGiB} ГиБ`
+          : '';
       return {
         ...EMPTY_NESTED,
         category: 'kubernetes',
         kubernetesAvailabilityFacet: availability,
-        kubernetesMasterVcpu: shapeVcpu,
-        kubernetesMasterRamGiB: shapeRam,
-        kubernetesShapelessOnly: !hasShape,
-        kubernetesMasterSize: masterSize,
-        summary: `Kubernetes · ${topo}${detail}`,
+        // Size-tier compare across providers (Small/Medium/Large), not exact shape.
+        kubernetesMasterVcpu: null,
+        kubernetesMasterRamGiB: null,
+        kubernetesShapelessOnly: false,
+        kubernetesMasterSize: sizeTier,
+        summary: `Kubernetes · ${topo} · ${sizeTitle}${shapeDetail}`,
       };
     }
     case 'ai': {

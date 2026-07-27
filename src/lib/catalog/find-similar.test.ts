@@ -253,88 +253,94 @@ describe('comparableFilterFromMeter', () => {
     );
   });
 
-  it('filters kubernetes HA masters to regional peers of the same shape', () => {
-    const m = catalog.meters.find(
-      (x) =>
-        x.categoryKey === 'kubernetes' &&
-        x.comparableTier === 'ha' &&
-        Number(x.dimensions.vcpu) === 2 &&
-        Number(x.dimensions.ramGiB) === 4,
-    );
+  it('filters k8s HA Small tier across providers (not exact 2/4 only)', () => {
+    const m = catalog.meters.find((x) => x.sku === 'cloudru.kubernetes.master-ha-2-4.synthetic');
     const f = requireFilter(m);
     assert.equal(f.kubernetesAvailabilityFacet, 'regional');
-    assert.equal(f.kubernetesMasterVcpu, 2);
-    assert.equal(f.kubernetesMasterRamGiB, 4);
+    assert.equal(f.kubernetesMasterSize, 'small');
+    assert.equal(f.kubernetesMasterVcpu, null);
     assert.match(f.summary, /региональный/i);
-    assert.match(f.summary, /2 vCPU \/ 4 ГиБ/);
+    assert.match(f.summary, /Small/i);
 
     const peers = peersMatching(f);
-    assert.ok(peers.length >= 2, 'expect HA 2/4 masters from multiple providers');
-    assert.ok(new Set(peers.map((p) => p.provider)).size >= 2);
+    assert.ok(new Set(peers.map((p) => p.provider)).size >= 3);
     for (const p of peers) {
       assert.equal(extractKubernetesAvailability(p), 'regional');
-      const v = Number(p.dimensions.vcpu);
-      const ram = Number(p.dimensions.ramGiB);
-      if (Number.isFinite(v)) assert.equal(v, 2, p.sku);
-      if (Number.isFinite(ram)) assert.equal(ram, 4, p.sku);
+      assert.notEqual(p.comparableTier, 'fixed-component');
     }
+    assert.ok(peers.some((p) => p.sku === 'vk.kubernetes.master-ha-2-6.synthetic'));
+    assert.ok(peers.some((p) => p.sku === 'selectel.kubernetes.master-ha'));
     assert.equal(
-      peers.some((p) => Number(p.dimensions.ramGiB) === 8),
+      peers.some((p) => /master-ha-4-8|master-ha-medium|master-ha-8-16/i.test(p.sku)),
       false,
     );
   });
 
-  it('filters kubernetes basic masters to zonal peers of the same shape', () => {
-    const m = catalog.meters.find(
-      (x) =>
-        x.sku === 'yc.kubernetes.master-basic-2-8.synthetic' ||
-        (x.categoryKey === 'kubernetes' &&
-          x.comparableTier === 'basic' &&
-          Number(x.dimensions.ramGiB) === 8),
-    );
+  it('filters k8s basic Small tier (2/x + fixed + T1 Small)', () => {
+    const m = catalog.meters.find((x) => x.sku === 'yc.kubernetes.master-basic-2-8.synthetic');
     const f = requireFilter(m);
     assert.equal(f.kubernetesAvailabilityFacet, 'zonal');
-    assert.equal(f.kubernetesMasterRamGiB, 8);
-    assert.equal(f.kubernetesShapelessOnly, false);
+    assert.equal(f.kubernetesMasterSize, 'small');
+    assert.match(f.summary, /Small/);
 
     const peers = peersMatching(f);
-    assert.ok(peers.length >= 1);
+    assert.ok(peers.length >= 4);
     for (const p of peers) {
       assert.equal(extractKubernetesAvailability(p), 'zonal');
-      const ram = Number(p.dimensions.ramGiB);
-      if (Number.isFinite(ram)) assert.equal(ram, 8, p.sku);
       assert.notEqual(p.comparableTier, 'fixed-component');
     }
+    assert.ok(peers.some((p) => p.sku === 'cloudru.kubernetes.master-zonal-2-4'));
+    assert.ok(peers.some((p) => p.sku === 'vk.kubernetes.master-basic-2-6.synthetic'));
+    assert.ok(peers.some((p) => p.sku === 'mws.kubernetes.master-basic'));
     assert.equal(
       peers.some((p) => extractKubernetesAvailability(p) === 'regional'),
       false,
     );
     assert.equal(
-      peers.some((p) => Number(p.dimensions.ramGiB) === 4),
+      peers.some((p) => p.sku === 'yc.kubernetes.master-basic-4-8.synthetic'),
       false,
     );
   });
 
-  it('shapeless native-fixed zonal (MWS) only pairs with entry packages, not shaped masters', () => {
+  it('T1 Medium find-similar calibrates against other Medium masters', () => {
+    const seed = catalog.meters.find((x) => x.sku === 't1.kubernetes.master-medium');
+    const f = requireFilter(seed);
+    assert.equal(f.kubernetesMasterSize, 'medium');
+    assert.match(f.summary, /Medium/);
+
+    const peers = peersMatching(f);
+    const providers = new Set(peers.map((p) => p.provider));
+    assert.ok(providers.has('t1-cloud'));
+    assert.ok(providers.has('cloud-ru'), 'Cloud.ru 4/8 is Medium');
+    assert.ok(providers.has('yandex-cloud'), 'Yandex 4/8 · 4/16 are Medium');
+    assert.ok(peers.length >= 4, `expected broad Medium set, got ${peers.length}`);
+    assert.ok(peers.every((p) => p.dimensions.masterSize === 'medium' || Number(p.dimensions.vcpu) === 4));
+    assert.equal(peers.some((p) => p.sku === 't1.kubernetes.master-small'), false);
+    assert.equal(peers.some((p) => p.sku === 'mws.kubernetes.master-basic'), false);
+    assert.equal(peers.some((p) => p.sku === 'yc.kubernetes.master-basic-8-16.synthetic'), false);
+  });
+
+  it('shapeless MWS is Small tier with VK/Yandex/Cloud.ru entry shapes', () => {
     const seed = catalog.meters.find((x) => x.sku === 'mws.kubernetes.master-basic');
     const f = requireFilter(seed);
-    assert.equal(f.kubernetesShapelessOnly, true);
-    assert.equal(f.kubernetesMasterVcpu, null);
-    assert.match(f.summary, /фикс|форма не раскрыта/i);
+    assert.equal(f.kubernetesMasterSize, 'small');
+    assert.equal(f.kubernetesShapelessOnly, false);
+    assert.match(f.summary, /Small/i);
 
     const peers = peersMatching(f);
     assert.ok(peers.some((p) => p.sku === 'mws.kubernetes.master-basic'));
     assert.ok(peers.some((p) => p.sku === 'selectel.kubernetes.master-basic'));
     assert.ok(peers.some((p) => p.sku === 't1.kubernetes.master-small'));
+    assert.ok(peers.some((p) => p.sku === 'vk.kubernetes.master-basic-2-6.synthetic'));
+    assert.ok(peers.some((p) => p.sku === 'yc.kubernetes.master-basic-2-8.synthetic'));
+    assert.ok(peers.some((p) => p.sku === 'cloudru.kubernetes.master-zonal-2-4'));
     assert.equal(
       peers.some((p) => p.sku === 't1.kubernetes.master-medium' || p.sku === 't1.kubernetes.master-large'),
       false,
-      'Medium/Large are not entry packages',
     );
     assert.equal(
-      peers.some((p) => Number(p.dimensions.vcpu) > 0 && Number(p.dimensions.ramGiB) > 0),
+      peers.some((p) => p.sku === 'yc.kubernetes.master-basic-4-8.synthetic'),
       false,
-      'must not mix with 2/4 · 2/8 shaped rows',
     );
     assert.equal(
       peers.some((p) => p.comparableTier === 'fixed-component' || p.sku === 'yc.kubernetes.master-zonal'),
