@@ -2,6 +2,10 @@
 
 ## 2026-07-27
 
+### Каталог / peer-match: P0 test matrix (Cloud.ru × MWS)
+
+Добавили таблицу exact/functional кейсов из YAML: extract / classify / select / invariants + comparison gates. Подкрутили extractor: unit vCPU без `workloadFamily` → `general`; disk `workloadClass`/`redundancy` n/a; ingress traffic route+unit; `sourcePackSize` из `nativeBillingStepRequests`. K8s shapeless Small остаётся exact по size tier (shape soft).
+
 ### E-ассистент / tool `compare_similar_peers`
 
 В чат добавили shortcut для «Найти похожие» и разброса цен: `compare_similar_peers`. `mode=peers` — seed + exact/functional peers, медиана и max/min только среди exact+priceEligible; `mode=anomalies` — группы каталога, где spread ≥ порога (по умолчанию 50%). Ответ без «дешевле на N%» для functional и без price claims при synthetic seed. В system prompt — маршрутизация «похожие / аномалии / медиана».

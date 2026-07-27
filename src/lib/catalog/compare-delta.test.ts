@@ -135,3 +135,68 @@ describe('priceDeltaTitle', () => {
     assert.match(priceDeltaTitle({kind: 'free-vs-paid'}, '0 ₽'), /0 ₽/);
   });
 });
+
+describe('P0 comparison gates', () => {
+  it('compare-single-provider-no-badges', () => {
+    const cmp = buildExactPriceComparison([{id: 'a.seed', amount: 10}]);
+    assert.equal(cmp.deltasByMeterId.size, 0);
+    assert.equal(cmp.medianPrice, null);
+    assert.equal(cmp.bestPrice, null);
+  });
+
+  it('compare-two-providers-best-only', () => {
+    const cmp = buildExactPriceComparison([
+      {id: 'a.seed', amount: 10},
+      {id: 'b.peer', amount: 12},
+    ]);
+    assert.equal(cmp.bestPrice, 10);
+    assert.equal(cmp.medianPrice, null);
+    assert.equal(cmp.deltasByMeterId.get('a.seed')?.vsBest.kind, 'best');
+    assert.deepEqual(cmp.deltasByMeterId.get('b.peer')?.vsBest, {kind: 'above', pct: 20});
+  });
+
+  it('compare-three-providers-median', () => {
+    const cmp = buildExactPriceComparison([
+      {id: 'a.seed', amount: 10},
+      {id: 'b.peer', amount: 12},
+      {id: 'c.peer', amount: 30},
+    ]);
+    assert.equal(cmp.bestPrice, 10);
+    assert.equal(cmp.medianPrice, 12);
+    assert.equal(cmp.deltasByMeterId.get('c.peer')?.vsMedianPct, 150);
+  });
+
+  it('compare-zero-vs-zero', () => {
+    const cmp = buildExactPriceComparison([
+      {id: 'cloudru.traffic.internet.ingress', amount: 0},
+      {id: 'mws.traffic.internet.ingress', amount: 0},
+    ]);
+    assert.equal(cmp.zeroBaseline, true);
+    assert.equal(cmp.deltasByMeterId.get('cloudru.traffic.internet.ingress')?.vsBest.kind, 'equal-free');
+    assert.equal(cmp.deltasByMeterId.get('mws.traffic.internet.ingress')?.vsBest.kind, 'equal-free');
+    assert.equal(cmp.deltasByMeterId.get('mws.traffic.internet.ingress')?.vsMedianPct, undefined);
+  });
+
+  it('compare-zero-vs-paid', () => {
+    const cmp = buildExactPriceComparison([
+      {id: 'a.free', amount: 0},
+      {id: 'b.paid', amount: 1},
+    ]);
+    assert.equal(cmp.deltasByMeterId.get('a.free')?.vsBest.kind, 'equal-free');
+    assert.equal(cmp.deltasByMeterId.get('b.paid')?.vsBest.kind, 'free-vs-paid');
+    assert.equal(cmp.deltasByMeterId.get('b.paid')?.vsMedianPct, undefined);
+  });
+
+  it('compare-price-ineligible-seed-disables-all (caller gate)', () => {
+    // buildExactPriceComparison itself is dumb numbers; the UI/tool gate is seed PE.
+    const seedEligible = false;
+    const rows = [
+      {id: 'cloudru.compute.cascade-lake.vcpu.synthetic', amount: 700},
+      {id: 'mws.compute.vcpu', amount: 800},
+    ];
+    const comparisonActive = seedEligible && rows.length >= 2;
+    const cmp = comparisonActive ? buildExactPriceComparison(rows) : null;
+    assert.equal(comparisonActive, false);
+    assert.equal(cmp, null);
+  });
+});

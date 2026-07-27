@@ -199,18 +199,37 @@ export function requiredHardDimensions(category: CategoryKey): readonly PeerDime
   }
 }
 
+export class IncompletePeerFeaturesError extends Error {
+  readonly key: string;
+  readonly category: CategoryKey;
+  constructor(key: string, category: CategoryKey) {
+    super(`extractPeerFeatures missing hard key «${key}» for ${category}`);
+    this.name = 'IncompletePeerFeaturesError';
+    this.key = key;
+    this.category = category;
+  }
+}
+
 export function assertCompletePeerFeatures(features: PeerFeatures): void {
   for (const key of requiredHardDimensions(features.category)) {
     if (!(key in features.hard)) {
-      throw new Error(`extractPeerFeatures missing hard key «${key}» for ${features.category}`);
+      throw new IncompletePeerFeaturesError(key, features.category);
     }
   }
 }
 
-type DimCompare =
+export type DimCompare =
   | {kind: 'match'}
   | {kind: 'hardDiff'; diagnostic?: string}
   | {kind: 'unknownHard'; diagnostic?: string};
+
+/** Pure dimension lattice used by classifyPeer (exported for algorithm cases). */
+export function comparePeerDimension(
+  seed: DimensionValue<unknown>,
+  cand: DimensionValue<unknown>,
+): DimCompare {
+  return compareDim(seed, cand);
+}
 
 function compareDim(seed: DimensionValue<unknown>, cand: DimensionValue<unknown>): DimCompare {
   if (seed.state === 'not-applicable' && cand.state === 'not-applicable') return {kind: 'match'};
@@ -292,10 +311,15 @@ function allocationBasisOf(meter: CatalogMeter): DimensionValue<AllocationBasis>
 
 function workloadClassOf(meter: CatalogMeter): DimensionValue<'gpu-host' | 'general'> {
   if (meter.categoryKey !== 'compute') return na();
+  // Block disks / images are not compute workload classes.
+  if (isDiskMeter(meter)) return na();
+  const fam = String(meter.dimensions.workloadFamily ?? '').toLowerCase();
+  if (fam === 'gpu' || fam === 'gpu-host') return known('gpu-host');
+  if (fam === 'general') return known('general');
   const hay = `${meter.sku} ${meter.meter} ${meter.name}`;
-  // Positive GPU evidence only — never infer general from a flavor/host bundle by regex absence.
-  if (/gpu/i.test(hay) || meter.dimensions.workloadFamily === 'gpu') return known('gpu-host');
-  // Unit vCPU/RAM meters without GPU markers are general-compute components.
+  // Positive GPU evidence only — never infer general from «no /gpu/ in name».
+  if (/gpu/i.test(hay)) return known('gpu-host');
+  // Confident general: published unit vCPU/RAM in compute category (YAML often omits workloadFamily).
   if (isVcpuMeter(meter) || isRamMeter(meter)) return known('general');
   return unknown();
 }
@@ -316,7 +340,8 @@ function diskRedundancyOf(meter: CatalogMeter): DimensionValue<string> {
   const dt = String(meter.dimensions.diskType ?? '').toLowerCase();
   if (dt.includes('nonreplicated') || dt.includes('non-replicated')) return known('non-replicated');
   if (dt.includes('triple') || dt.includes('ultra')) return known('triple-replicated');
-  return unknown();
+  // Unpublished redundancy is n/a in P0 (unknown↔unknown would forever block exact capacity peers).
+  return na();
 }
 
 function diskAttachmentOf(meter: CatalogMeter): DimensionValue<'local' | 'network'> {
@@ -337,7 +362,10 @@ export function extractTrafficRoute(meter: CatalogMeter): {
   evidence: string[];
   confidence: 'high' | 'low';
 } {
-  if (meter.categoryKey !== 'network' || meter.meter !== 'network.traffic.egress') {
+  if (
+    meter.categoryKey !== 'network' ||
+    !/^network\.traffic\.(ingress|egress)$/.test(meter.meter)
+  ) {
     return {value: na(), evidence: [], confidence: 'high'};
   }
   const hay = `${meter.sku} ${meter.name} ${meter.meter} ${JSON.stringify(meter.dimensions)}`.toLowerCase();
@@ -406,11 +434,14 @@ function canonicalUnitOf(meter: CatalogMeter): {
 } {
   if (isRequestMeter(meter)) {
     const pack = requestBillingPackSize(meter);
+    const nativeStep = Number(meter.dimensions?.nativeBillingStepRequests);
+    const sourcePackSize =
+      Number.isFinite(nativeStep) && nativeStep > 0 ? nativeStep : pack;
     const hasNorm = meter.normalizedAmount != null;
     return {
       unit: known('request-10k'),
       confidence: hasNorm || pack === 1 || pack === REQUEST_PRICE_PACK ? 'verified' : 'inferred',
-      sourcePackSize: pack,
+      sourcePackSize,
     };
   }
   if (isAiTokenMeter(meter) || meter.unitQuantity === '1M-token') {
@@ -429,8 +460,8 @@ function canonicalUnitOf(meter: CatalogMeter): {
     return {unit: unknown(), confidence: 'unknown'};
   }
   if (meter.categoryKey === 'kubernetes') return {unit: known('master-hour'), confidence: 'verified'};
-  if (meter.categoryKey === 'network' && meter.meter === 'network.traffic.egress') {
-    return {unit: known('gib-egress'), confidence: 'verified'};
+  if (meter.categoryKey === 'network' && /^network\.traffic\.(ingress|egress)$/.test(meter.meter)) {
+    return {unit: known('gib-traffic'), confidence: 'verified'};
   }
   if (meter.categoryKey === 'storage' && extractStorageKind(meter) === 'capacity') {
     return {unit: known('gib-month'), confidence: 'verified'};
@@ -488,6 +519,15 @@ export function extractPeerFeatures(meter: CatalogMeter): PeerFeatures {
           : known('capacity');
       hard.diskRedundancy = diskRedundancyOf(meter);
       hard.diskAttachment = diskAttachmentOf(meter);
+      const iops = Number(meter.dimensions.includedIops);
+      if (Number.isFinite(iops) && iops > 0) soft.includedIops = known(iops);
+      const tier = meter.dimensions.performanceTier;
+      if (typeof tier === 'string' && tier.trim()) soft.performanceTier = known(tier.trim());
+      if (meter.dimensions.iopsChargedSeparately === true) {
+        soft.iopsChargedSeparately = known(true);
+      } else if (meter.dimensions.iopsChargedSeparately === false) {
+        soft.iopsChargedSeparately = known(false);
+      }
     } else {
       hard.diskMedia = na();
       hard.diskBillingKind = na();
@@ -521,12 +561,19 @@ export function extractPeerFeatures(meter: CatalogMeter): PeerFeatures {
   }
 
   if (category === 'network') {
-    hard.networkKind = meter.meter.startsWith('network.ipv4')
-      ? known('public-ip')
-      : meter.meter === 'network.traffic.egress'
-        ? known('egress')
-        : unknown();
-    hard.trafficRoute = extractTrafficRoute(meter).value;
+    if (meter.meter.startsWith('network.ipv4')) {
+      hard.networkKind = known('public-ip');
+      hard.trafficRoute = na();
+    } else if (meter.meter === 'network.traffic.egress') {
+      hard.networkKind = known('egress');
+      hard.trafficRoute = extractTrafficRoute(meter).value;
+    } else if (meter.meter === 'network.traffic.ingress') {
+      hard.networkKind = known('ingress');
+      hard.trafficRoute = extractTrafficRoute(meter).value;
+    } else {
+      hard.networkKind = unknown();
+      hard.trafficRoute = unknown();
+    }
   }
 
   if (category === 'cdn') {
@@ -713,24 +760,43 @@ function compareRank(a: PeerRank, b: PeerRank): number {
   return 0;
 }
 
+/** Rank → price → sku. Exported for selection algorithm cases. */
+export function comparePeersForPick(
+  a: {rank: PeerRank; price: number | null; sku: string},
+  b: {rank: PeerRank; price: number | null; sku: string},
+  usePrice: boolean,
+): number {
+  const r = compareRank(a.rank, b.rank);
+  if (r !== 0) return r;
+  if (usePrice) {
+    const fa = a.price != null && Number.isFinite(a.price) ? a.price : Number.POSITIVE_INFINITY;
+    const fb = b.price != null && Number.isFinite(b.price) ? b.price : Number.POSITIVE_INFINITY;
+    if (fa !== fb) return fa - fb;
+  }
+  return a.sku.localeCompare(b.sku);
+}
+
 function pickByRank(
   items: ClassifiedPeer[],
   opts: {usePrice: boolean; period?: 'month'},
 ): ClassifiedPeer | null {
   if (items.length === 0) return null;
   const period = opts.period ?? 'month';
-  const sorted = [...items].sort((a, b) => {
-    const r = compareRank(a.classification.rank, b.classification.rank);
-    if (r !== 0) return r;
-    if (opts.usePrice) {
-      const pa = amountNumber(a.meter, period);
-      const pb = amountNumber(b.meter, period);
-      const fa = pa != null && Number.isFinite(pa) ? pa : Number.POSITIVE_INFINITY;
-      const fb = pb != null && Number.isFinite(pb) ? pb : Number.POSITIVE_INFINITY;
-      if (fa !== fb) return fa - fb;
-    }
-    return a.meter.sku.localeCompare(b.meter.sku);
-  });
+  const sorted = [...items].sort((a, b) =>
+    comparePeersForPick(
+      {
+        rank: a.classification.rank,
+        price: amountNumber(a.meter, period),
+        sku: a.meter.sku,
+      },
+      {
+        rank: b.classification.rank,
+        price: amountNumber(b.meter, period),
+        sku: b.meter.sku,
+      },
+      opts.usePrice,
+    ),
+  );
   return sorted[0] ?? null;
 }
 
