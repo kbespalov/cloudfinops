@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-27'
     sourceRefs:
     - vk.pricelist
     - vk.k8s-rules
@@ -42,8 +42,9 @@ spec:
         formula: 0.022766 × 60
         vat: included
     notes: >
-      Цена за один vCPU мастера (Intel Cascade Lake). Чтобы сравнить с другими
-      облаками, смотрите «Зональный мастер 2 vCPU / 4 ГиБ».
+      Ставка за 1 vCPU мастера (Intel Cascade Lake). Готовой «строки мастера»
+      в прайсе нет — цену собирают из vCPU и RAM. В каталоге ниже — собранные
+      формы 2/6 (типичный старт), 2/8 и 2/4 (*).
   - sku: vk.kubernetes.master-ram
     name: Ресурсы мастера Kubernetes · RAM
     meter: containers.kubernetes.control-plane.ram
@@ -51,7 +52,7 @@ spec:
     pricingMode: unit
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-27'
     sourceRefs:
     - vk.pricelist
     - vk.k8s-rules
@@ -77,8 +78,210 @@ spec:
         formula: 0.006185 × 60
         vat: included
     notes: >
-      Цена за 1 ГиБ RAM мастера. Чтобы сравнить с другими облаками, смотрите
-      «Зональный мастер 2 vCPU / 4 ГиБ».
+      Ставка за 1 ГиБ RAM мастера. Вместе со ставкой vCPU даёт цену управляющего
+      слоя. Собранные формы — в строках 2/6 · 2/8 · 2/4 ниже (*).
+  # Documented VK default master: STD2-2-6 (2 CPU / 6 GB), vertical autoscaling on.
+  - sku: vk.kubernetes.master-basic-2-6.synthetic
+    name: Мастер Kubernetes · зональный · 2 vCPU / 6 ГиБ *
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-27'
+    sourceRefs:
+    - vk.pricelist
+    - vk.k8s-rules
+    priceProvenance: derived
+    dimensions:
+      nativeName: STD2-2-6
+      hostType: STD2-2-6
+      comparabilityClass: synthetic-bundle
+      comparableTier: basic
+      availability: zonal
+      faultTolerant: false
+      topology: zonal
+      masterCount: 1
+      vcpu: 2
+      ramGiB: 6
+      synthetic: true
+      syntheticFrom:
+      - vk.kubernetes.master-vcpu
+      - vk.kubernetes.master-ram
+      vatRatePercent: 22
+    pricing:
+      rate:
+        amount: '4.95852'
+        currency: RUB
+        unit:
+          quantity: master
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '4.95852'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: 2 × 1.36596 (vCPU) + 6 × 0.3711 (GiB-RAM)
+        vat: included
+    notes: >
+      Синтетическая оценка Cloud FinOps (*), не отдельная строка прайса VK Cloud.
+      Зачем: в доках Cloud Containers при создании кластера по умолчанию —
+      2 CPU / 6 GB (шаблон STD2-2-6) с обязательным вертикальным автоскейлом;
+      от этой формы удобно сравнивать зональные мастера. Как считаем:
+      2×1,36596 + 6×0,3711 = 4,95852 ₽/ч с НДС. Рабочие ноды не входят.
+  - sku: vk.kubernetes.master-ha-2-6.synthetic
+    name: Мастер Kubernetes · региональный · 3 × 2 vCPU / 6 ГиБ *
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-27'
+    sourceRefs:
+    - vk.pricelist
+    - vk.k8s-rules
+    priceProvenance: derived
+    dimensions:
+      nativeName: 3 × STD2-2-6
+      hostType: STD2-2-6
+      comparabilityClass: synthetic-bundle
+      comparableTier: ha
+      availability: regional
+      faultTolerant: true
+      topology: regional
+      masterCount: 3
+      vcpu: 2
+      ramGiB: 6
+      synthetic: true
+      syntheticFrom:
+      - vk.kubernetes.master-vcpu
+      - vk.kubernetes.master-ram
+      vatRatePercent: 22
+    pricing:
+      rate:
+        amount: '14.87556'
+        currency: RUB
+        unit:
+          quantity: master
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '14.87556'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: 3 × (2 × 1.36596 + 6 × 0.3711)
+        vat: included
+    notes: >
+      Синтетическая оценка Cloud FinOps (*), не отдельная строка прайса VK Cloud.
+      Зачем: отказоустойчивый кластер — три мастера той же формы 2/6, чтобы
+      сравнить HA с другими облаками. Как считаем: 3 × 4,95852 = 14,87556 ₽/ч
+      с НДС. Рабочие ноды не входят.
+  # Same shape as Yandex orderable minimum s-c2-m8 — for cross-cloud 2/8 compare.
+  - sku: vk.kubernetes.master-basic-2-8.synthetic
+    name: Мастер Kubernetes · зональный · 2 vCPU / 8 ГиБ *
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-27'
+    sourceRefs:
+    - vk.pricelist
+    - vk.k8s-rules
+    priceProvenance: derived
+    dimensions:
+      nativeName: Паритет 2 vCPU / 8 ГиБ *
+      comparabilityClass: synthetic-bundle
+      comparableTier: basic
+      availability: zonal
+      faultTolerant: false
+      topology: zonal
+      masterCount: 1
+      vcpu: 2
+      ramGiB: 8
+      synthetic: true
+      syntheticFrom:
+      - vk.kubernetes.master-vcpu
+      - vk.kubernetes.master-ram
+      vatRatePercent: 22
+    pricing:
+      rate:
+        amount: '5.70072'
+        currency: RUB
+        unit:
+          quantity: master
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '5.70072'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: 2 × 1.36596 (vCPU) + 8 × 0.3711 (GiB-RAM)
+        vat: included
+    notes: >
+      Синтетическая оценка Cloud FinOps (*), не отдельная строка прайса VK Cloud.
+      Зачем: паритет с минимумом Yandex Cloud (s-c2-m8, 2 vCPU / 8 ГиБ) — одна
+      форма для сравнения. На VK RAM мастера может вырасти до 8 ГиБ при
+      автоскейле/ручном шаге. Как считаем: 2×1,36596 + 8×0,3711 = 5,70072 ₽/ч
+      с НДС. Рабочие ноды не входят.
+  - sku: vk.kubernetes.master-ha-2-8.synthetic
+    name: Мастер Kubernetes · региональный · 3 × 2 vCPU / 8 ГиБ *
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: bundle
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-07-27'
+    sourceRefs:
+    - vk.pricelist
+    - vk.k8s-rules
+    priceProvenance: derived
+    dimensions:
+      nativeName: Паритет 3 × 2 vCPU / 8 ГиБ *
+      comparabilityClass: synthetic-bundle
+      comparableTier: ha
+      availability: regional
+      faultTolerant: true
+      topology: regional
+      masterCount: 3
+      vcpu: 2
+      ramGiB: 8
+      synthetic: true
+      syntheticFrom:
+      - vk.kubernetes.master-vcpu
+      - vk.kubernetes.master-ram
+      vatRatePercent: 22
+    pricing:
+      rate:
+        amount: '17.10216'
+        currency: RUB
+        unit:
+          quantity: master
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '17.10216'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: 3 × (2 × 1.36596 + 8 × 0.3711)
+        vat: included
+    notes: >
+      Синтетическая оценка Cloud FinOps (*), не отдельная строка прайса VK Cloud.
+      Зачем: HA-паритет формы 2/8 с минимумом Yandex (три мастера). Как считаем:
+      3 × 5,70072 = 17,10216 ₽/ч с НДС. Рабочие ноды не входят.
+  # Cross-cloud parity with Cloud.ru 2/4.
   - sku: vk.kubernetes.master-basic-2-4.synthetic
     name: Мастер Kubernetes · зональный · 2 vCPU / 4 ГиБ *
     meter: containers.kubernetes.control-plane
@@ -86,13 +289,14 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-27'
     sourceRefs:
     - vk.pricelist
     - vk.k8s-rules
     priceProvenance: derived
     dimensions:
-      nativeName: Зональный мастер 2 vCPU / 4 ГиБ *
+      nativeName: Паритет 2 vCPU / 4 ГиБ *
+      parityOnly: true
       comparabilityClass: synthetic-bundle
       comparableTier: basic
       availability: zonal
@@ -125,10 +329,10 @@ spec:
         vat: included
     notes: >
       Синтетическая оценка Cloud FinOps (*), не публичный тариф VK Cloud.
-      Мастер Kubernetes тарифицируется по vCPU и RAM отдельно. Здесь собрана
-      типовая конфигурация 2 vCPU / 4 ГиБ (2×1,36596 + 4×0,3711 = 4,21632 ₽/ч
-      с НДС) — чтобы приблизительно сравнить с готовыми пакетами других облаков.
-      Размер мастера при создании можно выбрать другим; рабочие ноды не входят.
+      Зачем: паритет с готовым пакетом Cloud.ru «2 vCPU / 4 ГиБ». Типичный старт
+      VK в доках — 2/6 (строка выше); 2/4 здесь только для одинаковой формы
+      сравнения. Как считаем: 2×1,36596 + 4×0,3711 = 4,21632 ₽/ч с НДС.
+      Рабочие ноды не входят.
   - sku: vk.kubernetes.master-ha-2-4.synthetic
     name: Мастер Kubernetes · региональный · 3 × 2 vCPU / 4 ГиБ *
     meter: containers.kubernetes.control-plane
@@ -136,13 +340,14 @@ spec:
     pricingMode: bundle
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-27'
     sourceRefs:
     - vk.pricelist
     - vk.k8s-rules
     priceProvenance: derived
     dimensions:
-      nativeName: Региональный мастер 3×(2 vCPU / 4 ГиБ) *
+      nativeName: Паритет 3 × 2 vCPU / 4 ГиБ *
+      parityOnly: true
       comparabilityClass: synthetic-bundle
       comparableTier: ha
       availability: regional
@@ -175,7 +380,6 @@ spec:
         vat: included
     notes: >
       Синтетическая оценка Cloud FinOps (*), не публичный тариф VK Cloud.
-      Региональный (HA) Kubernetes — три мастер-узла; отдельной платы «за HA»
-      в прайсе нет, платите за ресурсы мастеров. Считаем три узла по 2 vCPU /
-      4 ГиБ: 3 × 4,21632 = 12,64896 ₽/ч с НДС — чтобы приблизительно сравнить
-      с HA других облаков. Рабочие ноды не входят.
+      Зачем: HA-паритет формы 2/4 с Cloud.ru (три мастера). Для типичного старта
+      VK смотрите HA 2/6. Как считаем: 3 × 4,21632 = 12,64896 ₽/ч с НДС.
+      Рабочие ноды не входят.

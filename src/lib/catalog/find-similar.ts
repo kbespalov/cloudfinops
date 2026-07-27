@@ -45,10 +45,15 @@ import {
 /** Card-only vs full GPU+host flavor — must not be mixed in «найти похожие». */
 export type GpuPriceBasisFilter = 'только GPU' | 'целиком';
 
+/** Block-disk billing axis — GiB capacity must not mix with ₽/IOPS add-ons. */
+export type DiskBillingKindFilter = 'capacity' | 'iops';
+
 export type ComparableCatalogFilter = {
   category: Exclude<CategoryFilter, 'all'>;
   facet: ComputeFacet;
   diskFacet: DiskFacet;
+  /** Set for disk finds: capacity (₽/GiB) vs IOPS add-on. */
+  diskBillingKind: DiskBillingKindFilter | null;
   vcpuShareFacet: VcpuShareFacet;
   vcpuPlatformFacet: VcpuPlatformFacet;
   gpuFacet: GpuFacet;
@@ -65,6 +70,9 @@ export type ComparableCatalogFilter = {
   cdnFacet: CdnFacet;
   cdnTrafficFacet: CdnTrafficFacet;
   kubernetesAvailabilityFacet: KubernetesAvailabilityFacet;
+  /** Exact master shape when known (e.g. 2 vCPU / 4 GiB ≠ 2/8). */
+  kubernetesMasterVcpu: number | null;
+  kubernetesMasterRamGiB: number | null;
   aiFacet: AiFacet;
   aiFamilyFacet: AiFamilyFacet;
   /** Human summary for the banner, e.g. «Storage · Standard · Хранение». */
@@ -74,6 +82,7 @@ export type ComparableCatalogFilter = {
 const EMPTY_NESTED = {
   facet: 'all' as ComputeFacet,
   diskFacet: 'all' as DiskFacet,
+  diskBillingKind: null as DiskBillingKindFilter | null,
   vcpuShareFacet: 'all' as VcpuShareFacet,
   vcpuPlatformFacet: 'all' as VcpuPlatformFacet,
   gpuFacet: 'all' as GpuFacet,
@@ -87,6 +96,8 @@ const EMPTY_NESTED = {
   cdnFacet: 'all' as CdnFacet,
   cdnTrafficFacet: 'all' as CdnTrafficFacet,
   kubernetesAvailabilityFacet: 'all' as KubernetesAvailabilityFacet,
+  kubernetesMasterVcpu: null as number | null,
+  kubernetesMasterRamGiB: null as number | null,
   aiFacet: 'all' as AiFacet,
   aiFamilyFacet: 'all' as AiFamilyFacet,
 };
@@ -126,6 +137,12 @@ function storageOperationOf(meter: CatalogMeter): string | null {
   if (typeof op !== 'string') return null;
   const normalized = op.trim().toUpperCase();
   return normalized || null;
+}
+
+function diskBillingKindOf(meter: CatalogMeter): DiskBillingKindFilter | null {
+  if (!isDiskMeter(meter)) return null;
+  if (meter.meter === 'storage.block.iops' || meter.unitQuantity === 'IOPS') return 'iops';
+  return 'capacity';
 }
 
 /** Returns null when the meter has no strict comparable class to filter by. */
@@ -214,14 +231,20 @@ export function comparableFilterFromMeter(meter: CatalogMeter): ComparableCatalo
     case 'kubernetes': {
       const availability = extractKubernetesAvailability(meter);
       if (!availability) return null;
+      const vcpu = Number(meter.dimensions.vcpu);
+      const ramGiB = Number(meter.dimensions.ramGiB ?? meter.dimensions.ramGb);
+      const shapeVcpu = Number.isFinite(vcpu) && vcpu > 0 ? vcpu : null;
+      const shapeRam = Number.isFinite(ramGiB) && ramGiB > 0 ? ramGiB : null;
+      const topo = availability === 'zonal' ? 'зональный' : 'региональный';
+      const shape =
+        shapeVcpu != null && shapeRam != null ? ` · ${shapeVcpu} vCPU / ${shapeRam} ГиБ` : '';
       return {
         ...EMPTY_NESTED,
         category: 'kubernetes',
         kubernetesAvailabilityFacet: availability,
-        summary:
-          availability === 'zonal'
-            ? 'Kubernetes · зональный'
-            : 'Kubernetes · региональный',
+        kubernetesMasterVcpu: shapeVcpu,
+        kubernetesMasterRamGiB: shapeRam,
+        summary: `Kubernetes · ${topo}${shape}`,
       };
     }
     case 'ai': {
@@ -244,12 +267,15 @@ export function comparableFilterFromMeter(meter: CatalogMeter): ComparableCatalo
         if (!media) return null;
         const disk = media.toLowerCase() as DiskFacet;
         if (disk !== 'hdd' && disk !== 'ssd' && disk !== 'nvme') return null;
+        const billing = diskBillingKindOf(meter);
+        if (!billing) return null;
         return {
           ...EMPTY_NESTED,
           category: 'compute',
           facet: 'disk',
           diskFacet: disk,
-          summary: `Compute · Диск · ${media}`,
+          diskBillingKind: billing,
+          summary: `Compute · Диск · ${media} · ${billing === 'iops' ? 'IOPS' : 'ёмкость'}`,
         };
       }
       if (isVcpuMeter(meter)) {

@@ -78,15 +78,37 @@ describe('k8s synthetic HA integrity', () => {
     assert.equal(picked.synthetic, false);
   });
 
-  it('Yandex / VK synthetic HA = 3 × synthetic basic 2/4', () => {
+  it('Yandex exposes 2/8 · 2/6; VK exposes 2/6 · 2/8 · 2/4; HA = 3 × basic', () => {
     const cases = [
       {
-        basic: 'yc.kubernetes.master-basic-2-4.synthetic',
-        ha: 'yc.kubernetes.master-ha-2-4.synthetic',
+        basic: 'yc.kubernetes.master-basic-2-8.synthetic',
+        ha: 'yc.kubernetes.master-ha-2-8.synthetic',
+        vcpu: 2,
+        ramGiB: 8,
+      },
+      {
+        basic: 'yc.kubernetes.master-basic-2-6.synthetic',
+        ha: 'yc.kubernetes.master-ha-2-6.synthetic',
+        vcpu: 2,
+        ramGiB: 6,
+      },
+      {
+        basic: 'vk.kubernetes.master-basic-2-6.synthetic',
+        ha: 'vk.kubernetes.master-ha-2-6.synthetic',
+        vcpu: 2,
+        ramGiB: 6,
       },
       {
         basic: 'vk.kubernetes.master-basic-2-4.synthetic',
         ha: 'vk.kubernetes.master-ha-2-4.synthetic',
+        vcpu: 2,
+        ramGiB: 4,
+      },
+      {
+        basic: 'vk.kubernetes.master-basic-2-8.synthetic',
+        ha: 'vk.kubernetes.master-ha-2-8.synthetic',
+        vcpu: 2,
+        ramGiB: 8,
       },
     ] as const;
 
@@ -98,6 +120,8 @@ describe('k8s synthetic HA integrity', () => {
       assert.equal(ha.synthetic, true);
       assert.equal(ha.comparableTier, 'ha');
       assert.equal(Number(ha.dimensions.masterCount), 3);
+      assert.equal(Number(basic.dimensions.vcpu), c.vcpu);
+      assert.equal(Number(basic.dimensions.ramGiB), c.ramGiB);
       const basicHour = amountNumber(basic, 'unit');
       const haHour = amountNumber(ha, 'unit');
       assert.ok(basicHour != null && haHour != null);
@@ -106,6 +130,28 @@ describe('k8s synthetic HA integrity', () => {
         `${c.ha}: expected ${basicHour}*3=${basicHour * 3}, got ${haHour}`,
       );
     }
+  });
+
+  it('Yandex has no 2/4 (console min 8 GiB); VK default is 2/6; parity shapes are parity-only', () => {
+    const ycOrderable = catalog.meters.find((m) => m.sku === 'yc.kubernetes.master-basic-2-8.synthetic');
+    const ycParity26 = catalog.meters.find((m) => m.sku === 'yc.kubernetes.master-basic-2-6.synthetic');
+    const vkDefault = catalog.meters.find((m) => m.sku === 'vk.kubernetes.master-basic-2-6.synthetic');
+    const vkParity24 = catalog.meters.find((m) => m.sku === 'vk.kubernetes.master-basic-2-4.synthetic');
+    assert.ok(ycOrderable && ycParity26 && vkDefault && vkParity24);
+    assert.equal(
+      catalog.meters.some((m) => m.sku.startsWith('yc.kubernetes.master-') && m.sku.includes('-2-4.')),
+      false,
+    );
+    assert.equal(ycOrderable.dimensions.hostType, 's-c2-m8');
+    assert.equal(vkDefault.dimensions.hostType, 'STD2-2-6');
+    assert.equal(ycParity26.dimensions.parityOnly, true);
+    assert.equal(vkParity24.dimensions.parityOnly, true);
+    assert.equal(isK8sComparableMaster(ycParity26, 'basic'), false);
+    assert.equal(isK8sComparableMaster(vkParity24, 'basic'), false);
+    assert.equal(isK8sComparableMaster(ycOrderable, 'basic'), true);
+    assert.equal(isK8sComparableMaster(vkDefault, 'basic'), true);
+    assert.equal(pickK8sMasterMeter('vk-cloud', 'basic')?.meter.sku, 'vk.kubernetes.master-basic-2-6.synthetic');
+    assert.equal(pickK8sMasterMeter('yandex-cloud', 'basic')?.meter.sku, 'yc.kubernetes.master-basic-2-8.synthetic');
   });
 
   it('pickK8sMasterMeter discloses synthetic HA for Cloud.ru', () => {

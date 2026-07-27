@@ -48,10 +48,12 @@ import {
 import {usePathname, useRouter, useSearchParams} from 'next/navigation';
 import {
   CATEGORY_TITLE,
+  amountNumber,
   billingUnitLabel,
   catalog,
   displayAmount,
   displayMeterName,
+  formatRub,
   extractAiModelFamily,
   listAiModelOptions,
   meterMatchesAiModel,
@@ -118,8 +120,14 @@ import {catalogEmptyIllustration} from '@/components/ui/emptyIllustration';
 import {
   canFindSimilar,
   comparableFilterFromMeter,
+  type DiskBillingKindFilter,
   type GpuPriceBasisFilter,
 } from '@/lib/catalog/find-similar';
+import {
+  bestAmount,
+  buildPriceDeltaById,
+  priceDeltaTitle,
+} from '@/lib/catalog/compare-delta';
 import styles from './CatalogPage.module.css';
 
 const PROVIDER_FACET_ORDER = [
@@ -482,6 +490,11 @@ export function CatalogPage() {
   const [gpuPriceBasis, setGpuPriceBasis] = useState<GpuPriceBasisFilter | null>(null);
   /** Extra GPU constraint from find-similar: exact ×N card count. */
   const [gpuCount, setGpuCount] = useState<number | null>(null);
+  /** Extra disk constraint from find-similar: capacity vs IOPS. */
+  const [diskBillingKind, setDiskBillingKind] = useState<DiskBillingKindFilter | null>(null);
+  /** Extra K8s constraint from find-similar: exact master vCPU / RAM. */
+  const [kubernetesMasterVcpu, setKubernetesMasterVcpu] = useState<number | null>(null);
+  const [kubernetesMasterRamGiB, setKubernetesMasterRamGiB] = useState<number | null>(null);
   /** Extra storage constraint from find-similar: GET/PUT/… */
   const [storageOperation, setStorageOperation] = useState<string | null>(null);
   const [hoveredSimilar, setHoveredSimilar] = useState<CatalogMeter | null>(null);
@@ -876,6 +889,10 @@ export function CatalogPage() {
       if (category === 'compute' && facet === 'disk' && !meterMatchesDiskFacet(m, diskFacet)) {
         return false;
       }
+      if (category === 'compute' && facet === 'disk' && diskBillingKind) {
+        const isIops = m.meter === 'storage.block.iops' || m.unitQuantity === 'IOPS';
+        if (diskBillingKind === 'iops' ? !isIops : isIops) return false;
+      }
       if (category === 'compute' && facet === 'vcpu') {
         if (!meterMatchesVcpuShareFacet(m, vcpuShareFacet)) return false;
         if (!meterMatchesVcpuPlatformFacet(m, vcpuPlatformFacet)) return false;
@@ -916,6 +933,15 @@ export function CatalogPage() {
       ) {
         return false;
       }
+      if (category === 'kubernetes' && kubernetesMasterVcpu != null) {
+        const v = Number(m.dimensions.vcpu);
+        // Native-fixed masters without a published shape stay; mismatched shapes drop.
+        if (Number.isFinite(v) && v !== kubernetesMasterVcpu) return false;
+      }
+      if (category === 'kubernetes' && kubernetesMasterRamGiB != null) {
+        const ram = Number(m.dimensions.ramGiB ?? m.dimensions.ramGb);
+        if (Number.isFinite(ram) && ram !== kubernetesMasterRamGiB) return false;
+      }
       if (category === 'ai' && !meterMatchesAiFacet(m, aiFacet)) return false;
       if (category === 'ai' && !meterMatchesAiFamilyFacet(m, aiFamilyFacet)) return false;
       if (category === 'ai' && !meterMatchesAiModel(m, aiModel || null)) return false;
@@ -929,6 +955,7 @@ export function CatalogPage() {
     category,
     facet,
     diskFacet,
+    diskBillingKind,
     vcpuShareFacet,
     vcpuPlatformFacet,
     gpuFacet,
@@ -942,6 +969,8 @@ export function CatalogPage() {
     cdnFacet,
     cdnTrafficFacet,
     kubernetesAvailabilityFacet,
+    kubernetesMasterVcpu,
+    kubernetesMasterRamGiB,
     aiFacet,
     aiFamilyFacet,
     aiModel,
@@ -950,6 +979,21 @@ export function CatalogPage() {
     sort,
     period,
   ]);
+
+  /** Like-for-like price deltas vs cheapest offer — only in «Найти похожие». */
+  const priceDeltas = useMemo(() => {
+    if (!similarActive) return new Map();
+    return buildPriceDeltaById(
+      filtered.map((m) => ({id: m.id, amount: amountNumber(m, period)})),
+    );
+  }, [similarActive, filtered, period]);
+
+  const compareBestLabel = useMemo(() => {
+    if (priceDeltas.size === 0) return null;
+    const best = bestAmount(filtered.map((m) => amountNumber(m, period)));
+    if (best == null) return null;
+    return formatRub(best, period === 'unit' ? 4 : 2);
+  }, [priceDeltas, filtered, period]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount);
@@ -964,6 +1008,7 @@ export function CatalogPage() {
     category,
     facet,
     diskFacet,
+    diskBillingKind,
     vcpuShareFacet,
     vcpuPlatformFacet,
     gpuFacet,
@@ -977,6 +1022,8 @@ export function CatalogPage() {
     cdnFacet,
     cdnTrafficFacet,
     kubernetesAvailabilityFacet,
+    kubernetesMasterVcpu,
+    kubernetesMasterRamGiB,
     aiFacet,
     aiFamilyFacet,
     aiModel,
@@ -1071,6 +1118,7 @@ export function CatalogPage() {
       setCategory(next.category);
       setFacet(next.facet);
       setDiskFacet(next.diskFacet);
+      setDiskBillingKind(next.diskBillingKind);
       setVcpuShareFacet(next.vcpuShareFacet);
       setVcpuPlatformFacet(next.vcpuPlatformFacet);
       setGpuFacet(next.gpuFacet);
@@ -1084,6 +1132,8 @@ export function CatalogPage() {
       setCdnFacet(next.cdnFacet);
       setCdnTrafficFacet(next.cdnTrafficFacet);
       setKubernetesAvailabilityFacet(next.kubernetesAvailabilityFacet);
+      setKubernetesMasterVcpu(next.kubernetesMasterVcpu);
+      setKubernetesMasterRamGiB(next.kubernetesMasterRamGiB);
       setAiFacet(next.aiFacet);
       setAiFamilyFacet(next.aiFamilyFacet);
       setAiModel('');
@@ -1233,14 +1283,40 @@ export function CatalogPage() {
         id: 'price',
         name: priceColumnTitle(period, category, cdnFacet),
         align: 'end',
-        width: 140,
-        className: styles.priceCol,
+        width: priceDeltas.size > 0 ? 190 : 140,
+        className: priceDeltas.size > 0 ? styles.priceColCompare : styles.priceCol,
         template: (m) => {
           const amount = displayAmount(m, period);
           const unitHint = meterPriceLabel(m, period);
+          const delta = priceDeltas.get(m.id);
+          if (!delta || !amount) {
+            return (
+              <span className={styles.priceCell} title={unitHint}>
+                {amount ?? '—'}
+              </span>
+            );
+          }
+          const tip =
+            compareBestLabel != null
+              ? `${priceDeltaTitle(delta, compareBestLabel)} · ${unitHint}`
+              : unitHint;
           return (
-            <span className={styles.priceCell} title={unitHint}>
-              {amount ?? '—'}
+            <span
+              className={`${styles.priceCell} ${styles.priceCellCompare}`}
+              title={tip}
+            >
+              <span
+                className={
+                  delta.kind === 'best' ? styles.priceAmountBest : styles.priceAmount
+                }
+              >
+                {amount}
+              </span>
+              {delta.kind === 'best' ? (
+                <span className={styles.bestTag}>лучший</span>
+              ) : (
+                <span className={styles.priceDeltaAbove}>+{delta.pct}%</span>
+              )}
             </span>
           );
         },
@@ -1248,13 +1324,14 @@ export function CatalogPage() {
     ];
 
     return cols;
-  }, [category, period, facet, cdnFacet]);
+  }, [category, period, facet, cdnFacet, priceDeltas, compareBestLabel]);
 
   const resetFilters = useCallback(() => {
     startTransition(() => {
       setCategory('all');
       setFacet('all');
       setDiskFacet('all');
+      setDiskBillingKind(null);
       setVcpuShareFacet('all');
       setVcpuPlatformFacet('all');
       setGpuFacet('all');
@@ -1268,6 +1345,8 @@ export function CatalogPage() {
       setCdnFacet('all');
       setCdnTrafficFacet('all');
       setKubernetesAvailabilityFacet('all');
+      setKubernetesMasterVcpu(null);
+      setKubernetesMasterRamGiB(null);
       setAiFacet('all');
       setAiFamilyFacet('all');
       setAiModel('');
@@ -1284,6 +1363,7 @@ export function CatalogPage() {
     category !== 'all' ||
     facet !== 'all' ||
     diskFacet !== 'all' ||
+    diskBillingKind != null ||
     vcpuShareFacet !== 'all' ||
     vcpuPlatformFacet !== 'all' ||
     gpuFacet !== 'all' ||
@@ -1297,6 +1377,8 @@ export function CatalogPage() {
     cdnFacet !== 'all' ||
     cdnTrafficFacet !== 'all' ||
     kubernetesAvailabilityFacet !== 'all' ||
+    kubernetesMasterVcpu != null ||
+    kubernetesMasterRamGiB != null ||
     aiFacet !== 'all' ||
     aiFamilyFacet !== 'all' ||
     Boolean(aiModel) ||
@@ -1347,6 +1429,9 @@ export function CatalogPage() {
                 setSimilarSummary(null);
                 setGpuPriceBasis(null);
                 setGpuCount(null);
+                setDiskBillingKind(null);
+                setKubernetesMasterVcpu(null);
+                setKubernetesMasterRamGiB(null);
                 setStorageOperation(null);
                 // All-tab chips are single-select; multi from other tabs collapses to first.
                 if (next === 'all') {
@@ -1355,6 +1440,7 @@ export function CatalogPage() {
                 if (next !== 'compute') {
                   setFacet('all');
                   setDiskFacet('all');
+                  setDiskBillingKind(null);
                   setVcpuShareFacet('all');
                   setVcpuPlatformFacet('all');
                 }
@@ -1374,7 +1460,11 @@ export function CatalogPage() {
                   setCdnFacet('all');
                   setCdnTrafficFacet('all');
                 }
-                if (next !== 'kubernetes') setKubernetesAvailabilityFacet('all');
+                if (next !== 'kubernetes') {
+                  setKubernetesAvailabilityFacet('all');
+                  setKubernetesMasterVcpu(null);
+                  setKubernetesMasterRamGiB(null);
+                }
                 if (next !== 'ai') {
                   setAiFacet('all');
                   setAiFamilyFacet('all');
@@ -1515,7 +1605,10 @@ export function CatalogPage() {
                       onUpdate={(v) => {
                         const next = v as ComputeFacet;
                         setFacet(next);
-                        if (next !== 'disk') setDiskFacet('all');
+                        if (next !== 'disk') {
+                          setDiskFacet('all');
+                          setDiskBillingKind(null);
+                        }
                         if (next !== 'vcpu') {
                           setVcpuShareFacet('all');
                           setVcpuPlatformFacet('all');
@@ -1934,8 +2027,8 @@ export function CatalogPage() {
                 <Icon data={MagicWand} size={16} className={styles.similarBarIcon} />
                 <Text variant="body-1" className={styles.similarBarText}>
                   {similarSummary
-                    ? `${similarSummary} · все провайдеры`
-                    : 'Только сопоставимые позиции того же класса · все провайдеры'}
+                    ? `${similarSummary} · все провайдеры · к лучшему офферу`
+                    : 'Только сопоставимые позиции того же класса · все провайдеры · к лучшему офферу'}
                 </Text>
                 <Button view="flat-secondary" size="s" onClick={resetFilters}>
                   Сбросить все

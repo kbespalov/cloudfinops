@@ -41,6 +41,10 @@ function peersMatching(filter: ComparableCatalogFilter): CatalogMeter[] {
     ) {
       return false;
     }
+    if (filter.category === 'compute' && filter.facet === 'disk' && filter.diskBillingKind) {
+      const isIops = m.meter === 'storage.block.iops' || m.unitQuantity === 'IOPS';
+      if (filter.diskBillingKind === 'iops' ? !isIops : isIops) return false;
+    }
     if (
       filter.category === 'compute' &&
       filter.facet === 'vcpu' &&
@@ -91,6 +95,14 @@ function peersMatching(filter: ComparableCatalogFilter): CatalogMeter[] {
       !meterMatchesKubernetesAvailabilityFacet(m, filter.kubernetesAvailabilityFacet)
     ) {
       return false;
+    }
+    if (filter.category === 'kubernetes' && filter.kubernetesMasterVcpu != null) {
+      const v = Number(m.dimensions.vcpu);
+      if (Number.isFinite(v) && v !== filter.kubernetesMasterVcpu) return false;
+    }
+    if (filter.category === 'kubernetes' && filter.kubernetesMasterRamGiB != null) {
+      const ram = Number(m.dimensions.ramGiB ?? m.dimensions.ramGb);
+      if (Number.isFinite(ram) && ram !== filter.kubernetesMasterRamGiB) return false;
     }
     if (filter.category === 'ai' && !meterMatchesAiFacet(m, filter.aiFacet)) return false;
     if (filter.category === 'ai' && !meterMatchesAiFamilyFacet(m, filter.aiFamilyFacet)) {
@@ -239,36 +251,62 @@ describe('comparableFilterFromMeter', () => {
     );
   });
 
-  it('filters kubernetes HA masters to regional peers only', () => {
+  it('filters kubernetes HA masters to regional peers of the same shape', () => {
     const m = catalog.meters.find(
-      (x) => x.categoryKey === 'kubernetes' && x.comparableTier === 'ha',
+      (x) =>
+        x.categoryKey === 'kubernetes' &&
+        x.comparableTier === 'ha' &&
+        Number(x.dimensions.vcpu) === 2 &&
+        Number(x.dimensions.ramGiB) === 4,
     );
     const f = requireFilter(m);
     assert.equal(f.kubernetesAvailabilityFacet, 'regional');
+    assert.equal(f.kubernetesMasterVcpu, 2);
+    assert.equal(f.kubernetesMasterRamGiB, 4);
     assert.match(f.summary, /региональный/i);
+    assert.match(f.summary, /2 vCPU \/ 4 ГиБ/);
 
     const peers = peersMatching(f);
-    assert.ok(peers.length >= 2, 'expect HA masters from multiple providers');
+    assert.ok(peers.length >= 2, 'expect HA 2/4 masters from multiple providers');
     assert.ok(new Set(peers.map((p) => p.provider)).size >= 2);
     for (const p of peers) {
       assert.equal(extractKubernetesAvailability(p), 'regional');
+      const v = Number(p.dimensions.vcpu);
+      const ram = Number(p.dimensions.ramGiB);
+      if (Number.isFinite(v)) assert.equal(v, 2, p.sku);
+      if (Number.isFinite(ram)) assert.equal(ram, 4, p.sku);
     }
+    assert.equal(
+      peers.some((p) => Number(p.dimensions.ramGiB) === 8),
+      false,
+    );
   });
 
-  it('filters kubernetes basic masters to zonal peers only', () => {
+  it('filters kubernetes basic masters to zonal peers of the same shape', () => {
     const m = catalog.meters.find(
-      (x) => x.categoryKey === 'kubernetes' && x.comparableTier === 'basic',
+      (x) =>
+        x.sku === 'yc.kubernetes.master-basic-2-8.synthetic' ||
+        (x.categoryKey === 'kubernetes' &&
+          x.comparableTier === 'basic' &&
+          Number(x.dimensions.ramGiB) === 8),
     );
     const f = requireFilter(m);
     assert.equal(f.kubernetesAvailabilityFacet, 'zonal');
+    assert.equal(f.kubernetesMasterRamGiB, 8);
 
     const peers = peersMatching(f);
     assert.ok(peers.length >= 1);
     for (const p of peers) {
       assert.equal(extractKubernetesAvailability(p), 'zonal');
+      const ram = Number(p.dimensions.ramGiB);
+      if (Number.isFinite(ram)) assert.equal(ram, 8, p.sku);
     }
     assert.equal(
       peers.some((p) => extractKubernetesAvailability(p) === 'regional'),
+      false,
+    );
+    assert.equal(
+      peers.some((p) => Number(p.dimensions.ramGiB) === 4),
       false,
     );
   });
@@ -334,6 +372,43 @@ describe('comparableFilterFromMeter', () => {
       assert.ok(peers.length >= 1);
       assert.ok(peers.every((p) => meterMatchesDiskFacet(p, 'nvme')));
     }
+  });
+
+  it('keeps disk capacity peers out of IOPS add-on finds', () => {
+    const iops = catalog.meters.find(
+      (x) => x.categoryKey === 'compute' && x.meter === 'storage.block.iops',
+    );
+    const f = requireFilter(iops);
+    assert.equal(f.diskBillingKind, 'iops');
+    assert.match(f.summary, /IOPS/);
+
+    const peers = peersMatching(f);
+    assert.ok(peers.length >= 1);
+    assert.ok(peers.every((p) => p.meter === 'storage.block.iops'));
+    assert.equal(
+      peers.some((p) => p.meter === 'storage.block.capacity'),
+      false,
+    );
+  });
+
+  it('keeps disk IOPS peers out of capacity finds', () => {
+    const capacity = catalog.meters.find(
+      (x) =>
+        x.categoryKey === 'compute' &&
+        x.meter === 'storage.block.capacity' &&
+        meterMatchesDiskFacet(x, 'nvme'),
+    );
+    const f = requireFilter(capacity);
+    assert.equal(f.diskBillingKind, 'capacity');
+    assert.match(f.summary, /ёмкость/);
+
+    const peers = peersMatching(f);
+    assert.ok(peers.length >= 1);
+    assert.ok(peers.every((p) => p.meter === 'storage.block.capacity'));
+    assert.equal(
+      peers.some((p) => p.meter === 'storage.block.iops'),
+      false,
+    );
   });
 
   it('filters compute vCPU with share/platform when present', () => {

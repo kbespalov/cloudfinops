@@ -58,7 +58,7 @@ export type PriceRow = {
   k8sTier?: string | null;
   /** Kubernetes: synthetic-bundle | native-bundle | native-fixed | null. */
   k8sClass?: string | null;
-  /** True for derived VK/Yandex 2 vCPU / 4 GiB master bundles. */
+  /** True for derived VK/Yandex master bundles (YC 2/8·2/6; VK 2/6·2/8·2/4). */
   synthetic?: boolean;
 };
 
@@ -399,6 +399,9 @@ export function isK8sComparableMaster(
   if (isK8sUnitComponent(meter)) return false;
   if (meter.comparableTier === 'fixed-component') return false;
   if (k8sComparabilityClass(meter) === 'fixed-component') return false;
+  // Parity-only shapes (e.g. Yandex 2/6 vs VK default) stay in catalog for
+  // like-for-like finds, but must not win default cheapest / lakehouse picks.
+  if (meter.dimensions.parityOnly === true) return false;
   const isMaster =
     meter.unitQuantity === 'master' || meter.meter === 'containers.kubernetes.control-plane';
   if (!isMaster) return false;

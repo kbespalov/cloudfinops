@@ -225,6 +225,11 @@
   max-width: 140px;
 }
 
+.priceColCompare {
+  width: 190px;
+  max-width: 190px;
+}
+
 .priceCell {
   display: block;
   width: 100%;
@@ -233,6 +238,42 @@
   font-feature-settings: 'tnum' 1;
   white-space: nowrap;
   font-family: var(--g-font-family-monospace);
+}
+
+/* Single-line compare chrome — keep row height unchanged. */
+.priceCellCompare {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 6px;
+  width: 100%;
+}
+
+.priceAmount {
+  min-width: 0;
+}
+
+.priceAmountBest {
+  color: var(--g-color-text-positive);
+}
+
+.bestTag {
+  flex-shrink: 0;
+  font-family: var(--g-text-body-1-font-family);
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 500;
+  color: var(--g-color-text-positive);
+}
+
+.priceDeltaAbove {
+  flex-shrink: 0;
+  font-family: var(--g-text-body-1-font-family);
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--g-color-text-warning);
 }
 
 .numCell {

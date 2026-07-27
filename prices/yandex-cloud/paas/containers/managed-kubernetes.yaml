@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-27'
     sourceRefs:
     - yc.billing-api
     - yc.kubernetes
@@ -42,8 +42,9 @@ spec:
         formula: native hourly rate
         vat: included
     notes: >
-      Цена за один vCPU мастера. Чтобы сравнить с другими облаками, смотрите
-      «Зональный мастер 2 vCPU / 4 ГиБ».
+      Ставка за 1 vCPU управляющего слоя (мастера). Готовой «строки мастера»
+      в прайсе нет — итоговую цену собирают из vCPU и RAM. В каталоге ниже
+      есть собранные формы 2/8 (минимум в консоли) и 2/6 (*).
   - sku: yc.kubernetes.master-ram
     name: Ресурсы мастера Kubernetes · RAM
     meter: containers.kubernetes.control-plane.ram
@@ -51,7 +52,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-27'
     sourceRefs:
     - yc.billing-api
     - yc.kubernetes
@@ -78,8 +79,8 @@ spec:
         formula: native hourly rate
         vat: included
     notes: >
-      Цена за 1 ГиБ RAM мастера. Чтобы сравнить с другими облаками, смотрите
-      «Зональный мастер 2 vCPU / 4 ГиБ».
+      Ставка за 1 ГиБ RAM управляющего слоя. Вместе со ставкой vCPU даёт цену
+      мастера. Собранные формы смотрите в строках 2/8 · 2/6 ниже (*).
   - sku: yc.kubernetes.master-zonal
     name: Мастер Kubernetes · зональный · фиксированная плата
     meter: containers.kubernetes.control-plane
@@ -87,7 +88,7 @@ spec:
     pricingMode: fixed
     region: Россия
     effectiveFrom: '2025-06-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-27'
     sourceRefs:
     - yc.billing-api
     - yc.kubernetes
@@ -110,8 +111,8 @@ spec:
         vat: included
         byteBasis: not-applicable
     notes: >
-      Отдельная плата за зональный мастер — 0 ₽; платите только за vCPU и RAM.
-      Для сравнения смотрите «Зональный мастер 2 vCPU / 4 ГиБ».
+      Отдельная плата «за зональный мастер» — 0 ₽. Стоимость — только vCPU и
+      RAM мастера. Для сравнения цен смотрите собранную форму 2/8 (*).
   - sku: yc.kubernetes.master-regional
     name: Мастер Kubernetes · региональный · фиксированная плата
     meter: containers.kubernetes.control-plane
@@ -119,7 +120,7 @@ spec:
     pricingMode: fixed
     region: Россия
     effectiveFrom: '2025-06-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-27'
     sourceRefs:
     - yc.billing-api
     - yc.kubernetes
@@ -142,22 +143,24 @@ spec:
         vat: included
         byteBasis: not-applicable
     notes: >
-      Отдельная плата за региональный мастер — 0 ₽; платите только за vCPU и RAM.
-      Для сравнения смотрите «Региональный мастер 3×(2 vCPU / 4 ГиБ)».
-  - sku: yc.kubernetes.master-basic-2-4.synthetic
-    name: Мастер Kubernetes · зональный · 2 vCPU / 4 ГиБ *
+      Отдельная плата «за региональный (HA) мастер» — 0 ₽. Стоимость — vCPU и
+      RAM трёх мастер-узлов. Для сравнения смотрите собранную форму 3×2/8 (*).
+  # Orderable minimum in calculator/docs: s-c2-m8 (2 vCPU / 8 GiB).
+  - sku: yc.kubernetes.master-basic-2-8.synthetic
+    name: Мастер Kubernetes · зональный · 2 vCPU / 8 ГиБ *
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-27'
     sourceRefs:
     - yc.billing-api
     - yc.kubernetes
     priceProvenance: derived
     dimensions:
-      nativeName: Зональный мастер 2 vCPU / 4 ГиБ *
+      nativeName: s-c2-m8
+      hostType: s-c2-m8
       comparabilityClass: synthetic-bundle
       comparableTier: basic
       availability: zonal
@@ -165,7 +168,7 @@ spec:
       topology: zonal
       masterCount: 1
       vcpu: 2
-      ramGiB: 4
+      ramGiB: 8
       synthetic: true
       syntheticFrom:
       - yc.kubernetes.master-vcpu
@@ -174,7 +177,7 @@ spec:
       vatRatePercent: 22
     pricing:
       rate:
-        amount: '5.36'
+        amount: '7.20'
         currency: RUB
         unit:
           quantity: master
@@ -182,34 +185,34 @@ spec:
         vat: included
         byteBasis: not-applicable
       normalized:
-        amount: '5.36'
+        amount: '7.20'
         unit:
           currency: RUB
           quantity: master
           period: hour
-        formula: 2 × 1.76 (vCPU) + 4 × 0.46 (GiB-RAM) + 0 (zonal fixed)
+        formula: 2 × 1.76 (vCPU) + 8 × 0.46 (GiB-RAM) + 0 (zonal fixed)
         vat: included
     notes: >
-      Синтетическая оценка Cloud FinOps (*), не публичный тариф Yandex Cloud.
-      Мастер Kubernetes тарифицируется по vCPU и RAM отдельно (плата «за
-      зональный мастер» — 0 ₽). Здесь собрана типовая конфигурация 2 vCPU /
-      4 ГиБ: 2×1,76 + 4×0,46 = 5,36 ₽/ч с НДС — чтобы приблизительно сравнить
-      с готовыми пакетами других облаков. Размер мастера при создании можно
-      выбрать другим; рабочие ноды не входят.
-  - sku: yc.kubernetes.master-ha-2-4.synthetic
-    name: Мастер Kubernetes · региональный · 3 × 2 vCPU / 4 ГиБ *
+      Синтетическая оценка Cloud FinOps (*), не отдельная строка прайса Yandex.
+      Зачем: минимальный хост мастера в калькуляторе и доках — s-c2-m8
+      (2 vCPU / 8 ГиБ); от него удобно сравнивать зональные мастера с другими
+      облаками. Как считаем: 2×1,76 + 8×0,46 = 7,20 ₽/ч с НДС (фикс за мастер —
+      0 ₽). Рабочие ноды не входят.
+  - sku: yc.kubernetes.master-ha-2-8.synthetic
+    name: Мастер Kubernetes · региональный · 3 × 2 vCPU / 8 ГиБ *
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-27'
     sourceRefs:
     - yc.billing-api
     - yc.kubernetes
     priceProvenance: derived
     dimensions:
-      nativeName: Региональный мастер 3×(2 vCPU / 4 ГиБ) *
+      nativeName: 3 × s-c2-m8
+      hostType: s-c2-m8
       comparabilityClass: synthetic-bundle
       comparableTier: ha
       availability: regional
@@ -217,7 +220,7 @@ spec:
       topology: regional
       masterCount: 3
       vcpu: 2
-      ramGiB: 4
+      ramGiB: 8
       synthetic: true
       syntheticFrom:
       - yc.kubernetes.master-vcpu
@@ -226,7 +229,7 @@ spec:
       vatRatePercent: 22
     pricing:
       rate:
-        amount: '16.08'
+        amount: '21.60'
         currency: RUB
         unit:
           quantity: master
@@ -234,16 +237,119 @@ spec:
         vat: included
         byteBasis: not-applicable
       normalized:
-        amount: '16.08'
+        amount: '21.60'
         unit:
           currency: RUB
           quantity: master
           period: hour
-        formula: 3 × (2 × 1.76 + 4 × 0.46 + 0 regional fixed)
+        formula: 3 × (2 × 1.76 + 8 × 0.46 + 0 regional fixed)
+        vat: included
+    notes: >
+      Синтетическая оценка Cloud FinOps (*), не отдельная строка прайса Yandex.
+      Зачем: региональный кластер — три мастер-узла; берём тот же минимум s-c2-m8
+      на каждый, чтобы сравнить HA с другими облаками. Как считаем:
+      3 × 7,20 = 21,60 ₽/ч с НДС. Рабочие ноды не входят.
+  # Parity with VK documented default STD2-2-6 — not an orderable Yandex host card.
+  - sku: yc.kubernetes.master-basic-2-6.synthetic
+    name: Мастер Kubernetes · зональный · 2 vCPU / 6 ГиБ *
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs:
+    - yc.billing-api
+    - yc.kubernetes
+    priceProvenance: derived
+    dimensions:
+      nativeName: Паритет 2 vCPU / 6 ГиБ *
+      parityOnly: true
+      comparabilityClass: synthetic-bundle
+      comparableTier: basic
+      availability: zonal
+      faultTolerant: false
+      topology: zonal
+      masterCount: 1
+      vcpu: 2
+      ramGiB: 6
+      synthetic: true
+      syntheticFrom:
+      - yc.kubernetes.master-vcpu
+      - yc.kubernetes.master-ram
+      - yc.kubernetes.master-zonal
+      vatRatePercent: 22
+    pricing:
+      rate:
+        amount: '6.28'
+        currency: RUB
+        unit:
+          quantity: master
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '6.28'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: 2 × 1.76 (vCPU) + 6 × 0.46 (GiB-RAM) + 0 (zonal fixed)
         vat: included
     notes: >
       Синтетическая оценка Cloud FinOps (*), не публичный тариф Yandex Cloud.
-      Региональный (HA) Kubernetes — три мастер-узла; фиксированная плата за HA
-      равна 0 ₽, платите только за vCPU и RAM мастеров. Считаем три узла по
-      2 vCPU / 4 ГиБ: 3 × 5,36 = 16,08 ₽/ч с НДС — чтобы приблизительно сравнить
-      с HA других облаков. Рабочие ноды не входят.
+      Зачем: паритет с типичным стартом VK Cloud (2 vCPU / 6 ГиБ) — чтобы
+      сравнить одинаковую форму. В калькуляторе Yandex карточки 2/6 нет
+      (минимум s-c2-m8); для заказа смотрите строку 2/8. Как считаем:
+      2×1,76 + 6×0,46 = 6,28 ₽/ч с НДС. Рабочие ноды не входят.
+  - sku: yc.kubernetes.master-ha-2-6.synthetic
+    name: Мастер Kubernetes · региональный · 3 × 2 vCPU / 6 ГиБ *
+    meter: containers.kubernetes.control-plane
+    status: available
+    pricingMode: bundle
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-07-27'
+    sourceRefs:
+    - yc.billing-api
+    - yc.kubernetes
+    priceProvenance: derived
+    dimensions:
+      nativeName: Паритет 3 × 2 vCPU / 6 ГиБ *
+      parityOnly: true
+      comparabilityClass: synthetic-bundle
+      comparableTier: ha
+      availability: regional
+      faultTolerant: true
+      topology: regional
+      masterCount: 3
+      vcpu: 2
+      ramGiB: 6
+      synthetic: true
+      syntheticFrom:
+      - yc.kubernetes.master-vcpu
+      - yc.kubernetes.master-ram
+      - yc.kubernetes.master-regional
+      vatRatePercent: 22
+    pricing:
+      rate:
+        amount: '18.84'
+        currency: RUB
+        unit:
+          quantity: master
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '18.84'
+        unit:
+          currency: RUB
+          quantity: master
+          period: hour
+        formula: 3 × (2 × 1.76 + 6 × 0.46 + 0 regional fixed)
+        vat: included
+    notes: >
+      Синтетическая оценка Cloud FinOps (*), не публичный тариф Yandex Cloud.
+      Зачем: HA-паритет формы 2/6 (три мастера) с VK. Для заказа на Yandex —
+      ориентир 3 × s-c2-m8 (строка 2/8 HA). Как считаем: 3 × 6,28 = 18,84 ₽/ч
+      с НДС. Рабочие ноды не входят.

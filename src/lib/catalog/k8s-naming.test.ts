@@ -76,14 +76,35 @@ describe('Kubernetes catalog naming', () => {
       'Мастер Kubernetes · зональный · фиксированная плата',
     );
     assert.equal(
-      bySku('yc.kubernetes.master-ha-2-4.synthetic').name,
-      'Мастер Kubernetes · региональный · 3 × 2 vCPU / 4 ГиБ *',
+      bySku('yc.kubernetes.master-basic-2-8.synthetic').name,
+      'Мастер Kubernetes · зональный · 2 vCPU / 8 ГиБ *',
+    );
+    assert.equal(
+      bySku('yc.kubernetes.master-ha-2-8.synthetic').name,
+      'Мастер Kubernetes · региональный · 3 × 2 vCPU / 8 ГиБ *',
+    );
+    assert.equal(
+      catalog.meters.some((m) => m.sku === 'yc.kubernetes.master-basic-2-4.synthetic'),
+      false,
+    );
+    assert.equal(
+      bySku('vk.kubernetes.master-basic-2-6.synthetic').name,
+      'Мастер Kubernetes · зональный · 2 vCPU / 6 ГиБ *',
     );
     assert.equal(
       bySku('vk.kubernetes.master-basic-2-4.synthetic').name,
       'Мастер Kubernetes · зональный · 2 vCPU / 4 ГиБ *',
     );
+    assert.equal(
+      bySku('vk.kubernetes.master-basic-2-8.synthetic').name,
+      'Мастер Kubernetes · зональный · 2 vCPU / 8 ГиБ *',
+    );
+    assert.equal(
+      bySku('yc.kubernetes.master-basic-2-6.synthetic').name,
+      'Мастер Kubernetes · зональный · 2 vCPU / 6 ГиБ *',
+    );
   });
+
 
   it('paramsLabel for k8s uses the structured helper', () => {
     assert.equal(paramsLabel(bySku('selectel.kubernetes.master-ha')), '3 мастера');
