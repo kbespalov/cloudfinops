@@ -4,6 +4,7 @@ import {
   bestAmount,
   buildExactPriceComparison,
   buildPriceDeltaById,
+  priceDeltaBadgeLabel,
   priceDeltaTitle,
   priceDeltaVsBest,
 } from './compare-delta';
@@ -132,7 +133,9 @@ describe('priceDeltaTitle', () => {
 
   it('describes free cases', () => {
     assert.match(priceDeltaTitle({kind: 'equal-free'}, '0 ₽'), /Бесплатно/);
-    assert.match(priceDeltaTitle({kind: 'free-vs-paid'}, '0 ₽'), /0 ₽/);
+    assert.match(priceDeltaTitle({kind: 'free-vs-paid'}, '0 ₽'), /бесплатный/);
+    assert.equal(priceDeltaBadgeLabel({kind: 'equal-free'}), null);
+    assert.equal(priceDeltaBadgeLabel({kind: 'free-vs-paid'}), 'есть бесплатный');
   });
 });
 

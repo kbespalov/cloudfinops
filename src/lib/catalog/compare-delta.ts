@@ -146,9 +146,9 @@ export function priceDeltaTitle(delta: PriceDelta, bestLabel: string): string {
   if (delta.kind === 'times') {
     return `В ${formatTimes(delta.times)} дороже лучшего точного аналога (${bestLabel})`;
   }
-  if (delta.kind === 'equal-free') return 'Бесплатно у нескольких провайдеров';
+  if (delta.kind === 'equal-free') return 'Бесплатно среди точных аналогов';
   if (delta.kind === 'free-vs-paid') {
-    return `Платный тариф при бесплатном точном аналоге (${bestLabel})`;
+    return `Платный тариф — у точного аналога есть бесплатный (${bestLabel})`;
   }
   return 'Сравнение цены недоступно';
 }
@@ -161,7 +161,9 @@ function formatTimes(times: number): string {
 export function priceDeltaBadgeLabel(delta: PriceDelta): string | null {
   if (delta.kind === 'above') return `+${delta.pct}%`;
   if (delta.kind === 'times') return formatTimes(delta.times);
-  if (delta.kind === 'equal-free') return '0 ₽';
-  if (delta.kind === 'free-vs-paid') return 'есть 0 ₽';
+  // Free row already shows 0,00 ₽ — no extra badge.
+  if (delta.kind === 'equal-free') return null;
+  // Point at the free peer, not a cryptic "есть 0 ₽".
+  if (delta.kind === 'free-vs-paid') return 'есть бесплатный';
   return null;
 }

@@ -1109,7 +1109,7 @@ export function CatalogPage() {
     if (exactComparison?.zeroBaseline) {
       return {
         ...base,
-        detail: 'точные аналоги · есть бесплатный оффер (без % к медиане)',
+        detail: 'точные аналоги · лучший — бесплатно (без % к медиане)',
         priceCompareActive: true,
       };
     }
