@@ -2,7 +2,8 @@
  * Function-calling tools for GigaChat.
  * Primitives: search_catalog, compose_solution, validate_solution, price_solution,
  * compare_solutions, get_product_details.
- * Shortcuts: search_prices, get_quote, compare_unit_price, compare_similar_peers, fit_budget (+ gated).
+ * Shortcuts: search_prices, get_quote, compare_unit_price, compare_similar_peers, fit_budget,
+ * compare_inference_tco, suggest_savings, market_radar (+ gated).
  */
 
 import type {CategoryKey, PeriodMode} from '@/lib/catalog';
@@ -18,6 +19,9 @@ import {compareUnitPrice, type DiskMediaFilter, type UnitComponent} from './anal
 import {catalogAsOfIso} from '@/lib/catalog/compare-disclaimer';
 import {fitBudget, type FitBudgetProfile} from './fit-budget';
 import {recommendInferenceInfra} from './inference-recommend';
+import {compareInferenceTco} from './inference-tco';
+import {suggestSavings} from './suggest-savings';
+import {marketRadar, type MarketRadarItem} from './market-radar';
 import {compareSimilarPeers} from './similar-peers';
 import {
   resolveLakehouseInput,
@@ -517,6 +521,105 @@ export const CHAT_TOOLS = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'compare_inference_tco',
+      description:
+        'TCO Hosted API vs self-host GPU с точкой безубыточности по объёму токенов. Для «API или свои H100», «при каком tok/день self-host выгоднее», «сравни TCO инференса». НЕ замена recommend_inference_infra (конфиги) и НЕ сырой search_prices по токенам без перевода в месяц.',
+      parameters: {
+        type: 'object',
+        properties: {
+          model: {
+            type: 'string',
+            description: 'Модель: gpt-oss-120b, GLM 5.2, Qwen3 32B…',
+          },
+          tokensPerDay: {
+            type: 'number',
+            description: 'Смешанных токенов в сутки (input+output). По умолчанию 1000000.',
+          },
+          inputShare: {
+            type: 'number',
+            description: 'Доля input 0–1 или 0–100 (по умолчанию 0.7 / 70).',
+          },
+          outputShare: {
+            type: 'number',
+            description: 'Доля output 0–1 или 0–100 (по умолчанию 0.3 / 30).',
+          },
+          daysPerMonth: {
+            type: 'number',
+            description: 'Дней в расчётном месяце (по умолчанию 30).',
+          },
+          quant: {
+            type: 'string',
+            enum: ['auto', 'bf16', 'fp8', 'int4', 'int8'],
+            description: 'Квант для self-host (по умолчанию auto).',
+          },
+        },
+        required: ['model'],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'suggest_savings',
+      description:
+        'FinOps-рычаги экономии по конфигурации ВМ/GPU: IP off, SSD↔NVMe/HDD, preemptible, другой провайдер, меньший диск. Для «где сэкономить 20%», «как удешевить эту ВМ». Нужны vcpu+ramGiB или gpuModel. НЕ для абстрактного рынка (market_radar) и НЕ для TCO API vs GPU (compare_inference_tco).',
+      parameters: {
+        type: 'object',
+        properties: {
+          vcpu: {type: 'number', description: 'Число vCPU.'},
+          ramGiB: {type: 'number', description: 'RAM GiB.'},
+          diskGiB: {type: 'number', description: 'Системный диск GiB (по умолчанию 100).'},
+          diskMedia: {
+            type: 'string',
+            enum: ['ssd', 'hdd', 'nvme'],
+            description: 'Тип системного диска.',
+          },
+          publicIpCount: {
+            type: 'number',
+            description: 'Число публичных IP в базе (0 если нет).',
+          },
+          gpuModel: {type: 'string', description: 'H100 / H200 / A100…'},
+          gpuCount: {type: 'number', description: 'Число GPU (по умолчанию 1).'},
+          provider: {
+            type: 'string',
+            description: 'Опционально сфокусироваться на провайдере (Yandex / Selectel…).',
+          },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
+      name: 'market_radar',
+      description:
+        'Срез рынка по сопоставимым корзинам: vCPU, RAM, SSD/NVMe, H100 card, S3 Standard 1 TiB, K8s basic master — рейтинг, медиана, outliers. Для «что сейчас дёшево/дорого», «аномалии рынка», «дайнер по категориям». НЕ для одной ВМ (get_quote) и НЕ unit-only среднего без корзины (compare_unit_price).',
+      parameters: {
+        type: 'object',
+        properties: {
+          basket: {
+            type: 'array',
+            items: {
+              type: 'string',
+              enum: ['vcpu', 'ram', 'ssd', 'nvme', 'gpu_h100', 's3_standard', 'k8s_basic'],
+            },
+            description:
+              'Корзина метрик. По умолчанию vcpu+ram+ssd+gpu_h100+s3_standard+k8s_basic.',
+          },
+          mode: {
+            type: 'string',
+            enum: ['snapshot', 'outliers'],
+            description: 'snapshot (по умолчанию) или outliers с акцентом на разброс.',
+          },
+        },
+        required: [],
+      },
+    },
+  },
 ] as const;
 
 /** Baseline + gated inference recommender (attach only on matching intents). */
@@ -612,6 +715,64 @@ function runFitBudget(args: Record<string, unknown>): unknown {
     ? (profileRaw as FitBudgetProfile)
     : 'general';
   return fitBudget({budgetMonthRub: budget, profile});
+}
+
+const MARKET_RADAR_ITEMS: MarketRadarItem[] = [
+  'vcpu',
+  'ram',
+  'ssd',
+  'nvme',
+  'gpu_h100',
+  's3_standard',
+  'k8s_basic',
+];
+
+function runCompareInferenceTco(args: Record<string, unknown>): unknown {
+  const model = typeof args.model === 'string' ? args.model.trim() : '';
+  if (!model) return {error: 'Укажи model (например gpt-oss-120b или GLM 5.2).'};
+  const quantRaw = typeof args.quant === 'string' ? args.quant : 'auto';
+  const quant =
+    quantRaw === 'auto' || INFERENCE_QUANTS.includes(quantRaw as InferenceDtype)
+      ? (quantRaw as InferenceDtype | 'auto')
+      : 'auto';
+  return compareInferenceTco({
+    model,
+    tokensPerDay: num(args.tokensPerDay),
+    inputShare: typeof args.inputShare === 'number' ? args.inputShare : undefined,
+    outputShare: typeof args.outputShare === 'number' ? args.outputShare : undefined,
+    daysPerMonth: num(args.daysPerMonth),
+    quant,
+  });
+}
+
+function runSuggestSavings(args: Record<string, unknown>): unknown {
+  const diskMediaRaw = typeof args.diskMedia === 'string' ? args.diskMedia.trim() : '';
+  const diskMedia =
+    diskMediaRaw === 'ssd' || diskMediaRaw === 'hdd' || diskMediaRaw === 'nvme'
+      ? diskMediaRaw
+      : undefined;
+  return suggestSavings({
+    vcpu: num(args.vcpu),
+    ramGiB: num(args.ramGiB),
+    diskGiB: num(args.diskGiB),
+    diskMedia,
+    publicIpCount:
+      typeof args.publicIpCount === 'number' && Number.isFinite(args.publicIpCount)
+        ? Math.max(0, args.publicIpCount)
+        : undefined,
+    gpuModel: typeof args.gpuModel === 'string' ? args.gpuModel.trim() : undefined,
+    gpuCount: num(args.gpuCount),
+    provider: typeof args.provider === 'string' ? args.provider.trim() : undefined,
+  });
+}
+
+function runMarketRadar(args: Record<string, unknown>): unknown {
+  const mode = args.mode === 'outliers' ? 'outliers' : 'snapshot';
+  const basketRaw = Array.isArray(args.basket) ? args.basket : undefined;
+  const basket = basketRaw
+    ?.filter((x): x is MarketRadarItem => typeof x === 'string' && MARKET_RADAR_ITEMS.includes(x as MarketRadarItem))
+    .slice(0, 7);
+  return marketRadar({mode, basket});
 }
 
 /** Distinguish a whole-VM/GPU flavor price from a GPU-only accelerator rate. */
@@ -1234,6 +1395,9 @@ export function runToolSync(name: string, rawArgs: string): string {
     if (name === 'compare_unit_price') return JSON.stringify(runCompareUnitPrice(args));
     if (name === 'compare_similar_peers') return JSON.stringify(runCompareSimilarPeers(args));
     if (name === 'fit_budget') return JSON.stringify(runFitBudget(args));
+    if (name === 'compare_inference_tco') return JSON.stringify(runCompareInferenceTco(args));
+    if (name === 'suggest_savings') return JSON.stringify(runSuggestSavings(args));
+    if (name === 'market_radar') return JSON.stringify(runMarketRadar(args));
     if (name === 'recommend_inference_infra') return JSON.stringify(runRecommendInference(args));
     if (name === 'get_lakehouse_quote') return JSON.stringify(runLakehouseQuote(args));
     return JSON.stringify({error: `Неизвестный инструмент: ${name}`});
@@ -1259,6 +1423,9 @@ export async function runTool(name: string, rawArgs: string): Promise<string> {
     if (name === 'compare_unit_price') return JSON.stringify(runCompareUnitPrice(args));
     if (name === 'compare_similar_peers') return JSON.stringify(runCompareSimilarPeers(args));
     if (name === 'fit_budget') return JSON.stringify(runFitBudget(args));
+    if (name === 'compare_inference_tco') return JSON.stringify(runCompareInferenceTco(args));
+    if (name === 'suggest_savings') return JSON.stringify(runSuggestSavings(args));
+    if (name === 'market_radar') return JSON.stringify(runMarketRadar(args));
     if (name === 'recommend_inference_infra') return JSON.stringify(runRecommendInference(args));
     if (name === 'get_lakehouse_quote') return JSON.stringify(runLakehouseQuote(args));
     return JSON.stringify({error: `Неизвестный инструмент: ${name}`});

@@ -19,6 +19,9 @@ export const CHAT_TOOL_NAMES = [
   'compare_unit_price',
   'compare_similar_peers',
   'fit_budget',
+  'compare_inference_tco',
+  'suggest_savings',
+  'market_radar',
   'recommend_inference_infra',
   'get_lakehouse_quote',
 ] as const;
@@ -38,6 +41,9 @@ const TOOL_NAME_USER_LABEL: Record<ChatToolName, string> = {
   compare_unit_price: 'кросс-провайдерной аналитики',
   compare_similar_peers: 'поиска похожих и аномалий',
   fit_budget: 'подбора под бюджет',
+  compare_inference_tco: 'сравнения TCO инференса',
+  suggest_savings: 'подбора рычагов экономии',
+  market_radar: 'радара рынка',
   recommend_inference_infra: 'подбора GPU под инференс',
   get_lakehouse_quote: 'калькулятора lakehouse',
 };
@@ -373,6 +379,12 @@ function inferToolName(
   ) {
     return 'compare_similar_peers';
   }
+  if ('tokensPerDay' in args || 'inputShare' in args || 'outputShare' in args) {
+    return 'compare_inference_tco';
+  }
+  if ('basket' in args || args.mode === 'snapshot' || args.mode === 'outliers') {
+    return 'market_radar';
+  }
   if ('vcpu' in args || 'ramGiB' in args || 'presetId' in args) return 'get_quote';
   if ('gpuModel' in args && !('query' in args) && !('category' in args)) return 'get_quote';
   if ('query' in args || 'storageClass' in args || 'category' in args) return 'search_prices';
@@ -385,7 +397,7 @@ function inferToolName(
   if (fromFn) return fromFn;
 
   const callMention = content.match(
-    /\b(?:call|calling|invoke|use)\s+`?(search_prices|get_quote|compare_unit_price|compare_similar_peers|fit_budget)`?/i,
+    /\b(?:call|calling|invoke|use)\s+`?(search_prices|get_quote|compare_unit_price|compare_similar_peers|fit_budget|compare_inference_tco|suggest_savings|market_radar)`?/i,
   );
   if (callMention) return callMention[1] as ChatToolName;
 

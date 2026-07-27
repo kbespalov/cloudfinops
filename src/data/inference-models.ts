@@ -687,10 +687,13 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
           'FP8 на восьми H200: веса около 550 ГиБ из 1128 ГиБ — запускается, но запас небольшой. Для полного 128K контекста Moonshot часто рекомендует уже 16 GPU.',
       },
     ],
-    hostedCatalogKeys: ['Kimi', 'kimi-k2.6', 'kimi'],
+    hostedCatalogKeys: ['Kimi', 'kimi-k2.6', 'kimi', 'Kimi K2.6'],
     sources: [
       'Moonshot Kimi-K2 deploy guidance (16× H200/H800 FP8 official floor)',
       'Community 8×H200 FP8 ~549 GB weights deployments',
+      'https://cloud.ru/docs/foundation-models/ug/topics/overview__available__models',
+      'Cloud.ru tariff 7.EVO.11.2 «БЯМ Kimi-K2.6»',
+      'MWS GPT Model Hub',
     ],
     checkedAt: '2026-07-27',
     caveats: [

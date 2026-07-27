@@ -513,3 +513,67 @@ spec:
         unit: {quantity: 1M-token, period: usage}
         vat: included
         byteBasis: not-applicable
+  # moonshotai/Kimi-K2.6 — internal (docs overview__available__models).
+  # Tariff 7.EVO.11.2: «БЯМ Kimi-K2.6» 144/595 без НДС → 175,68 / 725,90 с НДС.
+  - sku: cloudru.ai.kimi-k2.6.input
+    name: kimi-k2.6 · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-27'
+    sourceRefs: [cloudru.foundation-models]
+    dimensions:
+      modelFamily: kimi-k2.6
+      modelId: kimi-k2.6
+      openWeights: true
+      modelCapability: text-generation
+      parameterCountB: 1000  # total params, billions
+      activeParameterCountB: 32  # MoE active params, billions
+      inferenceScope: local
+      serviceProduct: foundation-models
+      placement: internal
+      tokenDirection: input
+    notes: >
+      Kimi K2.6 (Moonshot) в Evolution Foundation Models внутри Cloud.ru
+      (локальный inference, данные не уходят во внешний API). Цена — за 1 млн
+      токенов, с НДС; тариф 7.EVO.11.2.
+    pricing:
+      rate:
+        amount: '175.68'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.ai.kimi-k2.6.output
+    name: kimi-k2.6 · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-07-27'
+    sourceRefs: [cloudru.foundation-models]
+    dimensions:
+      modelFamily: kimi-k2.6
+      modelId: kimi-k2.6
+      openWeights: true
+      modelCapability: text-generation
+      parameterCountB: 1000  # total params, billions
+      activeParameterCountB: 32  # MoE active params, billions
+      inferenceScope: local
+      serviceProduct: foundation-models
+      placement: internal
+      tokenDirection: output
+    notes: >
+      Kimi K2.6 (Moonshot) в Evolution Foundation Models внутри Cloud.ru
+      (локальный inference, данные не уходят во внешний API). Цена — за 1 млн
+      токенов, с НДС; тариф 7.EVO.11.2.
+    pricing:
+      rate:
+        amount: '725.90'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable

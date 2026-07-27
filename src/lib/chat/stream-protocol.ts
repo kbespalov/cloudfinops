@@ -34,6 +34,9 @@ const TOOL_STATUS_LABEL: Record<ChatToolName, string> = {
   compare_unit_price: 'Сравниваю цены…',
   compare_similar_peers: 'Ищу похожие и аномалии…',
   fit_budget: 'Подбираю под бюджет…',
+  compare_inference_tco: 'Считаю TCO инференса…',
+  suggest_savings: 'Ищу рычаги экономии…',
+  market_radar: 'Смотрю срез рынка…',
   recommend_inference_infra: 'Подбираю GPU под инференс…',
   get_lakehouse_quote: 'Считаю lakehouse…',
 };
