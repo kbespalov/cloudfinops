@@ -90,7 +90,7 @@ spec:
       В каталоге — ставка сверх бесплатного пула. Первые 3 ТБ общие для входящего
       и исходящего внешнего трафика всех проектов аккаунта; дальше — ~0,90 ₽/GiB.
   - sku: selectel.object-storage.traffic.ingress
-    name: Входящий интернет-трафик S3
+    name: Входящий интернет-трафик Object Storage
     meter: network.traffic.ingress
     status: available
     pricingMode: unit
@@ -114,7 +114,7 @@ spec:
         byteBasis: binary
     notes: Входящий трафик и трафик внутри Selectel не тарифицируются (0 ₽) — docs S3 / payment.
   - sku: selectel.object-storage.standard.traffic.egress
-    name: Исходящий интернет-трафик S3 Standard
+    name: Исходящий интернет-трафик Object Storage
     meter: network.traffic.egress
     status: available
     pricingMode: unit
@@ -131,7 +131,7 @@ spec:
         vat: included
         byteBasis: binary
   - sku: selectel.object-storage.cold.traffic.egress
-    name: Исходящий интернет-трафик S3 Cold
+    name: Исходящий интернет-трафик Object Storage · Cold
     meter: network.traffic.egress
     status: available
     pricingMode: unit
@@ -148,7 +148,7 @@ spec:
         vat: included
         byteBasis: binary
   - sku: selectel.object-storage.ice.traffic.egress
-    name: Исходящий интернет-трафик S3 Glacier
+    name: Исходящий интернет-трафик Object Storage · Ice
     meter: network.traffic.egress
     status: available
     pricingMode: unit

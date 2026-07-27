@@ -146,6 +146,19 @@ export const newsItems: NewsItem[] = [
   },
   // ——— Selectel ———
   {
+    id: 'selectel-2026-04-dkaas-deckhouse',
+    date: '2026-04-09',
+    provider: 'selectel',
+    providerName: 'Selectel',
+    title: 'Managed Deckhouse (DKaaS) в облаке Selectel',
+    summary:
+      'Selectel и Deckhouse запустили Deckhouse Kubernetes as a Service: полноценная Deckhouse Kubernetes Platform на инфраструктуре Selectel с SLA 99,98%. Это не замена Managed Kubernetes, а соседний продукт — больше контроля над кластером, гибрид on-prem↔облако через глобальный роутер и привычный Deckhouse-опыт без смены CI/CD. Оплата pay-as-you-go: инфраструктура + лицензия Standard Edition+ (2,25 ₽/vCPU·час ноды). Удобно для пилотов на 3–6 месяцев, GPU/AI-нагрузок и резервной площадки без второго ДЦ — в TCO закладывайте лицензию отдельно от ВМ.',
+    tags: ['kubernetes', 'finops'],
+    sourceUrl:
+      'https://selectel.ru/about/newsroom/news/selectel-i-deckhouse-zapuskayut-dkaas-servis-dlya-bystrogo-i-bezopasnogo-razvertyvaniya-deckhouse-kubernetes-platform-v-oblake-s-gibkoj-modelyu-oplaty/',
+    sourceLabel: 'Пресс-центр Selectel',
+  },
+  {
     id: 'selectel-2026-06-ai-router',
     date: '2026-06-30',
     provider: 'selectel',
