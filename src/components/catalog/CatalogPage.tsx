@@ -45,7 +45,7 @@ import {
   SquareDashed,
   SquareListUl,
 } from '@gravity-ui/icons';
-import {usePathname, useRouter, useSearchParams} from 'next/navigation';
+import {usePathname, useSearchParams} from 'next/navigation';
 import {
   CATEGORY_TITLE,
   amountNumber,
@@ -433,7 +433,6 @@ function priceColumnTitle(
 }
 
 export function CatalogPage() {
-  const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const searchRef = useRef<HTMLInputElement>(null);
@@ -515,7 +514,9 @@ export function CatalogPage() {
   const similarActiveRef = useRef(similarActive);
   similarActiveRef.current = similarActive;
 
-  // Debounced URL sync — avoid router thrash on every keystroke
+  // Debounced URL sync via history.replaceState — NOT router.replace.
+  // App Router soft-navigation on every filter/find-similar was making «Подобрать»
+  // feel like 5–10s (RSC/Suspense refresh) even though peer-match is <5ms.
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const params = new URLSearchParams();
@@ -550,7 +551,11 @@ export function CatalogPage() {
       if (providers.length) params.set('providers', providers.join(','));
       if (sort !== 'price-asc') params.set('sort', sort);
       const qs = params.toString();
-      router.replace(qs ? `${pathname}?${qs}` : pathname, {scroll: false});
+      const next = qs ? `${pathname}?${qs}` : pathname;
+      const current = `${window.location.pathname}${window.location.search}`;
+      if (current !== next) {
+        window.history.replaceState(window.history.state, '', next);
+      }
     }, 350);
     return () => window.clearTimeout(timer);
   }, [
@@ -573,7 +578,6 @@ export function CatalogPage() {
     pathname,
     period,
     providers,
-    router,
     search,
     sort,
   ]);
@@ -892,6 +896,8 @@ export function CatalogPage() {
   );
 
   const filtered = useMemo(() => {
+    // Similar mode renders peer rows, not this list — skip the full scan.
+    if (similarActive && similarSeedId) return [] as CatalogMeter[];
     const providerSet = providers.length ? new Set(providers) : null;
     const list = baseMeters.filter((m) => {
       if (!meterMatchesCategory(m, category)) return false;
@@ -987,6 +993,7 @@ export function CatalogPage() {
     kubernetesShapelessOnly,
     kubernetesMasterSize,
     similarActive,
+    similarSeedId,
     aiFacet,
     aiFamilyFacet,
     aiModel,
@@ -1203,6 +1210,10 @@ export function CatalogPage() {
     const next = comparableFilterFromMeter(meter);
     if (!next) return;
     clearSimilarHover();
+    // Activate similar seed first so displayMeters switches before chip/filter churn.
+    setSimilarActive(true);
+    setSimilarSeedId(meter.id);
+    setSimilarSummary(next.summary);
     startTransition(() => {
       setCategory(next.category);
       setFacet(next.facet);
@@ -1231,9 +1242,6 @@ export function CatalogPage() {
       setSearch('');
       setProviders([]);
       setSort('price-asc');
-      setSimilarActive(true);
-      setSimilarSeedId(meter.id);
-      setSimilarSummary(next.summary);
     });
   }, [clearSimilarHover]);
 

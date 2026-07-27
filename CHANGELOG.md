@@ -2,6 +2,10 @@
 
 ## 2026-07-27
 
+### Каталог / «Подобрать» без тормозов URL
+
+Синхронизация фильтров каталога больше не вызывает `router.replace` (soft-navigation App Router / Suspense). Пишем query через `history.replaceState` — «Найти похожие» и смена чипов остаются мгновенными; peer-match и так был ~мс.
+
 ### Каталог / peer-match: P0 test matrix (Cloud.ru × MWS)
 
 Добавили таблицу exact/functional кейсов из YAML: extract / classify / select / invariants + comparison gates. Подкрутили extractor: unit vCPU без `workloadFamily` → `general`; disk `workloadClass`/`redundancy` n/a; ingress traffic route+unit; `sourcePackSize` из `nativeBillingStepRequests`. K8s shapeless Small остаётся exact по size tier (shape soft).
