@@ -78,7 +78,8 @@ export type RateLimitOk = {ok: true; reservedTokens: number};
 
 type TokenEvent = {at: number; tokens: number};
 
-class ChatRateLimiter {
+/** In-memory sliding-window limiter (exported for unit tests). */
+export class ChatRateLimiter {
   private tokenEvents: TokenEvent[] = [];
   private ipRequests = new Map<string, number[]>();
 
