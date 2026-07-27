@@ -67,6 +67,11 @@ function pct(n: number): number {
   return Math.round(n * 10) / 10;
 }
 
+/** GPU-host unit SKUs (e.g. Yandex Gen2) — not like-for-like with general compute. */
+function isGpuHostOnlyMeter(m: CatalogMeter): boolean {
+  return m.dimensions.gpuHostOnly === true || m.dimensions.gpuHostOnly === 'true';
+}
+
 function meterForComponent(
   component: UnitComponent,
   m: CatalogMeter,
@@ -76,6 +81,8 @@ function meterForComponent(
   // Derived / synthetic unit rates (Cloud.ru lattice *) stay out of the
   // like-for-like average — they surface via derivedFromFlavors instead.
   if (m.synthetic) return false;
+  // Same rule as calculator quotes: Gen2/GPU-host cores must not win «цена ядра».
+  if (component !== 'ssd' && isGpuHostOnlyMeter(m)) return false;
   if (component === 'vcpu') return m.meter === 'compute.vcpu' || isVcpuMeter(m);
   if (component === 'ram') return m.meter === 'compute.ram' || isRamMeter(m);
   // ssd: block storage capacity; media filter separates SSD vs NVMe tiers.

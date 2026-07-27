@@ -68,9 +68,9 @@ describe('quoteLakehouse', () => {
     const basic = quoteLakehouse(resolveLakehouseInput('medium', {k8sTier: 'basic'}), 'month');
     const haProviders = new Set(ha.quotes.map((q) => q.provider));
     const basicProviders = new Set(basic.quotes.map((q) => q.provider));
-    // Cloud.ru HA = 3× zonal master (synthetic); T1 still has only basic.
+    // Cloud.ru HA = 3× zonal master (synthetic); T1 now publishes real HA masters.
     assert.ok(haProviders.has('cloud-ru'));
-    assert.ok(!haProviders.has('t1-cloud'));
+    assert.ok(haProviders.has('t1-cloud'));
     assert.ok(basicProviders.has('cloud-ru'));
     // Every HA quote must carry a high-availability master line, never zonal.
     for (const q of ha.quotes) {
