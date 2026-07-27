@@ -97,8 +97,8 @@ export function pickK8sMasterMeter(
 
 function k8sMasterLabel(tier: 'basic' | 'ha'): string {
   return tier === 'ha'
-    ? 'Managed Kubernetes · отказоустойчивый'
-    : 'Managed Kubernetes · базовый';}
+    ? 'Managed Kubernetes · региональный'
+    : 'Managed Kubernetes · зональный';}
 
 function poolLabel(kind: 'platform' | 'etl' | 'query', pool: LakehouseNodePool): string {
   const hours = clampHours(pool.hoursPerDay);

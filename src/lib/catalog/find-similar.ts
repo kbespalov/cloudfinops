@@ -213,8 +213,8 @@ export function comparableFilterFromMeter(meter: CatalogMeter): ComparableCatalo
         kubernetesAvailabilityFacet: availability,
         summary:
           availability === 'zonal'
-            ? 'Kubernetes · Зональный'
-            : 'Kubernetes · Региональный (HA)',
+            ? 'Kubernetes · зональный'
+            : 'Kubernetes · региональный',
       };
     }
     case 'ai': {

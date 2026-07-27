@@ -59,18 +59,16 @@ import {
   extractDiskVariant,
   formatGpuLabel,
   gpuPriceBasisLabel,
-  extractKubernetesAvailability,
   extractRamGiB,
   extractStorageClass,
   extractVcpu,
+  formatKubernetesParamsLabel,
   isAiTokenMeter,
   isDiskMeter,
   isImageMeter,
   isSnapshotMeter,
   formatAsOf,
   formatPlatform,
-  kubernetesAvailabilityLabel,
-  kubernetesFaultToleranceHint,
   AI_FAMILY_TITLE,
   meterMatchesAiFacet,
   meterMatchesAiFamilyFacet,
@@ -1160,14 +1158,8 @@ export function CatalogPage() {
             const model = extractAiModelFamily(m);
             title = model ? `${model} · ${label}` : label;
           } else if (category === 'kubernetes') {
-            const availability = extractKubernetesAvailability(m);
-            if (availability) {
-              label = kubernetesAvailabilityLabel(availability);
-              title = `${label} · ${kubernetesFaultToleranceHint(availability)}`;
-            } else {
-              label = '—';
-              title = 'Компонент мастера без зональности';
-            }
+            label = formatKubernetesParamsLabel(m);
+            title = label === '—' ? 'Компонент мастера без зональности' : label;
           } else if (category === 'storage') {
             // Only object storage class — never show bare GiB as «Класс»
             const cls = extractStorageClass(m);

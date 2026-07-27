@@ -130,7 +130,7 @@ export const DOMAIN_CARD_K8S = `## Managed Kubernetes
 - Нет workerCount → preview с assumption (1 или 3) + validate; не подставляй 3 ноды как факт пользователя.
 - «Без worker-нод» → скажи, что managed K8s без workers неполное/нецелевое; не выдавай одну цену control plane как готовый кластер.
 - Только сравнение мастеров без workers → search_prices category=kubernetes. k8sTier=basic (зональный) по умолчанию; HA → k8sTier=ha.
-- НЕ цена мастера: 0 ₽ «фикс», Master vCPU/RAM по отдельности. VK/Yandex опора — «Зональный мастер 2 vCPU / 4 ГиБ» (synthetic-bundle).
+- НЕ цена мастера: 0 ₽ «фиксированная плата», unit «Ресурсы мастера · vCPU/RAM» по отдельности. VK/Yandex опора — «Мастер Kubernetes · зональный · 2 vCPU / 4 ГиБ *» (synthetic-bundle).
 - Selectel/MWS/T1 (native-fixed) — по сумме с пометкой; не утверждай 2/4. Зональный ≠ HA без явной просьбы.
 - Явный запрет S3/CDN → compose без них; можно написать «не включаю», не предлагай добавить.`;
 

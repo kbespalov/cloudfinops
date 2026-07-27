@@ -1148,6 +1148,51 @@ export function kubernetesFaultToleranceHint(availability: 'zonal' | 'regional')
   return availability === 'zonal' ? 'Не отказоустойчивый' : 'Отказоустойчивый';
 }
 
+/** Provider-original SKU title from price book (`dimensions.nativeName`), if stored. */
+export function meterNativeName(meter: CatalogMeter): string | null {
+  const native = meter.dimensions.nativeName;
+  return typeof native === 'string' && native.trim() ? native.trim() : null;
+}
+
+function isKubernetesUnitComponent(meter: CatalogMeter): boolean {
+  if (meter.categoryKey !== 'kubernetes') return false;
+  if (/\.(vcpu|ram)$/i.test(meter.meter)) return true;
+  const q = (meter.unitQuantity ?? '').toLowerCase();
+  return q === 'vcpu' || q === 'gib-ram' || q === 'gib';
+}
+
+function kubernetesMasterCount(meter: CatalogMeter): number | null {
+  const n = Number(meter.dimensions.masterCount);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function formatMasterCountRu(count: number): string {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+  if (mod10 === 1 && mod100 !== 11) return `${count} мастер`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${count} мастера`;
+  return `${count} мастеров`;
+}
+
+/**
+ * Specs column for Kubernetes — countable attrs (master count, synthetic), not title.
+ * Canonical titles live in price-book `name`.
+ */
+export function formatKubernetesParamsLabel(meter: CatalogMeter): string {
+  if (meter.categoryKey !== 'kubernetes') return '—';
+  if (isKubernetesUnitComponent(meter)) {
+    const unit = billingUnitLabel(meter);
+    return unit && unit !== '—' ? unit : '—';
+  }
+
+  const parts: string[] = [];
+  const masters = kubernetesMasterCount(meter);
+  if (masters != null) parts.push(formatMasterCountRu(masters));
+  if (meter.synthetic || meter.sku.includes('.synthetic')) parts.push('оценка *');
+
+  return parts.length ? parts.join(' · ') : '—';
+}
+
 export function meterMatchesKubernetesAvailabilityFacet(
   meter: CatalogMeter,
   facet: KubernetesAvailabilityFacet,
@@ -1164,6 +1209,7 @@ export function meterMatchesSearch(meter: CatalogMeter, q: string): boolean {
     meter.sku.toLowerCase().includes(s) ||
     meter.name.toLowerCase().includes(s) ||
     displayMeterName(meter).toLowerCase().includes(s) ||
+    (meterNativeName(meter) || '').toLowerCase().includes(s) ||
     meter.providerName.toLowerCase().includes(s) ||
     meter.meter.toLowerCase().includes(s) ||
     (meter.cpuPlatformFamily || '').toLowerCase().includes(s) ||
@@ -1210,11 +1256,12 @@ export function formatParameterCount(meter: CatalogMeter): string | null {
 }
 
 export function paramsLabel(meter: CatalogMeter): string {
+  if (meter.categoryKey === 'kubernetes') {
+    return formatKubernetesParamsLabel(meter);
+  }
+
   const dims = meter.dimensions;
   const parts: string[] = [];
-
-  const k8sAvailability = extractKubernetesAvailability(meter);
-  if (k8sAvailability) parts.push(kubernetesAvailabilityLabel(k8sAvailability));
 
   if (isAiTokenMeter(meter)) {
     const paramCount = formatParameterCount(meter);

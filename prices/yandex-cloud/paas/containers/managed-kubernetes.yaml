@@ -9,7 +9,7 @@ metadata:
 spec:
   meters:
   - sku: yc.kubernetes.master-vcpu
-    name: Master vCPU
+    name: Ресурсы мастера Kubernetes · vCPU
     meter: containers.kubernetes.control-plane.vcpu
     status: available
     pricingMode: unit
@@ -20,6 +20,7 @@ spec:
     - yc.billing-api
     - yc.kubernetes
     dimensions:
+      nativeName: Master vCPU
       component: master-vcpu
       yandexSkuId: dn2pjj9vapo7724rik0b
       serviceId: dn2af04ph5otc5f23o1h
@@ -44,7 +45,7 @@ spec:
       Цена за один vCPU мастера. Чтобы сравнить с другими облаками, смотрите
       «Зональный мастер 2 vCPU / 4 ГиБ».
   - sku: yc.kubernetes.master-ram
-    name: Master RAM
+    name: Ресурсы мастера Kubernetes · RAM
     meter: containers.kubernetes.control-plane.ram
     status: available
     pricingMode: unit
@@ -55,6 +56,7 @@ spec:
     - yc.billing-api
     - yc.kubernetes
     dimensions:
+      nativeName: Master RAM
       component: master-ram
       yandexSkuId: dn2u6o8avnm6b5tb8klu
       serviceId: dn2af04ph5otc5f23o1h
@@ -79,7 +81,7 @@ spec:
       Цена за 1 ГиБ RAM мастера. Чтобы сравнить с другими облаками, смотрите
       «Зональный мастер 2 vCPU / 4 ГиБ».
   - sku: yc.kubernetes.master-zonal
-    name: Зональный мастер — фикс
+    name: Мастер Kubernetes · зональный · фиксированная плата
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: fixed
@@ -90,6 +92,7 @@ spec:
     - yc.billing-api
     - yc.kubernetes
     dimensions:
+      nativeName: Зональный мастер — фикс
       topology: zonal
       availability: zonal
       faultTolerant: false
@@ -110,7 +113,7 @@ spec:
       Отдельная плата за зональный мастер — 0 ₽; платите только за vCPU и RAM.
       Для сравнения смотрите «Зональный мастер 2 vCPU / 4 ГиБ».
   - sku: yc.kubernetes.master-regional
-    name: Региональный мастер — фикс
+    name: Мастер Kubernetes · региональный · фиксированная плата
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: fixed
@@ -121,6 +124,7 @@ spec:
     - yc.billing-api
     - yc.kubernetes
     dimensions:
+      nativeName: Региональный мастер — фикс
       topology: regional
       availability: regional
       faultTolerant: true
@@ -141,7 +145,7 @@ spec:
       Отдельная плата за региональный мастер — 0 ₽; платите только за vCPU и RAM.
       Для сравнения смотрите «Региональный мастер 3×(2 vCPU / 4 ГиБ)».
   - sku: yc.kubernetes.master-basic-2-4.synthetic
-    name: Зональный мастер 2 vCPU / 4 ГиБ *
+    name: Мастер Kubernetes · зональный · 2 vCPU / 4 ГиБ *
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -153,6 +157,7 @@ spec:
     - yc.kubernetes
     priceProvenance: derived
     dimensions:
+      nativeName: Зональный мастер 2 vCPU / 4 ГиБ *
       comparabilityClass: synthetic-bundle
       comparableTier: basic
       availability: zonal
@@ -192,7 +197,7 @@ spec:
       с готовыми пакетами других облаков. Размер мастера при создании можно
       выбрать другим; рабочие ноды не входят.
   - sku: yc.kubernetes.master-ha-2-4.synthetic
-    name: Региональный мастер 3×(2 vCPU / 4 ГиБ) *
+    name: Мастер Kubernetes · региональный · 3 × 2 vCPU / 4 ГиБ *
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -204,6 +209,7 @@ spec:
     - yc.kubernetes
     priceProvenance: derived
     dimensions:
+      nativeName: Региональный мастер 3×(2 vCPU / 4 ГиБ) *
       comparabilityClass: synthetic-bundle
       comparableTier: ha
       availability: regional

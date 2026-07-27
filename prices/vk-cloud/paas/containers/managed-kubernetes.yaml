@@ -9,7 +9,7 @@ metadata:
 spec:
   meters:
   - sku: vk.kubernetes.master-vcpu
-    name: Master CPU, Intel Cascade Lake
+    name: Ресурсы мастера Kubernetes · vCPU
     meter: containers.kubernetes.control-plane.vcpu
     status: available
     pricingMode: unit
@@ -20,6 +20,7 @@ spec:
     - vk.pricelist
     - vk.k8s-rules
     dimensions:
+      nativeName: Master CPU, Intel Cascade Lake
       component: master vCPU
       cpuPlatformFamily: intel-cascade-lake
       published30Days: 983.51
@@ -44,7 +45,7 @@ spec:
       Цена за один vCPU мастера (Intel Cascade Lake). Чтобы сравнить с другими
       облаками, смотрите «Зональный мастер 2 vCPU / 4 ГиБ».
   - sku: vk.kubernetes.master-ram
-    name: Master RAM
+    name: Ресурсы мастера Kubernetes · RAM
     meter: containers.kubernetes.control-plane.ram
     status: available
     pricingMode: unit
@@ -55,6 +56,7 @@ spec:
     - vk.pricelist
     - vk.k8s-rules
     dimensions:
+      nativeName: Master RAM
       component: master-ram
       published30Days: 267.18
     pricing:
@@ -78,7 +80,7 @@ spec:
       Цена за 1 ГиБ RAM мастера. Чтобы сравнить с другими облаками, смотрите
       «Зональный мастер 2 vCPU / 4 ГиБ».
   - sku: vk.kubernetes.master-basic-2-4.synthetic
-    name: Зональный мастер 2 vCPU / 4 ГиБ *
+    name: Мастер Kubernetes · зональный · 2 vCPU / 4 ГиБ *
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -90,6 +92,7 @@ spec:
     - vk.k8s-rules
     priceProvenance: derived
     dimensions:
+      nativeName: Зональный мастер 2 vCPU / 4 ГиБ *
       comparabilityClass: synthetic-bundle
       comparableTier: basic
       availability: zonal
@@ -127,7 +130,7 @@ spec:
       с НДС) — чтобы приблизительно сравнить с готовыми пакетами других облаков.
       Размер мастера при создании можно выбрать другим; рабочие ноды не входят.
   - sku: vk.kubernetes.master-ha-2-4.synthetic
-    name: Региональный мастер 3×(2 vCPU / 4 ГиБ) *
+    name: Мастер Kubernetes · региональный · 3 × 2 vCPU / 4 ГиБ *
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -139,6 +142,7 @@ spec:
     - vk.k8s-rules
     priceProvenance: derived
     dimensions:
+      nativeName: Региональный мастер 3×(2 vCPU / 4 ГиБ) *
       comparabilityClass: synthetic-bundle
       comparableTier: ha
       availability: regional

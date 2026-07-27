@@ -21,6 +21,7 @@ import {
   billingUnitLabel,
   displayAmount,
   displayMeterName,
+  meterNativeName,
   extractDiskIopsLimits,
   extractOpenWeights,
   formatAsOf,
@@ -97,6 +98,8 @@ export function SkuDrawer({
   const selfHostHref =
     meter && showSelfHost ? chatUrlForQuery(buildSkuSelfHostPrompt(meter)) : '/chat';
   const openWeights = meter ? extractOpenWeights(meter) : null;
+  const nativeName = meter ? meterNativeName(meter) : null;
+  const title = meter ? displayMeterName(meter) : '';
 
   return (
     <Drawer
@@ -128,10 +131,10 @@ export function SkuDrawer({
               </Flex>
 
               <Flex direction="column" gap={2} className={styles.titleBlock}>
-                <Text variant="header-1">{displayMeterName(meter)}</Text>
-                {displayMeterName(meter) !== meter.name ? (
+                <Text variant="header-1">{title}</Text>
+                {nativeName && nativeName !== title ? (
                   <Text variant="body-1" color="secondary">
-                    {meter.name}
+                    {nativeName}
                   </Text>
                 ) : null}
                 <Flex alignItems="center" gap={1}>

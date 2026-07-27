@@ -9,7 +9,7 @@ metadata:
 spec:
   meters:
   - sku: selectel.kubernetes.master-basic
-    name: Базовый кластер, 1 master
+    name: Мастер Kubernetes · зональный · фиксированная плата
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: fixed
@@ -21,6 +21,7 @@ spec:
     - selectel.calculator
     - selectel.k8s-rules
     dimensions:
+      nativeName: Базовый кластер, 1 master
       topology: basic
       availability: zonal
       faultTolerant: false
@@ -51,7 +52,7 @@ spec:
       мастера, в публичном прайсе не указано: с пакетами «2 vCPU / 4 ГиБ» других
       облаков сравнивайте только по итоговой сумме. Рабочие ноды — отдельно.
   - sku: selectel.kubernetes.master-ha
-    name: Отказоустойчивый кластер, 3 master
+    name: Мастер Kubernetes · региональный · фиксированная плата
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: fixed
@@ -63,6 +64,7 @@ spec:
     - selectel.calculator
     - selectel.k8s-rules
     dimensions:
+      nativeName: Отказоустойчивый кластер, 3 master
       topology: high-availability
       availability: regional
       faultTolerant: true

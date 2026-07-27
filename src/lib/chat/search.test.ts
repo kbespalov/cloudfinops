@@ -266,12 +266,12 @@ describe('searchPricesDetailed kubernetes masters', () => {
     assert.ok(r.providers.length >= 5, `expected ≥5 providers, got ${r.providers.length}`);
 
     const byId = Object.fromEntries(r.providers.map((p) => [p.provider, p.cheapest]));
-    assert.match(byId['vk-cloud']?.name ?? '', /Зональный мастер 2 vCPU/i);
+    assert.match(byId['vk-cloud']?.name ?? '', /Мастер Kubernetes · зональный · 2 vCPU/i);
     assert.ok((byId['vk-cloud']?.hour ?? 0) > 1);
-    assert.match(byId['yandex-cloud']?.name ?? '', /Зональный мастер 2 vCPU/i);
+    assert.match(byId['yandex-cloud']?.name ?? '', /Мастер Kubernetes · зональный · 2 vCPU/i);
     assert.ok((byId['yandex-cloud']?.hour ?? 0) > 1);
-    assert.doesNotMatch(byId['yandex-cloud']?.name ?? '', /фикс/i);
-    assert.match(byId['cloud-ru']?.name ?? '', /2 vCPU|2 vCPU/i);
+    assert.doesNotMatch(byId['yandex-cloud']?.name ?? '', /фиксированная плата/i);
+    assert.match(byId['cloud-ru']?.name ?? '', /2 vCPU/);
     assert.ok(byId['selectel']?.k8sTier === 'basic');
     assert.ok((byId['selectel']?.hour ?? 0) > 1);
 
