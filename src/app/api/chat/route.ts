@@ -174,7 +174,7 @@ export async function POST(req: Request) {
         : CHAT_TOOLS;
   const messages: ChatMessage[] = [{role: 'system', content: systemContent}, ...history];
   const inputTokens = estimateMessagesTokens(messages);
-  const reservedTokens = reserveTokensForRequest(inputTokens);
+  const reservedTokens = reserveTokensForRequest(inputTokens, {llmOnly});
   const budget = chatRateLimiter.tryAcquire(ip, reservedTokens);
 
   if (!budget.ok) {
