@@ -23,6 +23,38 @@ import {resolveToolCalls, sanitizeUserFacingAnswer} from './tool-call-recovery';
 import {CHAT_TOOLS, runTool} from './tools';
 
 /**
+ * Gemini/Flash (and similar) sometimes emit a status line after compose_solution
+ * («валидирую лидера…», «запускаю точный прайсинг») instead of the table or
+ * the next tool_calls. That must not be shown as the final answer.
+ */
+export function looksLikeIncompleteAgentNarration(text: string): boolean {
+  const t = text.trim();
+  if (!t || t.length < 24) return false;
+  // Real priced answer — keep.
+  if (
+    /(?:₽\s*\/\s*мес|Итого\s*\/\s*мес|\|\s*Провайдер\s*\|)/i.test(t) &&
+    /\d[\d\s\u00a0.,]*\s*₽/.test(t)
+  ) {
+    return false;
+  }
+  if (
+    /(?:валидир\w*|запускаю\s+точн|параллельн\w*\s+по\s+всем|точн\w*\s+прайсинг|сейчас\s+запущу|We will (?:now )?call|I'll (?:now )?call|next I will|calling tools)/i.test(
+      t,
+    )
+  ) {
+    return true;
+  }
+  // «Все 6 решений … valid» without any ₽ figures.
+  if (
+    /(?:решени\w*\s+вернул|со статусом\s+valid|status[=:]\s*valid)/i.test(t) &&
+    !/\d[\d\s\u00a0.,]*\s*₽/.test(t)
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/**
  * Agent-path guard: if the model answers with prose and zero tools on a
  * catalog/compose question, retry once with tool_choice=required.
  * This is NOT a fast-path — the LLM still chooses which tool and args.
@@ -136,6 +168,7 @@ export async function runToolLoop(options: {
   let requiredRetryUsed = false;
   let emptyAfterToolsNudgeUsed = false;
   let forceToolsUsed = false;
+  let incompleteNarrationNudgeUsed = false;
 
   for (let round = 0; round < options.maxRounds; round++) {
     let reply = await chatCompletion(messages, tools, {
@@ -200,6 +233,46 @@ export async function runToolLoop(options: {
           break;
         }
         // kind === 'tools' → fall through to tool execution below
+      } else if (
+        text &&
+        toolCallsTotal > 0 &&
+        !incompleteNarrationNudgeUsed &&
+        looksLikeIncompleteAgentNarration(text)
+      ) {
+        // Status/plan after tools (common on Gemini Flash) — rescue table, else nudge.
+        incompleteNarrationNudgeUsed = true;
+        const rescued = tryDeterministicAfterTools(messages, {
+          allowStackCompose: looksMultiComponentStack(lastUserQuestion(messages)),
+        });
+        if (rescued) {
+          finalText = sanitizeUserFacingAnswer(rescued);
+          break;
+        }
+        messages.push({role: 'assistant', content: text});
+        messages.push({
+          role: 'user',
+          content: looksMultiComponentStack(lastUserQuestion(messages))
+            ? EMPTY_AFTER_STACK_NUDGE
+            : EMPTY_AFTER_TOOLS_NUDGE,
+        });
+        const forced = await chatCompletion(
+          looksMultiComponentStack(lastUserQuestion(messages))
+            ? (messagesForStackFinal({
+                userText: lastUserQuestion(messages),
+                toolPayloads: extractAllToolPayloads(messages),
+              }) ?? messagesForShortFinal(messages))
+            : messagesForShortFinal(messages),
+          undefined,
+          {signal: options.signal},
+        );
+        const forcedText = (forced.content ?? '').trim();
+        if (forcedText && !looksLikeIncompleteAgentNarration(forcedText)) {
+          finalText = sanitizeUserFacingAnswer(forcedText);
+        } else {
+          const second = tryDeterministicAfterTools(messages, {allowStackCompose: true});
+          finalText = second ? sanitizeUserFacingAnswer(second) : null;
+        }
+        break;
       } else if (text) {
         finalText = sanitizeUserFacingAnswer(text);
         break;
