@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
 import {
+  DOMAIN_CARD_AI,
+  DOMAIN_CARD_GPU,
+  DOMAIN_CARD_K8S,
   SYSTEM_PROMPT,
   SYSTEM_PROMPT_CORE,
   assembleSystemPrompt,
@@ -139,8 +142,25 @@ describe('matchPlanningDomains', () => {
     assert.ok(d.includes('ai'), d.join(','));
     assert.ok(!d.includes('gpu'), `must not invent GPU rent: ${d.join(',')}`);
     const prompt = buildSystemPrompt(q);
-    assert.match(prompt, /search_prices category=ai|gpt-oss-120b|70\/30/i);
-    assert.match(prompt, /Запрещено|есть.*в каталоге/i);
+    assert.match(prompt, /search_prices category=ai|70\/30/i);
+    assert.match(prompt, /Запрещено|не подменя/i);
+    assert.match(prompt, /CATALOG FACTS[\s\S]*gpt-oss-120b/);
+    assert.match(prompt, /yandex|mws|cloud\.ru/);
+  });
+
+  it('static domain cards omit hardcoded catalog matrices and price anecdotes', () => {
+    assert.ok(!/s-c2-m8|форм 2\/4 и 2\/6|VK:\s*2\/6/.test(DOMAIN_CARD_K8S));
+    assert.ok(!/gpt-oss-120b\s*\/\s*gpt-oss-20b\s*\*\*есть\*\*/.test(DOMAIN_CARD_AI));
+    assert.ok(!/Yandex,\s*MWS,\s*Cloud\.ru/.test(DOMAIN_CARD_AI));
+    assert.ok(!/~\s*300\s*₽|~\s*340к/.test(DOMAIN_CARD_GPU));
+  });
+
+  it('k8s ask injects live master defaults into planning prompt', () => {
+    const prompt = buildSystemPrompt('Сравни Managed Kubernetes по провайдерам');
+    assert.match(prompt, /## Managed Kubernetes/);
+    assert.match(prompt, /CATALOG FACTS/);
+    assert.match(prompt, /yandex 2\/8/);
+    assert.ok(!/s-c2-m8.*4\/8 · 4\/16/.test(prompt), 'old static matrix must be gone');
   });
 
   it('named model + 1M tokens stays on AI even if «инференс» appears', () => {
@@ -192,5 +212,48 @@ describe('buildSystemPrompt size', () => {
 
   it('assembleSystemPrompt([]) returns core only', () => {
     assert.equal(assembleSystemPrompt([]), SYSTEM_PROMPT_CORE);
+  });
+});
+
+describe('buildSystemPrompt catalog facts wiring', () => {
+  it('GPU-only ask does not inject CATALOG FACTS', () => {
+    const prompt = buildSystemPrompt('Самый дешёвый H100 в месяц');
+    assert.ok(prompt.includes('## GPU'));
+    assert.ok(!prompt.includes('CATALOG FACTS'));
+  });
+
+  it('eval SYSTEM_PROMPT baseline stays static (no live snapshot body)', () => {
+    // Cards may mention the section name, but must not embed live rows.
+    assert.ok(!/K8s masters \(catalog defaults/.test(SYSTEM_PROMPT));
+    assert.ok(!/AI hosted API «/.test(SYSTEM_PROMPT));
+    assert.ok(!/yandex 2\/8/.test(SYSTEM_PROMPT));
+  });
+
+  it('self-host GLM does not inject AI availability facts', () => {
+    const prompt = buildSystemPrompt('Подбери инфраструктуру для GLM 5.2');
+    assert.ok(!prompt.includes('CATALOG FACTS'), 'self-host should not get AI hosted snapshot');
+    assert.ok(!/AI hosted API/.test(prompt));
+  });
+
+  it('history can keep k8s card while AI facts use current turn only', () => {
+    const prompt = buildSystemPrompt('а теперь токены gpt-oss-120b', {
+      historyText: 'Сравни Managed Kubernetes по провайдерам',
+    });
+    assert.match(prompt, /## Managed Kubernetes/);
+    assert.match(prompt, /CATALOG FACTS/);
+    assert.match(prompt, /K8s masters/);
+    assert.match(prompt, /gpt-oss-120b/);
+  });
+
+  it('AI availability facts use current userText only (not history model name)', () => {
+    const prompt = buildSystemPrompt('Сравни Managed Kubernetes masters', {
+      historyText: 'Сколько стоит gpt-oss-120b?',
+    });
+    // History may still attach the AI policy card, but live availability is keyed off userText.
+    assert.match(prompt, /K8s masters/);
+    assert.ok(
+      !/AI hosted API «gpt-oss-120b»/.test(prompt),
+      'must not snapshot history model when current turn has no model',
+    );
   });
 });

@@ -1,8 +1,12 @@
 /**
  * Planning system prompt: compact CORE + intent-gated domain cards.
  * Domain failure-mode rules stay intact; we only avoid shipping every card
- * on every turn. Final-answer formatting lives in FAST_PATH_FINAL_SYSTEM.
+ * on every turn. Catalog shapes/availability are injected live via
+ * buildCatalogFactsAddendum (not hardcoded in cards).
+ * Final-answer formatting lives in FAST_PATH_FINAL_SYSTEM.
  */
+
+import {buildCatalogFactsAddendum} from '@/lib/chat/catalog-facts';
 
 export type PlanningDomain =
   | 'gpu'
@@ -95,9 +99,10 @@ B) Стек/K8s/inference/lakehouse:
 - Уточнение без чисел ок только если без формы нельзя даже preview; иначе preview+1 вопрос.`;
 
 export const DOMAIN_CARD_GPU = `## GPU / паритет хоста
-- Card-only и «конфигурация целиком» несопоставимы — не в одной таблице как равнозначные.
+- Card-only и «конфигурация целиком» несопоставимы — не в одной таблице как равнозначные. Нормальный диалог: сначала карта (search_prices), потом по просьбе — пример сборки (get_quote); не сваливай всё в один ответ без нужды.
 - «Сравни SKU / ближайшие аналоги» (B300/H200/H100, HGX, ×8) → search_prices category=gpu + nearestAnalog: providersMatched = ближайший datacenter peer (то же поколение или H200/H100 к B300, сопоставимое число карт), НЕ самый дешёвый NVIDIA (GTX 1080 / T4 / L4 vGPU). Нет близкого SKU у провайдера — не включай его как «аналог».
-- «Сравни по провайдерам» / «паритет по конфигурации» / «собери сервер целиком» / «не просто карту» → ОБЯЗАТЕЛЬНО get_quote(gpuModel, gpuCount) даже если уже был search_prices card-only. Не собирай хост вручную из card-only. Не подменяй get_quote(mode=cheapest-per-provider) — это про крошечные CPU-ВМ (~300 ₽), не про H100-сервер.
+- «Сравни по провайдерам» / «паритет по конфигурации» / «собери сервер целиком» / «пример конфигурации» / «не просто карту» → ОБЯЗАТЕЛЬНО get_quote(gpuModel, gpuCount) даже если уже был search_prices card-only. Не собирай хост вручную из card-only. Не подменяй get_quote(mode=cheapest-per-provider) — это про мелкие CPU-ВМ, не про GPU-хост.
+- Если в прошлом ходе floor был preemptible / «самый дешёвый», а пользователь собирает хост — в сборке явно раздели on-demand и preemptible (или спроси / покажи оба итога). Не выдавай один on-demand итог так, будто это и есть «самый дешёвый»; цифры — только из tools.
 - Если get_quote не привёл провайдера к общему хосту — отдельной строкой родная цена из search_prices + пояснение; не подгоняй.
 - Явно указывай assumedHost/request (vCPU/RAM/диск); если хост по умолчанию — скажи.
 - Если в get_quote есть missingProviders — в конце ответа коротко (1 строка/провайдер): «X — reason». Без длинного эссе.`;
@@ -114,7 +119,7 @@ export const DOMAIN_CARD_COMPUTE = `## vCPU / RAM / диск (сопостави
 - «Сравни SKU / Виртуальная машина N vCPU / M GiB» (flavor целиком) → get_quote(vcpu, ramGiB), НЕ search_prices unit RAM и НЕ GPU-host Cascade RAM. В таблице — полноценные ВМ того же shape; unit-компоненты и GPU-полки не аналоги.
 - get_quote — только ВМ/конфигурация целиком (оба: ядра+память, «собери», сайт с RAM). Nearest preset — назови отличия от запроса.
 - «Самая дешёвая ВМ у всех / по провайдерам» → get_quote(mode=cheapest-per-provider); в ответе таблица: провайдер · конфиг (vCPU/RAM, доля, обычная/прерываемая, диск) · ₽/мес. Не compare_unit_price и не усреднённые «вилки» без BOM. Не путай с follow-up после GPU: «сервер целиком» при H100 в истории ≠ cheapest-per-provider.
-- get_quote по умолчанию: системный диск 100 GiB SSD (boot), без публичного IP. IP (publicIpCount) — только по явной просьбе. Не раздувай корзину «типовым» IP.
+- get_quote по умолчанию: системный диск 100 GiB SSD (boot, см. notes tool), без публичного IP. IP (publicIpCount) — только по явной просьбе. Не раздувай корзину «типовым» IP.
 - missingProviders из get_quote — коротко в конце ответа («X — reason»), не разворачивай в абзацы.`;
 
 export const DOMAIN_CARD_S3 = `## Object Storage / S3
@@ -130,8 +135,7 @@ export const DOMAIN_CARD_K8S = `## Managed Kubernetes
 - Нет workerCount → preview с assumption (1 или 3) + validate; не подставляй 3 ноды как факт пользователя.
 - «Без worker-нод» → скажи, что managed K8s без workers неполное/нецелевое; не выдавай одну цену control plane как готовый кластер.
 - Только сравнение мастеров без workers → search_prices category=kubernetes. k8sTier=basic (базовый) по умолчанию; HA → k8sTier=ha. «Похожие мастера / Small vs Medium / разброс» → compare_similar_peers.
-- НЕ цена мастера: 0 ₽ «плата за кластер» (legacy Yandex), unit «Ресурсы мастера · vCPU/RAM» по отдельности. Yandex — пресеты с family (Standard / CPU-optimized): минимум 2/8 (s-c2-m8); ещё 4/8 · 4/16 · 8/16 · 8/32 · 16/32; форм 2/4 и 2/6 у Yandex нет. VK: 2/6 (дефолт) · 2/8 · паритет 2/4. Cloud.ru базовые мастера: 2/4 · 4/8 · 8/16 · 16/32 при 100% vCPU (HA = 3×); строки «Managed Kubernetes ВМ …» в прайсе — воркеры, не мастер.
-- Selectel/MWS/T1 (native-fixed) — по сумме с пометкой; не утверждай 2/4 у них. Зональный ≠ HA без явной просьбы.
+- НЕ цена мастера: 0 ₽ «плата за кластер» (legacy), unit «Ресурсы мастера · vCPU/RAM» по отдельности; строки «Managed Kubernetes ВМ …» — воркеры, не мастер. Не выдумывай формы мастеров и не утверждай чужие shape у native-fixed. Актуальные default shapes — из tool results или блока CATALOG FACTS. Зональный ≠ HA без явной просьбы.
 - Явный запрет S3/CDN → compose без них; можно написать «не включаю», не предлагай добавить.`;
 
 export const DOMAIN_CARD_CDN = `## CDN
@@ -140,9 +144,9 @@ export const DOMAIN_CARD_CDN = `## CDN
 - CDN без объёма → нельзя полной оценки; уточни или пометь unresolved.`;
 
 export const DOMAIN_CARD_AI = `## AI / inference / токены
-- Цена токенов API → search_prices category=ai + aiModel с версией (gpt-oss-120b, GLM 5.2, Qwen…). Input и output — пара ставок одной модели (₽/1M), в одной строке; не ранжируй output как «+N% к минимуму» против input. Не подменяй соседней версией.
+- Цена токенов API → search_prices category=ai + aiModel с версией (как в запросе: gpt-oss-120b, GLM 5.2, Qwen…). Input и output — пара ставок одной модели (₽/1M), в одной строке; не ранжируй output как «+N% к минимуму» против input. Не подменяй соседней версией.
 - Паттерн смеси входа/выхода (70/30, 80/20, «70 input / 30 output») → ₽ за **1M смешанных** токенов = share_in×input + share_out×output (на 1M total). Пример 70/30: 0,7×input + 0,3×output. Таблица по провайдерам + raw input/output.
-- gpt-oss-120b / gpt-oss-20b **есть** в каталоге (Yandex, MWS, Cloud.ru — input и output). aiModel в tool = как в запросе («gpt-oss-120b»), не «120B» и не «Qwen». Если search_prices вернул gpt-oss — считай 70/30 по ним. **Запрещено** подменять Qwen/«аналог 80B», писать «прямых тарифов 120B нет» или уходить в self-host, пока tool не пуст. Self-host — только по явной просьбе «развернуть / свои GPU».
+- aiModel в tool = как в запросе («gpt-oss-120b»), не «120B» и не соседняя семья. Наличие/провайдеры — из tool results или CATALOG FACTS. **Запрещено** подменять Qwen/«аналог», писать «прямых тарифов нет» или уходить в self-host, пока tool/CATALOG FACTS не пусты. Self-host — только по явной просьбе «развернуть / свои GPU».
 - «Развернуть / self-host / инфраструктура / online|batch inference для GLM|Qwen|Kimi|Llama» → recommend_inference_infra (+ compose/get_quote при необходимости). Не рой card-only GPU как итог. Не откладывай tool ради длинного опроса — baseline + assumptions сразу.
 - Критичные уточнения (≤2): версия/размер модели, inference vs train, concurrent users, контекст, tok/s, квант. Иначе — явный baseline.
 - Можно предложить min / balanced / performance; факты пользователя ≠ твои допущения.
@@ -330,7 +334,7 @@ export function assembleSystemPrompt(domains: readonly PlanningDomain[]): string
 }
 
 /**
- * Production planning prompt: CORE + matched domain cards.
+ * Production planning prompt: CORE + matched domain cards + live catalog facts.
  * `historyText` — recent user turns so follow-ups keep the right cards.
  */
 export function buildSystemPrompt(
@@ -338,7 +342,10 @@ export function buildSystemPrompt(
   opts?: {historyText?: string},
 ): string {
   const haystack = [opts?.historyText, userText].filter(Boolean).join('\n');
-  return assembleSystemPrompt(matchPlanningDomains(haystack));
+  const domains = matchPlanningDomains(haystack);
+  const base = assembleSystemPrompt(domains);
+  const facts = buildCatalogFactsAddendum(domains, userText);
+  return facts ? `${base}\n\n${facts}` : base;
 }
 
 /**
