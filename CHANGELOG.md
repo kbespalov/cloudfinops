@@ -2,9 +2,15 @@
 
 ## 2026-07-27
 
+### Каталог / search_prices: Yandex Gen2 ≠ H100
+
+Жёсткий фильтр `gpuModel` / GPU-family больше не смотрит в `notes`: у Gen2 в примечании было «не размечаем как …/H100», и `hay.includes('h100')` тащил Gen2 в выдачу карточек H100. Теперь матч только по identity (model/name/sku → family). Gen2 остаётся отдельной платформой с «чип не указан».
+
 ### E-ассистент / GPU «сервер целиком» после card-only
 
-Follow-up вроде «собери сервер целиком / не просто карту» после H100 card-only больше не уезжает в `get_quote(mode=cheapest-per-provider)` (крошечные CPU-ВМ ~300 ₽). Берём `gpuModel` из истории и считаем полный хост через `get_quote`. В system prompt — явный запрет путать эти сценарии. `CHAT_FAST_PATH_PROBABILITY=0` глушит только first-turn chips/aliases; multi-turn helpers (provider-focus, GPU full-server) остаются.
+Follow-up вроде «собери сервер целиком / не просто карту» после H100 card-only больше не уезжает в `get_quote(mode=cheapest-per-provider)` (крошечные CPU-ВМ ~300 ₽). Берём `gpuModel` из истории и считаем полный хост через `get_quote`. В system prompt — явный запрет путать эти сценарии.
+
+`CHAT_FAST_PATH_PROBABILITY=0` на `/chat` — полный LLM-only: без chips/aliases, без multi-turn helpers, без deterministic post-tool markdown, без regex intent-гейтов (inference/lakehouse addendum) и без force-tools nudge; модель видит полный набор тулов (`CHAT_TOOLS_ALL`). Калькулятор по-прежнему на FastPath. В LLM-only tool-loop использует полный `maxOutputTokens` (1200), иначе финал после `get_quote` обрезался на ~384 токенах mid-sentence.
 
 ### E-ассистент / FastPath precision + typed chips
 

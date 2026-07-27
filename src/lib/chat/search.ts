@@ -852,9 +852,19 @@ function collectCandidates(params: SearchParams): FilterContext {
     if (gpuPeerMode && peerFamilies && queryGpuFamily) {
       const family = meterGpuFamily(meter);
       if (!family || !peerFamilies.includes(family)) continue;
-    } else if (gpuModel) {
-      const gm = (extractGpuModel(meter) ?? '').toLowerCase();
-      if (!gm.includes(gpuModel) && !hay.includes(gpuModel)) continue;
+    } else if (gpuModel || (queryGpuFamily && category === 'gpu')) {
+      // Hard family filter from identity fields only — never `hay`/notes.
+      // Yandex Gen2 notes say «не размечаем как A100/H100»; hay.includes('h100')
+      // used to false-positive Gen2 into H100 card rankings.
+      const wantFamily = gpuFamilyToken(gpuModel ?? '') ?? queryGpuFamily;
+      if (wantFamily) {
+        const family = meterGpuFamily(meter);
+        if (family !== wantFamily) continue;
+      } else if (gpuModel) {
+        const gm = (extractGpuModel(meter) ?? '').toLowerCase();
+        const identity = `${meter.name} ${meter.sku} ${displayMeterName(meter)}`.toLowerCase();
+        if (!gm.includes(gpuModel) && !identity.includes(gpuModel)) continue;
+      }
     }
     // Whole-card / «дешёвый H100» search: drop per-GB ML Inference shares unless asked.
     // Also when the free-text query names a GPU family (even without gpuModel/category).

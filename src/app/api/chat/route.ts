@@ -16,6 +16,7 @@ import {buildSystemPrompt} from '@/lib/chat/system-prompt';
 import {
   extractAllToolPayloads,
   extractLastToolPayloads,
+  isChatLlmOnlyFromEnv,
   lastUserQuestion,
   looksMultiComponentStack,
   messagesForShortFinal,
@@ -45,6 +46,7 @@ import {
 import {runToolLoop} from '@/lib/chat/tool-loop';
 import {
   CHAT_TOOLS,
+  CHAT_TOOLS_ALL,
   CHAT_TOOLS_WITH_INFERENCE,
   CHAT_TOOLS_WITH_LAKEHOUSE,
 } from '@/lib/chat/tools';
@@ -140,10 +142,17 @@ export async function POST(req: Request) {
     .slice(-4)
     .map((m) => m.content as string)
     .join('\n');
-  const inferenceIntent = matchInferenceIntent(userText);
+  // Chat + CHAT_FAST_PATH_PROBABILITY=0 → pure LLM+tools: no FastPath, no regex
+  // intent addendums / tool gates (inference / lakehouse). Calculator keeps hints.
+  const llmOnly = surface === 'chat' && isChatLlmOnlyFromEnv();
+  const inferenceIntent = llmOnly
+    ? {matched: false, reason: 'none' as const}
+    : matchInferenceIntent(userText);
   // Follow-ups («150 TiB») after a lakehouse turn must keep get_lakehouse_quote
   // so the calculator sidebar can re-quote — not only the chat markdown.
-  const lakehouseIntent = matchLakehouseIntentWithHistory(userText, recentUserText);
+  const lakehouseIntent = llmOnly
+    ? {matched: false, reason: 'none' as const}
+    : matchLakehouseIntentWithHistory(userText, recentUserText);
   // Inference wins if both match (rare); otherwise lakehouse persona + tool.
   const calculatorAddendum =
     surface === 'calculator'
@@ -156,14 +165,16 @@ export async function POST(req: Request) {
       : lakehouseIntent.matched
         ? `${planningPrompt}\n\n${LAKEHOUSE_SYSTEM_ADDENDUM}`
         : planningPrompt) + calculatorAddendum;
-  const planningTools = inferenceIntent.matched
-    ? CHAT_TOOLS_WITH_INFERENCE
-    : lakehouseIntent.matched
-      ? CHAT_TOOLS_WITH_LAKEHOUSE
-      : CHAT_TOOLS;
+  const planningTools = llmOnly
+    ? CHAT_TOOLS_ALL
+    : inferenceIntent.matched
+      ? CHAT_TOOLS_WITH_INFERENCE
+      : lakehouseIntent.matched
+        ? CHAT_TOOLS_WITH_LAKEHOUSE
+        : CHAT_TOOLS;
   const messages: ChatMessage[] = [{role: 'system', content: systemContent}, ...history];
   const inputTokens = estimateMessagesTokens(messages);
-  const reservedTokens = reserveTokensForRequest(inputTokens);
+  const reservedTokens = reserveTokensForRequest(inputTokens, {llmOnly});
   const budget = chatRateLimiter.tryAcquire(ip, reservedTokens);
 
   if (!budget.ok) {
@@ -432,9 +443,10 @@ export async function POST(req: Request) {
           (await runToolLoop({
             messages: workingMessages,
             tools: planningTools,
-            // Simple first-turn asks: 1–2 rounds. Multi-SKU stacks need full headroom.
+            surface,
+            // LLM-only / stacks / multi-turn: full headroom. Otherwise 1–2 rounds.
             maxRounds:
-              multiStack || history.length > 1
+              llmOnly || multiStack || history.length > 1
                 ? CHAT_LIMITS.maxToolRounds
                 : Math.min(CHAT_LIMITS.maxToolRounds, 2),
             signal: abort.signal,
@@ -451,9 +463,10 @@ export async function POST(req: Request) {
         leaksDropped = loop.leaksDropped;
         let finalText = loop.finalText;
 
-        if (!finalText && loop.toolCallsTotal > 0) {
+        if (!finalText && loop.toolCallsTotal > 0 && !llmOnly) {
           // Same short-circuit as tool-loop (covers stream path when loop left final null).
           // Multi-tool compose only as last resort — stacks should get an LLM answer first.
+          // LLM-only mode skips this so the final completion always writes the answer.
           const formatted = tryFormatAgentToolAnswer({
             userText: userQuestion,
             toolPayloads: multiStack

@@ -49,10 +49,19 @@ export function estimateMessagesTokens(messages: ChatMessage[]): number {
 
 /**
  * Token reservation for one /api/chat turn.
- * Counts full input + final answer budget + a small buffer for tool-loop
- * completions (not a full worst-case 5×max_tokens, which would starve the window).
+ * Default path: input + final answer + small tool-loop buffer (not full worst-case).
+ * LLM-only (`CHAT_FAST_PATH_PROBABILITY=0`): reserve full tool-loop headroom so the
+ * global token gate tracks Cloud.ru spend when every round uses maxOutputTokens.
  */
-export function reserveTokensForRequest(inputTokens: number): number {
+export function reserveTokensForRequest(
+  inputTokens: number,
+  opts?: {llmOnly?: boolean},
+): number {
+  if (opts?.llmOnly) {
+    const toolLoopBudget = CHAT_LIMITS.maxToolRounds * CHAT_LIMITS.maxOutputTokens;
+    const rescueOrStream = CHAT_LIMITS.maxOutputTokens;
+    return inputTokens + toolLoopBudget + rescueOrStream;
+  }
   // Keep in sync with TOOL_LOOP_MAX_TOKENS in gigachat.ts (~384) × ~2 rounds.
   const toolLoopBuffer = 2 * 400;
   return inputTokens + CHAT_LIMITS.maxOutputTokens + toolLoopBuffer;

@@ -536,6 +536,16 @@ export const GET_LAKEHOUSE_QUOTE_TOOL = {
 /** Baseline + gated lakehouse quote (attach only on matching intents). */
 export const CHAT_TOOLS_WITH_LAKEHOUSE = [...CHAT_TOOLS, GET_LAKEHOUSE_QUOTE_TOOL];
 
+/**
+ * Full tool surface for LLM-only chat (CHAT_FAST_PATH_PROBABILITY=0):
+ * no regex intent gates — the model picks inference / lakehouse itself.
+ */
+export const CHAT_TOOLS_ALL = [
+  ...CHAT_TOOLS,
+  RECOMMEND_INFERENCE_INFRA_TOOL,
+  GET_LAKEHOUSE_QUOTE_TOOL,
+];
+
 const FIT_PROFILES: FitBudgetProfile[] = ['general', 'high-cpu', 'gpu-l4', 'gpu-h100'];
 
 const INFERENCE_QUANTS: InferenceDtype[] = ['bf16', 'fp8', 'int4', 'int8'];

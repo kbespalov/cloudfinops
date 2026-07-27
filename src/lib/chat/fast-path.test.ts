@@ -9,7 +9,9 @@ import {
   formatComposeSolutionAnswer,
   formatFastPathAnswer,
   formatStackFastPathAnswer,
+  formatGpuHostSpecsAnswer,
   looksGpuFullServerFollowUp,
+  looksGpuHostSpecsFollowUp,
   matchFastPath,
   planFromHomeChipId,
   shouldUseFastPath,
@@ -419,40 +421,47 @@ describe('matchFastPath', () => {
   });
 
   it('tryRunFastPath filters prior get_quote on provider-focus follow-up', async () => {
-    const quoteRaw = runToolSync(
-      'get_quote',
-      JSON.stringify({vcpu: 4, ramGiB: 16, diskGiB: 100, period: 'month'}),
-    );
-    const messages: ChatMessage[] = [
-      {role: 'user', content: 'Сравни 4 vCPU / 16 GiB по всем провайдерам'},
-      {
-        role: 'assistant',
-        content: '',
-        tool_calls: [
-          {
-            id: 'c1',
-            type: 'function',
-            function: {
-              name: 'get_quote',
-              arguments: JSON.stringify({vcpu: 4, ramGiB: 16, diskGiB: 100}),
+    const prev = process.env.CHAT_FAST_PATH_PROBABILITY;
+    process.env.CHAT_FAST_PATH_PROBABILITY = '1';
+    try {
+      const quoteRaw = runToolSync(
+        'get_quote',
+        JSON.stringify({vcpu: 4, ramGiB: 16, diskGiB: 100, period: 'month'}),
+      );
+      const messages: ChatMessage[] = [
+        {role: 'user', content: 'Сравни 4 vCPU / 16 GiB по всем провайдерам'},
+        {
+          role: 'assistant',
+          content: '',
+          tool_calls: [
+            {
+              id: 'c1',
+              type: 'function',
+              function: {
+                name: 'get_quote',
+                arguments: JSON.stringify({vcpu: 4, ramGiB: 16, diskGiB: 100}),
+              },
             },
-          },
-        ],
-      },
-      {role: 'tool', tool_call_id: 'c1', name: 'get_quote', content: quoteRaw},
-      {
-        role: 'assistant',
-        content: 'полный ответ со всеми провайдерами',
-      },
-      {role: 'user', content: 'покажи только cloud ru'},
-    ];
-    const result = await tryRunFastPath({messages, surface: 'chat'});
-    assert.ok(result);
-    assert.equal(result!.fastPathId, 'quote-provider-focus');
-    assert.ok(result!.finalText);
-    assert.match(result!.finalText!, /Cloud\.ru/);
-    assert.doesNotMatch(result!.finalText!, /MWS Cloud/);
-    assert.doesNotMatch(result!.finalText!, /Selectel/);
+          ],
+        },
+        {role: 'tool', tool_call_id: 'c1', name: 'get_quote', content: quoteRaw},
+        {
+          role: 'assistant',
+          content: 'полный ответ со всеми провайдерами',
+        },
+        {role: 'user', content: 'покажи только cloud ru'},
+      ];
+      const result = await tryRunFastPath({messages, surface: 'chat'});
+      assert.ok(result);
+      assert.equal(result!.fastPathId, 'quote-provider-focus');
+      assert.ok(result!.finalText);
+      assert.match(result!.finalText!, /Cloud\.ru/);
+      assert.doesNotMatch(result!.finalText!, /MWS Cloud/);
+      assert.doesNotMatch(result!.finalText!, /Selectel/);
+    } finally {
+      if (prev === undefined) delete process.env.CHAT_FAST_PATH_PROBABILITY;
+      else process.env.CHAT_FAST_PATH_PROBABILITY = prev;
+    }
   });
 
   it('filters get_quote table on follow-up «только Cloud.ru» / «а у MWS?»', () => {
@@ -563,6 +572,42 @@ describe('matchFastPath', () => {
     assert.match(md, /Нет в сравнении/);
     assert.match(md, /Yandex Cloud — нет H200 в каталоге/);
     assert.match(md, /MWS Cloud Platform — нет H200 в каталоге/);
+  });
+
+  it('surfaces parity host vCPU/RAM for GPU get_quote answers', () => {
+    const md = formatFastPathAnswer('vm', [
+      {
+        name: 'get_quote',
+        content: JSON.stringify({
+          request: {gpuModel: 'H100', gpuCount: 1, vcpu: 20, ramGiB: 110, diskGiB: 100},
+          assumedHost: '20 vCPU + 110 GiB RAM + 100 GiB диск',
+          quotes: [
+            {provider: 'Selectel', total: 340389, scope: 'gpu-synthetic'},
+            {provider: 'T1 Cloud', total: 344604, scope: 'gpu-synthetic'},
+          ],
+        }),
+      },
+    ]);
+    assert.ok(md);
+    assert.match(md, /хост 20 vCPU \/ 110 GiB/i);
+    assert.match(md, /Хост \(паритет\).*20 vCPU/i);
+    assert.match(md, /Хост \(vCPU\/RAM\)/);
+    assert.match(md, /\| Selectel \| 20\/110 \|/);
+  });
+
+  it('answers host-specs follow-up from prior get_quote', () => {
+    assert.ok(looksGpuHostSpecsFollowUp('Так а какие характеристики у него будут сколько ядер, сколько память.'));
+    assert.ok(!looksGpuHostSpecsFollowUp('Самый дешёвый H100 в месяц'));
+    const specs = formatGpuHostSpecsAnswer(
+      JSON.stringify({
+        request: {gpuModel: 'H100', gpuCount: 1, vcpu: 20, ramGiB: 110, diskGiB: 100},
+        assumedHost: '20 vCPU + 110 GiB RAM + 100 GiB диск',
+        quotes: [{provider: 'Selectel', total: 1}],
+      }),
+    );
+    assert.ok(specs);
+    assert.match(specs!, /20 vCPU/);
+    assert.match(specs!, /110 GiB RAM/);
   });
 
   it('formats recommend_inference_infra with readable markdown sections', () => {
@@ -1400,9 +1445,9 @@ describe('GPU full-server follow-up', () => {
     assert.equal(findPriorGpuModel(messages), 'H100');
   });
 
-  it('tryRunFastPath upgrades card-only H100 follow-up to get_quote host (even when p=0)', async () => {
+  it('tryRunFastPath upgrades card-only H100 follow-up to get_quote host when FastPath on', async () => {
     const prev = process.env.CHAT_FAST_PATH_PROBABILITY;
-    process.env.CHAT_FAST_PATH_PROBABILITY = '0';
+    process.env.CHAT_FAST_PATH_PROBABILITY = '1';
     try {
       const messages: ChatMessage[] = [
         {role: 'user', content: 'Самый дешёвый H100 в месяц'},
@@ -1445,8 +1490,132 @@ describe('GPU full-server follow-up', () => {
       assert.ok(result!.finalText);
       assert.doesNotMatch(result!.finalText!, /Самая дешёвая полноценная ВМ/i);
       assert.match(result!.finalText!, /H100|GPU|хост|конфигурац/i);
+      assert.match(result!.finalText!, /20 vCPU|Хост \(паритет\)/i);
       // Must not look like cheapest tiny VM table.
       assert.doesNotMatch(result!.finalText!, /324[,.]72|1 vCPU \/ 1 GiB/);
+    } finally {
+      if (prev === undefined) delete process.env.CHAT_FAST_PATH_PROBABILITY;
+      else process.env.CHAT_FAST_PATH_PROBABILITY = prev;
+    }
+  });
+
+  it('CHAT_FAST_PATH_PROBABILITY=0 hard-offs helpers too (full LLM-only)', async () => {
+    const prev = process.env.CHAT_FAST_PATH_PROBABILITY;
+    process.env.CHAT_FAST_PATH_PROBABILITY = '0';
+    try {
+      const quote = {
+        request: {gpuModel: 'H100', gpuCount: 1, vcpu: 20, ramGiB: 110, diskGiB: 100},
+        assumedHost: '20 vCPU + 110 GiB RAM + 100 GiB диск',
+        quotes: [{provider: 'Selectel', total: 340389, scope: 'gpu-synthetic'}],
+      };
+      const messages: ChatMessage[] = [
+        {role: 'user', content: 'собери сервер целиком на H100'},
+        {
+          role: 'assistant',
+          content: '',
+          tool_calls: [
+            {
+              id: 't1',
+              type: 'function',
+              function: {
+                name: 'get_quote',
+                arguments: JSON.stringify({gpuModel: 'H100', gpuCount: 1, period: 'month'}),
+              },
+            },
+          ],
+        },
+        {
+          role: 'tool',
+          tool_call_id: 't1',
+          name: 'get_quote',
+          content: JSON.stringify(quote),
+        },
+        {
+          role: 'assistant',
+          content: 'таблица цен без характеристик',
+        },
+        {
+          role: 'user',
+          content: 'Так а какие характеристики у него будут сколько ядер, сколько память.',
+        },
+      ];
+      assert.equal(await tryRunFastPath({messages, surface: 'chat'}), null);
+
+      const fullServer: ChatMessage[] = [
+        {role: 'user', content: 'Самый дешёвый H100 в месяц'},
+        {
+          role: 'assistant',
+          content: 'card-only',
+          tool_calls: [
+            {
+              id: 't1',
+              type: 'function',
+              function: {
+                name: 'search_prices',
+                arguments: JSON.stringify({gpuModel: 'H100', category: 'gpu'}),
+              },
+            },
+          ],
+        },
+        {role: 'tool', tool_call_id: 't1', name: 'search_prices', content: '{}'},
+        {
+          role: 'user',
+          content: 'супер, а ты можешь попробовать собрать сервер целиком ? не просто карту',
+        },
+      ];
+      assert.equal(await tryRunFastPath({messages: fullServer, surface: 'chat'}), null);
+    } finally {
+      if (prev === undefined) delete process.env.CHAT_FAST_PATH_PROBABILITY;
+      else process.env.CHAT_FAST_PATH_PROBABILITY = prev;
+    }
+  });
+
+  it('tryRunFastPath answers host specs from prior get_quote when FastPath on', async () => {
+    const prev = process.env.CHAT_FAST_PATH_PROBABILITY;
+    process.env.CHAT_FAST_PATH_PROBABILITY = '1';
+    try {
+      const quote = {
+        request: {gpuModel: 'H100', gpuCount: 1, vcpu: 20, ramGiB: 110, diskGiB: 100},
+        assumedHost: '20 vCPU + 110 GiB RAM + 100 GiB диск',
+        quotes: [{provider: 'Selectel', total: 340389, scope: 'gpu-synthetic'}],
+      };
+      const messages: ChatMessage[] = [
+        {role: 'user', content: 'собери сервер целиком на H100'},
+        {
+          role: 'assistant',
+          content: '',
+          tool_calls: [
+            {
+              id: 't1',
+              type: 'function',
+              function: {
+                name: 'get_quote',
+                arguments: JSON.stringify({gpuModel: 'H100', gpuCount: 1, period: 'month'}),
+              },
+            },
+          ],
+        },
+        {
+          role: 'tool',
+          tool_call_id: 't1',
+          name: 'get_quote',
+          content: JSON.stringify(quote),
+        },
+        {
+          role: 'assistant',
+          content: 'таблица цен без характеристик',
+        },
+        {
+          role: 'user',
+          content: 'Так а какие характеристики у него будут сколько ядер, сколько память.',
+        },
+      ];
+      const result = await tryRunFastPath({messages, surface: 'chat'});
+      assert.ok(result);
+      assert.equal(result!.fastPathId, 'gpu-host-specs');
+      assert.match(result!.finalText!, /20 vCPU/);
+      assert.match(result!.finalText!, /110 GiB RAM/);
+      assert.doesNotMatch(result!.finalText!, /340[\s\u00a0]?389/);
     } finally {
       if (prev === undefined) delete process.env.CHAT_FAST_PATH_PROBABILITY;
       else process.env.CHAT_FAST_PATH_PROBABILITY = prev;
