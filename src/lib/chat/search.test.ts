@@ -319,7 +319,7 @@ describe('searchPricesDetailed kubernetes masters', () => {
     // VK default compare = docs STD2-2-6 (2/6), not cheaper parity-only 2/4.
     assert.match(byId['vk-cloud']?.name ?? '', /Мастер Kubernetes · зональный · 2 vCPU \/ 6 ГиБ/i);
     assert.ok((byId['vk-cloud']?.hour ?? 0) > 1);
-    // Yandex default compare = orderable s-c2-m8, not cheaper parity-only 2/4|2/6.
+    // Yandex default compare = orderable s-c2-m8 (no 2/4 or 2/6 shapes).
     assert.match(byId['yandex-cloud']?.name ?? '', /Мастер Kubernetes · зональный · 2 vCPU \/ 8 ГиБ/i);
     assert.ok((byId['yandex-cloud']?.hour ?? 0) > 1);
     assert.doesNotMatch(byId['yandex-cloud']?.name ?? '', /фиксированная плата/i);

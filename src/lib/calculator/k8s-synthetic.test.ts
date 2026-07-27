@@ -93,7 +93,7 @@ describe('k8s synthetic HA integrity', () => {
     assert.equal(picked.synthetic, false);
   });
 
-  it('Yandex exposes orderable presets + 2/6 parity; VK exposes 2/6 · 2/8 · 2/4; HA = 3 × basic', () => {
+  it('Yandex exposes orderable presets; VK exposes 2/6 · 2/8 · 2/4; HA = 3 × basic', () => {
     const cases = [
       {
         basic: 'yc.kubernetes.master-basic-2-8.synthetic',
@@ -130,12 +130,6 @@ describe('k8s synthetic HA integrity', () => {
         ha: 'yc.kubernetes.master-ha-16-32.synthetic',
         vcpu: 16,
         ramGiB: 32,
-      },
-      {
-        basic: 'yc.kubernetes.master-basic-2-6.synthetic',
-        ha: 'yc.kubernetes.master-ha-2-6.synthetic',
-        vcpu: 2,
-        ramGiB: 6,
       },
       {
         basic: 'vk.kubernetes.master-basic-2-6.synthetic',
@@ -177,21 +171,22 @@ describe('k8s synthetic HA integrity', () => {
     }
   });
 
-  it('Yandex has no 2/4 (console min 8 GiB); VK default is 2/6; parity shapes are parity-only', () => {
+  it('Yandex has no 2/4 or 2/6 (console min 2/8); VK default is 2/6; VK 2/4 is parity-only', () => {
     const ycOrderable = catalog.meters.find((m) => m.sku === 'yc.kubernetes.master-basic-2-8.synthetic');
-    const ycParity26 = catalog.meters.find((m) => m.sku === 'yc.kubernetes.master-basic-2-6.synthetic');
     const vkDefault = catalog.meters.find((m) => m.sku === 'vk.kubernetes.master-basic-2-6.synthetic');
     const vkParity24 = catalog.meters.find((m) => m.sku === 'vk.kubernetes.master-basic-2-4.synthetic');
-    assert.ok(ycOrderable && ycParity26 && vkDefault && vkParity24);
+    assert.ok(ycOrderable && vkDefault && vkParity24);
     assert.equal(
       catalog.meters.some((m) => m.sku.startsWith('yc.kubernetes.master-') && m.sku.includes('-2-4.')),
       false,
     );
+    assert.equal(
+      catalog.meters.some((m) => m.sku.startsWith('yc.kubernetes.master-') && m.sku.includes('-2-6.')),
+      false,
+    );
     assert.equal(ycOrderable.dimensions.hostType, 's-c2-m8');
     assert.equal(vkDefault.dimensions.hostType, 'STD2-2-6');
-    assert.equal(ycParity26.dimensions.parityOnly, true);
     assert.equal(vkParity24.dimensions.parityOnly, true);
-    assert.equal(isK8sComparableMaster(ycParity26, 'basic'), false);
     assert.equal(isK8sComparableMaster(vkParity24, 'basic'), false);
     assert.equal(isK8sComparableMaster(ycOrderable, 'basic'), true);
     assert.equal(isK8sComparableMaster(vkDefault, 'basic'), true);

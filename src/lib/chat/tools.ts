@@ -2,7 +2,7 @@
  * Function-calling tools for GigaChat.
  * Primitives: search_catalog, compose_solution, validate_solution, price_solution,
  * compare_solutions, get_product_details.
- * Shortcuts: search_prices, get_quote, compare_unit_price, fit_budget (+ gated).
+ * Shortcuts: search_prices, get_quote, compare_unit_price, compare_similar_peers, fit_budget (+ gated).
  */
 
 import type {CategoryKey, PeriodMode} from '@/lib/catalog';
@@ -18,6 +18,7 @@ import {compareUnitPrice, type DiskMediaFilter, type UnitComponent} from './anal
 import {catalogAsOfIso} from '@/lib/catalog/compare-disclaimer';
 import {fitBudget, type FitBudgetProfile} from './fit-budget';
 import {recommendInferenceInfra} from './inference-recommend';
+import {compareSimilarPeers} from './similar-peers';
 import {
   resolveLakehouseInput,
   type LakehouseSize,
@@ -458,6 +459,43 @@ export const CHAT_TOOLS = [
   {
     type: 'function',
     function: {
+      name: 'compare_similar_peers',
+      description:
+        'Похожие тарифы и аномалии разброса: exact vs functional peers (как «Найти похожие» в каталоге). mode=peers — seed + таблица аналогов, медиана/spread только среди exact+priceEligible; mode=anomalies — группы с max/min ≥ порога. Используй для «похожие к SKU», «разброс/аномалии цен», «где медиану ломает outlier». НЕ для unit ₽/vCPU (compare_unit_price) и НЕ для полной ВМ-сборки (get_quote).',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: {
+            type: 'string',
+            description:
+              'Свободный поиск seed (название/SKU), например «Managed Kubernetes Medium», «S3 Standard GET», «H100».',
+          },
+          sku: {
+            type: 'string',
+            description: 'Точный SKU или id каталога как seed (предпочтительнее query).',
+          },
+          mode: {
+            type: 'string',
+            enum: ['peers', 'anomalies'],
+            description:
+              'peers (по умолчанию) — аналоги вокруг seed; anomalies — топ групп с большим разбросом по каталогу.',
+          },
+          minSpreadPct: {
+            type: 'number',
+            description: 'Порог max/min в % для mode=anomalies (по умолчанию 50).',
+          },
+          limit: {
+            type: 'integer',
+            description: 'Сколько строк/групп вернуть (peers ≤20, anomalies ≤40).',
+          },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: 'function',
+    function: {
       name: 'fit_budget',
       description:
         'Подобрать инфраструктуру под месячный бюджет (₽ с НДС): сколько целых ВМ (или GPU) каждого типового размера укладывается у каждого провайдера и какая утилизация бюджета. Используй для greenfield «бюджет 100 тысяч», «что можно позволить за N ₽/мес», «максимально утилизировать бюджет» — НЕ устраивай длинный опросник. НЕ используй, если пользователь описывает текущий флот («сейчас плачу», «у меня N ВМ»), просит жертвы/trade-off без ТЗ, или N×GPU заведомо не влезает в бюджет — тогда get_quote/search_prices + явный отказ «не укладывается» / уточнение формы. По умолчанию profile=general (типовые ВМ).',
@@ -856,6 +894,22 @@ function runCompareUnitPrice(args: Record<string, unknown>): unknown {
   return compareUnitPrice(component, diskMedia ? {diskMedia} : undefined);
 }
 
+function runCompareSimilarPeers(args: Record<string, unknown>): unknown {
+  const modeRaw = typeof args.mode === 'string' ? args.mode.toLowerCase() : '';
+  const mode = modeRaw === 'anomalies' ? 'anomalies' : modeRaw === 'peers' ? 'peers' : undefined;
+  return compareSimilarPeers({
+    query: typeof args.query === 'string' ? args.query : undefined,
+    sku: typeof args.sku === 'string' ? args.sku : undefined,
+    mode,
+    minSpreadPct:
+      typeof args.minSpreadPct === 'number' && Number.isFinite(args.minSpreadPct)
+        ? args.minSpreadPct
+        : undefined,
+    limit:
+      typeof args.limit === 'number' && Number.isFinite(args.limit) ? args.limit : undefined,
+  });
+}
+
 function asRequirementSpec(raw: unknown): RequirementSpec | Record<string, unknown> {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
   return raw as RequirementSpec | Record<string, unknown>;
@@ -1178,6 +1232,7 @@ export function runToolSync(name: string, rawArgs: string): string {
     }
     if (name === 'get_quote') return JSON.stringify(runQuote(args));
     if (name === 'compare_unit_price') return JSON.stringify(runCompareUnitPrice(args));
+    if (name === 'compare_similar_peers') return JSON.stringify(runCompareSimilarPeers(args));
     if (name === 'fit_budget') return JSON.stringify(runFitBudget(args));
     if (name === 'recommend_inference_infra') return JSON.stringify(runRecommendInference(args));
     if (name === 'get_lakehouse_quote') return JSON.stringify(runLakehouseQuote(args));
@@ -1202,6 +1257,7 @@ export async function runTool(name: string, rawArgs: string): Promise<string> {
     if (name === 'search_prices') return JSON.stringify(await runSearch(args));
     if (name === 'get_quote') return JSON.stringify(runQuote(args));
     if (name === 'compare_unit_price') return JSON.stringify(runCompareUnitPrice(args));
+    if (name === 'compare_similar_peers') return JSON.stringify(runCompareSimilarPeers(args));
     if (name === 'fit_budget') return JSON.stringify(runFitBudget(args));
     if (name === 'recommend_inference_infra') return JSON.stringify(runRecommendInference(args));
     if (name === 'get_lakehouse_quote') return JSON.stringify(runLakehouseQuote(args));

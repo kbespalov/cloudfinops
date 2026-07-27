@@ -125,9 +125,16 @@ import {
   type GpuPriceBasisFilter,
 } from '@/lib/catalog/find-similar';
 import {
-  bestAmount,
-  buildPriceDeltaById,
+  primaryPeerRows,
+  sameProviderCheaperExact,
+  selectPeersForCompare,
+} from '@/lib/catalog/peer-match';
+import {similarBannerCopy} from '@/lib/catalog/peer-summary';
+import {
+  buildExactPriceComparison,
+  priceDeltaBadgeLabel,
   priceDeltaTitle,
+  type PriceDelta,
 } from '@/lib/catalog/compare-delta';
 import styles from './CatalogPage.module.css';
 
@@ -989,27 +996,100 @@ export function CatalogPage() {
     period,
   ]);
 
-  /** Like-for-like price deltas vs cheapest offer — only in «Найти похожие». */
-  const priceDeltas = useMemo(() => {
-    if (!similarActive) return new Map();
-    return buildPriceDeltaById(
-      filtered.map((m) => ({id: m.id, amount: amountNumber(m, period)})),
+  const peerSelection = useMemo(() => {
+    if (!similarActive || !similarSeedId) return null;
+    const seed = catalog.meters.find((m) => m.id === similarSeedId);
+    if (!seed) return null;
+    return selectPeersForCompare(seed, catalog.meters);
+  }, [similarActive, similarSeedId]);
+
+  /** Wide retrieval still uses facets; similar mode shows one primary row per provider. */
+  const similarRows = useMemo(() => {
+    if (!peerSelection) return null;
+    const rows = primaryPeerRows(peerSelection);
+    const bucketOrder = {
+      seed: 0,
+      'exact-price-eligible': 1,
+      'exact-price-ineligible': 2,
+      functional: 3,
+    } as const;
+    return [...rows].sort((a, b) => {
+      const bo = bucketOrder[a.bucket] - bucketOrder[b.bucket];
+      if (bo !== 0) return bo;
+      const pa = amountNumber(a.meter, period);
+      const pb = amountNumber(b.meter, period);
+      const fa = pa != null && Number.isFinite(pa) ? pa : Number.POSITIVE_INFINITY;
+      const fb = pb != null && Number.isFinite(pb) ? pb : Number.POSITIVE_INFINITY;
+      if (fa !== fb) return fa - fb;
+      return a.meter.sku.localeCompare(b.meter.sku);
+    });
+  }, [peerSelection, period]);
+
+  const displayMeters = useMemo(() => {
+    if (similarRows) return similarRows.map((r) => r.meter);
+    return filtered;
+  }, [similarRows, filtered]);
+
+  const similarBucketById = useMemo(() => {
+    if (!similarRows) return new Map<string, string>();
+    return new Map(similarRows.map((r) => [r.meter.id, r.bucket]));
+  }, [similarRows]);
+
+  const cheaperSameProvider = useMemo(() => {
+    if (!peerSelection) return null;
+    return sameProviderCheaperExact(peerSelection, period);
+  }, [peerSelection, period]);
+
+  /** Exact price-eligible deltas only — never for functional / price-ineligible. */
+  const exactComparison = useMemo(() => {
+    if (!peerSelection || !similarRows) return null;
+    if (!peerSelection.seed.priceEligibility.eligible) return null;
+    const compareRows = similarRows
+      .filter((r) => r.bucket === 'seed' || r.bucket === 'exact-price-eligible')
+      .map((r) => ({id: r.meter.id, amount: amountNumber(r.meter, period)}));
+    // Distinct providers among compare rows
+    const providers = new Set(
+      similarRows
+        .filter((r) => r.bucket === 'seed' || r.bucket === 'exact-price-eligible')
+        .map((r) => r.meter.provider),
     );
-  }, [similarActive, filtered, period]);
+    if (providers.size < 2) return null;
+    return buildExactPriceComparison(compareRows);
+  }, [peerSelection, similarRows, period]);
+
+  const similarBanner = useMemo(() => {
+    if (!peerSelection) return null;
+    const base = similarBannerCopy(peerSelection);
+    if (exactComparison?.zeroBaseline) {
+      return {
+        ...base,
+        detail: 'точные аналоги · есть бесплатный оффер (без % к медиане)',
+        priceCompareActive: true,
+      };
+    }
+    return base;
+  }, [peerSelection, exactComparison]);
+
+  const priceDeltas = useMemo(() => {
+    if (!exactComparison) return new Map<string, PriceDelta>();
+    const map = new Map<string, PriceDelta>();
+    for (const [id, entry] of exactComparison.deltasByMeterId) {
+      map.set(id, entry.vsBest);
+    }
+    return map;
+  }, [exactComparison]);
 
   const compareBestLabel = useMemo(() => {
-    if (priceDeltas.size === 0) return null;
-    const best = bestAmount(filtered.map((m) => amountNumber(m, period)));
-    if (best == null) return null;
-    return formatRub(best, period === 'unit' ? 4 : 2);
-  }, [priceDeltas, filtered, period]);
+    if (!exactComparison || exactComparison.bestPrice == null) return null;
+    return formatRub(exactComparison.bestPrice, period === 'unit' ? 4 : 2);
+  }, [exactComparison, period]);
 
-  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pageCount = Math.max(1, Math.ceil(displayMeters.length / PAGE_SIZE));
   const safePage = Math.min(page, pageCount);
   const pageItems = useMemo(() => {
     const start = (safePage - 1) * PAGE_SIZE;
-    return filtered.slice(start, start + PAGE_SIZE);
-  }, [filtered, safePage]);
+    return displayMeters.slice(start, start + PAGE_SIZE);
+  }, [displayMeters, safePage]);
 
   useEffect(() => {
     setPage(1);
@@ -1299,32 +1379,42 @@ export function CatalogPage() {
         template: (m) => {
           const amount = displayAmount(m, period);
           const unitHint = meterPriceLabel(m, period);
+          const bucket = similarBucketById.get(m.id);
           const delta = priceDeltas.get(m.id);
+          const medianPct = exactComparison?.deltasByMeterId.get(m.id)?.vsMedianPct;
           if (!delta || !amount) {
+            const funcHint =
+              bucket === 'functional'
+                ? 'Функциональный аналог — без прямого сравнения цены'
+                : bucket === 'exact-price-ineligible'
+                  ? 'Точный аналог без ценового сравнения (synthetic / единица)'
+                  : null;
             return (
-              <span className={styles.priceCell} title={unitHint}>
+              <span className={styles.priceCell} title={[funcHint, unitHint].filter(Boolean).join(' · ')}>
                 {amount ?? '—'}
               </span>
             );
           }
+          const showMedian =
+            medianPct != null && !exactComparison?.zeroBaseline && delta.kind !== 'free-vs-paid';
           const tip =
             compareBestLabel != null
-              ? `${priceDeltaTitle(delta, compareBestLabel)} · ${unitHint}`
+              ? `${priceDeltaTitle(delta, compareBestLabel)}${
+                  showMedian ? ` · ${medianPct >= 0 ? '+' : ''}${medianPct}% к медиане` : ''
+                } · ${unitHint}`
               : unitHint;
+          const badge = priceDeltaBadgeLabel(delta);
+          const isBest = delta.kind === 'best' || delta.kind === 'equal-free';
           return (
             <span
               className={`${styles.priceCell} ${styles.priceCellCompare}`}
               title={tip}
             >
-              <span
-                className={
-                  delta.kind === 'best' ? styles.priceAmountBest : styles.priceAmount
-                }
-              >
+              <span className={isBest ? styles.priceAmountBest : styles.priceAmount}>
                 {amount}
               </span>
-              {delta.kind === 'above' ? (
-                <span className={styles.priceDeltaAbove}>+{delta.pct}%</span>
+              {badge && delta.kind !== 'best' ? (
+                <span className={styles.priceDeltaAbove}>{badge}</span>
               ) : null}
             </span>
           );
@@ -1333,7 +1423,16 @@ export function CatalogPage() {
     ];
 
     return cols;
-  }, [category, period, facet, cdnFacet, priceDeltas, compareBestLabel]);
+  }, [
+    category,
+    period,
+    facet,
+    cdnFacet,
+    priceDeltas,
+    compareBestLabel,
+    similarBucketById,
+    exactComparison,
+  ]);
 
   const resetFilters = useCallback(() => {
     startTransition(() => {
@@ -2043,9 +2142,14 @@ export function CatalogPage() {
               <Flex alignItems="center" gap={2} wrap>
                 <Icon data={MagicWand} size={16} className={styles.similarBarIcon} />
                 <Text variant="body-1" className={styles.similarBarText}>
-                  {similarSummary
-                    ? `${similarSummary} · все провайдеры · к лучшему офферу`
-                    : 'Только сопоставимые позиции того же класса · все провайдеры · к лучшему офферу'}
+                  {similarBanner
+                    ? `${similarBanner.title} · ${similarBanner.detail}`
+                    : similarSummary
+                      ? `${similarSummary} · похожие предложения`
+                      : 'Похожие предложения'}
+                  {cheaperSameProvider
+                    ? ` · у этого провайдера есть дешевле: ${cheaperSameProvider.name}`
+                    : ''}
                 </Text>
                 <Button view="flat-secondary" size="s" onClick={resetFilters}>
                   Сбросить все
@@ -2062,7 +2166,7 @@ export function CatalogPage() {
             }}
           >
             <div className={styles.tableCard}>
-              {filtered.length === 0 ? (
+              {displayMeters.length === 0 ? (
                 <PlaceholderContainer
                   title="Ничего не найдено"
                   description="Сбросьте фильтры или измените запрос."
@@ -2120,16 +2224,17 @@ export function CatalogPage() {
                       })}
                     />
                   </div>
-                  {filtered.length > PAGE_SIZE ? (
+                  {displayMeters.length > PAGE_SIZE ? (
                     <Flex justifyContent="space-between" alignItems="center" className={styles.pager}>
                       <Text variant="body-1" color="secondary">
                         {(safePage - 1) * PAGE_SIZE + 1}–
-                        {Math.min(safePage * PAGE_SIZE, filtered.length)} из {filtered.length}
+                        {Math.min(safePage * PAGE_SIZE, displayMeters.length)} из{' '}
+                        {displayMeters.length}
                       </Text>
                       <Pagination
                         page={safePage}
                         pageSize={PAGE_SIZE}
-                        total={filtered.length}
+                        total={displayMeters.length}
                         onUpdate={(nextPage) => setPage(nextPage)}
                         compact
                       />

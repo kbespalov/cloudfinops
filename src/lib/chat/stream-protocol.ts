@@ -32,6 +32,7 @@ const TOOL_STATUS_LABEL: Record<ChatToolName, string> = {
   search_prices: 'Ищу цены в каталоге…',
   get_quote: 'Считаю конфигурацию…',
   compare_unit_price: 'Сравниваю цены…',
+  compare_similar_peers: 'Ищу похожие и аномалии…',
   fit_budget: 'Подбираю под бюджет…',
   recommend_inference_infra: 'Подбираю GPU под инференс…',
   get_lakehouse_quote: 'Считаю lakehouse…',

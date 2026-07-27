@@ -100,8 +100,8 @@ describe('Kubernetes catalog naming', () => {
       'Мастер Kubernetes · зональный · 2 vCPU / 8 ГиБ *',
     );
     assert.equal(
-      bySku('yc.kubernetes.master-basic-2-6.synthetic').name,
-      'Мастер Kubernetes · зональный · 2 vCPU / 6 ГиБ *',
+      catalog.meters.some((m) => m.sku === 'yc.kubernetes.master-basic-2-6.synthetic'),
+      false,
     );
     assert.equal(
       bySku('yc.kubernetes.master-basic-4-8.synthetic').name,

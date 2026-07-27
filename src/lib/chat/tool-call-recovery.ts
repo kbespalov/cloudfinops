@@ -17,6 +17,7 @@ export const CHAT_TOOL_NAMES = [
   'search_prices',
   'get_quote',
   'compare_unit_price',
+  'compare_similar_peers',
   'fit_budget',
   'recommend_inference_infra',
   'get_lakehouse_quote',
@@ -35,6 +36,7 @@ const TOOL_NAME_USER_LABEL: Record<ChatToolName, string> = {
   get_quote: 'калькулятора конфигурации',
   search_prices: 'прайс-листа',
   compare_unit_price: 'кросс-провайдерной аналитики',
+  compare_similar_peers: 'поиска похожих и аномалий',
   fit_budget: 'подбора под бюджет',
   recommend_inference_infra: 'подбора GPU под инференс',
   get_lakehouse_quote: 'калькулятора lakehouse',
@@ -321,6 +323,7 @@ const QUOTE_KEYS = new Set([
   'presetId',
 ]);
 const COMPARE_KEYS = new Set(['component', 'period']);
+const SIMILAR_PEERS_KEYS = new Set(['query', 'sku', 'mode', 'minSpreadPct', 'limit']);
 const FIT_BUDGET_KEYS = new Set(['budgetMonthRub', 'profile']);
 
 function pickKeys(record: Record<string, unknown>, allowed: Set<string>): Record<string, unknown> {
@@ -363,6 +366,13 @@ function inferToolName(
   const args = argsRecordForInfer(record);
   if ('budgetMonthRub' in args) return 'fit_budget';
   if ('component' in args) return 'compare_unit_price';
+  if (
+    'minSpreadPct' in args ||
+    args.mode === 'anomalies' ||
+    args.mode === 'peers'
+  ) {
+    return 'compare_similar_peers';
+  }
   if ('vcpu' in args || 'ramGiB' in args || 'presetId' in args) return 'get_quote';
   if ('gpuModel' in args && !('query' in args) && !('category' in args)) return 'get_quote';
   if ('query' in args || 'storageClass' in args || 'category' in args) return 'search_prices';
@@ -375,7 +385,7 @@ function inferToolName(
   if (fromFn) return fromFn;
 
   const callMention = content.match(
-    /\b(?:call|calling|invoke|use)\s+`?(search_prices|get_quote|compare_unit_price|fit_budget)`?/i,
+    /\b(?:call|calling|invoke|use)\s+`?(search_prices|get_quote|compare_unit_price|compare_similar_peers|fit_budget)`?/i,
   );
   if (callMention) return callMention[1] as ChatToolName;
 
@@ -450,6 +460,14 @@ function sanitizeArgs(
     const args = pickKeys(cleaned, COMPARE_KEYS);
     if (typeof args.component !== 'string') return null;
     return args;
+  }
+  if (name === 'compare_similar_peers') {
+    const args = pickKeys(cleaned, SIMILAR_PEERS_KEYS);
+    const mode = typeof args.mode === 'string' ? args.mode : '';
+    if (mode === 'anomalies' || 'minSpreadPct' in args) return args;
+    if (typeof args.sku === 'string' && args.sku.trim()) return args;
+    if (typeof args.query === 'string' && args.query.trim()) return args;
+    return null;
   }
   if (name === 'fit_budget') {
     const args = pickKeys(cleaned, FIT_BUDGET_KEYS);
