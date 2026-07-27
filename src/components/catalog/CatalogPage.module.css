@@ -226,8 +226,8 @@
 }
 
 .priceColCompare {
-  width: 190px;
-  max-width: 190px;
+  width: 168px;
+  max-width: 168px;
 }
 
 .priceCell {
@@ -254,15 +254,6 @@
 }
 
 .priceAmountBest {
-  color: var(--g-color-text-positive);
-}
-
-.bestTag {
-  flex-shrink: 0;
-  font-family: var(--g-text-body-1-font-family);
-  font-size: 12px;
-  line-height: 1;
-  font-weight: 500;
   color: var(--g-color-text-positive);
 }
 

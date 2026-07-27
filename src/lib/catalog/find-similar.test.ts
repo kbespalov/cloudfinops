@@ -4,8 +4,10 @@ import {
   catalog,
   extractKubernetesAvailability,
   gpuPriceBasisLabel,
+  extractAiModelKey,
   meterMatchesAiFacet,
   meterMatchesAiFamilyFacet,
+  meterMatchesAiModel,
   meterMatchesCategory,
   meterMatchesCdnFacet,
   meterMatchesCdnTrafficFacet,
@@ -108,6 +110,7 @@ function peersMatching(filter: ComparableCatalogFilter): CatalogMeter[] {
     if (filter.category === 'ai' && !meterMatchesAiFamilyFacet(m, filter.aiFamilyFacet)) {
       return false;
     }
+    if (filter.category === 'ai' && !meterMatchesAiModel(m, filter.aiModelId)) return false;
     return true;
   });
 }
@@ -423,19 +426,51 @@ describe('comparableFilterFromMeter', () => {
     assert.ok(peers.every((p) => p.meter === 'compute.vcpu' || /vcpu/i.test(p.meter)));
   });
 
-  it('filters AI tokens by family / direction when available', () => {
+  it('filters AI tokens by exact modelId / direction (not coarse family chip)', () => {
     const m = catalog.meters.find(
       (x) =>
         x.categoryKey === 'ai' &&
-        (x.meter.includes('token') || x.unitQuantity === '1M-token'),
+        (x.meter.includes('token') || x.unitQuantity === '1M-token') &&
+        extractAiModelKey(x),
     );
     if (!m) return;
     const f = comparableFilterFromMeter(m);
     if (!f) return;
     assert.equal(f.category, 'ai');
+    assert.ok(f.aiModelId);
     const peers = peersMatching(f);
     assert.ok(peers.length >= 1);
     assert.ok(peers.every((p) => p.categoryKey === 'ai'));
+    assert.ok(peers.every((p) => extractAiModelKey(p) === f.aiModelId));
+  });
+
+  it('gpt-oss-120b find-similar excludes gpt-oss-20b', () => {
+    const seed = catalog.meters.find(
+      (x) => x.sku === 'mws.ai.gpt-oss-120b.output' || x.sku === 'yc.ai.gpt-oss-120b.output',
+    );
+    const f = requireFilter(seed);
+    assert.equal(f.aiModelId, 'gpt-oss-120b');
+    assert.equal(f.aiFacet, 'output');
+    assert.match(f.summary, /gpt-oss-120b/i);
+    const peers = peersMatching(f);
+    assert.ok(peers.length >= 2, 'expect multi-provider 120b output peers');
+    assert.ok(peers.every((p) => extractAiModelKey(p) === 'gpt-oss-120b'));
+    assert.equal(
+      peers.some((p) => extractAiModelKey(p) === 'gpt-oss-20b'),
+      false,
+    );
+  });
+
+  it('glm-5.2 find-similar excludes glm-4.7', () => {
+    const seed = catalog.meters.find((x) => x.sku === 'mws.ai.glm-5.2.output');
+    const f = requireFilter(seed);
+    assert.equal(f.aiModelId, 'glm-5.2');
+    const peers = peersMatching(f);
+    assert.ok(peers.every((p) => extractAiModelKey(p) === 'glm-5.2'));
+    assert.equal(
+      peers.some((p) => (extractAiModelKey(p) || '').includes('glm-4.7')),
+      false,
+    );
   });
 
   it('returns null when storage has no known class', () => {

@@ -4,6 +4,8 @@
  */
 import {
   extractAiFamilyFacet,
+  extractAiModelFamily,
+  extractAiModelKey,
   extractAiTokenDirection,
   extractCdnKind,
   extractCdnTrafficDirection,
@@ -75,6 +77,8 @@ export type ComparableCatalogFilter = {
   kubernetesMasterRamGiB: number | null;
   aiFacet: AiFacet;
   aiFamilyFacet: AiFamilyFacet;
+  /** Exact modelId / modelFamily key (gpt-oss-120b ≠ gpt-oss-20b). */
+  aiModelId: string | null;
   /** Human summary for the banner, e.g. «Storage · Standard · Хранение». */
   summary: string;
 };
@@ -100,6 +104,7 @@ const EMPTY_NESTED = {
   kubernetesMasterRamGiB: null as number | null,
   aiFacet: 'all' as AiFacet,
   aiFamilyFacet: 'all' as AiFamilyFacet,
+  aiModelId: null as string | null,
 };
 
 function gpuFacetFromMeter(meter: CatalogMeter): Exclude<GpuFacet, 'all'> | null {
@@ -248,17 +253,19 @@ export function comparableFilterFromMeter(meter: CatalogMeter): ComparableCatalo
       };
     }
     case 'ai': {
+      const modelId = extractAiModelKey(meter);
+      if (!modelId) return null;
       const family = extractAiFamilyFacet(meter);
       const dir = extractAiTokenDirection(meter);
-      if (!family && !dir) return null;
-      const familyTitle = family ?? 'AI';
+      const modelTitle = extractAiModelFamily(meter) || modelId;
       const dirTitle = dir === 'input' ? ' · Input' : dir === 'output' ? ' · Output' : '';
       return {
         ...EMPTY_NESTED,
         category: 'ai',
         aiFamilyFacet: family ?? 'all',
         aiFacet: dir ?? 'all',
-        summary: `AI · ${familyTitle}${dirTitle}`,
+        aiModelId: modelId,
+        summary: `AI · ${modelTitle}${dirTitle}`,
       };
     }
     case 'compute': {

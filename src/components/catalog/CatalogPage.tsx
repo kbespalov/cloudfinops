@@ -1136,7 +1136,7 @@ export function CatalogPage() {
       setKubernetesMasterRamGiB(next.kubernetesMasterRamGiB);
       setAiFacet(next.aiFacet);
       setAiFamilyFacet(next.aiFamilyFacet);
-      setAiModel('');
+      setAiModel(next.aiModelId ?? '');
       setSearch('');
       setProviders([]);
       setSort('price-asc');
@@ -1283,7 +1283,7 @@ export function CatalogPage() {
         id: 'price',
         name: priceColumnTitle(period, category, cdnFacet),
         align: 'end',
-        width: priceDeltas.size > 0 ? 190 : 140,
+        width: priceDeltas.size > 0 ? 168 : 140,
         className: priceDeltas.size > 0 ? styles.priceColCompare : styles.priceCol,
         template: (m) => {
           const amount = displayAmount(m, period);
@@ -1312,11 +1312,9 @@ export function CatalogPage() {
               >
                 {amount}
               </span>
-              {delta.kind === 'best' ? (
-                <span className={styles.bestTag}>лучший</span>
-              ) : (
+              {delta.kind === 'above' ? (
                 <span className={styles.priceDeltaAbove}>+{delta.pct}%</span>
-              )}
+              ) : null}
             </span>
           );
         },
