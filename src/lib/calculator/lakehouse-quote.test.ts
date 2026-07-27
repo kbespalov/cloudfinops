@@ -72,10 +72,10 @@ describe('quoteLakehouse', () => {
     assert.ok(haProviders.has('cloud-ru'));
     assert.ok(haProviders.has('t1-cloud'));
     assert.ok(basicProviders.has('cloud-ru'));
-    // Every HA quote must carry a high-availability master line, never zonal.
+    // Every HA quote must carry a high-availability master line, never basic.
     for (const q of ha.quotes) {
       const k8s = q.parts.find((p) => p.id === 'k8s');
-      assert.ok(k8s && /региональный/.test(k8s.label), q.provider);
+      assert.ok(k8s && /\bHA\b/.test(k8s.label), q.provider);
       assert.ok(!/\*/.test(k8s.label), q.provider);
     }
     // Synthetic HA math stays in catalog; quote UI does not surface provenance notes.

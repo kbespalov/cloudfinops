@@ -894,6 +894,10 @@ export function displayMeterName(meter: CatalogMeter): string {
     return displayBlockDiskName(meter);
   }
 
+  if (meter.categoryKey === 'kubernetes') {
+    return formatKubernetesDisplayName(meter);
+  }
+
   if (isImageMeter(meter)) return 'Образ ВМ';
   if (isSnapshotMeter(meter)) return 'Снимок диска';
 
@@ -1144,8 +1148,42 @@ export function kubernetesAvailabilityLabel(availability: 'zonal' | 'regional'):
   return availability === 'zonal' ? 'Зональный' : 'Региональный';
 }
 
+/** Display-name topology: базовый (1 zone) vs HA (fault-tolerant / multi-master). */
+export function kubernetesTopologyDisplayLabel(
+  availability: 'zonal' | 'regional' | null,
+): 'базовый' | 'HA' | null {
+  if (availability === 'zonal') return 'базовый';
+  if (availability === 'regional') return 'HA';
+  return null;
+}
+
 export function kubernetesFaultToleranceHint(availability: 'zonal' | 'regional'): string {
   return availability === 'zonal' ? 'Не отказоустойчивый' : 'Отказоустойчивый';
+}
+
+export type KubernetesPresetFamily = 'standard' | 'cpu-optimized' | 'memory-optimized';
+
+/** Yandex preset family from dimensions or hostType (s-* / c-* / m-*). */
+export function extractKubernetesPresetFamily(
+  meter: CatalogMeter,
+): KubernetesPresetFamily | null {
+  if (meter.categoryKey !== 'kubernetes') return null;
+  const explicit = String(meter.dimensions.presetFamily ?? '').toLowerCase();
+  if (explicit === 'standard' || explicit === 'cpu-optimized' || explicit === 'memory-optimized') {
+    return explicit;
+  }
+  const host = String(meter.dimensions.hostType ?? '');
+  // Yandex resource presets: s-cN-mM Standard, c-cN-mM CPU-optimized, m-cN-mM Memory-optimized.
+  if (/^m-c\d/i.test(host)) return 'memory-optimized';
+  if (/^c-c\d/i.test(host)) return 'cpu-optimized';
+  if (/^s-c\d/i.test(host)) return 'standard';
+  return null;
+}
+
+function kubernetesPresetFamilyTitle(family: KubernetesPresetFamily): string {
+  if (family === 'cpu-optimized') return 'CPU-optimized';
+  if (family === 'memory-optimized') return 'Memory-optimized';
+  return 'Standard';
 }
 
 /** Provider-original SKU title from price book (`dimensions.nativeName`), if stored. */
@@ -1174,9 +1212,82 @@ function formatMasterCountRu(count: number): string {
   return `${count} мастеров`;
 }
 
+function kubernetesShapeLabel(meter: CatalogMeter): string | null {
+  const vcpu = Number(meter.dimensions.vcpu);
+  const ram = Number(meter.dimensions.ramGiB ?? meter.dimensions.ramGb);
+  if (!(Number.isFinite(vcpu) && vcpu > 0 && Number.isFinite(ram) && ram > 0)) return null;
+  const masters = kubernetesMasterCount(meter) ?? 1;
+  return masters > 1 ? `${masters} × ${vcpu} vCPU / ${ram} ГиБ` : `${vcpu} vCPU / ${ram} ГиБ`;
+}
+
+/**
+ * Unified K8s title:
+ * - whole control plane: `Мастер Kubernetes · <базовый|HA> · …`
+ * - unit meters: `Ресурсы мастера · vCPU|RAM`
+ */
+export function formatKubernetesDisplayName(meter: CatalogMeter): string {
+  if (meter.categoryKey !== 'kubernetes') return meter.name;
+
+  // Unit meters are billed per vCPU/GiB — not a whole control-plane SKU.
+  if (isKubernetesUnitComponent(meter)) {
+    if (isVcpuMeter(meter) || /\.vcpu$/i.test(meter.meter) || /vcpu/i.test(meter.sku)) {
+      return 'Ресурсы мастера · vCPU';
+    }
+    if (isRamMeter(meter) || /\.ram$/i.test(meter.meter) || /ram/i.test(meter.sku)) {
+      return 'Ресурсы мастера · RAM';
+    }
+    return meter.name.replace(/\s*\*$/, '').replace(/\s·\sоценка\s*\*?$/i, '');
+  }
+
+  const topo =
+    kubernetesTopologyDisplayLabel(extractKubernetesAvailability(meter)) ?? 'базовый';
+  const parts: string[] = ['Мастер Kubernetes', topo];
+  const shape = kubernetesShapeLabel(meter);
+  const family = extractKubernetesPresetFamily(meter);
+  const shareRaw = meter.dimensions.guaranteedVcpuShare;
+  const share =
+    typeof shareRaw === 'string' && shareRaw.trim()
+      ? shareRaw.trim().endsWith('%')
+        ? `${shareRaw.trim()} vCPU`
+        : shareRaw.trim()
+      : null;
+  const sizeRaw = meter.dimensions.masterSize;
+  const sizeTier =
+    typeof sizeRaw === 'string' && sizeRaw.trim()
+      ? sizeRaw.trim().charAt(0).toUpperCase() + sizeRaw.trim().slice(1).toLowerCase()
+      : null;
+  const sizingModel = String(meter.dimensions.sizingModel ?? '');
+  const isClusterFee =
+    sizingModel === 'cluster-fee' ||
+    meter.comparableTier === 'fixed-component' ||
+    (!shape &&
+      !sizeTier &&
+      (meter.dimensions.comparabilityClass === 'native-fixed' ||
+        meter.dimensions.comparabilityClass === 'fixed-component'));
+
+  if (shape) {
+    if (family) parts.push(kubernetesPresetFamilyTitle(family));
+    parts.push(shape);
+    if (share) parts.push(share);
+  } else if (sizeTier && (sizingModel === 'marketing-tier' || !isClusterFee)) {
+    // T1 KaaS: public price publishes Small/Medium/Large without vCPU/RAM.
+    parts.push(sizeTier);
+  } else if (isClusterFee || !sizeTier) {
+    parts.push('плата за кластер');
+  } else {
+    parts.push(sizeTier);
+  }
+
+  if (meter.synthetic || meter.sku.includes('.synthetic')) {
+    parts.push('оценка');
+  }
+
+  return parts.join(' · ');
+}
+
 /**
  * Specs column for Kubernetes — countable attrs (master count, synthetic), not title.
- * Canonical titles live in price-book `name`.
+ * Canonical titles come from formatKubernetesDisplayName / price-book `name`.
  */
 export function formatKubernetesParamsLabel(meter: CatalogMeter): string {
   if (meter.categoryKey !== 'kubernetes') return '—';
@@ -1188,7 +1299,8 @@ export function formatKubernetesParamsLabel(meter: CatalogMeter): string {
   const parts: string[] = [];
   const masters = kubernetesMasterCount(meter);
   if (masters != null) parts.push(formatMasterCountRu(masters));
-  if (meter.synthetic || meter.sku.includes('.synthetic')) parts.push('оценка *');
+  if (meter.dimensions.legacy === true) parts.push('legacy');
+  if (meter.synthetic || meter.sku.includes('.synthetic')) parts.push('оценка');
 
   return parts.length ? parts.join(' · ') : '—';
 }

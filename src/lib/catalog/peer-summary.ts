@@ -19,7 +19,7 @@ export function exactSummaryFromFeatures(features: PeerFeatures): string | null 
   switch (features.category) {
     case 'kubernetes': {
       const topo = hardVal(features, 'k8sTopology');
-      const topoRu = topo === 'zonal' ? 'зональный' : topo === 'regional' ? 'региональный' : null;
+      const topoRu = topo === 'zonal' ? 'базовый' : topo === 'regional' ? 'HA' : null;
       const tier = hardVal(features, 'masterSizeTier');
       const tierTitle =
         tier === 'small' ? 'Small' : tier === 'medium' ? 'Medium' : tier === 'large' ? 'Large' : null;

@@ -2,6 +2,18 @@
 
 ## 2026-07-27
 
+### Каталог / K8s: unit vCPU/RAM → «Ресурсы мастера»
+
+Отдельные метры vCPU/RAM (Yandex, VK) больше не маскируются под целый мастер: `Ресурсы мастера · vCPU` / `· RAM`. Целые control-plane SKU по-прежнему `Мастер Kubernetes · …`.
+
+### Каталог / K8s: быстрый фильтр размера Small / Medium / Large
+
+В Kubernetes добавили чипы **Размер** (Small / Medium / Large) рядом с топологией; URL `size=`. Чипы топологии переименованы в **Базовый / HA**.
+
+### Каталог / K8s masters: единая таксономия имён
+
+Display-имена мастеров: `Мастер Kubernetes · базовый|HA · [family] · [shape|плата за кластер|Small] · [оценка]`. Вместо «зональный/региональный» — **базовый/HA**; фиксированная плата → **плата за кластер**; синтетика — **оценка** без `*`. Dimensions: `guaranteedVcpuShare` (Cloud.ru 100%), `presetFamily` (Yandex Standard / CPU-optimized), `sizingModel`, `legacy` для старых Yandex cluster-fee. Sync: `scripts/sync-k8s-display-names.mjs`.
+
 ### Каталог / «Подобрать» без тормозов URL
 
 Синхронизация фильтров каталога больше не вызывает `router.replace` (soft-navigation App Router / Suspense). Пишем query через `history.replaceState` — «Найти похожие» и смена чипов остаются мгновенными; peer-match и так был ~мс.

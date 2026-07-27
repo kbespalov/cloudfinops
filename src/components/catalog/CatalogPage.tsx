@@ -120,9 +120,11 @@ import {catalogEmptyIllustration} from '@/components/ui/emptyIllustration';
 import {
   canFindSimilar,
   comparableFilterFromMeter,
+  kubernetesMasterSizeTier,
   meterMatchesKubernetesSimilar,
   type DiskBillingKindFilter,
   type GpuPriceBasisFilter,
+  type KubernetesMasterSizeTier,
 } from '@/lib/catalog/find-similar';
 import {
   primaryPeerRows,
@@ -252,8 +254,18 @@ const KUBERNETES_AVAILABILITY_OPTIONS: {
   title: string;
 }[] = [
   {value: 'all', title: 'Все'},
-  {value: 'zonal', title: 'Зональный'},
-  {value: 'regional', title: 'Региональный'},
+  {value: 'zonal', title: 'Базовый'},
+  {value: 'regional', title: 'HA'},
+];
+
+const KUBERNETES_SIZE_OPTIONS: {
+  value: 'all' | KubernetesMasterSizeTier;
+  title: string;
+}[] = [
+  {value: 'all', title: 'Все'},
+  {value: 'small', title: 'Small'},
+  {value: 'medium', title: 'Medium'},
+  {value: 'large', title: 'Large'},
 ];
 
 const STORAGE_FACET_OPTIONS: {value: StorageFacet; title: string}[] = [
@@ -361,6 +373,11 @@ function parseCdnTrafficFacet(v: string | null): CdnTrafficFacet {
 function parseKubernetesAvailabilityFacet(v: string | null): KubernetesAvailabilityFacet {
   if (v === 'zonal' || v === 'regional' || v === 'all') return v;
   return 'all';
+}
+
+function parseKubernetesMasterSize(v: string | null): KubernetesMasterSizeTier | null {
+  if (v === 'small' || v === 'medium' || v === 'large') return v;
+  return null;
 }
 
 function parseAiFacet(v: string | null): AiFacet {
@@ -503,7 +520,9 @@ export function CatalogPage() {
   const [kubernetesMasterVcpu, setKubernetesMasterVcpu] = useState<number | null>(null);
   const [kubernetesMasterRamGiB, setKubernetesMasterRamGiB] = useState<number | null>(null);
   const [kubernetesShapelessOnly, setKubernetesShapelessOnly] = useState(false);
-  const [kubernetesMasterSize, setKubernetesMasterSize] = useState<string | null>(null);
+  const [kubernetesMasterSize, setKubernetesMasterSize] = useState<KubernetesMasterSizeTier | null>(
+    () => parseKubernetesMasterSize(searchParams.get('size')),
+  );
   /** Extra storage constraint from find-similar: GET/PUT/… */
   const [storageOperation, setStorageOperation] = useState<string | null>(null);
   const [hoveredSimilar, setHoveredSimilar] = useState<CatalogMeter | null>(null);
@@ -543,6 +562,9 @@ export function CatalogPage() {
       if (category === 'kubernetes' && kubernetesAvailabilityFacet !== 'all') {
         params.set('k8s', kubernetesAvailabilityFacet);
       }
+      if (category === 'kubernetes' && kubernetesMasterSize) {
+        params.set('size', kubernetesMasterSize);
+      }
       if (category === 'ai' && aiFacet !== 'all') params.set('ai', aiFacet);
       if (category === 'ai' && aiFamilyFacet !== 'all') params.set('family', aiFamilyFacet);
       if (category === 'ai' && aiModel) params.set('model', aiModel);
@@ -572,6 +594,7 @@ export function CatalogPage() {
     cdnFacet,
     cdnTrafficFacet,
     kubernetesAvailabilityFacet,
+    kubernetesMasterSize,
     aiFacet,
     aiFamilyFacet,
     aiModel,
@@ -770,6 +793,17 @@ export function CatalogPage() {
     [kubernetesMeters],
   );
 
+  const kubernetesSizeCounts = useMemo(
+    () => ({
+      all: kubernetesMeters.length,
+      small: kubernetesMeters.filter((m) => kubernetesMasterSizeTier(m) === 'small').length,
+      medium: kubernetesMeters.filter((m) => kubernetesMasterSizeTier(m) === 'medium')
+        .length,
+      large: kubernetesMeters.filter((m) => kubernetesMasterSizeTier(m) === 'large').length,
+    }),
+    [kubernetesMeters],
+  );
+
   const aiMeters = useMemo(
     () => baseMeters.filter((m) => m.categoryKey === 'ai'),
     [baseMeters],
@@ -955,11 +989,16 @@ export function CatalogPage() {
         ) {
           return false;
         }
-      } else if (
-        category === 'kubernetes' &&
-        !meterMatchesKubernetesAvailabilityFacet(m, kubernetesAvailabilityFacet)
-      ) {
-        return false;
+      } else if (category === 'kubernetes') {
+        if (!meterMatchesKubernetesAvailabilityFacet(m, kubernetesAvailabilityFacet)) {
+          return false;
+        }
+        if (
+          kubernetesMasterSize &&
+          kubernetesMasterSizeTier(m) !== kubernetesMasterSize
+        ) {
+          return false;
+        }
       }
       if (category === 'ai' && !meterMatchesAiFacet(m, aiFacet)) return false;
       if (category === 'ai' && !meterMatchesAiFamilyFacet(m, aiFamilyFacet)) return false;
@@ -1235,7 +1274,7 @@ export function CatalogPage() {
       setKubernetesMasterVcpu(next.kubernetesMasterVcpu);
       setKubernetesMasterRamGiB(next.kubernetesMasterRamGiB);
       setKubernetesShapelessOnly(next.kubernetesShapelessOnly);
-      setKubernetesMasterSize(next.kubernetesMasterSize);
+      setKubernetesMasterSize(parseKubernetesMasterSize(next.kubernetesMasterSize));
       setAiFacet(next.aiFacet);
       setAiFamilyFacet(next.aiFamilyFacet);
       setAiModel(next.aiModelId ?? '');
@@ -2060,36 +2099,66 @@ export function CatalogPage() {
               ) : null}
 
               {category === 'kubernetes' ? (
-                <div
-                  className={styles.facetControl}
-                  title="Зональный — не отказоустойчивый; региональный — отказоустойчивый"
-                >
-                  <Text variant="caption-2" color="complementary" className={styles.facetLabel}>
-                    Мастер
-                  </Text>
-                  <SegmentedRadioGroup
-                    size="m"
-                    value={kubernetesAvailabilityFacet}
-                    onUpdate={(v) =>
-                      setKubernetesAvailabilityFacet(v as KubernetesAvailabilityFacet)
-                    }
+                <>
+                  <div
+                    className={styles.facetControl}
+                    title="Базовый — одна зона; HA — отказоустойчивый control plane"
                   >
-                    {KUBERNETES_AVAILABILITY_OPTIONS.map((o) => (
-                      <SegmentedRadioGroup.Option key={o.value} value={o.value}>
-                        <span className={styles.facetOption}>
-                          {o.value === 'all' ? (
-                            <Icon data={Layers3Diagonal} size={14} />
-                          ) : (
-                            <Icon data={Server} size={14} />
-                          )}
-                          <span>
-                            {o.title} {kubernetesAvailabilityCounts[o.value]}
+                    <Text variant="caption-2" color="complementary" className={styles.facetLabel}>
+                      Мастер
+                    </Text>
+                    <SegmentedRadioGroup
+                      size="m"
+                      value={kubernetesAvailabilityFacet}
+                      onUpdate={(v) =>
+                        setKubernetesAvailabilityFacet(v as KubernetesAvailabilityFacet)
+                      }
+                    >
+                      {KUBERNETES_AVAILABILITY_OPTIONS.map((o) => (
+                        <SegmentedRadioGroup.Option key={o.value} value={o.value}>
+                          <span className={styles.facetOption}>
+                            {o.value === 'all' ? (
+                              <Icon data={Layers3Diagonal} size={14} />
+                            ) : (
+                              <Icon data={Server} size={14} />
+                            )}
+                            <span>
+                              {o.title} {kubernetesAvailabilityCounts[o.value]}
+                            </span>
                           </span>
-                        </span>
-                      </SegmentedRadioGroup.Option>
-                    ))}
-                  </SegmentedRadioGroup>
-                </div>
+                        </SegmentedRadioGroup.Option>
+                      ))}
+                    </SegmentedRadioGroup>
+                  </div>
+                  <div
+                    className={styles.facetControl}
+                    title="Тир размера control plane: Small / Medium / Large"
+                  >
+                    <Text variant="caption-2" color="complementary" className={styles.facetLabel}>
+                      Размер
+                    </Text>
+                    <SegmentedRadioGroup
+                      size="m"
+                      value={kubernetesMasterSize ?? 'all'}
+                      onUpdate={(v) =>
+                        setKubernetesMasterSize(parseKubernetesMasterSize(v === 'all' ? null : v))
+                      }
+                    >
+                      {KUBERNETES_SIZE_OPTIONS.map((o) => (
+                        <SegmentedRadioGroup.Option key={o.value} value={o.value}>
+                          <span className={styles.facetOption}>
+                            {o.value === 'all' ? (
+                              <Icon data={Layers3Diagonal} size={14} />
+                            ) : null}
+                            <span>
+                              {o.title} {kubernetesSizeCounts[o.value]}
+                            </span>
+                          </span>
+                        </SegmentedRadioGroup.Option>
+                      ))}
+                    </SegmentedRadioGroup>
+                  </div>
+                </>
               ) : null}
 
               {category === 'ai' ? (

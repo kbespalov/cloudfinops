@@ -9,7 +9,7 @@ metadata:
 spec:
   meters:
   - sku: yc.kubernetes.master-vcpu
-    name: Ресурсы мастера Kubernetes · vCPU
+    name: Ресурсы мастера · vCPU
     meter: containers.kubernetes.control-plane.vcpu
     status: available
     pricingMode: unit
@@ -20,6 +20,7 @@ spec:
     - yc.billing-api
     - yc.kubernetes
     dimensions:
+      sizingModel: resource-meter
       nativeName: Master vCPU
       component: master-vcpu
       yandexSkuId: dn2pjj9vapo7724rik0b
@@ -46,7 +47,7 @@ spec:
       в прайсе нет — итоговую цену собирают из vCPU и RAM. В каталоге ниже
       есть собранные формы пресетов (минимум 2/8; также 4/8 · 4/16 · 8/16 · 8/32 · 16/32) (*).
   - sku: yc.kubernetes.master-ram
-    name: Ресурсы мастера Kubernetes · RAM
+    name: Ресурсы мастера · RAM
     meter: containers.kubernetes.control-plane.ram
     status: available
     pricingMode: unit
@@ -57,6 +58,7 @@ spec:
     - yc.billing-api
     - yc.kubernetes
     dimensions:
+      sizingModel: resource-meter
       nativeName: Master RAM
       component: master-ram
       yandexSkuId: dn2u6o8avnm6b5tb8klu
@@ -82,7 +84,7 @@ spec:
       Ставка за 1 ГиБ RAM управляющего слоя. Вместе со ставкой vCPU даёт цену
       мастера. Собранные формы пресетов — ниже (*).
   - sku: yc.kubernetes.master-zonal
-    name: Мастер Kubernetes · зональный · фиксированная плата
+    name: Мастер Kubernetes · базовый · плата за кластер
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: fixed
@@ -93,6 +95,9 @@ spec:
     - yc.billing-api
     - yc.kubernetes
     dimensions:
+      parityOnly: true
+      legacy: true
+      sizingModel: cluster-fee
       nativeName: Зональный мастер — фикс
       topology: zonal
       availability: zonal
@@ -114,7 +119,7 @@ spec:
       Отдельная плата «за зональный мастер» — 0 ₽. Стоимость — только vCPU и
       RAM мастера. Для сравнения цен смотрите собранные формы пресетов ниже (*).
   - sku: yc.kubernetes.master-regional
-    name: Мастер Kubernetes · региональный · фиксированная плата
+    name: Мастер Kubernetes · HA · плата за кластер
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: fixed
@@ -125,6 +130,9 @@ spec:
     - yc.billing-api
     - yc.kubernetes
     dimensions:
+      parityOnly: true
+      legacy: true
+      sizingModel: cluster-fee
       nativeName: Региональный мастер — фикс
       topology: regional
       availability: regional
@@ -147,7 +155,7 @@ spec:
       RAM трёх мастер-узлов. Для сравнения смотрите собранные HA-формы пресетов ниже (*).
   # Orderable minimum in calculator/docs: s-c2-m8 (2 vCPU / 8 GiB).
   - sku: yc.kubernetes.master-basic-2-8.synthetic
-    name: Мастер Kubernetes · зональный · 2 vCPU / 8 ГиБ *
+    name: Мастер Kubernetes · базовый · Standard · 2 vCPU / 8 ГиБ · оценка
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -159,6 +167,8 @@ spec:
     - yc.kubernetes
     priceProvenance: derived
     dimensions:
+      sizingModel: preset
+      presetFamily: standard
       nativeName: s-c2-m8
       hostType: s-c2-m8
       comparabilityClass: synthetic-bundle
@@ -200,7 +210,7 @@ spec:
       2×1,76 + 8×0,46 = 7,20 ₽/ч с НДС (фикс за мастер —
       0 ₽). Рабочие ноды не входят.
   - sku: yc.kubernetes.master-ha-2-8.synthetic
-    name: Мастер Kubernetes · региональный · 3 × 2 vCPU / 8 ГиБ *
+    name: Мастер Kubernetes · HA · Standard · 3 × 2 vCPU / 8 ГиБ · оценка
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -212,6 +222,8 @@ spec:
     - yc.kubernetes
     priceProvenance: derived
     dimensions:
+      sizingModel: preset
+      presetFamily: standard
       nativeName: 3 × s-c2-m8
       hostType: s-c2-m8
       comparabilityClass: synthetic-bundle
@@ -254,7 +266,7 @@ spec:
   # Additional orderable presets from resource-preset list / console
   # (Standard s-* 4:1 and CPU-optimized c-* 2:1). No free-form vCPU/RAM in API.
   - sku: yc.kubernetes.master-basic-4-8.synthetic
-    name: Мастер Kubernetes · зональный · 4 vCPU / 8 ГиБ *
+    name: Мастер Kubernetes · базовый · CPU-optimized · 4 vCPU / 8 ГиБ · оценка
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -266,6 +278,8 @@ spec:
     - yc.kubernetes
     priceProvenance: derived
     dimensions:
+      sizingModel: preset
+      presetFamily: cpu-optimized
       nativeName: c-c4-m8
       hostType: c-c4-m8
       comparabilityClass: synthetic-bundle
@@ -307,7 +321,7 @@ spec:
       4×1,76 + 8×0,46 = 10,72 ₽/ч с НДС (фикс за мастер —
       0 ₽). Рабочие ноды не входят.
   - sku: yc.kubernetes.master-ha-4-8.synthetic
-    name: Мастер Kubernetes · региональный · 3 × 4 vCPU / 8 ГиБ *
+    name: Мастер Kubernetes · HA · CPU-optimized · 3 × 4 vCPU / 8 ГиБ · оценка
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -319,6 +333,8 @@ spec:
     - yc.kubernetes
     priceProvenance: derived
     dimensions:
+      sizingModel: preset
+      presetFamily: cpu-optimized
       nativeName: 3 × c-c4-m8
       hostType: c-c4-m8
       comparabilityClass: synthetic-bundle
@@ -359,7 +375,7 @@ spec:
       (4 vCPU / 8 ГиБ), чтобы сравнить HA с другими облаками. Как считаем:
       3 × 10,72 = 32,16 ₽/ч с НДС. Рабочие ноды не входят.
   - sku: yc.kubernetes.master-basic-4-16.synthetic
-    name: Мастер Kubernetes · зональный · 4 vCPU / 16 ГиБ *
+    name: Мастер Kubernetes · базовый · Standard · 4 vCPU / 16 ГиБ · оценка
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -371,6 +387,8 @@ spec:
     - yc.kubernetes
     priceProvenance: derived
     dimensions:
+      sizingModel: preset
+      presetFamily: standard
       nativeName: s-c4-m16
       hostType: s-c4-m16
       comparabilityClass: synthetic-bundle
@@ -412,7 +430,7 @@ spec:
       4×1,76 + 16×0,46 = 14,40 ₽/ч с НДС (фикс за мастер —
       0 ₽). Рабочие ноды не входят.
   - sku: yc.kubernetes.master-ha-4-16.synthetic
-    name: Мастер Kubernetes · региональный · 3 × 4 vCPU / 16 ГиБ *
+    name: Мастер Kubernetes · HA · Standard · 3 × 4 vCPU / 16 ГиБ · оценка
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -424,6 +442,8 @@ spec:
     - yc.kubernetes
     priceProvenance: derived
     dimensions:
+      sizingModel: preset
+      presetFamily: standard
       nativeName: 3 × s-c4-m16
       hostType: s-c4-m16
       comparabilityClass: synthetic-bundle
@@ -464,7 +484,7 @@ spec:
       (4 vCPU / 16 ГиБ), чтобы сравнить HA с другими облаками. Как считаем:
       3 × 14,40 = 43,20 ₽/ч с НДС. Рабочие ноды не входят.
   - sku: yc.kubernetes.master-basic-8-16.synthetic
-    name: Мастер Kubernetes · зональный · 8 vCPU / 16 ГиБ *
+    name: Мастер Kubernetes · базовый · CPU-optimized · 8 vCPU / 16 ГиБ · оценка
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -476,6 +496,8 @@ spec:
     - yc.kubernetes
     priceProvenance: derived
     dimensions:
+      sizingModel: preset
+      presetFamily: cpu-optimized
       nativeName: c-c8-m16
       hostType: c-c8-m16
       comparabilityClass: synthetic-bundle
@@ -517,7 +539,7 @@ spec:
       8×1,76 + 16×0,46 = 21,44 ₽/ч с НДС (фикс за мастер —
       0 ₽). Рабочие ноды не входят.
   - sku: yc.kubernetes.master-ha-8-16.synthetic
-    name: Мастер Kubernetes · региональный · 3 × 8 vCPU / 16 ГиБ *
+    name: Мастер Kubernetes · HA · CPU-optimized · 3 × 8 vCPU / 16 ГиБ · оценка
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -529,6 +551,8 @@ spec:
     - yc.kubernetes
     priceProvenance: derived
     dimensions:
+      sizingModel: preset
+      presetFamily: cpu-optimized
       nativeName: 3 × c-c8-m16
       hostType: c-c8-m16
       comparabilityClass: synthetic-bundle
@@ -569,7 +593,7 @@ spec:
       (8 vCPU / 16 ГиБ), чтобы сравнить HA с другими облаками. Как считаем:
       3 × 21,44 = 64,32 ₽/ч с НДС. Рабочие ноды не входят.
   - sku: yc.kubernetes.master-basic-8-32.synthetic
-    name: Мастер Kubernetes · зональный · 8 vCPU / 32 ГиБ *
+    name: Мастер Kubernetes · базовый · Standard · 8 vCPU / 32 ГиБ · оценка
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -581,6 +605,8 @@ spec:
     - yc.kubernetes
     priceProvenance: derived
     dimensions:
+      sizingModel: preset
+      presetFamily: standard
       nativeName: s-c8-m32
       hostType: s-c8-m32
       comparabilityClass: synthetic-bundle
@@ -622,7 +648,7 @@ spec:
       8×1,76 + 32×0,46 = 28,80 ₽/ч с НДС (фикс за мастер —
       0 ₽). Рабочие ноды не входят.
   - sku: yc.kubernetes.master-ha-8-32.synthetic
-    name: Мастер Kubernetes · региональный · 3 × 8 vCPU / 32 ГиБ *
+    name: Мастер Kubernetes · HA · Standard · 3 × 8 vCPU / 32 ГиБ · оценка
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -634,6 +660,8 @@ spec:
     - yc.kubernetes
     priceProvenance: derived
     dimensions:
+      sizingModel: preset
+      presetFamily: standard
       nativeName: 3 × s-c8-m32
       hostType: s-c8-m32
       comparabilityClass: synthetic-bundle
@@ -674,7 +702,7 @@ spec:
       (8 vCPU / 32 ГиБ), чтобы сравнить HA с другими облаками. Как считаем:
       3 × 28,80 = 86,40 ₽/ч с НДС. Рабочие ноды не входят.
   - sku: yc.kubernetes.master-basic-16-32.synthetic
-    name: Мастер Kubernetes · зональный · 16 vCPU / 32 ГиБ *
+    name: Мастер Kubernetes · базовый · CPU-optimized · 16 vCPU / 32 ГиБ · оценка
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -686,6 +714,8 @@ spec:
     - yc.kubernetes
     priceProvenance: derived
     dimensions:
+      sizingModel: preset
+      presetFamily: cpu-optimized
       nativeName: c-c16-m32
       hostType: c-c16-m32
       comparabilityClass: synthetic-bundle
@@ -727,7 +757,7 @@ spec:
       16×1,76 + 32×0,46 = 42,88 ₽/ч с НДС (фикс за мастер —
       0 ₽). Рабочие ноды не входят.
   - sku: yc.kubernetes.master-ha-16-32.synthetic
-    name: Мастер Kubernetes · региональный · 3 × 16 vCPU / 32 ГиБ *
+    name: Мастер Kubernetes · HA · CPU-optimized · 3 × 16 vCPU / 32 ГиБ · оценка
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -739,6 +769,8 @@ spec:
     - yc.kubernetes
     priceProvenance: derived
     dimensions:
+      sizingModel: preset
+      presetFamily: cpu-optimized
       nativeName: 3 × c-c16-m32
       hostType: c-c16-m32
       comparabilityClass: synthetic-bundle

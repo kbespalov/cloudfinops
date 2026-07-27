@@ -12,7 +12,7 @@ spec:
   # Kubernetes» в том же PDF недоступен для нового заказа — Tiny и старые
   # строки Containers сюда не переносим.
   - sku: t1.kubernetes.master-small
-    name: Мастер Kubernetes · зональный · Small
+    name: Мастер Kubernetes · базовый · Small
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: fixed
@@ -23,6 +23,7 @@ spec:
     - t1.rates-pdf-2026-07-13
     - t1.kubernetes
     dimensions:
+      sizingModel: marketing-tier
       nativeName: Зональный мастер Small
       published30Days: 5417
       vatRatePercent: 22
@@ -58,7 +59,7 @@ spec:
       указан, поэтому с другими облаками удобнее сравнивать по итоговой сумме,
       а не по «2 vCPU / 4 ГиБ».
   - sku: t1.kubernetes.master-medium
-    name: Мастер Kubernetes · зональный · Medium
+    name: Мастер Kubernetes · базовый · Medium
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: fixed
@@ -69,6 +70,7 @@ spec:
     - t1.rates-pdf-2026-07-13
     - t1.kubernetes
     dimensions:
+      sizingModel: marketing-tier
       nativeName: Зональный мастер Medium
       published30Days: 10026.11
       vatRatePercent: 22
@@ -104,7 +106,7 @@ spec:
       сравнении с другими облаками ориентируйтесь на итоговую стоимость, а не
       на конфигурацию «2 vCPU / 4 ГиБ».
   - sku: t1.kubernetes.master-large
-    name: Мастер Kubernetes · зональный · Large
+    name: Мастер Kubernetes · базовый · Large
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: fixed
@@ -115,6 +117,7 @@ spec:
     - t1.rates-pdf-2026-07-13
     - t1.kubernetes
     dimensions:
+      sizingModel: marketing-tier
       nativeName: Зональный мастер Large
       published30Days: 19181.83
       vatRatePercent: 22
@@ -150,7 +153,7 @@ spec:
       сравнивайте по итоговой сумме, а не по типовым «2 vCPU / 4 ГиБ».
   # HA: 3 × published Master rate (native-fixed). Cluster stays single-AZ per T1 docs.
   - sku: t1.kubernetes.master-ha-small
-    name: Мастер Kubernetes · региональный · Small
+    name: Мастер Kubernetes · HA · Small
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: fixed
@@ -161,6 +164,7 @@ spec:
     - t1.rates-pdf-2026-07-13
     - t1.kubernetes
     dimensions:
+      sizingModel: marketing-tier
       nativeName: Отказоустойчивый кластер Small, 3 master
       published30Days: 16251
       vatRatePercent: 22
@@ -197,7 +201,7 @@ spec:
       ноды в цену не входят; сравнивать с другими облаками удобнее по итоговой
       сумме.
   - sku: t1.kubernetes.master-ha-medium
-    name: Мастер Kubernetes · региональный · Medium
+    name: Мастер Kubernetes · HA · Medium
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: fixed
@@ -208,6 +212,7 @@ spec:
     - t1.rates-pdf-2026-07-13
     - t1.kubernetes
     dimensions:
+      sizingModel: marketing-tier
       nativeName: Отказоустойчивый кластер Medium, 3 master
       published30Days: 30078.33
       vatRatePercent: 22
@@ -242,7 +247,7 @@ spec:
       Размещение — в одной зоне; для второй площадки обычно поднимают ещё один
       кластер. Рабочие ноды считаются отдельно — в эту цену они не входят.
   - sku: t1.kubernetes.master-ha-large
-    name: Мастер Kubernetes · региональный · Large
+    name: Мастер Kubernetes · HA · Large
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: fixed
@@ -253,6 +258,7 @@ spec:
     - t1.rates-pdf-2026-07-13
     - t1.kubernetes
     dimensions:
+      sizingModel: marketing-tier
       nativeName: Отказоустойчивый кластер Large, 3 master
       published30Days: 57545.49
       vatRatePercent: 22

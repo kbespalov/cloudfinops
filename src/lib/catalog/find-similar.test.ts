@@ -259,7 +259,7 @@ describe('comparableFilterFromMeter', () => {
     assert.equal(f.kubernetesAvailabilityFacet, 'regional');
     assert.equal(f.kubernetesMasterSize, 'small');
     assert.equal(f.kubernetesMasterVcpu, null);
-    assert.match(f.summary, /региональный/i);
+    assert.match(f.summary, /\bHA\b/);
     assert.match(f.summary, /Small/i);
 
     const peers = peersMatching(f);

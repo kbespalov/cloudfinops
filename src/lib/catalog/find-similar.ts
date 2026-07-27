@@ -340,7 +340,7 @@ export function comparableFilterFromMeter(meter: CatalogMeter): ComparableCatalo
       const hasShape = kubernetesMasterHasShape(meter);
       const vcpu = Number(meter.dimensions.vcpu);
       const ramGiB = Number(meter.dimensions.ramGiB ?? meter.dimensions.ramGb);
-      const topo = availability === 'zonal' ? 'зональный' : 'региональный';
+      const topo = availability === 'zonal' ? 'базовый' : 'HA';
       const sizeTitle = SIZE_TIER_TITLE[sizeTier];
       const shapeDetail =
         hasShape && Number.isFinite(vcpu) && Number.isFinite(ramGiB)

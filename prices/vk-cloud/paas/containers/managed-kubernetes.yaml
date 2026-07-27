@@ -9,7 +9,7 @@ metadata:
 spec:
   meters:
   - sku: vk.kubernetes.master-vcpu
-    name: Ресурсы мастера Kubernetes · vCPU
+    name: Ресурсы мастера · vCPU
     meter: containers.kubernetes.control-plane.vcpu
     status: available
     pricingMode: unit
@@ -20,6 +20,7 @@ spec:
     - vk.pricelist
     - vk.k8s-rules
     dimensions:
+      sizingModel: resource-meter
       nativeName: Master CPU, Intel Cascade Lake
       component: master vCPU
       cpuPlatformFamily: intel-cascade-lake
@@ -46,7 +47,7 @@ spec:
       в прайсе нет — цену собирают из vCPU и RAM. В каталоге ниже — собранные
       формы 2/6 (типичный старт), 2/8 и 2/4 (*).
   - sku: vk.kubernetes.master-ram
-    name: Ресурсы мастера Kubernetes · RAM
+    name: Ресурсы мастера · RAM
     meter: containers.kubernetes.control-plane.ram
     status: available
     pricingMode: unit
@@ -57,6 +58,7 @@ spec:
     - vk.pricelist
     - vk.k8s-rules
     dimensions:
+      sizingModel: resource-meter
       nativeName: Master RAM
       component: master-ram
       published30Days: 267.18
@@ -82,7 +84,7 @@ spec:
       слоя. Собранные формы — в строках 2/6 · 2/8 · 2/4 ниже (*).
   # Documented VK default master: STD2-2-6 (2 CPU / 6 GB), vertical autoscaling on.
   - sku: vk.kubernetes.master-basic-2-6.synthetic
-    name: Мастер Kubernetes · зональный · 2 vCPU / 6 ГиБ *
+    name: Мастер Kubernetes · базовый · 2 vCPU / 6 ГиБ · оценка
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -94,6 +96,7 @@ spec:
     - vk.k8s-rules
     priceProvenance: derived
     dimensions:
+      sizingModel: observed-flavor
       nativeName: STD2-2-6
       hostType: STD2-2-6
       comparabilityClass: synthetic-bundle
@@ -134,7 +137,7 @@ spec:
       от этой формы удобно сравнивать зональные мастера. Как считаем:
       2×1,36596 + 6×0,3711 = 4,95852 ₽/ч с НДС. Рабочие ноды не входят.
   - sku: vk.kubernetes.master-ha-2-6.synthetic
-    name: Мастер Kubernetes · региональный · 3 × 2 vCPU / 6 ГиБ *
+    name: Мастер Kubernetes · HA · 3 × 2 vCPU / 6 ГиБ · оценка
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -146,6 +149,7 @@ spec:
     - vk.k8s-rules
     priceProvenance: derived
     dimensions:
+      sizingModel: observed-flavor
       nativeName: 3 × STD2-2-6
       hostType: STD2-2-6
       comparabilityClass: synthetic-bundle
@@ -186,7 +190,7 @@ spec:
       с НДС. Рабочие ноды не входят.
   # Same shape as Yandex orderable minimum s-c2-m8 — for cross-cloud 2/8 compare.
   - sku: vk.kubernetes.master-basic-2-8.synthetic
-    name: Мастер Kubernetes · зональный · 2 vCPU / 8 ГиБ *
+    name: Мастер Kubernetes · базовый · 2 vCPU / 8 ГиБ · оценка
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -198,6 +202,7 @@ spec:
     - vk.k8s-rules
     priceProvenance: derived
     dimensions:
+      sizingModel: observed-flavor
       nativeName: Паритет 2 vCPU / 8 ГиБ *
       comparabilityClass: synthetic-bundle
       comparableTier: basic
@@ -237,7 +242,7 @@ spec:
       автоскейле/ручном шаге. Как считаем: 2×1,36596 + 8×0,3711 = 5,70072 ₽/ч
       с НДС. Рабочие ноды не входят.
   - sku: vk.kubernetes.master-ha-2-8.synthetic
-    name: Мастер Kubernetes · региональный · 3 × 2 vCPU / 8 ГиБ *
+    name: Мастер Kubernetes · HA · 3 × 2 vCPU / 8 ГиБ · оценка
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -249,6 +254,7 @@ spec:
     - vk.k8s-rules
     priceProvenance: derived
     dimensions:
+      sizingModel: observed-flavor
       nativeName: Паритет 3 × 2 vCPU / 8 ГиБ *
       comparabilityClass: synthetic-bundle
       comparableTier: ha
@@ -287,7 +293,7 @@ spec:
       3 × 5,70072 = 17,10216 ₽/ч с НДС. Рабочие ноды не входят.
   # Cross-cloud parity with Cloud.ru 2/4.
   - sku: vk.kubernetes.master-basic-2-4.synthetic
-    name: Мастер Kubernetes · зональный · 2 vCPU / 4 ГиБ *
+    name: Мастер Kubernetes · базовый · 2 vCPU / 4 ГиБ · оценка
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -299,6 +305,7 @@ spec:
     - vk.k8s-rules
     priceProvenance: derived
     dimensions:
+      sizingModel: observed-flavor
       nativeName: Паритет 2 vCPU / 4 ГиБ *
       parityOnly: true
       comparabilityClass: synthetic-bundle
@@ -339,7 +346,7 @@ spec:
       сравнения. Как считаем: 2×1,36596 + 4×0,3711 = 4,21632 ₽/ч с НДС.
       Рабочие ноды не входят.
   - sku: vk.kubernetes.master-ha-2-4.synthetic
-    name: Мастер Kubernetes · региональный · 3 × 2 vCPU / 4 ГиБ *
+    name: Мастер Kubernetes · HA · 3 × 2 vCPU / 4 ГиБ · оценка
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -351,6 +358,7 @@ spec:
     - vk.k8s-rules
     priceProvenance: derived
     dimensions:
+      sizingModel: observed-flavor
       nativeName: Паритет 3 × 2 vCPU / 4 ГиБ *
       parityOnly: true
       comparabilityClass: synthetic-bundle

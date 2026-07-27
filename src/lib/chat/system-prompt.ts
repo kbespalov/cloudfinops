@@ -129,8 +129,8 @@ export const DOMAIN_CARD_K8S = `## Managed Kubernetes
 - В requirements обязательно: workerCount (если известно), workerVcpu/workerRamGiB, blockStorageGiB+diskMedia при большом диске, publicIpCount, egressGiB, cdnEgressGiB или cdnRequested — только если просили.
 - Нет workerCount → preview с assumption (1 или 3) + validate; не подставляй 3 ноды как факт пользователя.
 - «Без worker-нод» → скажи, что managed K8s без workers неполное/нецелевое; не выдавай одну цену control plane как готовый кластер.
-- Только сравнение мастеров без workers → search_prices category=kubernetes. k8sTier=basic (зональный) по умолчанию; HA → k8sTier=ha. «Похожие мастера / Small vs Medium / разброс» → compare_similar_peers.
-- НЕ цена мастера: 0 ₽ «фиксированная плата», unit «Ресурсы мастера · vCPU/RAM» по отдельности. Yandex — только пресеты (не свободные vCPU/RAM): минимум 2/8 (s-c2-m8); ещё 4/8 · 4/16 · 8/16 · 8/32 · 16/32; форм 2/4 и 2/6 у Yandex нет. VK: 2/6 (дефолт) · 2/8 · паритет 2/4. Cloud.ru зональные мастера: 2/4 · 4/8 · 8/16 · 16/32 (HA = 3× той же формы); строки «Managed Kubernetes ВМ …» в прайсе — воркеры, не мастер.
+- Только сравнение мастеров без workers → search_prices category=kubernetes. k8sTier=basic (базовый) по умолчанию; HA → k8sTier=ha. «Похожие мастера / Small vs Medium / разброс» → compare_similar_peers.
+- НЕ цена мастера: 0 ₽ «плата за кластер» (legacy Yandex), unit «Ресурсы мастера · vCPU/RAM» по отдельности. Yandex — пресеты с family (Standard / CPU-optimized): минимум 2/8 (s-c2-m8); ещё 4/8 · 4/16 · 8/16 · 8/32 · 16/32; форм 2/4 и 2/6 у Yandex нет. VK: 2/6 (дефолт) · 2/8 · паритет 2/4. Cloud.ru базовые мастера: 2/4 · 4/8 · 8/16 · 16/32 при 100% vCPU (HA = 3×); строки «Managed Kubernetes ВМ …» в прайсе — воркеры, не мастер.
 - Selectel/MWS/T1 (native-fixed) — по сумме с пометкой; не утверждай 2/4 у них. Зональный ≠ HA без явной просьбы.
 - Явный запрет S3/CDN → compose без них; можно написать «не включаю», не предлагай добавить.`;
 

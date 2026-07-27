@@ -11,7 +11,7 @@ spec:
   # Native «Зональный Мастер» configs from tariff PDF (full vCPU). Worker VM
   # rows in the same PDF (2/4 … 64/256) are node flavors, not control plane.
   - sku: cloudru.kubernetes.master-zonal-2-4
-    name: Мастер Kubernetes · зональный · 2 vCPU / 4 ГиБ
+    name: Мастер Kubernetes · базовый · 2 vCPU / 4 ГиБ · 100% vCPU
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -21,6 +21,8 @@ spec:
     sourceRefs:
     - cloudru.k8s-pdf
     dimensions:
+      sizingModel: shape
+      guaranteedVcpuShare: 100%
       nativeName: Зональный мастер 2 vCPU / 4 ГиБ
       vcpu: 2
       ramGb: 4
@@ -53,7 +55,7 @@ spec:
       Готовый тариф Cloud.ru на один мастер-узел Kubernetes: 2 vCPU и 4 ГиБ
       памяти в одной зоне доступности. Рабочие (worker) ноды в эту цену не входят.
   - sku: cloudru.kubernetes.master-zonal-4-8
-    name: Мастер Kubernetes · зональный · 4 vCPU / 8 ГиБ
+    name: Мастер Kubernetes · базовый · 4 vCPU / 8 ГиБ · 100% vCPU
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -63,6 +65,8 @@ spec:
     sourceRefs:
     - cloudru.k8s-pdf
     dimensions:
+      sizingModel: shape
+      guaranteedVcpuShare: 100%
       nativeName: Зональный мастер 4 vCPU / 8 ГиБ
       vcpu: 4
       ramGb: 8
@@ -95,7 +99,7 @@ spec:
       Готовый тариф Cloud.ru на один мастер-узел Kubernetes: 4 vCPU и 8 ГиБ
       памяти в одной зоне доступности. Рабочие (worker) ноды в эту цену не входят.
   - sku: cloudru.kubernetes.master-zonal-8-16
-    name: Мастер Kubernetes · зональный · 8 vCPU / 16 ГиБ
+    name: Мастер Kubernetes · базовый · 8 vCPU / 16 ГиБ · 100% vCPU
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -105,6 +109,8 @@ spec:
     sourceRefs:
     - cloudru.k8s-pdf
     dimensions:
+      sizingModel: shape
+      guaranteedVcpuShare: 100%
       nativeName: Зональный мастер 8 vCPU / 16 ГиБ
       vcpu: 8
       ramGb: 16
@@ -137,7 +143,7 @@ spec:
       Готовый тариф Cloud.ru на один мастер-узел Kubernetes: 8 vCPU и 16 ГиБ
       памяти в одной зоне доступности. Рабочие (worker) ноды в эту цену не входят.
   - sku: cloudru.kubernetes.master-zonal-16-32
-    name: Мастер Kubernetes · зональный · 16 vCPU / 32 ГиБ
+    name: Мастер Kubernetes · базовый · 16 vCPU / 32 ГиБ · 100% vCPU
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -147,6 +153,8 @@ spec:
     sourceRefs:
     - cloudru.k8s-pdf
     dimensions:
+      sizingModel: shape
+      guaranteedVcpuShare: 100%
       nativeName: Зональный мастер 16 vCPU / 32 ГиБ
       vcpu: 16
       ramGb: 32
@@ -183,7 +191,7 @@ spec:
   # Docs: https://cloud.ru/docs/kubernetes-evolution/ug/topics/guides__cluster__create
   # (1 / 3 / 5 master nodes). We use 3× to match peer HA comparables.
   - sku: cloudru.kubernetes.master-ha-2-4.synthetic
-    name: Мастер Kubernetes · региональный · 3 × 2 vCPU / 4 ГиБ *
+    name: Мастер Kubernetes · HA · 3 × 2 vCPU / 4 ГиБ · 100% vCPU · оценка
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -195,6 +203,8 @@ spec:
     - cloudru.k8s-docs
     priceProvenance: derived
     dimensions:
+      sizingModel: shape
+      guaranteedVcpuShare: 100%
       nativeName: Отказоустойчивый мастер 3×(2 vCPU / 4 ГиБ) *
       vcpu: 2
       ramGb: 4
@@ -237,7 +247,7 @@ spec:
       чтобы сравнить отказоустойчивый слой с другими облаками. Как считаем:
       3 × 8,601 = 25,803 ₽/ч с НДС. Рабочие ноды не входят.
   - sku: cloudru.kubernetes.master-ha-4-8.synthetic
-    name: Мастер Kubernetes · региональный · 3 × 4 vCPU / 8 ГиБ *
+    name: Мастер Kubernetes · HA · 3 × 4 vCPU / 8 ГиБ · 100% vCPU · оценка
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -249,6 +259,8 @@ spec:
     - cloudru.k8s-docs
     priceProvenance: derived
     dimensions:
+      sizingModel: shape
+      guaranteedVcpuShare: 100%
       nativeName: Отказоустойчивый мастер 3×(4 vCPU / 8 ГиБ) *
       vcpu: 4
       ramGb: 8
@@ -290,7 +302,7 @@ spec:
       3 × 4/8 для сравнения отказоустойчивого слоя. Как считаем:
       3 × 11,6876 = 35,0628 ₽/ч с НДС. Рабочие ноды не входят.
   - sku: cloudru.kubernetes.master-ha-8-16.synthetic
-    name: Мастер Kubernetes · региональный · 3 × 8 vCPU / 16 ГиБ *
+    name: Мастер Kubernetes · HA · 3 × 8 vCPU / 16 ГиБ · 100% vCPU · оценка
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -302,6 +314,8 @@ spec:
     - cloudru.k8s-docs
     priceProvenance: derived
     dimensions:
+      sizingModel: shape
+      guaranteedVcpuShare: 100%
       nativeName: Отказоустойчивый мастер 3×(8 vCPU / 16 ГиБ) *
       vcpu: 8
       ramGb: 16
@@ -343,7 +357,7 @@ spec:
       3 × 8/16 для сравнения отказоустойчивого слоя. Как считаем:
       3 × 23,363 = 70,089 ₽/ч с НДС. Рабочие ноды не входят.
   - sku: cloudru.kubernetes.master-ha-16-32.synthetic
-    name: Мастер Kubernetes · региональный · 3 × 16 vCPU / 32 ГиБ *
+    name: Мастер Kubernetes · HA · 3 × 16 vCPU / 32 ГиБ · 100% vCPU · оценка
     meter: containers.kubernetes.control-plane
     status: available
     pricingMode: bundle
@@ -355,6 +369,8 @@ spec:
     - cloudru.k8s-docs
     priceProvenance: derived
     dimensions:
+      sizingModel: shape
+      guaranteedVcpuShare: 100%
       nativeName: Отказоустойчивый мастер 3×(16 vCPU / 32 ГиБ) *
       vcpu: 16
       ramGb: 32

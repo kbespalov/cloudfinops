@@ -317,12 +317,12 @@ describe('searchPricesDetailed kubernetes masters', () => {
 
     const byId = Object.fromEntries(r.providers.map((p) => [p.provider, p.cheapest]));
     // VK default compare = docs STD2-2-6 (2/6), not cheaper parity-only 2/4.
-    assert.match(byId['vk-cloud']?.name ?? '', /Мастер Kubernetes · зональный · 2 vCPU \/ 6 ГиБ/i);
+    assert.match(byId['vk-cloud']?.name ?? '', /Мастер Kubernetes · базовый · 2 vCPU \/ 6 ГиБ/i);
     assert.ok((byId['vk-cloud']?.hour ?? 0) > 1);
     // Yandex default compare = orderable s-c2-m8 (no 2/4 or 2/6 shapes).
-    assert.match(byId['yandex-cloud']?.name ?? '', /Мастер Kubernetes · зональный · 2 vCPU \/ 8 ГиБ/i);
+    assert.match(byId['yandex-cloud']?.name ?? '', /Мастер Kubernetes · базовый · Standard · 2 vCPU \/ 8 ГиБ/i);
     assert.ok((byId['yandex-cloud']?.hour ?? 0) > 1);
-    assert.doesNotMatch(byId['yandex-cloud']?.name ?? '', /фиксированная плата/i);
+    assert.doesNotMatch(byId['yandex-cloud']?.name ?? '', /плата за кластер/i);
     assert.match(byId['cloud-ru']?.name ?? '', /2 vCPU/);
     assert.ok(byId['selectel']?.k8sTier === 'basic');
     assert.ok((byId['selectel']?.hour ?? 0) > 1);
