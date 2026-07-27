@@ -60,7 +60,16 @@ function resolveSeed(args: CompareSimilarPeersArgs): CatalogMeter | null {
   const search = searchPricesDetailed({query: q});
   const cheapest = search.providers[0]?.cheapest;
   if (!cheapest) return null;
-  return catalog.meters.find((m) => m.id === cheapest.id || m.sku === cheapest.sku) ?? null;
+  return (
+    catalog.meters.find(
+      (m) =>
+        m.status === 'available' &&
+        m.sku === cheapest.sku &&
+        m.provider === cheapest.provider,
+    ) ??
+    catalog.meters.find((m) => m.status === 'available' && m.sku === cheapest.sku) ??
+    null
+  );
 }
 
 function peerRowPayload(selection: PeerSelection) {
