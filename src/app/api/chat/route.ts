@@ -16,6 +16,7 @@ import {buildSystemPrompt} from '@/lib/chat/system-prompt';
 import {
   extractAllToolPayloads,
   extractLastToolPayloads,
+  isChatLlmOnlyFromEnv,
   lastUserQuestion,
   looksMultiComponentStack,
   messagesForShortFinal,
@@ -427,14 +428,16 @@ export async function POST(req: Request) {
 
         const userQuestion = lastUserQuestion(workingMessages);
         const multiStack = looksMultiComponentStack(userQuestion);
+        const llmOnly = surface === 'chat' && isChatLlmOnlyFromEnv();
         const loop =
           fast ??
           (await runToolLoop({
             messages: workingMessages,
             tools: planningTools,
-            // Simple first-turn asks: 1–2 rounds. Multi-SKU stacks need full headroom.
+            surface,
+            // LLM-only / stacks / multi-turn: full headroom. Otherwise 1–2 rounds.
             maxRounds:
-              multiStack || history.length > 1
+              llmOnly || multiStack || history.length > 1
                 ? CHAT_LIMITS.maxToolRounds
                 : Math.min(CHAT_LIMITS.maxToolRounds, 2),
             signal: abort.signal,
@@ -451,9 +454,10 @@ export async function POST(req: Request) {
         leaksDropped = loop.leaksDropped;
         let finalText = loop.finalText;
 
-        if (!finalText && loop.toolCallsTotal > 0) {
+        if (!finalText && loop.toolCallsTotal > 0 && !llmOnly) {
           // Same short-circuit as tool-loop (covers stream path when loop left final null).
           // Multi-tool compose only as last resort — stacks should get an LLM answer first.
+          // LLM-only mode skips this so the final completion always writes the answer.
           const formatted = tryFormatAgentToolAnswer({
             userText: userQuestion,
             toolPayloads: multiStack

@@ -2184,6 +2184,7 @@ export function formatFastPathAnswer(
       vcpu?: number;
       ramGiB?: number;
       diskGiB?: number;
+      diskMedia?: string;
       publicIpCount?: number;
       gpuModel?: string;
       gpuCount?: number;
@@ -2194,6 +2195,21 @@ export function formatFastPathAnswer(
             .map((q) => q.provider)
             .join(', ')}**.`
         : '';
+    const gpuHostLine = (() => {
+      if (req.gpuModel == null) return null;
+      const assumed =
+        typeof data.assumedHost === 'string' && data.assumedHost.trim()
+          ? data.assumedHost.trim()
+          : null;
+      if (assumed) {
+        return `**Хост (паритет):** ${assumed}. Одинаковый состав vCPU/RAM/диска у всех строк; форма по умолчанию из Cloud.ru flavor.`;
+      }
+      if (req.vcpu != null && req.ramGiB != null) {
+        const disk = `${req.diskGiB ?? 100} GiB ${(req.diskMedia ?? 'ssd').toString().toUpperCase()}`;
+        return `**Хост (паритет):** ${req.vcpu} vCPU · ${req.ramGiB} GiB RAM · ${disk}.`;
+      }
+      return null;
+    })();
 
     if (req.mode === 'cheapest-per-provider' || data.mode === 'cheapest-per-provider') {
       const purchaseLabel = (pm?: string) =>
@@ -2239,12 +2255,19 @@ export function formatFastPathAnswer(
         : '';
     const title =
       req.gpuModel != null
-        ? `Сравнение ${req.gpuCount ?? 1}×${req.gpuModel} по провайдерам за месяц (НДС вкл., 720 ч)`
+        ? req.vcpu != null && req.ramGiB != null
+          ? `Сравнение ${req.gpuCount ?? 1}×${req.gpuModel} + хост ${req.vcpu} vCPU / ${req.ramGiB} GiB по провайдерам за месяц (НДС вкл., 720 ч)`
+          : `Сравнение ${req.gpuCount ?? 1}×${req.gpuModel} по провайдерам за месяц (НДС вкл., 720 ч)`
         : `Сравнение ВМ ${req.vcpu ?? '—'} vCPU / ${req.ramGiB ?? '—'} GiB / ${req.diskGiB ?? '—'} GiB SSD${ipSuffix} на месяц (НДС вкл., 720 ч)`;
+    const hostCol =
+      req.gpuModel != null && req.vcpu != null && req.ramGiB != null
+        ? `${req.vcpu}/${req.ramGiB}`
+        : null;
     const rows = quotes
-      .map(
-        (q) =>
-          `| ${q.provider} | ${formatRub(q.total as number)} | ${pctVsBest(q.total as number, best)} |`,
+      .map((q) =>
+        hostCol
+          ? `| ${q.provider} | ${hostCol} | ${formatRub(q.total as number)} | ${pctVsBest(q.total as number, best)} |`
+          : `| ${q.provider} | ${formatRub(q.total as number)} | ${pctVsBest(q.total as number, best)} |`,
       )
       .join('\n');
     // gpu-synthetic = sum of published unit rates (GPU + host), not a single vendor SKU row.
@@ -2270,7 +2293,9 @@ export function formatFastPathAnswer(
         parts: q.parts,
       })),
     );
-    const byProviderTable = `| Провайдер | Итого / мес | к минимуму |\n|---|---:|---|\n${rows}`;
+    const byProviderTable = hostCol
+      ? `| Провайдер | Хост (vCPU/RAM) | Итого / мес | к минимуму |\n|---|---|---:|---|\n${rows}`
+      : `| Провайдер | Итого / мес | к минимуму |\n|---|---:|---|\n${rows}`;
     const catalogLine =
       focusFiltered && focusFiltered.length === 1
         ? `**${quotes[0].provider}** — ${formatRub(best)}/мес (НДС вкл., 720 ч).`
@@ -2281,6 +2306,7 @@ export function formatFastPathAnswer(
           });
     const sections = [
       `**${title}**`,
+      gpuHostLine,
       focusFiltered && focusFiltered.length === 1
         ? byProviderTable
         : `**По провайдерам**\n\n${byProviderTable}`,
@@ -3063,8 +3089,9 @@ function inferPlanIdFromAgentTool(
 /**
  * Chat fast-path sampling rate. Default 0.2 — ~20% chip/alias → fast-path, ~80% agent/LLM.
  * Override with CHAT_FAST_PATH_PROBABILITY=0|1|0.25 for eval/A-B.
- * `0` = hard off for first-turn chips/aliases. Multi-turn helpers (provider-focus,
- * GPU full-server) still run. Calculator surface always keeps fast-path.
+ * `0` = full LLM-only on chat: no chips/aliases, no multi-turn helpers, no
+ * deterministic post-tool markdown short-circuit (tool pick + answer = LLM).
+ * Calculator surface always keeps fast-path.
  */
 export function fastPathProbabilityFromEnv(): number {
   const raw = process.env.CHAT_FAST_PATH_PROBABILITY;
@@ -3072,6 +3099,11 @@ export function fastPathProbabilityFromEnv(): number {
   const n = Number(raw);
   if (!Number.isFinite(n)) return 0.2;
   return Math.min(1, Math.max(0, n));
+}
+
+/** Chat surface with CHAT_FAST_PATH_PROBABILITY=0 — rely entirely on the LLM. */
+export function isChatLlmOnlyFromEnv(): boolean {
+  return fastPathProbabilityFromEnv() <= 0;
 }
 
 /** Whether to take the deterministic chip path this turn. */
@@ -3092,6 +3124,46 @@ export function shouldUseFastPath(options?: {
 export function looksGpuFullServerFollowUp(text: string): boolean {
   return /(?:сервер\w*\s+целиком|целиком\s+(?:сервер|нод)|не\s+просто\s+карт|с\s+хостом|gpu\s*\+\s*хост|полноценн\w*\s+(?:gpu|сервер|нод)|конфигураци\w*\s+целиком|паритет\w*\s+(?:по\s+)?конфигурац|таблиц\w*\s+с\s+паритет)/i.test(
     text,
+  );
+}
+
+/** Follow-up: «сколько ядер/памяти», «какие характеристики» — ответ по assumedHost из prior get_quote. */
+export function looksGpuHostSpecsFollowUp(text: string): boolean {
+  const t = text.trim();
+  if (t.length > 240) return false;
+  return /(?:характеристик|какой\s+хост|какой\s+shape|конфиг\w*\s+хоста|сколько\s+(?:у\s+(?:него|нее|них)\s+)?(?:ядер|vcpu|памяти|ram|гиг)|какие\s+(?:у\s+(?:него|нее|них)\s+)?(?:ядра|vcpu|характеристик)|(?:ядер|vcpu).{0,40}(?:памят|ram)|(?:памят|ram).{0,40}(?:ядер|vcpu))/i.test(
+    t,
+  );
+}
+
+/** Short answer: host vCPU/RAM/disk from a prior GPU get_quote payload. */
+export function formatGpuHostSpecsAnswer(toolContent: string): string | null {
+  let data: Record<string, unknown>;
+  try {
+    data = JSON.parse(toolContent) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+  const req = (data.request ?? {}) as {
+    gpuModel?: string;
+    gpuCount?: number;
+    vcpu?: number;
+    ramGiB?: number;
+    diskGiB?: number;
+    diskMedia?: string;
+  };
+  if (!req.gpuModel || req.vcpu == null || req.ramGiB == null) return null;
+  const diskGiB = req.diskGiB ?? 100;
+  const diskMedia = (req.diskMedia ?? 'ssd').toString().toUpperCase();
+  const assumed =
+    typeof data.assumedHost === 'string' && data.assumedHost.trim()
+      ? data.assumedHost.trim()
+      : `${req.vcpu} vCPU + ${req.ramGiB} GiB RAM + ${diskGiB} GiB диск`;
+  const gpuLabel = `${req.gpuCount ?? 1}×${req.gpuModel}`;
+  return (
+    `**Характеристики минимального ${gpuLabel} сервера в сравнении**\n\n` +
+    `Паритетный хост (одинаковый у всех провайдеров в таблице): **${req.vcpu} vCPU · ${req.ramGiB} GiB RAM · ${diskGiB} GiB ${diskMedia}** (${assumed}).\n\n` +
+    `Форма взята из Cloud.ru flavor; у Selectel/T1 те же ядра/память/диск собраны из unit-ставок + GPU.`
   );
 }
 
@@ -3136,7 +3208,7 @@ export function findPriorGpuModel(messages: ChatMessage[]): string | null {
  * Returns null when the query should use the normal tool loop.
  * Chat surface: ~20% by default (CHAT_FAST_PATH_PROBABILITY, default 0.2).
  * Typed homepage chips pass `fastPathId` and skip NL matching.
- * `CHAT_FAST_PATH_PROBABILITY=0` disables first-turn chips/aliases; multi-turn helpers stay on.
+ * `CHAT_FAST_PATH_PROBABILITY=0` → full LLM-only (chips, helpers, and this entrypoint all off).
  */
 export async function tryRunFastPath(options: {
   messages: ChatMessage[];
@@ -3148,12 +3220,11 @@ export async function tryRunFastPath(options: {
   fastPathId?: string | null;
 }): Promise<FastPathResult | null> {
   const surface = options.surface === 'calculator' ? 'calculator' : 'chat';
+  // Full LLM-only: do not run chips, aliases, or multi-turn helpers on chat.
+  if (surface === 'chat' && isChatLlmOnlyFromEnv()) return null;
+
   const userText = lastUserText(options.messages);
   const turns = userTurnCount(options.messages);
-
-  // Hard off for local/debug: first-turn chips/aliases only.
-  // Multi-turn helpers (provider-focus, GPU full-server) stay available.
-  const chatFastPathOff = surface === 'chat' && fastPathProbabilityFromEnv() <= 0;
 
   let plan: FastPathPlan | null = null;
 
@@ -3188,6 +3259,26 @@ export async function tryRunFastPath(options: {
       }
     }
 
+    // «сколько ядер / характеристики» — из prior get_quote, без повторной таблицы цен.
+    if (looksGpuHostSpecsFollowUp(userText)) {
+      const prior = findLatestGetQuotePayload(options.messages);
+      if (prior) {
+        const specs = formatGpuHostSpecsAnswer(prior.content);
+        if (specs) {
+          return {
+            finalText: specs,
+            messages: options.messages.slice(),
+            toolRounds: 0,
+            toolCallsTotal: 0,
+            leaksRecovered: 0,
+            leaksRetried: 0,
+            leaksDropped: 0,
+            fastPathId: 'gpu-host-specs',
+          };
+        }
+      }
+    }
+
     // After H100 card-only: «собери сервер целиком» → full host get_quote, not cheapest VM.
     if (looksGpuFullServerFollowUp(userText)) {
       const gpuModel = findPriorGpuModel(options.messages);
@@ -3209,8 +3300,6 @@ export async function tryRunFastPath(options: {
     }
     if (!plan) return null;
   } else if (turns === 1) {
-    if (chatFastPathOff) return null;
-
     const fromChip = options.fastPathId ? planFromHomeChipId(options.fastPathId) : null;
     const matched = fromChip ?? matchFastPath(userText);
     if (!matched) return null;

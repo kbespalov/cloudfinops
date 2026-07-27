@@ -10,6 +10,7 @@
 import {
   extractAllToolPayloads,
   extractLastToolPayloads,
+  isChatLlmOnlyFromEnv,
   lastUserQuestion,
   looksMultiComponentStack,
   messagesForShortFinal,
@@ -17,6 +18,7 @@ import {
   tryFormatAgentToolAnswer,
 } from './fast-path';
 import {chatCompletion, type ChatMessage} from './gigachat';
+import {CHAT_LIMITS} from './limits';
 import {resolveToolCalls, sanitizeUserFacingAnswer} from './tool-call-recovery';
 import {CHAT_TOOLS, runTool} from './tools';
 
@@ -112,9 +114,19 @@ export async function runToolLoop(options: {
   onEvent?: (event: ToolLoopEvent) => void;
   /** Defaults to baseline CHAT_TOOLS — pass CHAT_TOOLS_WITH_INFERENCE only when gated. */
   tools?: ChatToolsParam;
+  /**
+   * `chat` + CHAT_FAST_PATH_PROBABILITY=0 → LLM-only: no deterministic
+   * post-tool markdown short-circuit; the model writes the final answer.
+   */
+  surface?: 'chat' | 'calculator';
 }): Promise<ToolLoopResult> {
   const messages = options.messages;
   const tools = options.tools ?? CHAT_TOOLS;
+  const llmOnly =
+    (options.surface ?? 'chat') === 'chat' && isChatLlmOnlyFromEnv();
+  // Tool-loop default is 384 tokens (tool_calls only). In LLM-only the model
+  // also writes the final answer inside this loop — needs the full budget.
+  const loopMaxTokens = llmOnly ? CHAT_LIMITS.maxOutputTokens : undefined;
   let toolRounds = 0;
   let toolCallsTotal = 0;
   let leaksRecovered = 0;
@@ -129,6 +141,7 @@ export async function runToolLoop(options: {
     let reply = await chatCompletion(messages, tools, {
       signal: options.signal,
       toolChoice: 'auto',
+      maxTokens: loopMaxTokens,
     });
 
     let resolved = resolveToolCalls(reply);
@@ -144,6 +157,7 @@ export async function runToolLoop(options: {
       reply = await chatCompletion(messages, tools, {
         signal: options.signal,
         toolChoice: 'required',
+        maxTokens: loopMaxTokens,
       });
       resolved = resolveToolCalls(reply);
     }
@@ -176,6 +190,7 @@ export async function runToolLoop(options: {
         reply = await chatCompletion(messages, tools, {
           signal: options.signal,
           toolChoice: 'required',
+          maxTokens: loopMaxTokens,
         });
         resolved = resolveToolCalls(reply);
         if (resolved.kind === 'final') {
@@ -188,17 +203,19 @@ export async function runToolLoop(options: {
         finalText = sanitizeUserFacingAnswer(text);
         break;
       } else if (toolCallsTotal > 0 && !emptyAfterToolsNudgeUsed) {
-        // Empty content after tools — single-SKU table short-circuit, else LLM (+ stack digest).
-        const formatted = tryDeterministicAfterTools(messages);
-        if (formatted) {
-          finalText = sanitizeUserFacingAnswer(formatted);
-          break;
+        // Empty content after tools — deterministic table unless LLM-only mode.
+        if (!llmOnly) {
+          const formatted = tryDeterministicAfterTools(messages);
+          if (formatted) {
+            finalText = sanitizeUserFacingAnswer(formatted);
+            break;
+          }
         }
         emptyAfterToolsNudgeUsed = true;
         const userQ = lastUserQuestion(messages);
         if (looksMultiComponentStack(userQ)) {
           finalText = await finalizeStackWithLlm(messages, options.signal);
-          if (!finalText) {
+          if (!finalText && !llmOnly) {
             const rescue = tryDeterministicAfterTools(messages, {allowStackCompose: true});
             if (rescue) finalText = sanitizeUserFacingAnswer(rescue);
           }
@@ -275,11 +292,13 @@ export async function runToolLoop(options: {
     }
 
     // One complete structured tool → skip planning another round + final LLM.
+    // LLM-only mode keeps the loop so the model writes the answer itself.
     // Multi-SKU stacks never short-circuit here (looksMultiComponentStack → null).
     // search_catalog alone is discovery — keep the agent loop when the ask needs pricing/compose.
     const onlyCatalog =
       toolCalls.length === 1 && toolCalls[0]!.function.name === 'search_catalog';
     if (
+      !llmOnly &&
       toolCalls.length === 1 &&
       !(onlyCatalog && shouldForceToolRound(lastUserQuestion(messages)))
     ) {
@@ -313,12 +332,12 @@ export async function runToolLoop(options: {
 
   // Exhausted rounds with tool data but no prose — stack digest LLM, then last-chance compose.
   if (!finalText && toolCallsTotal > 0 && !emptyAfterToolsNudgeUsed) {
-    const formatted = tryDeterministicAfterTools(messages);
+    const formatted = llmOnly ? null : tryDeterministicAfterTools(messages);
     if (formatted) {
       finalText = sanitizeUserFacingAnswer(formatted);
     } else if (looksMultiComponentStack(lastUserQuestion(messages))) {
       finalText = await finalizeStackWithLlm(messages, options.signal);
-      if (!finalText) {
+      if (!finalText && !llmOnly) {
         const rescue = tryDeterministicAfterTools(messages, {allowStackCompose: true});
         if (rescue) finalText = sanitizeUserFacingAnswer(rescue);
       }

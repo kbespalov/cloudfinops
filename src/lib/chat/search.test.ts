@@ -315,6 +315,22 @@ describe('searchPricesDetailed GPU', () => {
     );
   });
 
+  it('does not treat Yandex Gen2 as H100 (notes mention H100 only as a disclaimer)', () => {
+    const r = searchPricesDetailed({
+      query: 'H100',
+      gpuModel: 'H100',
+      category: 'gpu',
+      limit: 20,
+    });
+    for (const p of r.providers) {
+      assert.notEqual(p.provider, 'yandex-cloud');
+      assert.doesNotMatch(p.cheapest.name, /Gen2/i);
+    }
+    for (const row of r.rows) {
+      assert.doesNotMatch(`${row.provider} ${row.name}`, /Yandex.*Gen2|Gen2.*H100/i);
+    }
+  });
+
   it('keeps GB-GPU meters when query explicitly asks for per-GB share', () => {
     const r = searchPricesDetailed({
       query: 'Cloud.ru ML Inference цена за 1 GB GPU H100',

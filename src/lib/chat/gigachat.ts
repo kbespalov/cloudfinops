@@ -63,8 +63,6 @@ function apiKey(): string {
 function commonParams() {
   return {
     model: getChatModel(),
-    presence_penalty: 0,
-    top_p: 0.95,
   } as const;
 }
 
@@ -87,12 +85,38 @@ function toolLoopMaxTokens(): number {
   return TOOL_LOOP_MAX_TOKENS;
 }
 
+function isAnthropicModel(model = getChatModel()): boolean {
+  const m = model.toLowerCase();
+  return m.includes('anthropic/') || m.includes('claude');
+}
+
+/**
+ * Sampling knobs. Anthropic via Cloud.ru FM rejects temperature+top_p together
+ * (`invalid_request_error`) — send only temperature for those models.
+ */
+function samplingParams(withTools: boolean): Record<string, number> {
+  const temperature = withTools ? 0.1 : 0.5;
+  if (isAnthropicModel()) {
+    return {temperature};
+  }
+  return {
+    presence_penalty: 0,
+    top_p: 0.95,
+    temperature,
+  };
+}
+
 export type ToolChoice = 'auto' | 'required' | 'none';
 
 export type ChatCompletionOptions = {
   signal?: AbortSignal;
   /** OpenAI-compatible tool_choice. Default `auto` when tools are present. */
   toolChoice?: ToolChoice;
+  /**
+   * Override max_tokens. Use for LLM-only finals inside the tool loop — the
+   * default tool-loop budget (384) truncates prose mid-sentence.
+   */
+  maxTokens?: number;
 };
 
 /** Non-streaming completion — used inside the tool-calling loop. */
@@ -107,6 +131,8 @@ export async function chatCompletion(
       : signalOrOptions;
   const withTools = Boolean(tools && tools.length);
   const toolChoice = options.toolChoice ?? (withTools ? 'auto' : undefined);
+  const maxTokens =
+    options.maxTokens ?? (withTools ? toolLoopMaxTokens() : FINAL_MAX_TOKENS);
   const res = await fetch(`${BASE_URL}/chat/completions`, {
     method: 'POST',
     headers: {
@@ -115,9 +141,8 @@ export async function chatCompletion(
     },
     body: JSON.stringify({
       ...commonParams(),
-      max_tokens: withTools ? toolLoopMaxTokens() : FINAL_MAX_TOKENS,
-      // Cooler while planning tools — gpt-oss otherwise narrates English CoT into content.
-      temperature: withTools ? 0.1 : 0.5,
+      max_tokens: maxTokens,
+      ...samplingParams(withTools),
       messages,
       ...(withTools ? {tools, tool_choice: toolChoice ?? 'auto'} : {}),
     }),
@@ -152,7 +177,7 @@ export async function* chatCompletionStream(
     body: JSON.stringify({
       ...commonParams(),
       max_tokens: FINAL_MAX_TOKENS,
-      temperature: 0.5,
+      ...samplingParams(false),
       messages,
       stream: true,
     }),
