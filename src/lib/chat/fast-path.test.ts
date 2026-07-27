@@ -12,6 +12,7 @@ import {
   formatGpuHostSpecsAnswer,
   looksGpuFullServerFollowUp,
   looksGpuHostSpecsFollowUp,
+  fastPathProbabilityFromEnv,
   matchFastPath,
   planFromHomeChipId,
   shouldUseFastPath,
@@ -26,12 +27,24 @@ describe('shouldUseFastPath', () => {
     assert.equal(shouldUseFastPath({surface: 'calculator', probability: 0, random: () => 0.99}), true);
   });
 
+  it('defaults chat FastPath probability to 0 (LLM-only) when env unset', () => {
+    const prev = process.env.CHAT_FAST_PATH_PROBABILITY;
+    delete process.env.CHAT_FAST_PATH_PROBABILITY;
+    try {
+      assert.equal(fastPathProbabilityFromEnv(), 0);
+      assert.equal(shouldUseFastPath({surface: 'chat', random: () => 0}), false);
+    } finally {
+      if (prev === undefined) delete process.env.CHAT_FAST_PATH_PROBABILITY;
+      else process.env.CHAT_FAST_PATH_PROBABILITY = prev;
+    }
+  });
+
   it('respects probability 0 / 1 on chat', () => {
     assert.equal(shouldUseFastPath({surface: 'chat', probability: 0, random: () => 0}), false);
     assert.equal(shouldUseFastPath({surface: 'chat', probability: 1, random: () => 0.99}), true);
   });
 
-  it('samples chat fast-path at configured probability (~20% default)', () => {
+  it('samples chat fast-path at configured probability', () => {
     assert.equal(shouldUseFastPath({surface: 'chat', probability: 0.5, random: () => 0.49}), true);
     assert.equal(shouldUseFastPath({surface: 'chat', probability: 0.5, random: () => 0.5}), false);
     assert.equal(shouldUseFastPath({surface: 'chat', probability: 0.2, random: () => 0.19}), true);

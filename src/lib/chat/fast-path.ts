@@ -3087,17 +3087,16 @@ function inferPlanIdFromAgentTool(
 }
 
 /**
- * Chat fast-path sampling rate. Default 0.2 — ~20% chip/alias → fast-path, ~80% agent/LLM.
+ * Chat fast-path sampling rate. Default **0** = full LLM-only on /chat
+ * (no chips/aliases/helpers, no deterministic post-tool markdown).
  * Override with CHAT_FAST_PATH_PROBABILITY=0|1|0.25 for eval/A-B.
- * `0` = full LLM-only on chat: no chips/aliases, no multi-turn helpers, no
- * deterministic post-tool markdown short-circuit (tool pick + answer = LLM).
  * Calculator surface always keeps fast-path.
  */
 export function fastPathProbabilityFromEnv(): number {
   const raw = process.env.CHAT_FAST_PATH_PROBABILITY;
-  if (raw == null || raw === '') return 0.2;
+  if (raw == null || raw === '') return 0;
   const n = Number(raw);
-  if (!Number.isFinite(n)) return 0.2;
+  if (!Number.isFinite(n)) return 0;
   return Math.min(1, Math.max(0, n));
 }
 
@@ -3210,9 +3209,9 @@ export function findPriorGpuModel(messages: ChatMessage[]): string | null {
 /**
  * If this is a first-turn chip/alias query, run tools locally and one short final LLM call.
  * Returns null when the query should use the normal tool loop.
- * Chat surface: ~20% by default (CHAT_FAST_PATH_PROBABILITY, default 0.2).
- * Typed homepage chips pass `fastPathId` and skip NL matching.
- * `CHAT_FAST_PATH_PROBABILITY=0` → full LLM-only (chips, helpers, and this entrypoint all off).
+ * Chat surface: default CHAT_FAST_PATH_PROBABILITY=0 (full LLM-only).
+ * Typed homepage chips pass `fastPathId` and skip NL matching when sampling > 0.
+ * `CHAT_FAST_PATH_PROBABILITY=0` → chips, helpers, and this entrypoint all off.
  */
 export async function tryRunFastPath(options: {
   messages: ChatMessage[];
