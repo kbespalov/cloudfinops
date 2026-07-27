@@ -182,6 +182,7 @@ export async function runToolLoop(options: {
         text &&
         toolCallsTotal === 0 &&
         !forceToolsUsed &&
+        !llmOnly &&
         shouldForceToolRound(lastUserQuestion(messages))
       ) {
         forceToolsUsed = true;

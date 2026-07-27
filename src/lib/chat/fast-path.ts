@@ -3101,7 +3101,11 @@ export function fastPathProbabilityFromEnv(): number {
   return Math.min(1, Math.max(0, n));
 }
 
-/** Chat surface with CHAT_FAST_PATH_PROBABILITY=0 — rely entirely on the LLM. */
+/**
+ * Chat surface with CHAT_FAST_PATH_PROBABILITY=0 — rely entirely on the LLM:
+ * no FastPath chips/helpers, no deterministic post-tool tables, no regex
+ * inference/lakehouse intent gates, no force-tools nudge.
+ */
 export function isChatLlmOnlyFromEnv(): boolean {
   return fastPathProbabilityFromEnv() <= 0;
 }

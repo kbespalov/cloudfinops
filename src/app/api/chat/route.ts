@@ -46,6 +46,7 @@ import {
 import {runToolLoop} from '@/lib/chat/tool-loop';
 import {
   CHAT_TOOLS,
+  CHAT_TOOLS_ALL,
   CHAT_TOOLS_WITH_INFERENCE,
   CHAT_TOOLS_WITH_LAKEHOUSE,
 } from '@/lib/chat/tools';
@@ -141,10 +142,17 @@ export async function POST(req: Request) {
     .slice(-4)
     .map((m) => m.content as string)
     .join('\n');
-  const inferenceIntent = matchInferenceIntent(userText);
+  // Chat + CHAT_FAST_PATH_PROBABILITY=0 → pure LLM+tools: no FastPath, no regex
+  // intent addendums / tool gates (inference / lakehouse). Calculator keeps hints.
+  const llmOnly = surface === 'chat' && isChatLlmOnlyFromEnv();
+  const inferenceIntent = llmOnly
+    ? {matched: false, reason: 'none' as const}
+    : matchInferenceIntent(userText);
   // Follow-ups («150 TiB») after a lakehouse turn must keep get_lakehouse_quote
   // so the calculator sidebar can re-quote — not only the chat markdown.
-  const lakehouseIntent = matchLakehouseIntentWithHistory(userText, recentUserText);
+  const lakehouseIntent = llmOnly
+    ? {matched: false, reason: 'none' as const}
+    : matchLakehouseIntentWithHistory(userText, recentUserText);
   // Inference wins if both match (rare); otherwise lakehouse persona + tool.
   const calculatorAddendum =
     surface === 'calculator'
@@ -157,11 +165,13 @@ export async function POST(req: Request) {
       : lakehouseIntent.matched
         ? `${planningPrompt}\n\n${LAKEHOUSE_SYSTEM_ADDENDUM}`
         : planningPrompt) + calculatorAddendum;
-  const planningTools = inferenceIntent.matched
-    ? CHAT_TOOLS_WITH_INFERENCE
-    : lakehouseIntent.matched
-      ? CHAT_TOOLS_WITH_LAKEHOUSE
-      : CHAT_TOOLS;
+  const planningTools = llmOnly
+    ? CHAT_TOOLS_ALL
+    : inferenceIntent.matched
+      ? CHAT_TOOLS_WITH_INFERENCE
+      : lakehouseIntent.matched
+        ? CHAT_TOOLS_WITH_LAKEHOUSE
+        : CHAT_TOOLS;
   const messages: ChatMessage[] = [{role: 'system', content: systemContent}, ...history];
   const inputTokens = estimateMessagesTokens(messages);
   const reservedTokens = reserveTokensForRequest(inputTokens);
@@ -428,7 +438,6 @@ export async function POST(req: Request) {
 
         const userQuestion = lastUserQuestion(workingMessages);
         const multiStack = looksMultiComponentStack(userQuestion);
-        const llmOnly = surface === 'chat' && isChatLlmOnlyFromEnv();
         const loop =
           fast ??
           (await runToolLoop({
