@@ -202,7 +202,7 @@ describe('k8s synthetic HA integrity', () => {
     assert.ok(isK8sComparableMaster(picked.meter, 'ha'));
   });
 
-  it('every synthetic k8s comparable has user-facing notes and * marker', () => {
+  it('every synthetic k8s comparable has user-facing notes and оценка marker', () => {
     for (const m of catalog.meters) {
       if (!m.synthetic && !m.sku.includes('.synthetic')) continue;
       if (m.categoryKey !== 'kubernetes') continue;
@@ -224,10 +224,12 @@ describe('k8s synthetic HA integrity', () => {
         /\bPDF\b|Прил\.|7\.EVO|sourceRefs|syntheticFrom/i,
         `${m.sku}: notes must stay user-facing (no internal tariff jargon)`,
       );
-      assert.ok(
-        m.name.includes('*'),
-        `${m.sku}: synthetic SKU name must carry * marker`,
+      assert.match(
+        m.name,
+        /оценка/i,
+        `${m.sku}: synthetic K8s name must carry «оценка» marker`,
       );
+      assert.doesNotMatch(m.name, /\*/, `${m.sku}: K8s synthetic names use «оценка», not *`);
     }
   });
 
@@ -244,7 +246,11 @@ describe('k8s synthetic HA integrity', () => {
         /синтетич/i,
         `${m.sku}: synthetic SKU notes must contain «синтетическ…»`,
       );
-      assert.ok(m.name.includes('*'), `${m.sku}: name must carry * marker`);
+      // K8s: «оценка»; GPU/other: legacy «*» or «оценка *».
+      assert.ok(
+        /оценка/i.test(m.name) || m.name.includes('*'),
+        `${m.sku}: name must carry synthetic marker (оценка or *)`,
+      );
     }
   });
 });
