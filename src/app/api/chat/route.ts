@@ -163,8 +163,12 @@ export async function POST(req: Request) {
     surface === 'calculator'
       ? '\n\nКонтекст: калькулятор «AI конфигурация» (корзина справа). ПОШАГОВО: «начнём с CPU/RAM/диска/IP/CDN/S3» или один компонент → только этот ресурс (compare_unit_price для vcpu|ram|ssd; search_prices для IP/CDN/S3/HDD/K8s/AI). НЕ get_quote и НЕ додумывай остальную ВМ «чтобы заполнить корзину». Корзину через get_quote обновляй только когда явно собрали конфигурацию («N vCPU / M GiB», «собери ВМ», gpuModel; RAM по умолчанию 4×vCPU; системный диск по умолчанию 100 GiB SSD; публичный IP — ТОЛЬКО если просили, иначе publicIpCount=0 / не передавай). Lakehouse → get_lakehouse_quote. Follow-up «докинь CDN [N ТБ]» → search_prices category=cdn, volumeGiB (1 ТБ→1024), патч корзины; НЕ S3/network ingress, НЕ пересчёт всей ВМ. Без опросника.'
       : '';
-  // Ambiguous block↔object only; default off. llmOnly skips all regex/LLM intent gates.
-  const storageIntentMode = llmOnly ? 'off' : storageIntentLlmModeFromEnv();
+  // Ambiguous block↔object; default on. Skip when llmOnly or lakehouse/inference
+  // persona already owns the turn — don't let storage cards fight get_lakehouse_quote.
+  const storageIntentMode =
+    llmOnly || lakehouseIntent.matched || inferenceIntent.matched
+      ? 'off'
+      : storageIntentLlmModeFromEnv();
   const storageIntent = await resolveStorageIntent(userText, {
     historyText: recentUserText,
     mode: storageIntentMode,

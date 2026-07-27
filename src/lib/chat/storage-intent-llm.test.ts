@@ -11,11 +11,11 @@ import {
 import {applyStorageIntentToDomains, matchPlanningDomains} from '@/lib/chat/system-prompt';
 
 describe('storageIntentLlmModeFromEnv', () => {
-  it('defaults to off and accepts shadow/on', () => {
-    assert.equal(storageIntentLlmModeFromEnv({}), 'off');
+  it('defaults to on and accepts shadow/off', () => {
+    assert.equal(storageIntentLlmModeFromEnv({}), 'on');
     assert.equal(storageIntentLlmModeFromEnv({CHAT_STORAGE_INTENT_LLM: 'shadow'}), 'shadow');
-    assert.equal(storageIntentLlmModeFromEnv({CHAT_STORAGE_INTENT_LLM: 'ON'}), 'on');
-    assert.equal(storageIntentLlmModeFromEnv({CHAT_STORAGE_INTENT_LLM: 'weird'}), 'off');
+    assert.equal(storageIntentLlmModeFromEnv({CHAT_STORAGE_INTENT_LLM: 'OFF'}), 'off');
+    assert.equal(storageIntentLlmModeFromEnv({CHAT_STORAGE_INTENT_LLM: 'weird'}), 'on');
   });
 });
 

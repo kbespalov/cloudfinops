@@ -4,12 +4,12 @@
  * Challenge / design constraints:
  * - Regex already fixes the hard bug (volumeEstimates + classifyStorageVolumeIntent).
  * - An extra LLM hop adds latency, flakiness, and a second source of truth.
- * - So we ONLY call the model when regex is ambiguous, and default mode is off.
+ * - So we ONLY call the model when regex is ambiguous (both / none+storage-ish).
  *
  * CHAT_STORAGE_INTENT_LLM=
- *   off     — never call (default)
+ *   on      — call on ambiguous turns; override planning cards/addendum if confidence≥threshold (default)
  *   shadow  — call on ambiguous turns, log disagreement, do not override
- *   on      — call on ambiguous turns; override planning cards/addendum if confidence≥threshold
+ *   off     — never call
  */
 
 import {chatCompletion, hasApiKey, type ChatMessage} from '@/lib/chat/gigachat';
@@ -56,9 +56,9 @@ const CLASSIFIER_SYSTEM = `Ты классификатор storage-intent для
 export function storageIntentLlmModeFromEnv(
   env: NodeJS.ProcessEnv = process.env,
 ): StorageIntentLlmMode {
-  const raw = (env.CHAT_STORAGE_INTENT_LLM || 'off').trim().toLowerCase();
+  const raw = (env.CHAT_STORAGE_INTENT_LLM || 'on').trim().toLowerCase();
   if (raw === 'shadow' || raw === 'on' || raw === 'off') return raw;
-  return 'off';
+  return 'on';
 }
 
 /** When regex is already decisive, skip the LLM hop. */
