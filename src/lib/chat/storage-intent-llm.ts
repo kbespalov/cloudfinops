@@ -47,6 +47,7 @@ const CLASSIFIER_SYSTEM = `Ты классификатор storage-intent для
 - «не S3 / не объектное, а блочный» → block
 - «только S3, блочный не считай» → object
 - «сравни блочный и S3» → both
+- Follow-up после S3/блока: смотри ТЕКУЩИЙ вопрос. «а теперь блочный SSD» → block; «то же для S3» → object. История — контекст объёма, не смешивай продукты в both без явного сравнения.
 - Ice Lake (CPU) ≠ S3 Ice
 - volumeGiB: двоичные GiB (1 ТБ/ТиБ = 1024). Если объёма нет → null.
 
@@ -138,14 +139,14 @@ type ClassifyDeps = {
 };
 
 /**
- * Resolve storage intent: regex first; optional LLM only when ambiguous.
+ * Resolve storage intent: regex on the *current* turn only; history is LLM context.
+ * Merging history into regex made S3→«теперь блочный SSD» sticky `both`.
  */
 export async function resolveStorageIntent(
   userText: string,
   opts?: {historyText?: string} & ClassifyDeps,
 ): Promise<StorageIntentResolution> {
-  const haystack = [opts?.historyText, userText].filter(Boolean).join('\n');
-  const regexStorage = classifyStorageVolumeIntent(haystack);
+  const regexStorage = classifyStorageVolumeIntent(userText);
   const mode = opts?.mode ?? storageIntentLlmModeFromEnv();
   const threshold = opts?.confidenceThreshold ?? 0.7;
   const hasKey = opts?.hasKey ?? hasApiKey;
@@ -162,7 +163,7 @@ export async function resolveStorageIntent(
     llmCalled: false,
   };
 
-  if (mode === 'off' || !needsLlmStorageIntent(regexStorage, haystack) || !hasKey()) {
+  if (mode === 'off' || !needsLlmStorageIntent(regexStorage, userText) || !hasKey()) {
     return base;
   }
 

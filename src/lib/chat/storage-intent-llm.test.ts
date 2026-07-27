@@ -133,6 +133,60 @@ describe('resolveStorageIntent', () => {
     assert.equal(r.storage, 'block');
     assert.equal(r.source, 'regex');
   });
+
+  it('follow-up block after S3 history is regex block (not sticky both)', async () => {
+    let called = 0;
+    let llmUser = '';
+    const r = await resolveStorageIntent('а теперь то же для блочного SSD', {
+      historyText: 'Сколько стоит 100 ТБ объектного хранилища Standard?',
+      mode: 'on',
+      hasKey: () => true,
+      complete: async (messages: ChatMessage[]) => {
+        called += 1;
+        llmUser = String(messages.find((m) => m.role === 'user')?.content ?? '');
+        return {
+          role: 'assistant',
+          content: '{"storage":"block","volumeGiB":102400,"confidence":0.9,"reason":"follow-up block"}',
+        };
+      },
+    });
+    assert.equal(r.regexStorage, 'block');
+    assert.equal(r.storage, 'block');
+    assert.equal(r.source, 'regex');
+    assert.equal(called, 0, 'decisive current-turn block must not call LLM');
+    assert.equal(llmUser, '');
+
+    // Domains: override drops S3 even if lexical haystack still saw object history.
+    const lexical = matchPlanningDomains(
+      'Сколько стоит 100 ТБ объектного хранилища Standard?\nа теперь то же для блочного SSD',
+    );
+    const gated = applyStorageIntentToDomains(
+      lexical,
+      r.storage,
+      'а теперь то же для блочного SSD',
+    );
+    assert.ok(gated.includes('compute'));
+    assert.ok(!gated.includes('s3'), `must drop S3 card: ${gated.join(',')}`);
+  });
+
+  it('passes history to LLM only as context when current turn is ambiguous', async () => {
+    let llmUser = '';
+    const r = await resolveStorageIntent('Сравни блочный SSD и объектное на 100 ТБ', {
+      historyText: 'Ранее смотрели CDN',
+      mode: 'shadow',
+      hasKey: () => true,
+      complete: async (messages: ChatMessage[]) => {
+        llmUser = String(messages.find((m) => m.role === 'user')?.content ?? '');
+        return {
+          role: 'assistant',
+          content: '{"storage":"both","volumeGiB":102400,"confidence":0.9,"reason":"compare"}',
+        };
+      },
+    });
+    assert.equal(r.llmCalled, true);
+    assert.match(llmUser, /История \(user\):[\s\S]*CDN/);
+    assert.match(llmUser, /Текущий вопрос:[\s\S]*блочный SSD/);
+  });
 });
 
 describe('formatStorageIntentAddendum', () => {
