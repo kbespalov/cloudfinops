@@ -25,5 +25,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # catalog.generated.json is gitignored; tests import it via @/data/...
+      - name: Build catalog
+        run: npm run data:build
+
       - name: Run unit tests
         run: npm test
