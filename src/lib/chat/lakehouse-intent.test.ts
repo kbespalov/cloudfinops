@@ -45,13 +45,13 @@ describe('matchLakehouseIntent', () => {
 
 describe('get_lakehouse_quote tool', () => {
   it('is gated in CHAT_TOOLS_WITH_LAKEHOUSE only', () => {
-    assert.equal(CHAT_TOOLS.length, 14);
+    assert.equal(CHAT_TOOLS.length, 15);
     assert.ok(
       !(CHAT_TOOLS as readonly {function: {name: string}}[])
         .map((t) => t.function.name)
         .includes('get_lakehouse_quote'),
     );
-    assert.equal(CHAT_TOOLS_WITH_LAKEHOUSE.length, 15);
+    assert.equal(CHAT_TOOLS_WITH_LAKEHOUSE.length, 16);
     assert.ok(
       CHAT_TOOLS_WITH_LAKEHOUSE.map((t) => (t as {function: {name: string}}).function.name).includes(
         'get_lakehouse_quote',

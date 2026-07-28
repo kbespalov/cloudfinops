@@ -449,16 +449,17 @@ describe('recommendInferenceInfra', () => {
 
 describe('gated tools latency contract', () => {
   it('keeps gated recommend tool out of baseline CHAT_TOOLS', () => {
-    // Baseline = 6 primitives + 5 shortcuts (…/compare_unit_price/compare_similar_peers/fit_budget).
-    assert.equal(CHAT_TOOLS.length, 14);
+    // Baseline = 6 primitives + 9 shortcuts (…/market_radar/get_compute_shape_limits).
+    assert.equal(CHAT_TOOLS.length, 15);
     const names = CHAT_TOOLS.map((t) => t.function.name);
     assert.ok(!names.includes('recommend_inference_infra' as (typeof names)[number]));
     assert.ok(names.includes('compose_solution'));
     assert.ok(names.includes('search_catalog'));
+    assert.ok(names.includes('get_compute_shape_limits'));
   });
 
   it('adds recommend tool only in CHAT_TOOLS_WITH_INFERENCE', () => {
-    assert.equal(CHAT_TOOLS_WITH_INFERENCE.length, 15);
+    assert.equal(CHAT_TOOLS_WITH_INFERENCE.length, 16);
     const names = CHAT_TOOLS_WITH_INFERENCE.map(
       (t) => (t as {function: {name: string}}).function.name,
     );
