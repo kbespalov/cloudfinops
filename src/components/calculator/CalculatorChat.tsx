@@ -34,7 +34,7 @@ const ChatContainer = dynamic(
 const STORAGE_KEY = 'cf-calculator-chat-v1';
 
 const AI_CALC_SUGGESTIONS: SuggestionsItem[] = [
-  {id: 'vm-52', title: 'Хочу ВМ на 52 vCPU и 128 GiB RAM'},
+  {id: 'vm-48', title: 'Хочу ВМ на 48 vCPU и 96 GiB RAM'},
   {id: 'vm-4-16', title: 'Сравни 4 vCPU / 16 GiB по провайдерам'},
   {id: 'gpu-h100', title: 'Сколько стоит 1× H100 в месяц?'},
   {id: 'lake-medium', title: 'Оцени lakehouse medium ~75 TiB'},
@@ -368,7 +368,7 @@ export function CalculatorChat({
           emptyStateDescription:
             'Напишите текстом — справа появится минимальная цена и альтернативы.',
           emptyStateSuggestionsTitle: 'Примеры',
-          promptPlaceholder: 'Например: хочу 52 ядра и 128 ГиБ…',
+          promptPlaceholder: 'Например: хочу 48 ядер и 96 ГиБ…',
           errorText: 'Не удалось получить ответ. Попробуйте ещё раз.',
           disclaimerText: `${PRICING_DISCLAIMER} Цены справа — из калькулятора; ассистент может ошибаться в тексте.`,
         }}
