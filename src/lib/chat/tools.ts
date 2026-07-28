@@ -10,6 +10,7 @@ import type {CategoryKey, PeriodMode} from '@/lib/catalog';
 import {
   searchPricesDetailed,
   searchPricesDetailedAsync,
+  capPriceRowsKeepingAiPairs,
   type PriceRow,
   type SearchParams,
 } from './search';
@@ -865,8 +866,10 @@ async function runSearch(args: Record<string, unknown>): Promise<unknown> {
   };
   const {rows, providers, totalMatches, volumeEstimates, applied} =
     await searchPricesDetailedAsync(params);
+  // Cap for the model, but keep AI input/output mates (gemma output must not become «—»).
+  const toolRows = capPriceRowsKeepingAiPairs(rows, 10);
   return {
-    count: rows.length,
+    count: toolRows.length,
     totalMatches,
     currency: 'RUB',
     vatIncluded: true,
@@ -880,8 +883,7 @@ async function runSearch(args: Record<string, unknown>): Promise<unknown> {
       offerings: p.count,
       cheapest: serializeRow(p.cheapest),
     })),
-    // Cap rows for the model; providersMatched already has per-provider cheapest.
-    rows: rows.slice(0, 10).map(serializeRow),
+    rows: toolRows.map(serializeRow),
     ...(volumeEstimates && volumeEstimates.length
       ? {
           volumeEstimates,
@@ -1403,8 +1405,9 @@ export function runToolSync(name: string, rawArgs: string): string {
         limit: typeof args.limit === 'number' ? args.limit : undefined,
       };
       const {rows, providers, totalMatches, volumeEstimates, applied} = searchPricesDetailed(params);
+      const toolRows = capPriceRowsKeepingAiPairs(rows, 10);
       return JSON.stringify({
-        count: rows.length,
+        count: toolRows.length,
         totalMatches,
         currency: 'RUB',
         vatIncluded: true,
@@ -1416,7 +1419,7 @@ export function runToolSync(name: string, rawArgs: string): string {
           offerings: p.count,
           cheapest: serializeRow(p.cheapest),
         })),
-        rows: rows.slice(0, 10).map(serializeRow),
+        rows: toolRows.map(serializeRow),
         ...(volumeEstimates && volumeEstimates.length ? {volumeEstimates} : {}),
       });
     }

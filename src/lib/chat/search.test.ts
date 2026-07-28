@@ -4,6 +4,7 @@ import {
   aiModelMatchesNeedle,
   compactAiModelId,
   blendTokenPricePerMillion,
+  capPriceRowsKeepingAiPairs,
   classifyStorageVolumeIntent,
   detectAiModelNeedle,
   detectTokenMixShares,
@@ -12,6 +13,7 @@ import {
   looksLikeBlockDiskQuery,
   searchPricesDetailed,
 } from './search';
+import {runToolSync} from './tools';
 import {catalog} from '@/lib/catalog';
 
 describe('detectStorageClass', () => {
@@ -494,6 +496,50 @@ describe('AI model matching', () => {
     assert.ok(cloud);
     assert.match(cloud!.cheapest.name, /Qwen3\.6|3\.6/i);
     assert.doesNotMatch(cloud!.cheapest.name, /Coder/i);
+  });
+
+  it('keeps gemma-4-31b-it output when cheap input alone would fit in top-N', () => {
+    // Broad AI browse ranks by ₽; gemma output (224.48) is truncated without pair completion.
+    const r = searchPricesDetailed({
+      query: 'AI inference tokens',
+      category: 'ai',
+      limit: 20,
+    });
+    const names = r.rows.map((row) => row.name);
+    assert.ok(
+      names.some((n) => /gemma-4-31b-it/i.test(n) && /input/i.test(n)),
+      `expected gemma input in top rows: ${names.join(' | ')}`,
+    );
+    assert.ok(
+      names.some((n) => /gemma-4-31b-it/i.test(n) && /output/i.test(n)),
+      `expected gemma output mate kept with input: ${names.join(' | ')}`,
+    );
+    const out = r.rows.find((row) => /gemma-4-31b-it/i.test(row.name) && /output/i.test(row.name));
+    assert.equal(out?.month, 224.48);
+  });
+
+  it('tool payload cap keeps gemma output mate past rows.slice(0,10)', () => {
+    const r = searchPricesDetailed({
+      query: 'AI inference tokens',
+      category: 'ai',
+      limit: 20,
+    });
+    const capped = capPriceRowsKeepingAiPairs(r.rows, 10);
+    assert.ok(capped.some((row) => /gemma-4-31b-it/i.test(row.name) && /input/i.test(row.name)));
+    assert.ok(capped.some((row) => /gemma-4-31b-it/i.test(row.name) && /output/i.test(row.name)));
+    assert.ok(capped.length >= 11, `pair mate may exceed hard 10, got ${capped.length}`);
+
+    const viaTool = JSON.parse(
+      runToolSync(
+        'search_prices',
+        JSON.stringify({query: 'AI inference tokens', category: 'ai', limit: 20}),
+      ),
+    ) as {rows: {name: string; month: number | null}[]};
+    assert.ok(viaTool.rows.some((row) => /gemma-4-31b-it/i.test(row.name) && /output/i.test(row.name)));
+    assert.equal(
+      viaTool.rows.find((row) => /gemma-4-31b-it/i.test(row.name) && /output/i.test(row.name))?.month,
+      224.48,
+    );
   });
 });
 

@@ -1238,6 +1238,85 @@ async function rankHybrid(ctx: FilterContext, query: string): Promise<{
   return {scored, retrieval: 'hybrid'};
 }
 
+/** Input/output direction from AI token row labels (name/config/sku). */
+function aiTokenDirectionFromLabel(label: string): 'input' | 'output' | null {
+  if (/\binput\b|вход/i.test(label)) return 'input';
+  if (/\boutput\b|выход/i.test(label)) return 'output';
+  return null;
+}
+
+function aiTokenModelBaseFromName(name: string): string {
+  return name
+    .replace(/\s*[·•|-]\s*(input|output|вход|выход).*$/i, '')
+    .replace(/\s*\((input|output|вход|выход)\)\s*$/i, '')
+    .trim();
+}
+
+function aiTokenPairKey(row: PriceRow): string | null {
+  const dir = aiTokenDirectionFromLabel(`${row.name} ${row.config} ${row.sku}`);
+  if (!dir) return null;
+  const model = aiTokenModelBaseFromName(row.name) || row.name;
+  return `${row.provider}::${model.toLowerCase()}`;
+}
+
+/**
+ * Cheap input often lands in top-N while expensive output is truncated.
+ * If either half of an AI token pair is selected, pull its mate from the pool.
+ */
+export function ensureAiTokenPairRows(selected: PriceRow[], pool: PriceRow[]): PriceRow[] {
+  type Slot = {input?: PriceRow; output?: PriceRow};
+  const mates = new Map<string, Slot>();
+  for (const row of pool) {
+    const dir = aiTokenDirectionFromLabel(`${row.name} ${row.config} ${row.sku}`);
+    const key = aiTokenPairKey(row);
+    if (!dir || !key) continue;
+    const slot = mates.get(key) ?? {};
+    slot[dir] = row;
+    mates.set(key, slot);
+  }
+
+  const seen = new Set(selected.map((r) => r.sku));
+  const out = [...selected];
+  for (const row of selected) {
+    const dir = aiTokenDirectionFromLabel(`${row.name} ${row.config} ${row.sku}`);
+    const key = aiTokenPairKey(row);
+    if (!dir || !key) continue;
+    const mate = dir === 'input' ? mates.get(key)?.output : mates.get(key)?.input;
+    if (!mate || seen.has(mate.sku)) continue;
+    seen.add(mate.sku);
+    out.push(mate);
+  }
+  return out;
+}
+
+/** Cap rows for the LLM tool payload without dropping an AI input/output mate. */
+export function capPriceRowsKeepingAiPairs(rows: PriceRow[], max: number): PriceRow[] {
+  const n = Math.max(1, Math.floor(max));
+  return ensureAiTokenPairRows(rows.slice(0, n), rows);
+}
+
+/**
+ * Cheap input often lands in top-N while expensive output is truncated.
+ * If either half of an AI token pair is selected, pull its mate from the
+ * full match set so chat never shows «gemma input / output —».
+ */
+function completeAiTokenPairs(selected: ScoredRow[], all: ScoredRow[]): ScoredRow[] {
+  const bySku = new Map(all.map((s) => [s.row.sku, s]));
+  const completed = ensureAiTokenPairRows(
+    selected.map((s) => s.row),
+    all.map((s) => s.row),
+  );
+  const out: ScoredRow[] = [];
+  const seen = new Set<string>();
+  for (const row of completed) {
+    if (seen.has(row.sku)) continue;
+    seen.add(row.sku);
+    const scored = bySku.get(row.sku);
+    if (scored) out.push(scored);
+  }
+  return out;
+}
+
 function buildResult(
   scored: ScoredRow[],
   storageClass: string | null,
@@ -1285,7 +1364,8 @@ function buildResult(
       rest.push(s);
     }
   }
-  const rows = [...primary, ...rest].slice(0, limit).map((s) => s.row);
+  const sliced = [...primary, ...rest].slice(0, limit);
+  const rows = completeAiTokenPairs(sliced, scored).map((s) => s.row);
 
   let volumeEstimates: VolumeEstimate[] | undefined;
   if (volumeGiB != null) {

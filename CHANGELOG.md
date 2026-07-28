@@ -2,6 +2,10 @@
 
 ## 2026-07-28
 
+### E-ассистент / AI токены: не терять output в top-N
+
+При широком `search_prices` category=ai дешёвый **input** попадал в limit / `rows.slice(0,10)`, а дорогой **output** обрезался — у MWS `gemma-4-31b-it` в ответе был «output —», хотя в каталоге **224.48 ₽/1M**. Теперь к выбранным AI input/output добираем пару и в ranking, и в tool payload.
+
 ### Калькулятор / envelopes форм ВМ (не выдумывать quote)
 
 В YAML general compute разметили `min/max vCPU·RAM` (+ `platformMax*`, `shapeMode`) по всем провайдерам. Quote больше не считает формы вне публичного self-serve каталога.
