@@ -626,7 +626,7 @@ export const CHAT_TOOLS = [
     function: {
       name: 'get_compute_shape_limits',
       description:
-        'Min/max конфигурации обычных ВМ (vCPU+RAM) по провайдерам: наименьший и наибольший вычислительный footprint в публичном каталоге. Без GPU. Для «максимальная конфигурация ВМ», «сколько ядер максимум», «минимальная ВМ по ядрам/RAM», лимиты shape. НЕ про самую дешёвую в ₽ (это get_quote mode=cheapest-per-provider) и НЕ про цену конкретной формы (get_quote).',
+        'Min/max конфигурации обычных ВМ (vCPU+RAM) по провайдерам: наименьший и наибольший вычислительный footprint в публичном каталоге. Без GPU. Для «максимальная конфигурация ВМ», «сколько ядер максимум», «минимальная ВМ по ядрам/RAM», лимиты shape. В ответе используй note/envelopes/platformMax: у multi-platform (Yandex) max — union потолков, не одна orderable пара; platformMax пиши с RAM если >0. НЕ про самую дешёвую в ₽ (это get_quote mode=cheapest-per-provider) и НЕ про цену конкретной формы (get_quote).',
       parameters: {
         type: 'object',
         properties: {

@@ -279,6 +279,29 @@ function platformMaxOf(provider: string): ShapePoint | null {
 }
 
 /**
+ * When max is a union across platforms/shares, list the distinct full-size
+ * ceilings that contribute to maxVcpu or maxRamGiB (skip tiny share envelopes).
+ */
+function unionMaxNote(envelopes: ComputeEnvelope[], max: ShapePoint): string {
+  const full = envelopes.filter(
+    (e) => e.maxVcpu === max.vcpu || e.maxRamGiB === max.ramGiB,
+  );
+  const seen = new Set<string>();
+  const parts: string[] = [];
+  for (const e of full) {
+    const key = `${e.maxVcpu}/${e.maxRamGiB}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    parts.push(`${e.maxVcpu} vCPU / ${e.maxRamGiB} GiB`);
+  }
+  const ceilings = parts.length ? parts.join('; ') : `${max.vcpu} vCPU / ${max.ramGiB} GiB`;
+  return (
+    `Несколько платформ/долей: max в таблице — объединение потолков, не одна orderable форма. ` +
+    `Реальные потолки: ${ceilings}. Пара ${max.vcpu}×${max.ramGiB} недоступна сразу.`
+  );
+}
+
+/**
  * Min/max general-compute (CPU+RAM, no GPU) shapes for a provider.
  * Min = smallest compute footprint; Max = largest public catalog shape.
  */
@@ -313,17 +336,18 @@ export function providerShapeLimits(provider: string): ProviderShapeLimits {
   }
 
   const env = providerEnvelope(provider);
+  const max = env ? {vcpu: env.maxVcpu, ramGiB: env.maxRamGiB} : null;
   return {
     providerId: provider,
     shapeMode: mode,
     min: env ? {vcpu: env.minVcpu, ramGiB: env.minRamGiB} : null,
-    max: env ? {vcpu: env.maxVcpu, ramGiB: env.maxRamGiB} : null,
+    max,
     platformMax,
     envelopes,
     publishedShapes: null,
     note:
-      envelopes.length > 1
-        ? 'Несколько платформ/долей: max — объединение потолков; не каждая пара (maxVcpu×maxRam) доступна сразу.'
+      envelopes.length > 1 && max
+        ? unionMaxNote(envelopes, max)
         : undefined,
   };
 }

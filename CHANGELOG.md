@@ -12,6 +12,8 @@
 
 Intent 2c: «макс/мин конфигурация ВМ», лимиты ядер/RAM → footprint без цен и без GPU (не путать с cheapest-per-provider). Чип в пустом чате; recovery leak’ов; fast-path не уводит «минимальная конфигурация…» в ₽-таблицу.
 
+Уточнили ответы: для Yandex `max` = union платформ (Ice **96/640** + Cascade **80/1280**), пара **96×1280** не orderable — note tool’а и system prompt это явно говорят; `platformMax` пишем с RAM (Cloud.ru **64/320**), не «только 64 vCPU».
+
 ## 2026-07-27
 
 ### E-ассистент / аналитические tools

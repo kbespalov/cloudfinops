@@ -81,6 +81,9 @@ describe('matchPlanningDomains', () => {
     assert.match(prompt, /get_compute_shape_limits/);
     assert.match(prompt, /наименьший вычислительный footprint|без GPU/i);
     assert.match(prompt, /Не путай с 2b|не get_quote\(cheapest-per-provider\)/i);
+    // Anti-hallucination: Yandex union max and full platformMax (Cloud.ru 64/320).
+    assert.match(prompt, /объединение потолков|не одна orderable/i);
+    assert.match(prompt, /64\/320|platformMax/i);
     // Starter chip must stay aligned with this intent.
     const chip = CHAT_SUGGESTIONS.find((s) => s.id === 'compute-shape-limits');
     assert.ok(chip);

@@ -131,6 +131,17 @@ describe('compute-shapes', () => {
     assert.deepEqual(mws.max, {vcpu: 48, ramGiB: 192});
   });
 
+  it('Yandex max is a union of platform ceilings, not one orderable pair', () => {
+    const yc = providerShapeLimits('yandex-cloud');
+    assert.deepEqual(yc.max, {vcpu: 96, ramGiB: 1280});
+    assert.ok(yc.envelopes.length > 1);
+    assert.match(yc.note ?? '', /объединение потолков|не одна orderable/i);
+    assert.match(yc.note ?? '', /96 vCPU \/ 640 GiB/);
+    assert.match(yc.note ?? '', /80 vCPU \/ 1280 GiB/);
+    assert.match(yc.note ?? '', /96×1280/);
+    assert.equal(isComputeShapeAllowed('yandex-cloud', 96, 1280), false);
+  });
+
   it('explainShapeMiss describes envelope / lattice rejects', () => {
     assert.equal(explainShapeMiss('selectel', 32, 256), null);
     assert.match(explainShapeMiss('selectel', 1, 1) ?? '', /2–32|вне каталога/);

@@ -28,6 +28,7 @@
 | **VK Cloud** | envelope (STD2/STD3) | ~1–2 / 2–4 | **16 / 64** | Platform hard: **32 / 1024**; >16/64 — поддержка |
 | **Yandex Cloud** Ice Lake (`standard-v3`) | envelope + share rules | 2 / 1 (доля ≥20%) | **96 / 640** (100%) | RAM ≤16 GiB/ядро; доля 20/50% → только 2\|4 vCPU, ≤4 GiB/ядро |
 | **Yandex Cloud** Cascade Lake (`standard-v2`) | envelope + share rules | 2 / 0.5 (5%) | **80 / 1280** (100%) | Доля 5% → ≤2 GiB/ядро; 20/50% → ≤4 GiB/ядро, 2\|4 vCPU |
+| **Yandex Cloud** *(сводка chat/tool)* | union envelopes | 2 / 0.5 | **96 / 1280** *(не форма)* | max = max(Ice vCPU, Cascade RAM); пара **96×1280 не orderable** |
 | **Yandex Cloud** Zen 4 (`standard-v4a`) | docs only* | 2 / 1 | **288 / 1792** | *В каталоге unit SKU пока Ice/Cascade; Windows ≤224 vCPU |
 | **Cloud.ru** (Evolution) | exact flavors + envelope | **1 / 1** | **32 / 128** (консоль self-serve) | AZ-зависимо: где-то 32/64; прайс знает до 64/320, но в UI часто недоступно |
 | **Selectel** | envelope (Standard dedicated) | **2 / 4** | **32 / 256** (фиксированные SL2 / docs fixed) | Docs произвольные ru-6: **232 / 1200** → `platformMax*`; Shared 1/0.5 в каталоге unit не котируем; пул-зависимо |

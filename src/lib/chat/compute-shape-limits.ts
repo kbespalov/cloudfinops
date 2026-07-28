@@ -82,7 +82,9 @@ export function getComputeShapeLimits(args: ComputeShapeLimitsArgs = {}): Comput
     catalogAsOf: catalogAsOfIso(),
     note:
       'Общие ВМ (CPU+RAM), без GPU. min = наименьший вычислительный footprint в публичном каталоге ' +
-      '(не самая дешёвая ВМ в ₽). max = наибольшая self-serve / published форма. ' +
-      'platformMax — жёсткий лимит гипервизора, часто через поддержку. Цены сюда не входят — для ₽ используй get_quote.',
+      '(не самая дешёвая ВМ в ₽). max = наибольшая self-serve / published форма; если у провайдера note про ' +
+      'объединение потолков — max не одна orderable пара (смотри envelopes/note). ' +
+      'platformMax — жёсткий лимит гипервизора, часто через поддержку; указывай vCPU и RAM, если RAM>0. ' +
+      'Цены сюда не входят — для ₽ используй get_quote.',
   };
 }
