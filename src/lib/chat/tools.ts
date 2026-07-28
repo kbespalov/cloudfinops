@@ -3,7 +3,7 @@
  * Primitives: search_catalog, compose_solution, validate_solution, price_solution,
  * compare_solutions, get_product_details.
  * Shortcuts: search_prices, get_quote, compare_unit_price, compare_similar_peers, fit_budget,
- * compare_inference_tco, suggest_savings, market_radar (+ gated).
+ * compare_inference_tco, suggest_savings, market_radar, get_compute_shape_limits (+ gated).
  */
 
 import type {CategoryKey, PeriodMode} from '@/lib/catalog';
@@ -22,6 +22,7 @@ import {recommendInferenceInfra} from './inference-recommend';
 import {compareInferenceTco} from './inference-tco';
 import {suggestSavings} from './suggest-savings';
 import {marketRadar, type MarketRadarItem} from './market-radar';
+import {getComputeShapeLimits} from './compute-shape-limits';
 import {compareSimilarPeers} from './similar-peers';
 import {
   resolveLakehouseInput,
@@ -620,6 +621,26 @@ export const CHAT_TOOLS = [
       },
     },
   },
+  {
+    type: 'function',
+    function: {
+      name: 'get_compute_shape_limits',
+      description:
+        'Min/max конфигурации обычных ВМ (vCPU+RAM) по провайдерам: наименьший и наибольший вычислительный footprint в публичном каталоге. Без GPU. Для «максимальная конфигурация ВМ», «сколько ядер максимум», «минимальная ВМ по ядрам/RAM», лимиты shape. НЕ про самую дешёвую в ₽ (это get_quote mode=cheapest-per-provider) и НЕ про цену конкретной формы (get_quote).',
+      parameters: {
+        type: 'object',
+        properties: {
+          providers: {
+            type: 'array',
+            items: {type: 'string', enum: [...PROVIDER_IDS]},
+            description:
+              'Опционально сузить список (yandex-cloud, vk-cloud, …). По умолчанию — все провайдеры калькулятора.',
+          },
+        },
+        required: [],
+      },
+    },
+  },
 ] as const;
 
 /** Baseline + gated inference recommender (attach only on matching intents). */
@@ -773,6 +794,14 @@ function runMarketRadar(args: Record<string, unknown>): unknown {
     ?.filter((x): x is MarketRadarItem => typeof x === 'string' && MARKET_RADAR_ITEMS.includes(x as MarketRadarItem))
     .slice(0, 7);
   return marketRadar({mode, basket});
+}
+
+function runComputeShapeLimits(args: Record<string, unknown>): unknown {
+  const raw = Array.isArray(args.providers) ? args.providers : undefined;
+  const providers = raw
+    ?.filter((x): x is string => typeof x === 'string' && (PROVIDER_IDS as readonly string[]).includes(x))
+    .slice(0, PROVIDER_IDS.length);
+  return getComputeShapeLimits({providers});
 }
 
 /** Distinguish a whole-VM/GPU flavor price from a GPU-only accelerator rate. */
@@ -1398,6 +1427,7 @@ export function runToolSync(name: string, rawArgs: string): string {
     if (name === 'compare_inference_tco') return JSON.stringify(runCompareInferenceTco(args));
     if (name === 'suggest_savings') return JSON.stringify(runSuggestSavings(args));
     if (name === 'market_radar') return JSON.stringify(runMarketRadar(args));
+    if (name === 'get_compute_shape_limits') return JSON.stringify(runComputeShapeLimits(args));
     if (name === 'recommend_inference_infra') return JSON.stringify(runRecommendInference(args));
     if (name === 'get_lakehouse_quote') return JSON.stringify(runLakehouseQuote(args));
     return JSON.stringify({error: `Неизвестный инструмент: ${name}`});
@@ -1426,6 +1456,7 @@ export async function runTool(name: string, rawArgs: string): Promise<string> {
     if (name === 'compare_inference_tco') return JSON.stringify(runCompareInferenceTco(args));
     if (name === 'suggest_savings') return JSON.stringify(runSuggestSavings(args));
     if (name === 'market_radar') return JSON.stringify(runMarketRadar(args));
+    if (name === 'get_compute_shape_limits') return JSON.stringify(runComputeShapeLimits(args));
     if (name === 'recommend_inference_infra') return JSON.stringify(runRecommendInference(args));
     if (name === 'get_lakehouse_quote') return JSON.stringify(runLakehouseQuote(args));
     return JSON.stringify({error: `Неизвестный инструмент: ${name}`});

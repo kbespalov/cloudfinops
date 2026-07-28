@@ -344,6 +344,22 @@ describe('matchFastPath', () => {
     assert.notEqual(matchFastPath('Самый дешёвый H100')?.id, 'vm-cheapest-per-provider');
   });
 
+  it('does not fast-path shape-limit asks as cheapest-per-provider', () => {
+    for (const q of [
+      'Максимальная и минимальная конфигурация ВМ по облакам?',
+      'Какая максимальная конфигурация ВМ у провайдеров?',
+      'Минимальная конфигурация ВМ по облакам',
+      'Минимальная конфигурация ВМ по провайдерам',
+      'Лимиты vCPU и RAM по облакам',
+      'Какой самый большой shape ВМ?',
+      'Сколько ядер максимум на одну ВМ?',
+    ]) {
+      const plan = matchFastPath(q);
+      assert.notEqual(plan?.id, 'vm-cheapest-per-provider', q);
+      assert.notEqual(plan?.tools?.[0]?.name, 'get_quote', q);
+    }
+  });
+
   it('matches Qwen3 32B self-host to recommend_inference_infra', () => {
     const plan = matchFastPath(
       'Хочу поднять Qwen3 32B у себя на GPU в РФ — какую карту и сколько штук брать, с ценами?',

@@ -22,6 +22,7 @@ export const CHAT_TOOL_NAMES = [
   'compare_inference_tco',
   'suggest_savings',
   'market_radar',
+  'get_compute_shape_limits',
   'recommend_inference_infra',
   'get_lakehouse_quote',
 ] as const;
@@ -44,6 +45,7 @@ const TOOL_NAME_USER_LABEL: Record<ChatToolName, string> = {
   compare_inference_tco: 'сравнения TCO инференса',
   suggest_savings: 'подбора рычагов экономии',
   market_radar: 'радара рынка',
+  get_compute_shape_limits: 'лимитов конфигураций ВМ',
   recommend_inference_infra: 'подбора GPU под инференс',
   get_lakehouse_quote: 'калькулятора lakehouse',
 };
@@ -397,7 +399,7 @@ function inferToolName(
   if (fromFn) return fromFn;
 
   const callMention = content.match(
-    /\b(?:call|calling|invoke|use)\s+`?(search_prices|get_quote|compare_unit_price|compare_similar_peers|fit_budget|compare_inference_tco|suggest_savings|market_radar)`?/i,
+    /\b(?:call|calling|invoke|use)\s+`?(search_prices|get_quote|compare_unit_price|compare_similar_peers|fit_budget|compare_inference_tco|suggest_savings|market_radar|get_compute_shape_limits)`?/i,
   );
   if (callMention) return callMention[1] as ChatToolName;
 
@@ -489,6 +491,17 @@ function sanitizeArgs(
     const n = Number(args.budgetMonthRub);
     if (!Number.isFinite(n) || n < 1000) return null;
     args.budgetMonthRub = n;
+    return args;
+  }
+  if (name === 'get_compute_shape_limits') {
+    const args = pickKeys(cleaned, new Set(['providers']));
+    if (Array.isArray(args.providers)) {
+      args.providers = args.providers.filter((p): p is string => typeof p === 'string' && p.trim().length > 0);
+      if (!args.providers.length) delete args.providers;
+    } else {
+      delete args.providers;
+    }
+    // Empty args = all calculator providers (tool default).
     return args;
   }
   return null;

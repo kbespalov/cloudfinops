@@ -78,7 +78,7 @@ export function shouldForceToolRound(userText: string): boolean {
 }
 
 const FORCE_TOOLS_NUDGE =
-  'Для этого вопроса сначала вызови подходящий инструмент (compose_solution / get_quote / search_prices / get_lakehouse_quote / recommend_inference_infra / search_catalog). Не отвечай без данных из tool results.';
+  'Для этого вопроса сначала вызови подходящий инструмент (compose_solution / get_quote / search_prices / get_compute_shape_limits / get_lakehouse_quote / recommend_inference_infra / search_catalog). Не отвечай без данных из tool results.';
 
 async function finalizeStackWithLlm(
   messages: ChatMessage[],

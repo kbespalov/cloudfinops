@@ -26,6 +26,12 @@ spec:
       purchaseModel: on-demand
       yandexSkuId: dn2k3vqlk9snp1jv351u
       serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 96
+      maxRamGiB: 640
+      maxRamGiBPerVcpu: 16
+      shapeMode: envelope
     pricing:
       rate:
         amount: '1.24'
@@ -62,6 +68,12 @@ spec:
       purchaseModel: on-demand
       yandexSkuId: dn2ilq72mjc3bej6j74p
       serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 96
+      maxRamGiB: 640
+      maxRamGiBPerVcpu: 16
+      shapeMode: envelope
     pricing:
       rate:
         amount: '0.33'
@@ -96,6 +108,12 @@ spec:
       guaranteedVcpuShare: 20%
       purchaseModel: on-demand
       yandexSkuId: dn2r8aklo79bmpkd87l3
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 4
+      maxRamGiB: 16
+      maxRamGiBPerVcpu: 4
+      shapeMode: envelope
     pricing:
       rate:
         amount: '0.52'
@@ -130,6 +148,12 @@ spec:
       guaranteedVcpuShare: 50%
       purchaseModel: on-demand
       yandexSkuId: dn2f0q0d6gtpcom4b1p6
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 4
+      maxRamGiB: 16
+      maxRamGiBPerVcpu: 4
+      shapeMode: envelope
     pricing:
       rate:
         amount: '0.75'
@@ -164,6 +188,12 @@ spec:
       guaranteedVcpuShare: 20%
       purchaseModel: preemptible
       yandexSkuId: dn2pdedm5fon78kbl0fh
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 4
+      maxRamGiB: 16
+      maxRamGiBPerVcpu: 4
+      shapeMode: envelope
     pricing:
       rate:
         amount: '0.166'
@@ -198,6 +228,12 @@ spec:
       guaranteedVcpuShare: 50%
       purchaseModel: preemptible
       yandexSkuId: dn2333h2iv190t06bon8
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 4
+      maxRamGiB: 16
+      maxRamGiBPerVcpu: 4
+      shapeMode: envelope
     pricing:
       rate:
         amount: '0.2371'
@@ -232,6 +268,12 @@ spec:
       guaranteedVcpuShare: 100%
       purchaseModel: preemptible
       yandexSkuId: dn2e2fphfupugm21k4hv
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 96
+      maxRamGiB: 640
+      maxRamGiBPerVcpu: 16
+      shapeMode: envelope
     pricing:
       rate:
         amount: '0.34'
@@ -265,6 +307,12 @@ spec:
       cpuPlatformNative: Intel Ice Lake
       purchaseModel: preemptible
       yandexSkuId: dn26ur5frjbgdek2a0g5
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 96
+      maxRamGiB: 640
+      maxRamGiBPerVcpu: 16
+      shapeMode: envelope
     pricing:
       rate:
         amount: '0.083'
@@ -301,6 +349,12 @@ spec:
       guaranteedVcpuShare: 100%
       purchaseModel: on-demand
       serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 0.5
+      maxVcpu: 80
+      maxRamGiB: 1280
+      maxRamGiBPerVcpu: 16
+      shapeMode: envelope
     pricing:
       rate:
         amount: '1.41'
@@ -329,6 +383,12 @@ spec:
       cpuPlatformNative: Intel Cascade Lake
       purchaseModel: on-demand
       serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 0.5
+      maxVcpu: 80
+      maxRamGiB: 1280
+      maxRamGiBPerVcpu: 16
+      shapeMode: envelope
     pricing:
       rate:
         amount: '0.3676'
@@ -356,6 +416,12 @@ spec:
       cpuPlatformNative: Intel Cascade Lake
       guaranteedVcpuShare: 20%
       purchaseModel: on-demand
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 4
+      maxRamGiB: 16
+      maxRamGiBPerVcpu: 4
+      shapeMode: envelope
     pricing:
       rate:
         amount: '0.58'
@@ -383,6 +449,12 @@ spec:
       cpuPlatformNative: Intel Cascade Lake
       guaranteedVcpuShare: 50%
       purchaseModel: on-demand
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 4
+      maxRamGiB: 16
+      maxRamGiBPerVcpu: 4
+      shapeMode: envelope
     pricing:
       rate:
         amount: '0.85'
@@ -410,6 +482,12 @@ spec:
       cpuPlatformNative: Intel Cascade Lake
       guaranteedVcpuShare: 5%
       purchaseModel: on-demand
+      minVcpu: 2
+      minRamGiB: 0.5
+      maxVcpu: 4
+      maxRamGiB: 8
+      maxRamGiBPerVcpu: 2
+      shapeMode: envelope
     pricing:
       rate:
         amount: '0.1897'
@@ -437,6 +515,12 @@ spec:
       cpuPlatformNative: Intel Cascade Lake
       guaranteedVcpuShare: 20%
       purchaseModel: preemptible
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 4
+      maxRamGiB: 16
+      maxRamGiBPerVcpu: 4
+      shapeMode: envelope
     pricing:
       rate:
         amount: '0.1897'
@@ -464,6 +548,12 @@ spec:
       cpuPlatformNative: Intel Cascade Lake
       guaranteedVcpuShare: 50%
       purchaseModel: preemptible
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 4
+      maxRamGiB: 16
+      maxRamGiBPerVcpu: 4
+      shapeMode: envelope
     pricing:
       rate:
         amount: '0.26'
@@ -491,6 +581,12 @@ spec:
       cpuPlatformNative: Intel Cascade Lake
       guaranteedVcpuShare: 100%
       purchaseModel: preemptible
+      minVcpu: 2
+      minRamGiB: 0.5
+      maxVcpu: 80
+      maxRamGiB: 1280
+      maxRamGiBPerVcpu: 16
+      shapeMode: envelope
     pricing:
       rate:
         amount: '0.3794'
@@ -518,6 +614,12 @@ spec:
       cpuPlatformNative: Intel Cascade Lake
       guaranteedVcpuShare: 5%
       purchaseModel: preemptible
+      minVcpu: 2
+      minRamGiB: 0.5
+      maxVcpu: 4
+      maxRamGiB: 8
+      maxRamGiBPerVcpu: 2
+      shapeMode: envelope
     pricing:
       rate:
         amount: '0.1185'
@@ -544,6 +646,12 @@ spec:
       cpuPlatformFamily: intel-cascade-lake
       cpuPlatformNative: Intel Cascade Lake
       purchaseModel: preemptible
+      minVcpu: 2
+      minRamGiB: 0.5
+      maxVcpu: 80
+      maxRamGiB: 1280
+      maxRamGiBPerVcpu: 16
+      shapeMode: envelope
     pricing:
       rate:
         amount: '0.083'

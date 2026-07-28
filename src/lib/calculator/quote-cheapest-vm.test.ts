@@ -32,9 +32,12 @@ describe('quoteCheapestVmPerProvider', () => {
     assert.equal(byId['cloud-ru']!.purchaseModel, 'on-demand');
     assert.ok(byId['cloud-ru']!.total < 500);
 
+    // Selectel general unit SKUs = Standard dedicated (min 2/4), not Shared 1/0.5.
     assert.ok(byId['selectel']);
     assert.equal(byId['selectel']!.purchaseModel, 'preemptible');
-    assert.ok(byId['selectel']!.total < 500);
+    assert.equal(byId['selectel']!.vcpu, 2);
+    assert.equal(byId['selectel']!.ramGiB, 4);
+    assert.ok(byId['selectel']!.total < 1500, `Selectel cheapest ~2/4 spot, got ${byId['selectel']!.total}`);
 
     assert.ok(byId['yandex-cloud']);
     assert.equal(byId['yandex-cloud']!.purchaseModel, 'preemptible');

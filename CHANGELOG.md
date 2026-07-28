@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-07-28
+
+### Калькулятор / envelopes форм ВМ (не выдумывать quote)
+
+В YAML general compute разметили `min/max vCPU·RAM` (+ `platformMax*`, `shapeMode`) по всем провайдерам. Quote больше не считает формы вне публичного self-serve каталога.
+
+История сверки: VK self-serve **16/64** (platform 32/1024); Cloud.ru консоль **32/128** (price book 64/320 → platformMax); T1 консоль **64/640**; Selectel docs писали произвольные **232/1200**, но фиксированный Standard dedicated — **32/256** (232/1200 оставили как `platformMax`); MWS — exact `vmTypes`; Yandex — envelope + `maxRamGiBPerVcpu`. Сводка: `docs/flavors.md`.
+
+### E-ассистент / tool `get_compute_shape_limits`
+
+Intent 2c: «макс/мин конфигурация ВМ», лимиты ядер/RAM → footprint без цен и без GPU (не путать с cheapest-per-provider). Чип в пустом чате; recovery leak’ов; fast-path не уводит «минимальная конфигурация…» в ₽-таблицу.
+
 ## 2026-07-27
 
 ### E-ассистент / аналитические tools

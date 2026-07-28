@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
+import {CHAT_SUGGESTIONS} from '@/components/chat/suggestions';
 import {
   DOMAIN_CARD_AI,
   DOMAIN_CARD_GPU,
@@ -71,6 +72,51 @@ describe('matchPlanningDomains', () => {
       'Сайт на шестнадцати ядрах и тридцати двух гигах памяти — сравни провайдеров',
     );
     assert.ok(d.includes('compute'));
+  });
+
+  it('routes max/min VM configuration chip to compute card + shape-limits tool', () => {
+    const q = 'Максимальная и минимальная конфигурация ВМ по облакам?';
+    assert.ok(matchPlanningDomains(q).includes('compute'));
+    const prompt = buildSystemPrompt(q);
+    assert.match(prompt, /get_compute_shape_limits/);
+    assert.match(prompt, /наименьший вычислительный footprint|без GPU/i);
+    assert.match(prompt, /Не путай с 2b|не get_quote\(cheapest-per-provider\)/i);
+    // Starter chip must stay aligned with this intent.
+    const chip = CHAT_SUGGESTIONS.find((s) => s.id === 'compute-shape-limits');
+    assert.ok(chip);
+    assert.equal(chip!.title, q);
+  });
+
+  it('routes shape-limit intents (not cheapest ₽) to get_compute_shape_limits', () => {
+    const phrases = [
+      'Максимальная и минимальная конфигурация ВМ по облакам?',
+      'Какая максимальная конфигурация ВМ у провайдеров?',
+      'Минимальная конфигурация ВМ по облакам',
+      'Какой самый большой shape ВМ?',
+      'Сколько ядер максимум можно взять на одну ВМ?',
+      'Лимиты vCPU и RAM по облакам',
+      'наименьший footprint виртуальной машины',
+    ];
+    for (const q of phrases) {
+      assert.ok(matchPlanningDomains(q).includes('compute'), `domains: ${q}`);
+      const prompt = buildSystemPrompt(q);
+      assert.match(prompt, /get_compute_shape_limits/, q);
+      assert.match(prompt, /без GPU|footprint/i, q);
+    }
+  });
+
+  it('keeps cheapest-per-provider intent distinct from shape-limits wording', () => {
+    const cheap = 'Самая дешёвая ВМ у каждого провайдера';
+    assert.ok(matchPlanningDomains(cheap).includes('compute'));
+    const cheapPrompt = buildSystemPrompt(cheap);
+    assert.match(cheapPrompt, /cheapest-per-provider/);
+    // Shape-limits card is still in compute domain text, but 2b must stay explicit.
+    assert.match(cheapPrompt, /самая дешёвая|экономичн/i);
+
+    const shape = 'Максимальная конфигурация ВМ по провайдерам';
+    const shapePrompt = buildSystemPrompt(shape);
+    assert.match(shapePrompt, /get_compute_shape_limits/);
+    assert.match(shapePrompt, /НЕ самая дешёвая|не путай с 2b/i);
   });
 
   it('CPU-only / Ice Lake ask is compute+aggregates, not S3 Ice or stack', () => {

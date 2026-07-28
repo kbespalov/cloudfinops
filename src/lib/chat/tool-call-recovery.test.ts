@@ -86,6 +86,25 @@ describe('tool-call-recovery', () => {
     assert.deepEqual(JSON.parse(recovered[0].function.arguments), {query: 'H100'});
   });
 
+  it('recovers get_compute_shape_limits from English planning leak', () => {
+    const text =
+      'We need to call get_compute_shape_limits. Now produce tool call JSON.\n' +
+      '{"providers":["selectel","vk-cloud"]}';
+    assert.equal(looksLikeToolCallLeak(text), true);
+    const recovered = recoverToolCallsFromContent(text);
+    assert.equal(recovered.length, 1);
+    assert.equal(recovered[0]?.function.name, 'get_compute_shape_limits');
+    assert.deepEqual(JSON.parse(recovered[0]!.function.arguments), {
+      providers: ['selectel', 'vk-cloud'],
+    });
+  });
+
+  it('sanitizes get_compute_shape_limits name in user-facing footnotes', () => {
+    const clean = sanitizeUserFacingAnswer('Источник: get_compute_shape_limits.');
+    assert.equal(/\bget_compute_shape_limits\b/.test(clean), false);
+    assert.match(clean, /лимит/i);
+  });
+
   it('resolveToolCalls prefers native tool_calls', () => {
     const resolved = resolveToolCalls({
       role: 'assistant',

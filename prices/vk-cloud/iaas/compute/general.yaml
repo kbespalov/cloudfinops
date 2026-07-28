@@ -25,6 +25,17 @@ spec:
       cpuPlatformNative: Intel Cascade Lake
       guaranteedVcpuShare: 100%
       purchaseModel: on-demand
+      # Self-serve STD2/STD3 catalog envelope (docs). Larger shapes need support.
+      # https://cloud.vk.ru/docs/computing/iaas/concepts/vm/flavor
+      maxVcpu: 16
+      maxRamGiB: 64
+      # Hard per-instance caps on standard hypervisors (quotas docs).
+      # https://cloud.vk.ru/docs/ru/tools-for-using-services/account/concepts/quotasandlimits
+      platformMaxVcpu: 32
+      platformMaxRamGiB: 1024
+      minVcpu: 1
+      minRamGiB: 2
+      shapeMode: envelope
     pricing:
       rate:
         amount: '0.018972'
@@ -43,7 +54,10 @@ spec:
         formula: 0.018972 × 60
         vat: included
     notes: >
-      Конфигурации STD2-*. Источник: cloud.vk.com/pricelist, раздел CPU (Intel Cascade Lake).
+      Конфигурации STD2-*. Self-serve каталог — до 16 vCPU / 64 GiB; больше —
+      через поддержку (индивидуальный flavor). Жёсткий лимит гипервизора —
+      32 vCPU / 1024 GiB. Источник: cloud.vk.com/pricelist, раздел CPU
+      (Intel Cascade Lake); docs flavors + quotasandlimits.
   - sku: vk.compute.ice-lake.vcpu
     name: Intel Ice Lake, 100% vCPU
     meter: compute.vcpu
@@ -61,6 +75,13 @@ spec:
       cpuPlatformNative: Intel Ice Lake
       guaranteedVcpuShare: 100%
       purchaseModel: on-demand
+      maxVcpu: 16
+      maxRamGiB: 64
+      platformMaxVcpu: 32
+      platformMaxRamGiB: 1024
+      minVcpu: 1
+      minRamGiB: 2
+      shapeMode: envelope
     pricing:
       rate:
         amount: '0.01966'
@@ -78,6 +99,9 @@ spec:
           period: hour
         formula: 0.019660 × 60
         vat: included
+    notes: >
+      Конфигурации STD3-*. Self-serve каталог — до 16 vCPU / 64 GiB; больше —
+      через поддержку. Жёсткий лимит гипервизора — 32 vCPU / 1024 GiB.
   - sku: vk.compute.cascade-lake.ram
     name: Intel Cascade Lake, RAM
     meter: compute.ram
@@ -94,6 +118,13 @@ spec:
       cpuPlatformFamily: intel-cascade-lake
       cpuPlatformNative: Intel Cascade Lake
       purchaseModel: on-demand
+      maxVcpu: 16
+      maxRamGiB: 64
+      platformMaxVcpu: 32
+      platformMaxRamGiB: 1024
+      minVcpu: 1
+      minRamGiB: 2
+      shapeMode: envelope
     pricing:
       rate:
         amount: '0.005154'
@@ -127,6 +158,13 @@ spec:
       cpuPlatformFamily: intel-ice-lake
       cpuPlatformNative: Intel Ice Lake
       purchaseModel: on-demand
+      maxVcpu: 16
+      maxRamGiB: 64
+      platformMaxVcpu: 32
+      platformMaxRamGiB: 1024
+      minVcpu: 1
+      minRamGiB: 2
+      shapeMode: envelope
     pricing:
       rate:
         amount: '0.005154'

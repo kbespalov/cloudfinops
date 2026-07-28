@@ -96,6 +96,11 @@ spec:
       - id: gen-48-192
         vcpu: 48
         ramGb: 192
+      minVcpu: 2
+      minRamGiB: 4
+      maxVcpu: 48
+      maxRamGiB: 192
+      shapeMode: exact-vm-types
     pricing:
       rate:
         amount: '1.1522'
@@ -135,6 +140,11 @@ spec:
       cpuPlatformFamily: intel-sapphire-rapids
       cpuPlatformNative: Intel Xeon Gold 6448H (Sapphire Rapids)
       purchaseModel: on-demand
+      minVcpu: 2
+      minRamGiB: 4
+      maxVcpu: 48
+      maxRamGiB: 192
+      shapeMode: exact-vm-types
     pricing:
       rate:
         amount: '0.3067'

@@ -33,6 +33,13 @@ spec:
       cpuPlatformFamily: intel-cascade-or-ice
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       ramGiB: 2
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '1.48535'
@@ -120,6 +127,13 @@ spec:
       cpuPlatformFamily: intel-cascade-or-ice
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       ramGiB: 4
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '2.9707'
@@ -153,6 +167,13 @@ spec:
       cpuPlatformFamily: intel-cascade-or-ice
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       ramGiB: 8
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '5.9414'
@@ -186,6 +207,13 @@ spec:
       cpuPlatformFamily: intel-cascade-or-ice
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       ramGiB: 16
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '7.9788'
@@ -220,6 +248,13 @@ spec:
       cpuPlatformFamily: intel-cascade-or-ice
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       ramGiB: 16
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '11.8828'
@@ -253,6 +288,13 @@ spec:
       cpuPlatformFamily: intel-cascade-or-ice
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       ramGiB: 32
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '15.9576'
@@ -288,6 +330,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 11
       ramGiB: 1
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '1.2444'
@@ -324,6 +373,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 19
       ramGiB: 8
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '5.5022'
@@ -360,6 +416,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 17
       ramGiB: 16
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '8.2228'
@@ -396,6 +459,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 25
       ramGiB: 32
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '12.0414'
@@ -432,6 +502,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 26
       ramGiB: 64
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '20.1788'
@@ -468,6 +545,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 33
       ramGiB: 64
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '24.0828'
@@ -504,6 +588,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 30
       ramGiB: 128
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '40.3576'
@@ -540,6 +631,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 4
       ramGiB: 24
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '23.7534'
@@ -576,6 +674,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 5
       ramGiB: 48
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '32.025'
@@ -612,6 +717,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 6
       ramGiB: 96
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '52.0208'
@@ -648,6 +760,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 9
       ramGiB: 32
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '23.7656'
@@ -684,6 +803,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 10
       ramGiB: 64
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '31.9152'
@@ -720,6 +846,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 7
       ramGiB: 128
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '48.1656'
@@ -756,6 +889,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 8
       ramGiB: 256
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '80.7152'
@@ -792,6 +932,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 14
       ramGiB: 32
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '31.48576'
@@ -828,6 +975,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 15
       ramGiB: 48
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '35.6484'
@@ -864,6 +1018,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 16
       ramGiB: 96
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '47.8728'
@@ -900,6 +1061,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 13
       ramGiB: 192
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '72.2484'
@@ -936,6 +1104,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 22
       ramGiB: 64
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '47.5312'
@@ -972,6 +1147,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 20
       ramGiB: 128
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '63.8304'
@@ -1008,6 +1190,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 21
       ramGiB: 256
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '96.3312'
@@ -1044,6 +1233,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 23
       ramGiB: 320
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '120.414'
@@ -1080,6 +1276,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 28
       ramGiB: 128
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '95.0624'
@@ -1116,6 +1319,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 29
       ramGiB: 256
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '127.6608'
@@ -1152,6 +1362,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 34
       ramGiB: 1
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '0.4148'
@@ -1188,6 +1405,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 35
       ramGiB: 2
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '0.49511666'
@@ -1224,6 +1448,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 36
       ramGiB: 4
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '0.99023334'
@@ -1260,6 +1491,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 39
       ramGiB: 8
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '1.98046666'
@@ -1296,6 +1534,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 37
       ramGiB: 16
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '2.6596'
@@ -1332,6 +1577,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 38
       ramGiB: 32
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '4.0138'
@@ -1368,6 +1620,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 40
       ramGiB: 16
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '3.96093334'
@@ -1404,6 +1663,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 41
       ramGiB: 32
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '5.3192'
@@ -1440,6 +1706,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 44
       ramGiB: 1
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '0.64233'
@@ -1476,6 +1749,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 45
       ramGiB: 2
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '0.899262'
@@ -1512,6 +1792,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 47
       ramGiB: 4
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '1.798524'
@@ -1548,6 +1835,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 52
       ramGiB: 8
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '3.597048'
@@ -1584,6 +1878,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 49
       ramGiB: 16
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '5.71936'
@@ -1620,6 +1921,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 50
       ramGiB: 32
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '7.70796'
@@ -1656,6 +1964,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 51
       ramGiB: 64
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '11.56194'
@@ -1692,6 +2007,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 53
       ramGiB: 16
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '7.194096'
@@ -1728,6 +2050,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 54
       ramGiB: 32
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '11.43872'
@@ -1764,6 +2093,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 55
       ramGiB: 64
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '15.41592'
@@ -1800,6 +2136,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 42
       ramGiB: 32
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '14.388192'
@@ -1836,6 +2179,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 43
       ramGiB: 64
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '22.87744'
@@ -1872,6 +2222,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 46
       ramGiB: 48
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '21.582288'
@@ -1908,6 +2265,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6248R (Cascade Lake) или 6348 (Ice Lake)
       publishedTariffRow: 48
       ramGiB: 64
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '28.776384'
@@ -1949,6 +2313,13 @@ spec:
       - cloudru.compute.8vcpu-16gb
       - cloudru.compute.8vcpu-32gb
       latticeScope: stable-100pct-ratio-le-4
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '0.976'
@@ -2006,6 +2377,13 @@ spec:
       - cloudru.compute.8vcpu-16gb
       - cloudru.compute.8vcpu-32gb
       latticeScope: stable-100pct-ratio-le-4
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '0.976'
@@ -2060,6 +2438,13 @@ spec:
       - cloudru.compute.8vcpu-16gb
       - cloudru.compute.8vcpu-32gb
       latticeScope: stable-100pct-ratio-le-4
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '0.254675'
@@ -2116,6 +2501,13 @@ spec:
       - cloudru.compute.8vcpu-16gb
       - cloudru.compute.8vcpu-32gb
       latticeScope: stable-100pct-ratio-le-4
+      minVcpu: 1
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 128
+      platformMaxVcpu: 64
+      platformMaxRamGiB: 320
+      shapeMode: exact-flavors
     pricing:
       rate:
         amount: '0.254675'

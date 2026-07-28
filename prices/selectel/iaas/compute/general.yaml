@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-28'
     sourceRefs:
     - selectel.prices
     - selectel.calculator
@@ -27,6 +27,18 @@ spec:
       purchaseModel: on-demand
       cpuPlatformFamily: amd-zen4
       cpuPlatformNative: AMD EPYC 9754
+      # Standard + выделенные ядра (EPYC 9754 в ru-6): фиксированный каталог и
+      # документированный диапазон fixed dedicated — 2–32 vCPU / 4–256 GiB
+      # (SL2.* до SL2.32-262144-AMD). Docs также публикуют произвольные до
+      # 232/1200 в ru-6 — это platformMax; крупные формы часто через тикет/ёмкость.
+      # https://docs.selectel.ru/cloud-servers/create/configurations/
+      minVcpu: 2
+      minRamGiB: 4
+      maxVcpu: 32
+      maxRamGiB: 256
+      platformMaxVcpu: 232
+      platformMaxRamGiB: 1200
+      shapeMode: envelope
     pricing:
       rate:
         amount: '1.0071'
@@ -43,7 +55,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-28'
     sourceRefs:
     - selectel.prices
     - selectel.calculator
@@ -54,6 +66,13 @@ spec:
       purchaseModel: on-demand
       cpuPlatformFamily: amd-zen4
       cpuPlatformNative: AMD EPYC 9754
+      minVcpu: 2
+      minRamGiB: 4
+      maxVcpu: 32
+      maxRamGiB: 256
+      platformMaxVcpu: 232
+      platformMaxRamGiB: 1200
+      shapeMode: envelope
     pricing:
       rate:
         amount: '0.3662'
@@ -63,7 +82,7 @@ spec:
           period: hour
         vat: included
         byteBasis: binary
-    notes: Ставки зависят от пула; в каталоге указана ставка для ru-6a.
+    notes: Ставки зависят от пула; в каталоге указана ставка для ru-6a. Quote envelope = Standard dedicated fixed (32/256); docs произвольные ru-6 = platformMax 232/1200.
   - sku: selectel.compute.preemptible-vcpu
     name: Intel Xeon Gold 6240R, 100% preemptible vCPU
     meter: compute.vcpu
@@ -72,7 +91,7 @@ spec:
     # Align with disk SKUs (ru-6a); preemptible rates are pool-dependent.
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-28'
     sourceRefs:
     - selectel.prices
     - selectel.calculator
@@ -83,6 +102,13 @@ spec:
       cpuPlatformNative: Intel Xeon Gold 6240R
       guaranteedVcpuShare: 100%
       purchaseModel: preemptible
+      minVcpu: 2
+      minRamGiB: 4
+      maxVcpu: 32
+      maxRamGiB: 256
+      platformMaxVcpu: 232
+      platformMaxRamGiB: 1200
+      shapeMode: envelope
     pricing:
       rate:
         amount: '0.2518'
@@ -92,7 +118,7 @@ spec:
           period: hour
         vat: included
         byteBasis: not-applicable
-    notes: Ставки зависят от пула; в каталоге указана ставка для ru-9a / типичный preemptible.
+    notes: Ставки зависят от пула; в каталоге указана ставка для ru-9a / типичный preemptible. Envelope как у Standard dedicated (без сверки отдельного preemptible max).
   - sku: selectel.compute.preemptible-ram
     name: Intel Xeon Gold 6240R, preemptible RAM
     meter: compute.ram
@@ -100,7 +126,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-07-28'
     sourceRefs:
     - selectel.prices
     - selectel.calculator
@@ -110,6 +136,13 @@ spec:
       cpuPlatformFamily: intel-cascade-lake
       cpuPlatformNative: Intel Xeon Gold 6240R
       purchaseModel: preemptible
+      minVcpu: 2
+      minRamGiB: 4
+      maxVcpu: 32
+      maxRamGiB: 256
+      platformMaxVcpu: 232
+      platformMaxRamGiB: 1200
+      shapeMode: envelope
     pricing:
       rate:
         amount: '0.0919'

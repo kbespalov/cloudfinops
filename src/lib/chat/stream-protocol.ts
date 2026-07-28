@@ -37,6 +37,7 @@ const TOOL_STATUS_LABEL: Record<ChatToolName, string> = {
   compare_inference_tco: 'Считаю TCO инференса…',
   suggest_savings: 'Ищу рычаги экономии…',
   market_radar: 'Смотрю срез рынка…',
+  get_compute_shape_limits: 'Смотрю лимиты конфигураций ВМ…',
   recommend_inference_infra: 'Подбираю GPU под инференс…',
   get_lakehouse_quote: 'Считаю lakehouse…',
 };

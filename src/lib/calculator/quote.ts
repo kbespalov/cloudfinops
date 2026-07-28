@@ -18,6 +18,10 @@ import {
   vcpuSharePercent,
 } from '@/lib/calculator/vcpu-share';
 import {
+  explainShapeMiss,
+  shapeAllowedForProvider,
+} from '@/lib/calculator/compute-shapes';
+import {
   CALCULATOR_PROVIDER_IDS,
   CALCULATOR_PROVIDER_NAMES,
   formatGiBCapacity,
@@ -485,11 +489,20 @@ function pickComputeCombo(
   preset: ComputePreset,
   period: PeriodMode,
   lowCost: boolean,
+  opts?: {forGpuHost?: boolean},
 ): ComputeCombo | null {
   const share = vcpuShareOf(preset);
   // Do not invent prices for shapes providers cannot order at this share
   // (e.g. Yandex 20% is only 2/4 cores, max 16 GiB RAM).
   if (isFractionalShare(share) && !shapeAllowedForShare(share, preset.vcpu, preset.ramGiB)) {
+    return null;
+  }
+  // General-compute catalog envelopes (docs/flavors.md). GPU host lattices are
+  // separate (hostConfigs / flavor bundles) and may exceed general max RAM/vCPU.
+  if (
+    !opts?.forGpuHost &&
+    !shapeAllowedForProvider(provider, preset.vcpu, preset.ramGiB)
+  ) {
     return null;
   }
   const unit = pickUnitComputeCombo(provider, preset, period, lowCost);
@@ -919,7 +932,9 @@ function quoteGpu(
           : null;
       const hostShape = hostPresetForGpu(preset, platformId);
       if (hostShape) {
-        const host = pickComputeCombo(provider.id, hostShape, period, false);
+        const host = pickComputeCombo(provider.id, hostShape, period, false, {
+          forGpuHost: true,
+        });
         if (host) {
           primary.push(buildComposedGpuQuote(provider, preset, bestUnit, host));
         } else {
@@ -953,6 +968,8 @@ function explainComputeMiss(
   if (isFractionalShare(share) && !shapeAllowedForShare(share, preset.vcpu, preset.ramGiB)) {
     return `нет формы с долей vCPU ${share}`;
   }
+  const shapeMiss = explainShapeMiss(providerId, preset.vcpu, preset.ramGiB);
+  if (shapeMiss) return shapeMiss;
 
   const preference = purchaseModelOf(preset);
   const lowCost = preset.family === 'low-cost';

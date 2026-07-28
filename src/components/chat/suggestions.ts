@@ -8,6 +8,10 @@ import type {SuggestionsItem} from '@gravity-ui/aikit/types';
 export const CHAT_SUGGESTIONS: SuggestionsItem[] = [
   {id: 'fit-budget-100k', title: 'Бюджет 100 000 ₽/мес — что можно позволить?'},
   {
+    id: 'compute-shape-limits',
+    title: 'Максимальная и минимальная конфигурация ВМ по облакам?',
+  },
+  {
     id: 'inference-tco-gpt-oss',
     title: 'gpt-oss-120b, ~5M токенов/день — Hosted API или свои H100?',
   },

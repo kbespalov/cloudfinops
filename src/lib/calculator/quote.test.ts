@@ -421,6 +421,97 @@ describe('calculator quote arbitration', () => {
     assert.equal(oversized.quotes.length, 0, '8 vCPU @ 20% is not orderable');
   });
 
+  it('skips VK Cloud when shape exceeds self-serve STD envelope (16 vCPU / 64 GiB)', () => {
+    const ok = COMPUTE_PRESETS.find((p) => p.id === 'gen-16-64');
+    const big = COMPUTE_PRESETS.find((p) => p.id === 'gen-32-128');
+    assert.ok(ok && big);
+    const okQuote = quotePreset(ok, 'month');
+    assert.ok(
+      okQuote.quotes.some((q) => q.provider === 'vk-cloud'),
+      'expected VK quote for 16/64',
+    );
+    const bigQuote = quotePreset(big, 'month');
+    assert.ok(
+      !bigQuote.quotes.some((q) => q.provider === 'vk-cloud'),
+      'VK must not quote 32/128 (beyond self-serve STD)',
+    );
+    const miss = bigQuote.missingProviders.find((m) => m.provider === 'vk-cloud');
+    assert.ok(miss, 'expected VK in missing providers for 32/128');
+    assert.match(miss.reason, /STD|16|self-serve/i);
+
+    const helicopter = quotePreset({...ok, vcpu: 52, ramGiB: 208}, 'month');
+    assert.ok(!helicopter.quotes.some((q) => q.provider === 'vk-cloud'));
+  });
+
+  it('Selectel quotes inside Standard dedicated 2–32 / 4–256 and misses outside', () => {
+    const tiny = COMPUTE_PRESETS.find((p) => p.id === 'low-1-1');
+    const edge = COMPUTE_PRESETS.find((p) => p.id === 'mem-32-256');
+    const mid = COMPUTE_PRESETS.find((p) => p.id === 'gen-32-128');
+    assert.ok(tiny && edge && mid);
+
+    const tinyQuote = quotePreset(tiny, 'month');
+    assert.ok(
+      !tinyQuote.quotes.some((q) => q.provider === 'selectel'),
+      'Selectel Standard min is 2/4 — must not invent 1/1',
+    );
+    const tinyMiss = tinyQuote.missingProviders.find((m) => m.provider === 'selectel');
+    assert.ok(tinyMiss);
+    assert.match(tinyMiss.reason, /2–32|вне каталога/i);
+
+    assert.ok(quotePreset(mid, 'month').quotes.some((q) => q.provider === 'selectel'));
+    assert.ok(quotePreset(edge, 'month').quotes.some((q) => q.provider === 'selectel'));
+
+    const overDocsArbitrary = quotePreset({...mid, vcpu: 96, ramGiB: 384}, 'month');
+    assert.ok(!overDocsArbitrary.quotes.some((q) => q.provider === 'selectel'));
+    const overMiss = overDocsArbitrary.missingProviders.find((m) => m.provider === 'selectel');
+    assert.ok(overMiss);
+    assert.match(overMiss.reason, /2–32|256|вне каталога/i);
+
+    // Docs platformMax 232/1200 must not be treated as quoteable self-serve.
+    const platformClaim = quotePreset({...mid, vcpu: 232, ramGiB: 1200}, 'month');
+    assert.ok(!platformClaim.quotes.some((q) => q.provider === 'selectel'));
+  });
+
+  it('skips Cloud.ru when shape exceeds console self-serve 32/128', () => {
+    const ok = COMPUTE_PRESETS.find((p) => p.id === 'gen-32-128');
+    const fatRam = COMPUTE_PRESETS.find((p) => p.id === 'mem-32-256');
+    assert.ok(ok && fatRam);
+    assert.ok(quotePreset(ok, 'month').quotes.some((q) => q.provider === 'cloud-ru'));
+    const missQuote = quotePreset(fatRam, 'month');
+    assert.ok(!missQuote.quotes.some((q) => q.provider === 'cloud-ru'));
+    const miss = missQuote.missingProviders.find((m) => m.provider === 'cloud-ru');
+    assert.ok(miss);
+    assert.match(miss.reason, /flavor|32|128|вне каталога/i);
+  });
+
+  it('GPU host composition still quotes Selectel shapes above general-compute max', () => {
+    const fatHost = GPU_PRESETS.find(
+      (p) =>
+        p.gpuModelMatch === 'H200' &&
+        p.gpuCount === 1 &&
+        (p.vcpu ?? 0) >= 40 &&
+        (p.ramGiB ?? 0) >= 256,
+    );
+    assert.ok(fatHost, 'expected Selectel-style H200 host ≥40/256');
+    const result = quotePreset(fatHost, 'month');
+    assert.ok(
+      result.quotes.some((q) => q.provider === 'selectel'),
+      'GPU forGpuHost must bypass general 32/256 envelope',
+    );
+  });
+
+  it('skips MWS when shape is not a published vmType (exact lattice)', () => {
+    const ok = COMPUTE_PRESETS.find((p) => p.id === 'gen-32-128');
+    const bad = COMPUTE_PRESETS.find((p) => p.id === 'mem-32-256');
+    assert.ok(ok && bad);
+    assert.ok(quotePreset(ok, 'month').quotes.some((q) => q.provider === 'mws-cloud'));
+    const missQuote = quotePreset(bad, 'month');
+    assert.ok(!missQuote.quotes.some((q) => q.provider === 'mws-cloud'));
+    const miss = missQuote.missingProviders.find((m) => m.provider === 'mws-cloud');
+    assert.ok(miss);
+    assert.match(miss.reason, /vmType/i);
+  });
+
   it('larger compute presets cost at least as much as smaller ones per provider', () => {
     for (const family of ['general', 'high-cpu', 'high-memory', 'low-cost'] as const) {
       const presets = computePresetsByFamily(family);
