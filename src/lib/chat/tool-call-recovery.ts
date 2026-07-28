@@ -496,8 +496,11 @@ function sanitizeArgs(
   if (name === 'get_compute_shape_limits') {
     const args = pickKeys(cleaned, new Set(['providers']));
     if (Array.isArray(args.providers)) {
-      args.providers = args.providers.filter((p): p is string => typeof p === 'string' && p.trim().length > 0);
-      if (!args.providers.length) delete args.providers;
+      const providers = args.providers.filter(
+        (p): p is string => typeof p === 'string' && p.trim().length > 0,
+      );
+      if (providers.length) args.providers = providers;
+      else delete args.providers;
     } else {
       delete args.providers;
     }
