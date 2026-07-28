@@ -1,14 +1,54 @@
 /**
- * Thin fetch client for the Cloud.ru Foundation Models API (OpenAI-compatible).
+ * Thin fetch client for OpenAI-compatible chat APIs (Yandex AI Studio / Cloud.ru FM).
  * Server-only: the API key is read from process.env and must never reach the client.
+ *
+ * Default production path: Yandex AI (`qwen3.6-35b-a3b`). Override via CLOUDRU_FM_*.
  */
 
-const BASE_URL = process.env.CLOUDRU_FM_BASE_URL || 'https://foundation-models.api.cloud.ru/v1';
-const DEFAULT_MODEL = 'google/gemini-3.1-flash-lite';
+const DEFAULT_BASE_URL = 'https://ai.api.cloud.yandex.net/v1';
+const DEFAULT_MODEL = 'gpt://b1g8e6sg32uhno3n7jih/qwen3.6-35b-a3b/latest';
+const DEFAULT_FOLDER = 'b1g8e6sg32uhno3n7jih';
+
+const BASE_URL = process.env.CLOUDRU_FM_BASE_URL || DEFAULT_BASE_URL;
 
 /** Resolved at call time so eval can switch models via CLOUDRU_FM_MODEL / withChatModel. */
 export function getChatModel(): string {
   return process.env.CLOUDRU_FM_MODEL || DEFAULT_MODEL;
+}
+
+function folderId(): string | undefined {
+  return (
+    process.env.CLOUDRU_FM_FOLDER ||
+    process.env.YANDEX_CLOUD_FOLDER ||
+    (isYandexEndpoint() ? DEFAULT_FOLDER : undefined)
+  );
+}
+
+function isYandexEndpoint(): boolean {
+  return BASE_URL.includes('api.cloud.yandex.net');
+}
+
+/** Qwen-style thinking models burn tool-loop budget unless thinking is off. */
+function wantsThinkingOff(model = getChatModel()): boolean {
+  const m = model.toLowerCase();
+  return m.includes('qwen') || isYandexEndpoint();
+}
+
+function requestHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${apiKey()}`,
+  };
+  const folder = folderId();
+  if (folder) {
+    headers['OpenAI-Project'] = folder;
+    headers['x-folder-id'] = folder;
+  }
+  return headers;
+}
+
+function providerErrorLabel(): string {
+  return isYandexEndpoint() ? 'Yandex AI API' : 'Cloud.ru API';
 }
 
 export async function withChatModel<T>(model: string, fn: () => Promise<T>): Promise<T> {
@@ -82,7 +122,14 @@ const TOOL_LOOP_MAX_TOKENS_GEMINI = 2500;
 function toolLoopMaxTokens(): number {
   const model = getChatModel().toLowerCase();
   if (model.includes('gemini')) return TOOL_LOOP_MAX_TOKENS_GEMINI;
+  // Qwen with thinking off is small; keep headroom if thinking leaks back on.
+  if (model.includes('qwen')) return 1024;
   return TOOL_LOOP_MAX_TOKENS;
+}
+
+function bodyExtras(): Record<string, unknown> {
+  if (!wantsThinkingOff()) return {};
+  return {chat_template_kwargs: {enable_thinking: false}};
 }
 
 function isAnthropicModel(model = getChatModel()): boolean {
@@ -135,28 +182,26 @@ export async function chatCompletion(
     options.maxTokens ?? (withTools ? toolLoopMaxTokens() : FINAL_MAX_TOKENS);
   const res = await fetch(`${BASE_URL}/chat/completions`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey()}`,
-    },
+    headers: requestHeaders(),
     body: JSON.stringify({
       ...commonParams(),
       max_tokens: maxTokens,
       ...samplingParams(withTools),
       messages,
       ...(withTools ? {tools, tool_choice: toolChoice ?? 'auto'} : {}),
+      ...bodyExtras(),
     }),
     signal: options.signal,
   });
 
   if (!res.ok) {
     const text = await res.text().catch(() => '');
-    throw new Error(`Cloud.ru API ${res.status}: ${text.slice(0, 500)}`);
+    throw new Error(`${providerErrorLabel()} ${res.status}: ${text.slice(0, 500)}`);
   }
 
   const data = (await res.json()) as CompletionResponse;
   const message = data.choices?.[0]?.message;
-  if (!message) throw new Error('Cloud.ru API returned no choices.');
+  if (!message) throw new Error(`${providerErrorLabel()} returned no choices.`);
   return message;
 }
 
@@ -170,23 +215,21 @@ export async function* chatCompletionStream(
 ): AsyncGenerator<string> {
   const res = await fetch(`${BASE_URL}/chat/completions`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey()}`,
-    },
+    headers: requestHeaders(),
     body: JSON.stringify({
       ...commonParams(),
       max_tokens: FINAL_MAX_TOKENS,
       ...samplingParams(false),
       messages,
       stream: true,
+      ...bodyExtras(),
     }),
     signal,
   });
 
   if (!res.ok || !res.body) {
     const text = await res.text().catch(() => '');
-    throw new Error(`Cloud.ru API ${res.status}: ${text.slice(0, 500)}`);
+    throw new Error(`${providerErrorLabel()} ${res.status}: ${text.slice(0, 500)}`);
   }
 
   const reader = res.body.getReader();

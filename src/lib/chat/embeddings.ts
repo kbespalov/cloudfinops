@@ -8,7 +8,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {hasApiKey} from './gigachat';
 
-const BASE_URL = process.env.CLOUDRU_FM_BASE_URL || 'https://foundation-models.api.cloud.ru/v1';
+// Embeddings stay on Cloud.ru FM (Yandex chat endpoint has no bge-m3).
+// Do not inherit CLOUDRU_FM_BASE_URL — chat defaults to Yandex AI.
+const BASE_URL =
+  process.env.CLOUDRU_FM_EMBEDDING_BASE_URL ||
+  'https://foundation-models.api.cloud.ru/v1';
 export const EMBEDDING_MODEL =
   process.env.CLOUDRU_FM_EMBEDDING_MODEL || 'BAAI/bge-m3';
 
