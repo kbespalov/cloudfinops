@@ -14,23 +14,20 @@ spec:
     status: available
     pricingMode: unit
     region: ru-central1
-    effectiveFrom: null
-    checkedAt: '2026-07-25'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-08-01'
     sourceRefs: [mws.cdn, mws.all-prices]
     dimensions:
       trafficScope: cdn-to-client
       nativeName: Исходящий трафик с серверов CDN
       nativeUnit: ГБ
-      nativeAmountIncluded: '0.732'
+      nativeAmountIncluded: '0.8418'
       sourceVatRatePercent: 22
       sourceVat: included
-      upcomingAmountFrom: '2026-08-01'
-      upcomingAmount: '0.8418'
-      upcomingVat: included
       comparabilityClass: egress-payg
     pricing:
       rate:
-        amount: '0.732'
+        amount: '0.8418'
         currency: RUB
         unit: {quantity: GiB, period: usage}
         vat: included
@@ -48,7 +45,7 @@ spec:
     pricingMode: unit
     region: ru-central1
     effectiveFrom: null
-    checkedAt: '2026-07-25'
+    checkedAt: '2026-08-01'
     sourceRefs: [mws.cdn, mws.cdn-overview]
     dimensions:
       trafficScope: origin-and-internet-to-cdn

@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-08-01
+
+### Каталог / MWS: тарифы с 1 августа 2026
+
+Сверили публичный прайс MWS ([all-prices](https://mws.ru/docs/cloud-platform/about/general/mws-cloud-platform-pricing.html), compute, storage, CDN, mk8s, GPT Model Hub) и перевели объявленные ставки с `2026-08-01` из `future*` / `upcoming*` в текущие `pricing.rate`:
+
+- **Compute:** vCPU 1,267458 ₽/ч · RAM 0,33733 ₽/GiB·ч
+- **Disk NBS-PL2:** 0,012444 ₽/GiB·ч (IOPS без изменений — 0,0339 ₽/100 IOPS·ч)
+- **Image / snapshot:** 0,00488 ₽/GiB·ч
+- **Object Storage Standard requests:** PUT/POST/PATCH/LIST 0,00055 · GET/HEAD/OPTIONS 0,000045 ₽/запрос (хранение Standard/Warm без изменений)
+- **CDN egress:** 0,8418 ₽/GiB
+- **Managed Kubernetes:** basic 8,785586 · HA 23,07081 ₽/ч
+- **GPT Model Hub:** list-тарифы уже были с `effectiveFrom: 2026-08-01`; исправили embeddings **bge-m3** / **bge-multilingual-gemma2** на 0,61 / 1,83 ₽ за 1M (раньше ошибочно ×10)
+
+`asOf` каталога → `2026-08-01`. VPC/IP/трафик без изменений. Managed PostgreSQL / Kafka в каталоге пока нет (только IaaS + K8s + AI).
+
 ## 2026-07-28
 
 ### E-ассистент / AI токены: не терять output в top-N

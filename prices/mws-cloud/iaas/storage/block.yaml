@@ -14,17 +14,14 @@ spec:
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: null
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-08-01'
     sourceRefs:
     - mws.all-prices
     - mws.compute
     dimensions:
-      publishedMonth: 8.17
+      publishedMonth: 8.95968
       iopsChargedSeparately: true
-      futureRateFrom: '2026-08-01'
-      futureHourlyAmount: '0.012444'
-      futurePublishedMonth: '8.95968'
       performanceTier: provisioned-iops
       nativePerformanceTier: nbs-pl2
       diskType: nbs-pl2
@@ -35,7 +32,7 @@ spec:
       maximumIops: 10000
     pricing:
       rate:
-        amount: '0.0113'
+        amount: '0.012444'
         currency: RUB
         unit:
           quantity: GiB
@@ -43,7 +40,7 @@ spec:
         vat: included
         byteBasis: binary
       normalized:
-        amount: '0.0113'
+        amount: '0.012444'
         unit:
           currency: RUB
           quantity: GiB
@@ -62,7 +59,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-08-01'
     sourceRefs:
     - mws.all-prices
     - mws.compute
@@ -78,8 +75,6 @@ spec:
       iopsChargedSeparately: true
       includedIops: 1000
       maximumIops: 10000
-      futureRateFrom: '2026-08-01'
-      futureHourlyAmountPerStep: '0.0339'
     pricing:
       rate:
         amount: '0.000339'
@@ -107,19 +102,16 @@ spec:
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: null
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-08-01'
     sourceRefs:
     - mws.all-prices
     - mws.compute
     dimensions:
-      publishedMonth: 3.07
-      futureRateFrom: '2026-08-01'
-      futureHourlyAmount: '0.00488'
-      futurePublishedMonth: '3.5136'
+      publishedMonth: 3.5136
     pricing:
       rate:
-        amount: '0.0042'
+        amount: '0.00488'
         currency: RUB
         unit:
           quantity: GiB
@@ -127,7 +119,7 @@ spec:
         vat: included
         byteBasis: binary
       normalized:
-        amount: '0.0042'
+        amount: '0.00488'
         unit:
           currency: RUB
           quantity: GiB
@@ -141,21 +133,18 @@ spec:
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: null
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-08-01'
     sourceRefs:
     - mws.all-prices
     - mws.compute
     dimensions:
-      publishedMonth: 3.07
-      futureRateFrom: '2026-08-01'
-      futureHourlyAmount: '0.00488'
-      futurePublishedMonth: '3.5136'
+      publishedMonth: 3.5136
       billingBasis: actual-stored-data
       nativeName: Объем резервных копий дисков
     pricing:
       rate:
-        amount: '0.0042'
+        amount: '0.00488'
         currency: RUB
         unit:
           quantity: GiB
@@ -163,7 +152,7 @@ spec:
         vat: included
         byteBasis: binary
       normalized:
-        amount: '0.0042'
+        amount: '0.00488'
         unit:
           currency: RUB
           quantity: GiB

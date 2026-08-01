@@ -11,7 +11,7 @@ import {catalog, amountNumber} from '../../src/lib/catalog';
 
 type Issue = {level: 'critical' | 'warn'; code: string; id: string; detail: string};
 
-const today = new Date('2026-07-26'); // pin for reproducible CI; bump with catalog asOf
+const today = new Date('2026-08-01'); // pin for reproducible CI; bump with catalog asOf
 const issues: Issue[] = [];
 
 function add(level: Issue['level'], code: string, id: string, detail: string) {
@@ -65,22 +65,26 @@ for (const m of catalog.meters) {
       );
     }
   }
+  if (futureFrom) {
+    const from = new Date(futureFrom);
+    if (from <= today) {
+      add(
+        'critical',
+        'stale-future-rate',
+        m.id,
+        `futureRateFrom/upcomingAmountFrom ${futureFrom} is due or past — flip into pricing.rate`,
+      );
+    }
+  }
   if (m.effectiveFrom) {
     const from = new Date(m.effectiveFrom);
     if (from > today) {
-      // MWS GPT Model Hub: catalog uses list rates with future effectiveFrom by policy.
-      const intentional =
-        m.provider === 'mws-cloud' &&
-        m.categoryKey === 'ai' &&
-        m.dimensions?.serviceProduct === 'gpt-model-hub';
-      if (!intentional) {
-        add(
-          'warn',
-          'future-effective-as-available',
-          m.id,
-          `effectiveFrom ${m.effectiveFrom} is in the future but status=${m.status} — UI may look like current price`,
-        );
-      }
+      add(
+        'warn',
+        'future-effective-as-available',
+        m.id,
+        `effectiveFrom ${m.effectiveFrom} is in the future but status=${m.status} — UI may look like current price`,
+      );
     }
   }
   // futureRateFrom / futureHourlyAmount in dimensions is enough — do not require

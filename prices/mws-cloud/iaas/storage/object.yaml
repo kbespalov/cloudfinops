@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-08-01'
     sourceRefs:
     - mws.all-prices
     - mws.object-storage
@@ -25,11 +25,9 @@ spec:
       datacenterCount: 2
       verificationStatus: verified
       verificationMethod: official-pricing-page
-      verifiedAt: '2026-07-13'
+      verifiedAt: '2026-08-01'
       vatRatePercent: 22
       nativeBillingPeriod: month
-      futureStorageRateFrom: '2026-08-01'
-      futureStorageRateAmount: '2.44'
     pricing:
       rate:
         amount: '2.44'
@@ -54,7 +52,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-08-01'
     sourceRefs:
     - mws.all-prices
     - mws.object-storage
@@ -87,175 +85,154 @@ spec:
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: null
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-08-01'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: standard
       operation: PUT
       nativeBillingStepRequests: 10
-      nativeAmountPerStep: '0.0051'
-      futureRateFrom: '2026-08-01'
-      futureAmountPerRequest: '0.00055'
-      futureNativeAmountPerStep: '0.0055'
+      nativeAmountPerStep: '0.0055'
     pricing:
       rate:
-        amount: '0.00051'
+        amount: '0.00055'
         currency: RUB
         unit: {quantity: request, period: usage}
         vat: included
         byteBasis: not-applicable
-    notes: В прайсе 0,0051 ₽ за 10 операций; в каталоге — за 1 операцию (та же ставка).
+    notes: В прайсе 0,0055 ₽ за 10 операций; в каталоге — за 1 операцию (та же ставка).
   - sku: mws.object-storage.standard.requests.post
     name: Запросы POST — стандартный класс
     meter: storage.object.requests
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: null
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-08-01'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: standard
       operation: POST
       nativeBillingStepRequests: 10
-      nativeAmountPerStep: '0.0051'
-      futureRateFrom: '2026-08-01'
-      futureAmountPerRequest: '0.00055'
-      futureNativeAmountPerStep: '0.0055'
+      nativeAmountPerStep: '0.0055'
     pricing:
       rate:
-        amount: '0.00051'
+        amount: '0.00055'
         currency: RUB
         unit: {quantity: request, period: usage}
         vat: included
         byteBasis: not-applicable
-    notes: В прайсе 0,0051 ₽ за 10 операций; в каталоге — за 1 операцию (та же ставка).
+    notes: В прайсе 0,0055 ₽ за 10 операций; в каталоге — за 1 операцию (та же ставка).
   - sku: mws.object-storage.standard.requests.patch
     name: Запросы PATCH — стандартный класс
     meter: storage.object.requests
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: null
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-08-01'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: standard
       operation: PATCH
       nativeBillingStepRequests: 10
-      nativeAmountPerStep: '0.0051'
-      futureRateFrom: '2026-08-01'
-      futureAmountPerRequest: '0.00055'
-      futureNativeAmountPerStep: '0.0055'
+      nativeAmountPerStep: '0.0055'
     pricing:
       rate:
-        amount: '0.00051'
+        amount: '0.00055'
         currency: RUB
         unit: {quantity: request, period: usage}
         vat: included
         byteBasis: not-applicable
-    notes: В прайсе 0,0051 ₽ за 10 операций; в каталоге — за 1 операцию (та же ставка).
+    notes: В прайсе 0,0055 ₽ за 10 операций; в каталоге — за 1 операцию (та же ставка).
   - sku: mws.object-storage.standard.requests.list
     name: Запросы LIST — стандартный класс
     meter: storage.object.requests
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: null
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-08-01'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: standard
       operation: LIST
       nativeBillingStepRequests: 10
-      nativeAmountPerStep: '0.0051'
-      futureRateFrom: '2026-08-01'
-      futureAmountPerRequest: '0.00055'
-      futureNativeAmountPerStep: '0.0055'
+      nativeAmountPerStep: '0.0055'
     pricing:
       rate:
-        amount: '0.00051'
+        amount: '0.00055'
         currency: RUB
         unit: {quantity: request, period: usage}
         vat: included
         byteBasis: not-applicable
-    notes: В прайсе 0,0051 ₽ за 10 операций; в каталоге — за 1 операцию (та же ставка).
+    notes: В прайсе 0,0055 ₽ за 10 операций; в каталоге — за 1 операцию (та же ставка).
   - sku: mws.object-storage.standard.requests.get
     name: Запросы GET — стандартный класс
     meter: storage.object.requests
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: null
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-08-01'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: standard
       operation: GET
       nativeBillingStepRequests: 100
-      nativeAmountPerStep: '0.004'
-      futureRateFrom: '2026-08-01'
-      futureAmountPerRequest: '0.000045'
-      futureNativeAmountPerStep: '0.0045'
+      nativeAmountPerStep: '0.0045'
     pricing:
       rate:
-        amount: '0.00004'
+        amount: '0.000045'
         currency: RUB
         unit: {quantity: request, period: usage}
         vat: included
         byteBasis: not-applicable
-    notes: В прайсе 0,004 ₽ за 100 операций; в каталоге — за 1 операцию (та же ставка).
+    notes: В прайсе 0,0045 ₽ за 100 операций; в каталоге — за 1 операцию (та же ставка).
   - sku: mws.object-storage.standard.requests.head
     name: Запросы HEAD — стандартный класс
     meter: storage.object.requests
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: null
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-08-01'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: standard
       operation: HEAD
       nativeBillingStepRequests: 100
-      nativeAmountPerStep: '0.004'
-      futureRateFrom: '2026-08-01'
-      futureAmountPerRequest: '0.000045'
-      futureNativeAmountPerStep: '0.0045'
+      nativeAmountPerStep: '0.0045'
     pricing:
       rate:
-        amount: '0.00004'
+        amount: '0.000045'
         currency: RUB
         unit: {quantity: request, period: usage}
         vat: included
         byteBasis: not-applicable
-    notes: В прайсе 0,004 ₽ за 100 операций; в каталоге — за 1 операцию (та же ставка).
+    notes: В прайсе 0,0045 ₽ за 100 операций; в каталоге — за 1 операцию (та же ставка).
   - sku: mws.object-storage.standard.requests.options
     name: Запросы OPTIONS — стандартный класс
     meter: storage.object.requests
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: null
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-08-01'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: standard
       operation: OPTIONS
       nativeBillingStepRequests: 100
-      nativeAmountPerStep: '0.004'
-      futureRateFrom: '2026-08-01'
-      futureAmountPerRequest: '0.000045'
-      futureNativeAmountPerStep: '0.0045'
+      nativeAmountPerStep: '0.0045'
     pricing:
       rate:
-        amount: '0.00004'
+        amount: '0.000045'
         currency: RUB
         unit: {quantity: request, period: usage}
         vat: included
         byteBasis: not-applicable
-    notes: В прайсе 0,004 ₽ за 100 операций; в каталоге — за 1 операцию (та же ставка).
+    notes: В прайсе 0,0045 ₽ за 100 операций; в каталоге — за 1 операцию (та же ставка).
   - sku: mws.object-storage.warm.requests.put
     name: Запросы PUT — теплый класс
     meter: storage.object.requests
@@ -263,7 +240,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-08-01'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: warm
@@ -285,7 +262,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-08-01'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: warm
@@ -307,7 +284,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-08-01'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: warm
@@ -329,7 +306,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-08-01'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: warm
@@ -351,7 +328,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-08-01'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: warm
@@ -373,7 +350,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-08-01'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: warm
@@ -395,7 +372,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-08-01'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       storageClass: warm

@@ -1,6 +1,6 @@
 /**
  * Golden spot-check: critical public anchors verified against vendor pages
- * on 2026-07-26. Failures mean catalog drift or a bad edit — re-check source.
+ * on 2026-08-01. Failures mean catalog drift or a bad edit — re-check source.
  */
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
@@ -24,7 +24,7 @@ function nearly(a: number, b: number, eps = EPS) {
   assert.ok(Math.abs(a - b) <= eps, `expected ${b}, got ${a}`);
 }
 
-describe('price anchors — live-verified 2026-07-26', () => {
+describe('price anchors — live-verified 2026-08-01', () => {
   it('Yandex Ice Lake compute (docs/compute/pricing)', () => {
     nearly(hour('yc.compute.ice-lake-100.vcpu'), 1.24);
     nearly(hour('yc.compute.ice-lake.ram'), 0.33);
@@ -35,17 +35,18 @@ describe('price anchors — live-verified 2026-07-26', () => {
     nearly(amountNumber(m, 'month')!, 2.376);
   });
 
-  it('MWS compute current rates (docs; hike from 2026-08-01 in dimensions)', () => {
-    nearly(hour('mws.compute.vcpu'), 1.1522);
-    nearly(hour('mws.compute.ram'), 0.3067);
-    assert.equal(meter('mws.compute.vcpu').dimensions?.futureRateFrom, '2026-08-01');
-    assert.equal(meter('mws.compute.vcpu').dimensions?.futureHourlyAmount, '1.267458');
+  it('MWS compute rates effective 2026-08-01 (docs/compute + all-prices)', () => {
+    nearly(hour('mws.compute.vcpu'), 1.267458);
+    nearly(hour('mws.compute.ram'), 0.33733);
+    assert.equal(meter('mws.compute.vcpu').effectiveFrom, '2026-08-01');
+    assert.equal(meter('mws.compute.vcpu').dimensions?.futureRateFrom, undefined);
   });
 
-  it('MWS AI Model Hub list rates stay pinned (effectiveFrom 2026-08-01)', () => {
+  it('MWS AI Model Hub list rates (effectiveFrom 2026-08-01)', () => {
     nearly(hour('mws.ai.gpt-oss-120b.input'), 13.42);
     nearly(hour('mws.ai.gpt-oss-120b.output'), 54.9);
     nearly(hour('mws.ai.qwen3.6-35b-a3b.input'), 70.76);
+    nearly(hour('mws.ai.bge-m3.input'), 0.61);
     assert.equal(meter('mws.ai.gpt-oss-120b.input').effectiveFrom, '2026-08-01');
   });
 

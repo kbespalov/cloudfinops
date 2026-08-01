@@ -14,18 +14,15 @@ spec:
     status: available
     pricingMode: fixed
     region: Россия
-    effectiveFrom: null
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-08-01'
     sourceRefs:
     - mws.all-prices
     - mws.kubernetes
     dimensions:
       sizingModel: cluster-fee
       nativeName: Базовый мастер
-      publishedMonth: 6264
-      futureRateFrom: '2026-08-01'
-      futureHourlyAmount: '8.785586'
-      futurePublishedMonth: '6325.62192'
+      publishedMonth: 6325.62192
       availability: zonal
       faultTolerant: false
       topology: zonal
@@ -35,7 +32,7 @@ spec:
       masterSize: small
     pricing:
       rate:
-        amount: '8.7'
+        amount: '8.785586'
         currency: RUB
         unit:
           quantity: master
@@ -43,7 +40,7 @@ spec:
         vat: included
         byteBasis: not-applicable
       normalized:
-        amount: '8.7'
+        amount: '8.785586'
         unit:
           currency: RUB
           quantity: master
@@ -61,18 +58,15 @@ spec:
     status: available
     pricingMode: fixed
     region: Россия
-    effectiveFrom: null
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-08-01'
     sourceRefs:
     - mws.all-prices
     - mws.kubernetes
     dimensions:
       sizingModel: cluster-fee
       nativeName: Отказоустойчивый мастер
-      publishedMonth: 15818.4
-      futureRateFrom: '2026-08-01'
-      futureHourlyAmount: '23.07081'
-      futurePublishedMonth: '16610.9832'
+      publishedMonth: 16610.9832
       availability: regional
       faultTolerant: true
       topology: regional
@@ -82,7 +76,7 @@ spec:
       masterSize: small
     pricing:
       rate:
-        amount: '21.97'
+        amount: '23.07081'
         currency: RUB
         unit:
           quantity: master
@@ -90,7 +84,7 @@ spec:
         vat: included
         byteBasis: not-applicable
       normalized:
-        amount: '21.97'
+        amount: '23.07081'
         unit:
           currency: RUB
           quantity: master

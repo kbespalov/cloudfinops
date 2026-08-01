@@ -14,17 +14,14 @@ spec:
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: null
-    checkedAt: '2026-07-26'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-08-01'
     sourceRefs:
     - mws.all-prices
     - mws.compute
     - mws.vm-types
     dimensions:
-      publishedMonth: 829.65
-      futureRateFrom: '2026-08-01'
-      futureHourlyAmount: '1.267458'
-      futurePublishedMonth: '912.56976'
+      publishedMonth: 912.56976
       cpuPlatformFamily: intel-sapphire-rapids
       cpuPlatformNative: Intel Xeon Gold 6448H (Sapphire Rapids)
       guaranteedVcpuShare: 100%
@@ -103,7 +100,7 @@ spec:
       shapeMode: exact-vm-types
     pricing:
       rate:
-        amount: '1.1522'
+        amount: '1.267458'
         currency: RUB
         unit:
           quantity: vCPU
@@ -111,7 +108,7 @@ spec:
         vat: included
         byteBasis: not-applicable
       normalized:
-        amount: '1.1522'
+        amount: '1.267458'
         unit:
           currency: RUB
           quantity: vCPU
@@ -126,17 +123,14 @@ spec:
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: null
-    checkedAt: '2026-07-26'
+    effectiveFrom: '2026-08-01'
+    checkedAt: '2026-08-01'
     sourceRefs:
     - mws.all-prices
     - mws.compute
     - mws.vm-types
     dimensions:
-      publishedMonth: 220.83
-      futureRateFrom: '2026-08-01'
-      futureHourlyAmount: '0.33733'
-      futurePublishedMonth: '242.8776'
+      publishedMonth: 242.8776
       cpuPlatformFamily: intel-sapphire-rapids
       cpuPlatformNative: Intel Xeon Gold 6448H (Sapphire Rapids)
       purchaseModel: on-demand
@@ -147,7 +141,7 @@ spec:
       shapeMode: exact-vm-types
     pricing:
       rate:
-        amount: '0.3067'
+        amount: '0.33733'
         currency: RUB
         unit:
           quantity: GiB-RAM
@@ -155,7 +149,7 @@ spec:
         vat: included
         byteBasis: binary
       normalized:
-        amount: '0.3067'
+        amount: '0.33733'
         unit:
           currency: RUB
           quantity: GiB-RAM
