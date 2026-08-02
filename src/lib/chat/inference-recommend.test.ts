@@ -94,6 +94,8 @@ describe('inference model KB', () => {
     assert.equal(findInferenceModel('Qwen3 8B')?.id, 'qwen3-8b');
     assert.equal(findInferenceModel('deepseek')?.id, 'deepseek-v4-flash');
     assert.equal(findInferenceModel('DeepSeek V4 Flash')?.id, 'deepseek-v4-flash');
+    assert.equal(findInferenceModel('DeepSeek V4 Flash 0731')?.id, 'deepseek-v4-flash');
+    assert.equal(findInferenceModel('deepseek 4 flash')?.id, 'deepseek-v4-flash');
     assert.equal(findInferenceModel('DeepSeek V4 Pro')?.id, 'deepseek-v4-pro');
     assert.equal(findInferenceModel('Gemma 4')?.id, 'gemma-4-31b');
     assert.equal(findInferenceModel('Qwen 3.5')?.id, 'qwen3.5-122b-a10b');
