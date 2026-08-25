@@ -1,5 +1,7 @@
 # Cloud FinOps
 
+## New Project
+
 **Сравнить цены облаков России — без презентаций вендоров, без «примерно» и без скрытых промо.**
 
 [cloudfinops.ru](https://cloudfinops.ru) · сообщество [@cloudfinopsru](https://t.me/cloudfinopsru)
