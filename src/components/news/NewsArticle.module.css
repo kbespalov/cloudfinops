@@ -64,10 +64,13 @@
 }
 
 .summary {
-  margin: 4px 0;
-  font-size: 1.0625rem;
+  margin: 4px 0 0;
   line-height: 1.6;
-  color: var(--g-color-text-primary);
+}
+
+.body p {
+  margin: 0;
+  line-height: 1.65;
 }
 
 .sourceBlock {

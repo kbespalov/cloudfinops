@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import {Button, Icon, Label, Text} from '@gravity-ui/uikit';
+import {Button, Flex, Icon, Label, Text} from '@gravity-ui/uikit';
 import {
   ArrowUpRightFromSquare,
   Calculator,
@@ -62,7 +62,19 @@ export function NewsArticle({item}: {item: NewsItem}) {
             ))}
           </div>
 
-          <p className={styles.summary}>{item.summary}</p>
+          <Text as="p" variant="body-2" className={styles.summary}>
+            {item.summary}
+          </Text>
+
+          {item.body?.length ? (
+            <Flex direction="column" gap={4} className={styles.body}>
+              {item.body.map((paragraph) => (
+                <Text as="p" key={paragraph.slice(0, 48)} variant="body-2">
+                  {paragraph}
+                </Text>
+              ))}
+            </Flex>
+          ) : null}
 
           <div className={styles.sourceBlock}>
             <Text variant="caption-2" color="secondary">
@@ -95,7 +107,13 @@ export function NewsArticle({item}: {item: NewsItem}) {
                 <Icon data={Calculator} size={16} />
                 Калькулятор
               </Button>
-              <Button component={Link} href="/catalog" view="outlined" size="l" prefetch>
+              <Button
+                component={Link}
+                href={item.catalogHref || '/catalog'}
+                view="outlined"
+                size="l"
+                prefetch
+              >
                 <Icon data={SquareListUl} size={16} />
                 Каталог SKU
               </Button>

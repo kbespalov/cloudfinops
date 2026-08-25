@@ -27,9 +27,13 @@ export type NewsItem = {
   providerName: string;
   title: string;
   summary: string;
+  /** Extra paragraphs on the article page. The feed card still uses `summary`. */
+  body?: string[];
   tags: NewsTag[];
   sourceUrl: string;
   sourceLabel: string;
+  /** Optional catalog deep-link for the article CTA (defaults to `/catalog`). */
+  catalogHref?: string;
 };
 
 export const NEWS_PROVIDER_TITLE: Record<NewsProviderId, string> = {
@@ -263,12 +267,19 @@ export const newsItems: NewsItem[] = [
     date: '2026-08-25',
     provider: 'mws-cloud',
     providerName: 'MWS Cloud',
-    title: 'Холодный класс S3 в Object Storage',
+    title: 'Холодный класс Object Storage для архивов',
     summary:
-      'У Object Storage появился класс COLD: 1,26 ₽/ГиБ·мес с НДС — дешевле Standard (2,44), но запросы примерно вдвое дороже. Для архивов и редко читаемых данных это закрывает пробел между тёплым NVMe-классом и обычным хранением; исходящий трафик тот же, 1,3212 ₽/ГиБ.',
+      'MWS Cloud добавила в S3 класс Cold: хранение 1,26 ₽/ГиБ·мес с НДС — почти вдвое дешевле Standard и в семь раз дешевле тёплого NVMe. Имеет смысл, если платите за объём, а не за частые обращения: запросы у Cold примерно вдвое дороже.',
+    body: [
+      'В Object Storage MWS Cloud теперь три класса. Тёплый (Warm) на NVMe — для ML и высокой нагрузки, его запустили в начале июля. Standard — обычные приложения и медиа. Новый Cold закрывает другой сценарий: долго держать данные, к которым почти не ходят — бэкапы, сырые логи, выгрузки «на всякий случай», архив датасетов после обучения.',
+      'По публичному прайсу холодное хранение стоит 1,26 ₽ за ГиБ в месяц с НДС 22%. Standard — 2,44 ₽, Warm — 9,15 ₽. Запись (PUT, POST, PATCH, LIST) — 0,0106 ₽ за 10 операций, чтение (GET, HEAD, OPTIONS) — 0,01 ₽ за 100: примерно вдвое дороже, чем у Standard и Warm. Исходящий трафик от класса не зависит — 1,3212 ₽/ГиБ. DELETE по-прежнему бесплатный.',
+      'На рынке РФ это тот же класс, что Cold у Yandex Cloud, Selectel, Cloud.ru и Icebox у VK Cloud: дешевле хранить, дороже трогать. Ставка MWS совпадает с Selectel и чуть ниже Yandex Cold (~1,27). Выигрыш появляется на больших объёмах с редкими GET/PUT. Если объекты читают часто, Standard может оказаться дешевле — экономия на гигабайтах съестся операциями.',
+      'Класс задаётся на бакете или при загрузке объекта (COLD). В каталоге Cloud FinOps Cold MWS уже стоит в одной таблице с остальными провайдерами: можно сравнить ₽/ГиБ·мес и стоимость запросов, не собирая прайсы вручную.',
+    ],
     tags: ['storage', 'finops'],
     sourceUrl: 'https://mws.ru/docs/cloud-platform/storage/general/pricing.html',
     sourceLabel: 'Документация MWS · Object Storage',
+    catalogHref: '/catalog?category=storage&storage=cold',
   },
   {
     id: 'mws-2026-06-local-nvme',
