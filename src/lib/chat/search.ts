@@ -25,6 +25,7 @@ import {
   extractVcpu,
   extractRamGiB,
   CATEGORY_TITLE,
+  REQUEST_PRICE_PACK,
   type CatalogMeter,
   type CategoryKey,
 } from '@/lib/catalog';
@@ -54,6 +55,8 @@ export type PriceRow = {
   /** Capacity/requests kind for object OR block volume meters. */
   meterKind?: 'capacity' | 'requests' | 'other';
   storageClass?: string | null;
+  /** S3 API verb from dimensions.operation (PUT/GET/…). */
+  operation?: string | null;
   /** Kubernetes control-plane: basic (zonal) | ha (regional) | fixed-component | null. */
   k8sTier?: string | null;
   /** Kubernetes: synthetic-bundle | native-bundle | native-fixed | null. */
@@ -80,8 +83,15 @@ export type SearchParams = {
    * Auto-detected from the query when omitted.
    */
   meterKind?: 'capacity' | 'requests';
+  /**
+   * Hard-filter S3 request meters by API verb (PUT/GET/…).
+   * Auto-detected when the query names exactly one verb family.
+   */
+  operation?: string;
   /** Optional volume for capacity estimates (binary GiB). */
   volumeGiB?: number;
+  /** Optional request count for requestEstimates (₽/10k × count/10000). */
+  requestCount?: number;
   limit?: number;
 };
 
@@ -105,6 +115,18 @@ export type VolumeEstimate = {
   name: string;
 };
 
+export type RequestEstimate = {
+  provider: string;
+  providerName: string;
+  storageClass: string | null;
+  operation: string | null;
+  ratePer10k: number;
+  requestCount: number;
+  total: number;
+  sku: string;
+  name: string;
+};
+
 export type PriceSearchResult = {
   /** Top-N rows, diversified so every matching provider is represented. */
   rows: PriceRow[];
@@ -113,11 +135,15 @@ export type PriceSearchResult = {
   totalMatches: number;
   /** Present when volumeGiB was requested and capacity rows matched. */
   volumeEstimates?: VolumeEstimate[];
+  /** Present when requestCount was inferred/passed and request rows matched. */
+  requestEstimates?: RequestEstimate[];
   /** Effective structural filters after query inference. */
   applied?: {
     storageClass: string | null;
     meterKind: 'capacity' | 'requests' | null;
     volumeGiB: number | null;
+    operation: string | null;
+    requestCount: number | null;
     retrieval?: 'lexical' | 'hybrid';
     /** When set, kubernetes search preferred zonal (basic) or HA masters. */
     k8sTier?: 'basic' | 'ha';
@@ -403,6 +429,70 @@ export function detectStorageClass(query: string | undefined): string | null {
   return [...positive][0] ?? null;
 }
 
+/** Write-family verbs share the catalog PUT SKU; read-family share GET. */
+const STORAGE_WRITE_VERBS = new Set(['PUT', 'POST', 'PATCH', 'LIST']);
+const STORAGE_READ_VERBS = new Set(['GET', 'HEAD', 'OPTIONS']);
+const STORAGE_OP_VERB_RE =
+  /(?<![а-яёa-z])(put|get|post|patch|list|head|options)(?![а-яёa-z])/gi;
+
+export function canonicalStorageOperation(raw: string | undefined): string | null {
+  if (!raw?.trim()) return null;
+  const op = raw.trim().toUpperCase();
+  if (STORAGE_WRITE_VERBS.has(op)) return 'PUT';
+  if (STORAGE_READ_VERBS.has(op)) return 'GET';
+  return op;
+}
+
+/**
+ * Infer a single S3 verb family from the question.
+ * Returns null when none or both PUT-family and GET-family are named
+ * (e.g. «5k PUT + 5k GET» must not collapse to cheaper GET).
+ */
+export function detectStorageOperation(query: string | undefined): string | null {
+  if (!query) return null;
+  const families = new Set<string>();
+  STORAGE_OP_VERB_RE.lastIndex = 0;
+  let match: RegExpExecArray | null;
+  while ((match = STORAGE_OP_VERB_RE.exec(query)) !== null) {
+    const canonical = canonicalStorageOperation(match[1]);
+    if (canonical) families.add(canonical);
+  }
+  if (families.size !== 1) return null;
+  return [...families][0] ?? null;
+}
+
+function parseScaledCount(intPart: string, fracPart: string | undefined, scale: string | undefined): number | null {
+  const raw = fracPart ? `${intPart.replace(/\s/g, '')}.${fracPart}` : intPart.replace(/\s/g, '');
+  const n = Number(raw.replace(',', '.'));
+  if (!Number.isFinite(n) || n <= 0) return null;
+  const scaled = scale && /тыс|тысяч|^k$/i.test(scale) ? n * 1000 : n;
+  return Math.round(scaled);
+}
+
+/**
+ * «1000 PUT», «5 тыс GET», «5k PUT», or a single «10 000 запросов».
+ * Null when several different verb+count pairs appear.
+ */
+export function detectRequestCount(query: string | undefined): number | null {
+  if (!query) return null;
+  const verbHits: number[] = [];
+  const verbRe =
+    /(?<![а-яёa-z\d])(\d(?:[\d\s]*\d)?)(?:[.,](\d+))?\s*(тыс\.?|тысяч\w*|k)?\s*(put|get|post|patch|list|head|options)\b/gi;
+  let match: RegExpExecArray | null;
+  while ((match = verbRe.exec(query)) !== null) {
+    const count = parseScaledCount(match[1]!, match[2], match[3]);
+    if (count != null) verbHits.push(count);
+  }
+  if (verbHits.length === 1) return verbHits[0]!;
+  if (verbHits.length > 1) return null;
+
+  const genericRe =
+    /(?<![а-яёa-z\d])(\d(?:[\d\s]*\d)?)(?:[.,](\d+))?\s*(тыс\.?|тысяч\w*|k)?\s*(?:запрос\w*|операц\w*)/i;
+  const generic = genericRe.exec(query);
+  if (!generic) return null;
+  return parseScaledCount(generic[1]!, generic[2], generic[3]);
+}
+
 /** Cyrillic-safe “word” check (JS `\b` is ASCII-only). */
 function hasWord(q: string, stem: string): boolean {
   return new RegExp(`(?<![а-яёa-z])${stem}(?![а-яёa-z])`, 'u').test(q);
@@ -415,16 +505,13 @@ function detectMeterKind(
   if (explicit) return explicit;
   if (!query) return null;
   const q = normalize(query);
+  STORAGE_OP_VERB_RE.lastIndex = 0;
   if (
     hasWord(q, 'request') ||
     hasWord(q, 'requests') ||
     /(?<![а-яёa-z])операц\p{L}*/u.test(q) ||
     /(?<![а-яёa-z])запрос\p{L}*/u.test(q) ||
-    hasWord(q, 'put') ||
-    hasWord(q, 'get') ||
-    hasWord(q, 'list') ||
-    hasWord(q, 'head') ||
-    hasWord(q, 'post')
+    STORAGE_OP_VERB_RE.test(q)
   ) {
     return 'requests';
   }
@@ -841,6 +928,10 @@ function toRow(m: CatalogMeter): PriceRow {
     note: m.notes,
     meterKind: objectMeterKind(m),
     storageClass: extractStorageClass(m),
+    operation:
+      typeof m.dimensions.operation === 'string'
+        ? canonicalStorageOperation(m.dimensions.operation)
+        : null,
     k8sTier: m.categoryKey === 'kubernetes' ? m.comparableTier : null,
     k8sClass: m.categoryKey === 'kubernetes' ? k8sComparabilityClass(m) : null,
     synthetic: m.synthetic || undefined,
@@ -924,6 +1015,8 @@ type FilterContext = {
   searchTokens: string[];
   storageClass: string | null;
   meterKind: 'capacity' | 'requests' | null;
+  storageOperation: string | null;
+  requestCount: number | null;
   preferCapacity: boolean;
   k8sTier: 'basic' | 'ha' | null;
   /** SKU/platform compare: keep closest match per provider, not absolute cheapest. */
@@ -997,6 +1090,14 @@ function collectCandidates(params: SearchParams): FilterContext {
     storageClass = null;
   }
   let meterKind = detectMeterKind(effectiveQuery, params.meterKind);
+  const storageOperation =
+    canonicalStorageOperation(params.operation) || detectStorageOperation(effectiveQuery);
+  const requestCount =
+    typeof params.requestCount === 'number' &&
+    Number.isFinite(params.requestCount) &&
+    params.requestCount > 0
+      ? Math.round(params.requestCount)
+      : detectRequestCount(effectiveQuery);
   const looksLikeObject =
     !blockDiskAsk &&
     (category === 'storage' ||
@@ -1084,6 +1185,12 @@ function collectCandidates(params: SearchParams): FilterContext {
     }
     if (meterKind === 'capacity' && objectMeterKind(meter) === 'requests') continue;
     if (meterKind === 'requests' && objectMeterKind(meter) === 'capacity') continue;
+    if (storageOperation && objectMeterKind(meter) === 'requests') {
+      const op = canonicalStorageOperation(
+        typeof meter.dimensions.operation === 'string' ? meter.dimensions.operation : '',
+      );
+      if (op !== storageOperation) continue;
+    }
 
     // Default Managed Kubernetes compare: only zonal/HA master SKUs, not unit rates or 0₽ фикс.
     if (k8sComparableOnly && meter.categoryKey === 'kubernetes') {
@@ -1098,6 +1205,7 @@ function collectCandidates(params: SearchParams): FilterContext {
     // Synthetic GPU/other demotion; for k8s the 2/4 bundles ARE the comparable masters.
     if (meter.synthetic && !k8sContext) lexical -= 0.5;
     if (storageClass && hay.includes(storageClass)) lexical += 0.5;
+    if (storageOperation && hay.includes(storageOperation.toLowerCase())) lexical += 0.5;
     if (k8sTier && isK8sComparableMaster(meter, k8sTier)) lexical += 1.5;
     if (aiModel && aiModelMatchesNeedle(aiModel, meter, hay)) lexical += 1.5;
     if (vcpuUnitOnly) {
@@ -1152,6 +1260,8 @@ function collectCandidates(params: SearchParams): FilterContext {
     searchTokens,
     storageClass,
     meterKind,
+    storageOperation,
+    requestCount,
     preferCapacity,
     k8sTier,
     nearestMatchPerProvider: vcpuUnitOnly || gpuNearestPerProvider || vmFlavorAnalog,
@@ -1317,17 +1427,22 @@ function completeAiTokenPairs(selected: ScoredRow[], all: ScoredRow[]): ScoredRo
   return out;
 }
 
+function requestRatePer10k(row: PriceRow): number | null {
+  const rate = row.month ?? row.hour;
+  if (rate == null || !Number.isFinite(rate)) return null;
+  return rate;
+}
+
 function buildResult(
   scored: ScoredRow[],
-  storageClass: string | null,
-  meterKind: 'capacity' | 'requests' | null,
-  preferCapacity: boolean,
+  ctx: FilterContext,
   volumeGiB: number | null,
   limit: number,
   retrieval: 'lexical' | 'hybrid',
-  k8sTier: 'basic' | 'ha' | null = null,
-  nearestMatchPerProvider = false,
 ): PriceSearchResult {
+  const {storageClass, meterKind, preferCapacity, k8sTier, nearestMatchPerProvider} = ctx;
+  const storageOperation = ctx.storageOperation;
+  const requestCount = ctx.requestCount;
   const byProvider = new Map<string, ProviderSummary>();
   for (const {row} of scored) {
     const existing = byProvider.get(row.provider);
@@ -1400,15 +1515,50 @@ function buildResult(
       .sort((a, b) => a.totalMonth - b.totalMonth);
   }
 
+  let requestEstimates: RequestEstimate[] | undefined;
+  if (requestCount != null && requestCount > 0) {
+    const requestRowByProvider = new Map<string, PriceRow>();
+    for (const {row} of scored) {
+      if (row.meterKind !== 'requests') continue;
+      const rate = requestRatePer10k(row);
+      if (rate == null) continue;
+      const prev = requestRowByProvider.get(row.provider);
+      const prevRate = prev ? requestRatePer10k(prev) : null;
+      if (!prev || (prevRate != null && rate < prevRate)) {
+        requestRowByProvider.set(row.provider, row);
+      }
+    }
+    requestEstimates = [...requestRowByProvider.values()]
+      .map((row) => {
+        const rate = requestRatePer10k(row) as number;
+        return {
+          provider: row.provider,
+          providerName: row.providerName,
+          storageClass: row.storageClass ?? null,
+          operation: row.operation ?? storageOperation,
+          ratePer10k: Math.round(rate * 1e6) / 1e6,
+          requestCount,
+          total: Math.round(rate * (requestCount / REQUEST_PRICE_PACK) * 100) / 100,
+          sku: row.sku,
+          name: row.name,
+        };
+      })
+      .sort((a, b) => a.total - b.total);
+    if (!requestEstimates.length) requestEstimates = undefined;
+  }
+
   return {
     rows,
     providers,
     totalMatches: scored.length,
     ...(volumeEstimates ? {volumeEstimates} : {}),
+    ...(requestEstimates ? {requestEstimates} : {}),
     applied: {
       storageClass,
       meterKind,
       volumeGiB,
+      operation: storageOperation,
+      requestCount,
       retrieval,
       ...(k8sTier ? {k8sTier} : {}),
     },
@@ -1425,17 +1575,7 @@ export function searchPricesDetailed(params: SearchParams): PriceSearchResult {
     typeof params.volumeGiB === 'number' && Number.isFinite(params.volumeGiB) && params.volumeGiB > 0
       ? params.volumeGiB
       : null;
-  return buildResult(
-    rankLexical(ctx),
-    ctx.storageClass,
-    ctx.meterKind,
-    ctx.preferCapacity,
-    volumeGiB,
-    limit,
-    'lexical',
-    ctx.k8sTier,
-    ctx.nearestMatchPerProvider,
-  );
+  return buildResult(rankLexical(ctx), ctx, volumeGiB, limit, 'lexical');
 }
 
 /**
@@ -1444,6 +1584,8 @@ export function searchPricesDetailed(params: SearchParams): PriceSearchResult {
  */
 function skipHybridForHardFilters(params: SearchParams, ctx: FilterContext): boolean {
   if (ctx.storageClass) return true;
+  if (ctx.storageOperation) return true;
+  if (ctx.meterKind === 'requests') return true;
   if (typeof params.gpuModel === 'string' && params.gpuModel.trim()) return true;
   if (typeof params.aiModel === 'string' && params.aiModel.trim()) return true;
   // Platform/SKU vCPU compare: lexical boosts already encode Ice Lake / 100% / preemptible.
@@ -1474,30 +1616,10 @@ export async function searchPricesDetailedAsync(
       : null;
   const query = typeof params.query === 'string' ? params.query : '';
   if (skipHybridForHardFilters(params, ctx)) {
-    return buildResult(
-      rankLexical(ctx),
-      ctx.storageClass,
-      ctx.meterKind,
-      ctx.preferCapacity,
-      volumeGiB,
-      limit,
-      'lexical',
-      ctx.k8sTier,
-      ctx.nearestMatchPerProvider,
-    );
+    return buildResult(rankLexical(ctx), ctx, volumeGiB, limit, 'lexical');
   }
   const {scored, retrieval} = await rankHybrid(ctx, query);
-  return buildResult(
-    scored,
-    ctx.storageClass,
-    ctx.meterKind,
-    ctx.preferCapacity,
-    volumeGiB,
-    limit,
-    retrieval,
-    ctx.k8sTier,
-    ctx.nearestMatchPerProvider,
-  );
+  return buildResult(scored, ctx, volumeGiB, limit, retrieval);
 }
 
 /** Sync lexical rows (tests). */

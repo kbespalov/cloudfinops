@@ -11,6 +11,7 @@ import {
 } from '@/lib/calculator/self-host-links';
 import {cheapestInCatalogLine} from '@/lib/catalog/compare-disclaimer';
 import {chatCompletion, type ChatMessage} from './gigachat';
+import {detectStorageOperation} from './search';
 import {sanitizeUserFacingAnswer} from './tool-call-recovery';
 import {runTool} from './tools';
 
@@ -58,6 +59,7 @@ export const FAST_PATH_FINAL_SYSTEM = `Ты — AI-ассистент Cloud FinO
 - НДС включён, месяц = 720 ч, валюта ₽. Минимальную цену называй как «минимальная цена в каталоге Cloud FinOps на {catalogAsOf}» (поле catalogAsOf / asOf в tool result), среди публичных тарифов в выборке, без промо. Не утверждай абсолютное «самый дешёвый на рынке».
 - Если у победителя synthetic=true или derived — явно пометь «оценка Cloud FinOps, не строка прайса».
 - Для S3 volumeEstimates — итог за месяц; операции/egress не включай, если не просили.
+- Для S3 requestEstimates — итог за N запросов (ставка ₽/10 тыс. × N/10000). hour/month у request-строк = ₽/10 тыс. операций, НЕ ₽/мес. Не подменяй PUT на более дешёвый GET.
 - Для compare_unit_price(ssd) при запросе объёма умножь ₽/GiB·мес на объём (55 ТБ → 56320 GiB) и покажи итог. Учитывай diskMedia: NVMe ≠ SSD; в таблице указывай name/sku диска.
 - Для S3 volumeEstimates класс бери из applied.storageClass / volumeEstimates[].storageClass — не называй Ice «Standard».
 - Для AI — input и output рядом в одной строке модели (₽/1M); не сравнивай output с input через «к минимуму».
@@ -1009,6 +1011,27 @@ export function lastUserQuestion(messages: ChatMessage[]): string {
 
 function formatRub(n: number): string {
   return `${n.toLocaleString('ru-RU', {maximumFractionDigits: 2})} ₽`;
+}
+
+function storageClassTitle(cls: string | null | undefined): string {
+  const c = (cls || '').toLowerCase();
+  if (c === 'cold') return 'Cold';
+  if (c === 'ice') return 'Ice';
+  if (c === 'warm') return 'Warm';
+  if (c === 'standard') return 'Standard';
+  return '';
+}
+
+function looksLikeRequestPriceRow(m: {
+  meterKind?: string | null;
+  operation?: string | null;
+  name?: string;
+  config?: string;
+  unit?: string;
+}): boolean {
+  if (m.meterKind === 'requests') return true;
+  if (m.operation === 'PUT' || m.operation === 'GET') return true;
+  return /10\s*тыс\.?\s*запрос|₽\s*\/\s*10\s*тыс/i.test(`${m.unit ?? ''} ${m.config ?? ''}`);
 }
 
 /** Display names as returned by get_quote (`provider` field). */
@@ -2501,6 +2524,53 @@ export function formatFastPathAnswer(
   }
 
   if (primary.name === 'search_prices') {
+    type ReqEst = {
+      providerName: string;
+      total: number;
+      ratePer10k: number;
+      requestCount: number;
+      operation?: string | null;
+      storageClass?: string | null;
+      name?: string;
+    };
+    const requestEstimates = data.requestEstimates as ReqEst[] | undefined;
+    const volumesPreview = data.volumeEstimates as unknown[] | undefined;
+    const appliedMeter = (data.applied as {meterKind?: string} | undefined)?.meterKind;
+    const hasVolumes = Array.isArray(volumesPreview) && volumesPreview.length > 0;
+    // Payload-driven: any planId (including leftover cold-5tb) may carry requestEstimates.
+    // If the same payload also has capacity volumeEstimates, keep the capacity table.
+    if (Array.isArray(requestEstimates) && requestEstimates.length && (!hasVolumes || appliedMeter === 'requests')) {
+      const sorted = requestEstimates.slice().sort((a, b) => a.total - b.total);
+      const best = sorted[0]!;
+      const op = (best.operation ||
+        (data.applied as {operation?: string} | undefined)?.operation ||
+        'запросы'
+      ).toUpperCase();
+      const classLabel =
+        storageClassTitle(best.storageClass) ||
+        storageClassTitle((data.applied as {storageClass?: string} | undefined)?.storageClass) ||
+        '';
+      const count = best.requestCount;
+      const rows = sorted
+        .map(
+          (v) =>
+            `| ${v.providerName} | ${formatRub(v.ratePer10k)} | ${formatRub(v.total)} | ${pctVsBest(v.total, best.total)} |`,
+        )
+        .join('\n');
+      const title = [
+        'Объектное хранилище',
+        classLabel,
+        op,
+        count ? `${count.toLocaleString('ru-RU')} запросов` : null,
+      ]
+        .filter(Boolean)
+        .join(' · ');
+      return `**${title}** (НДС вкл.)\n\n| Провайдер | ₽ / 10 тыс. | Итого | к минимуму |\n|---|---:|---:|---|\n${rows}\n\n${cheapestInCatalogLine({
+        provider: best.providerName,
+        priceText: formatRub(best.total),
+      })} Ставка — за 10 тыс. операций, не за месяц.`;
+    }
+
     type Vol = {
       providerName: string;
       totalMonth: number;
@@ -2684,6 +2754,8 @@ export function formatFastPathAnswer(
         month: number | null;
         hour: number | null;
         unit?: string;
+        meterKind?: string | null;
+        operation?: string | null;
         synthetic?: boolean;
       };
     };
@@ -2704,6 +2776,8 @@ export function formatFastPathAnswer(
           month: m.cheapest?.month,
           hour: m.cheapest?.hour,
           unit: m.cheapest?.unit ?? '',
+          meterKind: m.cheapest?.meterKind ?? null,
+          operation: m.cheapest?.operation ?? null,
           synthetic: Boolean(m.cheapest?.synthetic),
         }))
         .filter((m) => typeof m.month === 'number' || typeof m.hour === 'number')
@@ -2754,6 +2828,35 @@ export function formatFastPathAnswer(
         ).filter((r) => r.month > 0);
         const aiMd = formatAiTokenPairAnswer(flat, planId);
         if (aiMd) return aiMd;
+      }
+
+      const requestTable =
+        planId === 's3-requests' ||
+        planId.startsWith('s3-req-') ||
+        appliedMeter === 'requests' ||
+        (withPrice.length > 0 && withPrice.every(looksLikeRequestPriceRow));
+      if (requestTable) {
+        const reqRows = withPrice
+          .map((m) => ({
+            provider: m.provider,
+            name: m.name,
+            config: m.config,
+            pack: typeof m.month === 'number' ? m.month : (m.hour as number),
+          }))
+          .filter((m) => typeof m.pack === 'number' && Number.isFinite(m.pack))
+          .sort((a, b) => a.pack - b.pack);
+        if (!reqRows.length) return null;
+        const bestPack = reqRows[0]!.pack;
+        const reqMd = reqRows
+          .map(
+            (r) =>
+              `| ${r.provider} | ${r.name} | ${r.config} | ${formatRub(r.pack)} | ${pctVsBest(r.pack, bestPack)} |`,
+          )
+          .join('\n');
+        return `**Сравнение цен запросов S3** (НДС вкл., ₽ / 10 тыс. операций)\n\n| Провайдер | Позиция | Конфигурация | ₽ / 10 тыс. | к минимуму |\n|---|---|---|---:|---|\n${reqMd}\n\n${cheapestInCatalogLine({
+          provider: reqRows[0]!.provider,
+          priceText: `${formatRub(bestPack)} / 10 тыс. запросов`,
+        })} Это не цена за месяц.`;
       }
 
       const rowsData = withPrice
@@ -3051,6 +3154,19 @@ function inferPlanIdFromAgentTool(
       return 'search-generic';
     }
     if (category === 'storage') {
+      const hasVolumeArg =
+        typeof args.volumeGiB === 'number' && Number.isFinite(args.volumeGiB) && args.volumeGiB > 0;
+      const hasVolumeText = /(\d+(?:[.,]\d+)?)\s*(?:тиб|тб|tib|tb)\b/i.test(`${query} ${userText}`);
+      const op =
+        (typeof args.operation === 'string' && args.operation.trim().toUpperCase()) ||
+        detectStorageOperation(userText) ||
+        detectStorageOperation(query);
+      // Only a dedicated request table when the tool call itself is ops, or the
+      // user named one verb and did not also ask for capacity. Do not encode
+      // class/verb/count into planId — formatter reads requestEstimates.
+      if (args.meterKind === 'requests' || (op && !hasVolumeArg && !hasVolumeText)) {
+        return 's3-requests';
+      }
       const volMatch = userText.match(/(\d+(?:[.,]\d+)?)\s*тб/i);
       const tb = volMatch ? Math.round(parseFloat(volMatch[1]!.replace(',', '.'))) : null;
       const cls =

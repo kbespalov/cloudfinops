@@ -10,6 +10,8 @@ import {
   detectTokenMixShares,
   resolveAiModelNeedle,
   detectStorageClass,
+  detectStorageOperation,
+  detectRequestCount,
   looksLikeBlockDiskQuery,
   searchPricesDetailed,
 } from './search';
@@ -49,6 +51,25 @@ describe('detectStorageClass', () => {
     assert.equal(detectStorageClass('yc.compute.ice-lake-100.preemptible-vcpu'), null);
     // Real S3 Ice still detected.
     assert.equal(detectStorageClass('объектное хранилище класс Ice'), 'ice');
+  });
+});
+
+describe('detectStorageOperation / detectRequestCount', () => {
+  it('detects a single verb and count', () => {
+    assert.equal(detectStorageOperation('1000 PUT в Cold MWS'), 'PUT');
+    assert.equal(detectRequestCount('1000 PUT в Cold MWS'), 1000);
+    assert.equal(detectStorageOperation('5 тыс GET'), 'GET');
+    assert.equal(detectRequestCount('5 тыс GET'), 5000);
+    assert.equal(detectStorageOperation('5k PUT'), 'PUT');
+    assert.equal(detectRequestCount('5k PUT'), 5000);
+    assert.equal(detectStorageOperation('POST в Cold'), 'PUT');
+  });
+
+  it('does not collapse PUT+GET to one verb', () => {
+    assert.equal(detectStorageOperation('5000 PUT и 5000 GET Cold'), null);
+    assert.equal(detectRequestCount('5000 PUT и 5000 GET Cold'), null);
+    assert.equal(detectStorageOperation('объектное хранилище'), null);
+    assert.equal(detectStorageOperation('Intel Ice Lake'), null);
   });
 });
 
@@ -188,6 +209,64 @@ describe('searchPricesDetailed object storage', () => {
     assert.equal(r.applied?.meterKind, 'requests');
     assert.ok(r.rows.length > 0);
     assert.ok(r.rows.every((row) => row.meterKind === 'requests'));
+  });
+
+  it('1000 PUT Cold MWS is PUT not cheaper GET, estimate ≈ 1.06 ₽', () => {
+    const r = searchPricesDetailed({
+      query: '1000 PUT в Cold MWS',
+      category: 'storage',
+      limit: 12,
+    });
+    assert.equal(r.applied?.meterKind, 'requests');
+    assert.equal(r.applied?.operation, 'PUT');
+    assert.equal(r.applied?.requestCount, 1000);
+    assert.equal(r.applied?.storageClass, 'cold');
+    const mws = r.providers.find((p) => p.provider === 'mws-cloud');
+    assert.ok(mws, 'expected MWS Cold PUT');
+    assert.equal(mws!.cheapest.sku, 'mws.object-storage.cold.requests.put');
+    assert.equal(mws!.cheapest.operation, 'PUT');
+    assert.doesNotMatch(mws!.cheapest.name, /GET/);
+    const est = r.requestEstimates?.find((e) => e.provider === 'mws-cloud');
+    assert.ok(est);
+    assert.equal(est!.operation, 'PUT');
+    assert.equal(est!.requestCount, 1000);
+    assert.ok(Math.abs(est!.total - 1.06) < 0.02, `expected ~1.06, got ${est!.total}`);
+    assert.ok(Math.abs(est!.ratePer10k - 10.6) < 0.05, `expected ~10.6 / 10k, got ${est!.ratePer10k}`);
+  });
+
+  it('infers verb and count from other phrasings, not only the MWS chip', () => {
+    const getIce = searchPricesDetailed({
+      query: 'Сколько стоят 5 тыс GET в Ice у Yandex?',
+      category: 'storage',
+      limit: 12,
+    });
+    assert.equal(getIce.applied?.operation, 'GET');
+    assert.equal(getIce.applied?.requestCount, 5000);
+    assert.equal(getIce.applied?.storageClass, 'ice');
+    assert.ok(getIce.providers.every((p) => p.cheapest.operation === 'GET'));
+    assert.ok((getIce.requestEstimates?.length ?? 0) >= 1);
+
+    const putStd = searchPricesDetailed({
+      query: '10 тысяч PUT Standard object storage',
+      category: 'storage',
+      limit: 12,
+    });
+    assert.equal(putStd.applied?.operation, 'PUT');
+    assert.equal(putStd.applied?.requestCount, 10000);
+    assert.ok(putStd.providers.every((p) => p.cheapest.operation === 'PUT'));
+  });
+
+  it('does not filter when both PUT and GET are named', () => {
+    const r = searchPricesDetailed({
+      query: '5000 PUT и 5000 GET Cold',
+      category: 'storage',
+      storageClass: 'cold',
+      meterKind: 'requests',
+      limit: 20,
+    });
+    assert.equal(r.applied?.operation, null);
+    assert.ok(r.rows.some((row) => row.operation === 'PUT'));
+    assert.ok(r.rows.some((row) => row.operation === 'GET'));
   });
 
   it('returns volumeEstimates for DWH-sized capacity', () => {

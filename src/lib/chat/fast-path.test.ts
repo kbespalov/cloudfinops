@@ -1317,6 +1317,89 @@ describe('fast-path parameter fidelity', () => {
     assert.equal(cdn.tools[0]?.args.volumeGiB, Math.round(0.5 * 1024));
   });
 
+  it('does not steal PUT/GET or TCO asks into a hardcoded S3 request chip', () => {
+    assert.equal(matchFastPath('1000 PUT в Cold MWS'), null);
+    assert.equal(matchFastPath('Сколько стоят GET в Ice у Yandex?'), null);
+    assert.equal(matchFastPath('1 ТиБ Cold + 5000 PUT + 5000 GET'), null);
+    const volume = matchFastPath('Сколько стоит 5 ТБ cold object storage?');
+    assert.ok(volume);
+    assert.equal(volume.tools[0]?.args.meterKind, 'capacity');
+    assert.equal(volume.tools[0]?.args.storageClass, 'cold');
+  });
+
+  it('formats requestEstimates from payload even if planId is leftover cold-5tb', () => {
+    const md = formatFastPathAnswer('cold-5tb', [
+      {
+        name: 'search_prices',
+        content: JSON.stringify({
+          applied: {
+            storageClass: 'cold',
+            meterKind: 'requests',
+            operation: 'PUT',
+            requestCount: 1000,
+          },
+          requestEstimates: [
+            {
+              providerName: 'MWS Cloud',
+              ratePer10k: 10.6,
+              total: 1.06,
+              requestCount: 1000,
+              operation: 'PUT',
+              storageClass: 'cold',
+              name: 'Объектное хранилище · Cold · PUT',
+            },
+          ],
+        }),
+      },
+    ]);
+    assert.ok(md);
+    assert.match(md, /PUT/);
+    assert.match(md, /1[,.]06/);
+    assert.doesNotMatch(md, /GET/);
+    assert.doesNotMatch(md, /₽\/мес/);
+  });
+
+  it('agent storage+PUT tool result does not fall through to cold-5tb ₽/мес', () => {
+    const md = tryFormatAgentToolAnswer({
+      userText: '1000 PUT в Cold MWS',
+      toolPayloads: [
+        {
+          name: 'search_prices',
+          // Typical agent call: category + class only. Verb/count come from the query.
+          arguments: JSON.stringify({
+            query: '1000 PUT в Cold MWS',
+            category: 'storage',
+            storageClass: 'cold',
+          }),
+          content: JSON.stringify({
+            applied: {
+              storageClass: 'cold',
+              meterKind: 'requests',
+              operation: 'PUT',
+              requestCount: 1000,
+            },
+            requestEstimates: [
+              {
+                providerName: 'MWS Cloud',
+                ratePer10k: 10.6,
+                total: 1.06,
+                requestCount: 1000,
+                operation: 'PUT',
+                storageClass: 'cold',
+                name: 'Объектное хранилище · Cold · PUT',
+              },
+            ],
+          }),
+        },
+      ],
+    });
+    assert.ok(md);
+    assert.match(md!, /PUT/);
+    assert.match(md!, /1[,.]06/);
+    assert.doesNotMatch(md!, /GET/);
+    assert.doesNotMatch(md!, /₽\/мес/);
+  });
+
   it('defaults VM disk to 100 GiB only when disk is omitted', () => {
     const noDisk = matchFastPath('Сравни ВМ 4 vCPU / 16 GiB на месяц по провайдерам');
     assert.ok(noDisk);

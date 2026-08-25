@@ -367,6 +367,17 @@ export const CHAT_TOOLS = [
             description:
               'S3: capacity=хранение, requests=PUT/GET. Для блочного диска с объёмом — capacity (storage.block.capacity). Не путай блок и S3.',
           },
+          operation: {
+            type: 'string',
+            enum: ['PUT', 'GET', 'POST', 'PATCH', 'LIST', 'HEAD', 'OPTIONS'],
+            description:
+              'S3 API-глагол из запроса. Один глагол: PUT/POST/PATCH/LIST → PUT; GET/HEAD/OPTIONS → GET. Не передавай, если в запросе и PUT, и GET — иначе cheapest станет дешёвым GET.',
+          },
+          requestCount: {
+            type: 'number',
+            description:
+              'Число операций («1000 PUT» → 1000, «5 тыс GET» → 5000). Даёт requestEstimates = ₽/10 тыс. × count/10000. hour/month у request-строк — это ₽/10 тыс., не ₽/мес.',
+          },
           volumeGiB: {
             type: 'number',
             description:
@@ -820,6 +831,7 @@ function priceKind(r: PriceRow): string {
 function serializeRow(r: PriceRow) {
   // Keep chat tool payloads compact — large JSON after 3–4 tools often yields empty finals.
   return {
+    sku: r.sku,
     provider: r.providerName,
     category: r.categoryTitle,
     name: r.name,
@@ -828,6 +840,7 @@ function serializeRow(r: PriceRow) {
     priceKind: priceKind(r),
     meterKind: r.meterKind ?? null,
     storageClass: r.storageClass ?? null,
+    operation: r.operation ?? null,
     k8sTier: r.k8sTier ?? null,
     k8sClass: r.k8sClass ?? null,
     synthetic: r.synthetic ?? false,
@@ -836,18 +849,34 @@ function serializeRow(r: PriceRow) {
   };
 }
 
-const STORAGE_CLASSES = ['standard', 'warm', 'cold', 'ice'] as const;
+const STORAGE_OPERATIONS = [
+  'PUT',
+  'GET',
+  'POST',
+  'PATCH',
+  'LIST',
+  'HEAD',
+  'OPTIONS',
+] as const;
 
-async function runSearch(args: Record<string, unknown>): Promise<unknown> {
+function searchParamsFromToolArgs(args: Record<string, unknown>): SearchParams {
   const storageClassRaw =
     typeof args.storageClass === 'string' ? args.storageClass.trim().toLowerCase() : '';
   const meterKindRaw =
     typeof args.meterKind === 'string' ? args.meterKind.trim().toLowerCase() : '';
+  const operationRaw =
+    typeof args.operation === 'string' ? args.operation.trim().toUpperCase() : '';
   const volumeGiB =
     typeof args.volumeGiB === 'number' && Number.isFinite(args.volumeGiB) && args.volumeGiB > 0
       ? args.volumeGiB
       : undefined;
-  const params: SearchParams = {
+  const requestCount =
+    typeof args.requestCount === 'number' &&
+    Number.isFinite(args.requestCount) &&
+    args.requestCount > 0
+      ? Math.round(args.requestCount)
+      : undefined;
+  return {
     query: typeof args.query === 'string' ? args.query : undefined,
     category: CATEGORIES.includes(args.category as CategoryKey)
       ? (args.category as CategoryKey)
@@ -861,10 +890,20 @@ async function runSearch(args: Record<string, unknown>): Promise<unknown> {
       : undefined,
     meterKind:
       meterKindRaw === 'capacity' || meterKindRaw === 'requests' ? meterKindRaw : undefined,
+    operation: STORAGE_OPERATIONS.includes(operationRaw as (typeof STORAGE_OPERATIONS)[number])
+      ? operationRaw
+      : undefined,
     volumeGiB,
+    requestCount,
     limit: typeof args.limit === 'number' ? args.limit : undefined,
   };
-  const {rows, providers, totalMatches, volumeEstimates, applied} =
+}
+
+const STORAGE_CLASSES = ['standard', 'warm', 'cold', 'ice'] as const;
+
+async function runSearch(args: Record<string, unknown>): Promise<unknown> {
+  const params = searchParamsFromToolArgs(args);
+  const {rows, providers, totalMatches, volumeEstimates, requestEstimates, applied} =
     await searchPricesDetailedAsync(params);
   // Cap for the model, but keep AI input/output mates (gemma output must not become «—»).
   const toolRows = capPriceRowsKeepingAiPairs(rows, 10);
@@ -876,7 +915,7 @@ async function runSearch(args: Record<string, unknown>): Promise<unknown> {
     catalogAsOf: catalogAsOfIso(),
     applied,
     note:
-      'НДС вкл., месяц=720ч. Цены только из providersMatched. Минимум формулируй как «в каталоге Cloud FinOps на catalogAsOf» среди публичных тарифов в выборке. S3: capacity одного storageClass. K8s master: basic/HA; synthetic=true → оценка Cloud FinOps, не строка прайса.',
+      'НДС вкл., месяц=720ч. Цены только из providersMatched. Минимум формулируй как «в каталоге Cloud FinOps на catalogAsOf» среди публичных тарифов в выборке. S3: capacity одного storageClass. Request-строки: hour/month = ₽/10 тыс. операций, не ₽/мес; итог N запросов — из requestEstimates. K8s master: basic/HA; synthetic=true → оценка Cloud FinOps, не строка прайса.',
     // Точный список провайдеров, у которых реально есть совпадение, с их СОБСТВЕННОЙ минимальной ценой.
     providersMatched: providers.map((p) => ({
       provider: p.providerName,
@@ -889,6 +928,13 @@ async function runSearch(args: Record<string, unknown>): Promise<unknown> {
           volumeEstimates,
           volumeNote:
             'Итог за месяц = ставка ₽/GiB·мес × volumeGiB (двоичные GiB). Сортировка по возрастанию totalMonth. Операции и egress сюда не входят.',
+        }
+      : {}),
+    ...(requestEstimates && requestEstimates.length
+      ? {
+          requestEstimates,
+          requestNote:
+            'Итог = ставка ₽/10 тыс. запросов × requestCount/10000. Не путай с ₽/мес. Глагол — applied.operation / requestEstimates[].operation; не подменяй PUT на более дешёвый GET.',
         }
       : {}),
   };
@@ -1380,31 +1426,9 @@ export function runToolSync(name: string, rawArgs: string): string {
     if (name === 'price_solution') return JSON.stringify(runPriceSolution(args));
     if (name === 'compare_solutions') return JSON.stringify(runCompareSolutions(args));
     if (name === 'search_prices') {
-      const storageClassRaw =
-        typeof args.storageClass === 'string' ? args.storageClass.trim().toLowerCase() : '';
-      const params: SearchParams = {
-        query: typeof args.query === 'string' ? args.query : undefined,
-        category: CATEGORIES.includes(args.category as CategoryKey)
-          ? (args.category as CategoryKey)
-          : undefined,
-        provider: typeof args.provider === 'string' ? args.provider : undefined,
-        gpuModel: typeof args.gpuModel === 'string' ? args.gpuModel : undefined,
-        nearestAnalog: args.nearestAnalog === true,
-        aiModel: typeof args.aiModel === 'string' ? args.aiModel : undefined,
-        storageClass: STORAGE_CLASSES.includes(storageClassRaw as (typeof STORAGE_CLASSES)[number])
-          ? storageClassRaw
-          : undefined,
-        meterKind:
-          args.meterKind === 'capacity' || args.meterKind === 'requests'
-            ? args.meterKind
-            : undefined,
-        volumeGiB:
-          typeof args.volumeGiB === 'number' && Number.isFinite(args.volumeGiB) && args.volumeGiB > 0
-            ? args.volumeGiB
-            : undefined,
-        limit: typeof args.limit === 'number' ? args.limit : undefined,
-      };
-      const {rows, providers, totalMatches, volumeEstimates, applied} = searchPricesDetailed(params);
+      const params = searchParamsFromToolArgs(args);
+      const {rows, providers, totalMatches, volumeEstimates, requestEstimates, applied} =
+        searchPricesDetailed(params);
       const toolRows = capPriceRowsKeepingAiPairs(rows, 10);
       return JSON.stringify({
         count: toolRows.length,
@@ -1413,7 +1437,7 @@ export function runToolSync(name: string, rawArgs: string): string {
         vatIncluded: true,
         applied,
         note:
-          'НДС вкл., месяц=720ч. Цены только из providersMatched. S3: capacity одного storageClass. K8s master: basic/HA; synthetic VK/Yandex=2vCPU/4GiB.',
+          'НДС вкл., месяц=720ч. Цены только из providersMatched. S3: capacity одного storageClass. Request-строки: hour/month = ₽/10 тыс., не ₽/мес. K8s master: basic/HA; synthetic VK/Yandex=2vCPU/4GiB.',
         providersMatched: providers.map((p) => ({
           provider: p.providerName,
           offerings: p.count,
@@ -1421,6 +1445,7 @@ export function runToolSync(name: string, rawArgs: string): string {
         })),
         rows: toolRows.map(serializeRow),
         ...(volumeEstimates && volumeEstimates.length ? {volumeEstimates} : {}),
+        ...(requestEstimates && requestEstimates.length ? {requestEstimates} : {}),
       });
     }
     if (name === 'get_quote') return JSON.stringify(runQuote(args));

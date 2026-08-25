@@ -141,6 +141,7 @@ export const DOMAIN_CARD_S3 = `## Object Storage / S3
 - Standard / Warm / Cold / Ice — разные продукты. Не ставь в одну таблицу как равнозначные; не объявляй Ice/Cold «самым дешёвым Standard».
 - Standard/Hotbox → search_prices category=storage, storageClass=standard, meterKind=capacity. Cold/Ice/Warm — свой storageClass. Объём без класса → standard, НЕ самый дешёвый Ice. Заголовок = applied.storageClass / volumeEstimates[].storageClass.
 - requests (PUT/GET) ≠ хранение; 0 ₽ за запрос ≠ нет тарифа capacity. Для хранения бери capacity.
+- Если назван один глагол PUT/GET (или POST/LIST/HEAD…) — передай operation и requestCount. providersMatched.cheapest без фильтра почти всегда GET. Итог N запросов — из requestEstimates, не hour/month как ₽/мес.
 - Объём: volumeGiB (1 ТиБ/ТБ → ×1024; «50 ТБ» → 51200; «100 ТБ» → 102400); итог из volumeEstimates. Операции/egress — если просили явно ИЛИ сравнивают TCO / «съедят ли запросы выгоду» / hot workload / полное скачивание.
 - Нет capacity у провайдера для класса — скажи честно; не подставляй Ice/Cold и не «—». Single-zone/multi-zone внутри Standard сравнимы с пометкой; не с Cold/Ice.
 - Если в истории только что считали S3, а follow-up про «блочный SSD / диск ВМ» — новый search_prices по блоку, не переиспользуй S3 volumeEstimates.
