@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-08-25
+
+### Каталог / MWS: холодный класс Object Storage (COLD)
+
+В публичном прайсе MWS появился третий класс S3 — **Cold** (`COLD`): хранение **1,26 ₽/ГиБ·мес**, запросы дороже Standard/Warm (PUT/POST/PATCH/LIST **0,0106 ₽ / 10**, GET/HEAD/OPTIONS **0,01 ₽ / 100**). Источники: [тарификация Object Storage](https://mws.ru/docs/cloud-platform/storage/general/pricing.html) и [all-prices](https://mws.ru/docs/cloud-platform/about/general/mws-cloud-platform-pricing.html). Egress тот же, **1,3212 ₽/ГиБ**.
+
 ## 2026-08-01
 
 ### Каталог / MWS: тарифы с 1 августа 2026

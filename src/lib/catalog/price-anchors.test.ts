@@ -42,6 +42,18 @@ describe('price anchors — live-verified 2026-08-01', () => {
     assert.equal(meter('mws.compute.vcpu').dimensions?.futureRateFrom, undefined);
   });
 
+  it('MWS Object Storage Cold (docs/storage + all-prices, 2026-08-25)', () => {
+    const cap = meter('mws.object-storage.cold');
+    nearly(amountNumber(cap, 'month')!, 1.26);
+    assert.equal(cap.dimensions?.storageClass, 'cold');
+    const put = meter('mws.object-storage.cold.requests.put');
+    const get = meter('mws.object-storage.cold.requests.get');
+    assert.equal(put.nativeAmount, '0.00106');
+    assert.equal(get.nativeAmount, '0.0001');
+    nearly(amountNumber(put, 'unit')!, 10.6); // ₽ / 10k requests
+    nearly(amountNumber(get, 'unit')!, 1);
+  });
+
   it('MWS AI Model Hub list rates (effectiveFrom 2026-08-01)', () => {
     nearly(hour('mws.ai.gpt-oss-120b.input'), 13.42);
     nearly(hour('mws.ai.gpt-oss-120b.output'), 54.9);

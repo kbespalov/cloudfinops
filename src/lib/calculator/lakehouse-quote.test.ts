@@ -25,6 +25,11 @@ describe('lakehouse object storage pick', () => {
     assert.ok(vkCold);
     assert.equal(vkHot.dimensions.storageClass, 'standard');
     assert.equal(vkCold.dimensions.storageClass, 'cold');
+
+    const mwsCold = pickObjectStorageCapacity('mws-cloud', 'cold');
+    assert.ok(mwsCold);
+    assert.equal(mwsCold.sku, 'mws.object-storage.cold');
+    assert.equal(amountNumber(mwsCold, 'month'), 1.26);
   });
 
   it('Cloud.ru standard is cheaper than Yandex/Selectel/VK', () => {

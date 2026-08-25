@@ -259,6 +259,18 @@ export const newsItems: NewsItem[] = [
 
   // ——— MWS ———
   {
+    id: 'mws-2026-08-s3-cold',
+    date: '2026-08-25',
+    provider: 'mws-cloud',
+    providerName: 'MWS Cloud',
+    title: 'Холодный класс S3 в Object Storage',
+    summary:
+      'У Object Storage появился класс COLD: 1,26 ₽/ГиБ·мес с НДС — дешевле Standard (2,44), но запросы примерно вдвое дороже. Для архивов и редко читаемых данных это закрывает пробел между тёплым NVMe-классом и обычным хранением; исходящий трафик тот же, 1,3212 ₽/ГиБ.',
+    tags: ['storage', 'finops'],
+    sourceUrl: 'https://mws.ru/docs/cloud-platform/storage/general/pricing.html',
+    sourceLabel: 'Документация MWS · Object Storage',
+  },
+  {
     id: 'mws-2026-06-local-nvme',
     date: '2026-06-20',
     provider: 'mws-cloud',

@@ -148,6 +148,20 @@ describe('searchPricesDetailed object storage', () => {
     assert.equal(r.providers[0]?.provider, 'cloud-ru');
   });
 
+  it('includes MWS Cold in cold-class capacity compare', () => {
+    const r = searchPricesDetailed({
+      query: 'объектное хранилище cold',
+      category: 'storage',
+      storageClass: 'cold',
+      meterKind: 'capacity',
+      limit: 20,
+    });
+    const mws = r.providers.find((p) => p.provider === 'mws-cloud');
+    assert.ok(mws);
+    assert.equal(mws!.cheapest.sku, 'mws.object-storage.cold');
+    assert.equal(mws!.cheapest.month, 1.26);
+  });
+
   it('hard-filters Ice so T1/MWS Standard do not appear', () => {
     const r = searchPricesDetailed({
       query: 'объектное хранилище ice',
