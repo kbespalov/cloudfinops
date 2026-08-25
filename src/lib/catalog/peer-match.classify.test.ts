@@ -238,6 +238,19 @@ describe('peer-match.classify / object-storage', () => {
     });
   });
 
+  it('object-cold-put-exact-across-providers', () => {
+    const {classification: c} = classifyPair(
+      'yc.object-storage.cold.requests.put',
+      'mws.object-storage.cold.requests.put',
+    );
+    assertMode('object-cold-put-exact-across-providers', c, 'exact', true);
+    const {classification: cap} = classifyPair(
+      'selectel.object-storage.cold',
+      'mws.object-storage.cold',
+    );
+    assertMode('object-cold-capacity-exact-across-providers', cap, 'exact', true);
+  });
+
   it('object-put-vs-get-functional', () => {
     const {classification: c} = classifyPair(
       'cloudru.object-storage.standard.requests.put',

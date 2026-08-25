@@ -92,14 +92,8 @@ spec:
     - mws.object-storage
     dimensions:
       storageClass: cold
-      storageClassNative: COLD
       redundancy: regional
       datacenterCount: 2
-      verificationStatus: verified
-      verificationMethod: official-pricing-page
-      verifiedAt: '2026-08-25'
-      vatRatePercent: 22
-      nativeBillingPeriod: month
     pricing:
       rate:
         amount: '1.26'
@@ -117,9 +111,7 @@ spec:
           period: month
         formula: native monthly rate
         vat: included
-    notes: >
-      Холодный класс (COLD) — архивные данные с низкой частотой обращения.
-      Хранение дешевле Standard, запросы дороже.
+    notes: Тариф хранения не включает операции и исходящий трафик.
   - sku: mws.object-storage.standard.requests.put
     name: Запросы PUT — стандартный класс
     meter: storage.object.requests
@@ -428,8 +420,11 @@ spec:
         vat: included
         byteBasis: not-applicable
     notes: В прайсе 0,0045 ₽ за 100 операций; в каталоге — за 1 операцию (та же ставка).
+  # Cold ops — same taxonomy as Yandex / Cloud.ru / Selectel / VK: PUT + GET
+  # stand in for the write/read families (MWS price list also quotes POST/PATCH/LIST
+  # and HEAD/OPTIONS at those family rates).
   - sku: mws.object-storage.cold.requests.put
-    name: Запросы PUT — холодный класс
+    name: Объектное хранилище · Cold · PUT
     meter: storage.object.requests
     status: available
     pricingMode: unit
@@ -449,75 +444,9 @@ spec:
         unit: {quantity: request, period: usage}
         vat: included
         byteBasis: not-applicable
-    notes: В прайсе 0,0106 ₽ за 10 операций; в каталоге — за 1 операцию (та же ставка).
-  - sku: mws.object-storage.cold.requests.post
-    name: Запросы POST — холодный класс
-    meter: storage.object.requests
-    status: available
-    pricingMode: unit
-    region: Россия
-    effectiveFrom: '2026-08-01'
-    checkedAt: '2026-08-25'
-    sourceRefs: [mws.all-prices, mws.object-storage]
-    dimensions:
-      storageClass: cold
-      operation: POST
-      nativeBillingStepRequests: 10
-      nativeAmountPerStep: '0.0106'
-    pricing:
-      rate:
-        amount: '0.00106'
-        currency: RUB
-        unit: {quantity: request, period: usage}
-        vat: included
-        byteBasis: not-applicable
-    notes: В прайсе 0,0106 ₽ за 10 операций; в каталоге — за 1 операцию (та же ставка).
-  - sku: mws.object-storage.cold.requests.patch
-    name: Запросы PATCH — холодный класс
-    meter: storage.object.requests
-    status: available
-    pricingMode: unit
-    region: Россия
-    effectiveFrom: '2026-08-01'
-    checkedAt: '2026-08-25'
-    sourceRefs: [mws.all-prices, mws.object-storage]
-    dimensions:
-      storageClass: cold
-      operation: PATCH
-      nativeBillingStepRequests: 10
-      nativeAmountPerStep: '0.0106'
-    pricing:
-      rate:
-        amount: '0.00106'
-        currency: RUB
-        unit: {quantity: request, period: usage}
-        vat: included
-        byteBasis: not-applicable
-    notes: В прайсе 0,0106 ₽ за 10 операций; в каталоге — за 1 операцию (та же ставка).
-  - sku: mws.object-storage.cold.requests.list
-    name: Запросы LIST — холодный класс
-    meter: storage.object.requests
-    status: available
-    pricingMode: unit
-    region: Россия
-    effectiveFrom: '2026-08-01'
-    checkedAt: '2026-08-25'
-    sourceRefs: [mws.all-prices, mws.object-storage]
-    dimensions:
-      storageClass: cold
-      operation: LIST
-      nativeBillingStepRequests: 10
-      nativeAmountPerStep: '0.0106'
-    pricing:
-      rate:
-        amount: '0.00106'
-        currency: RUB
-        unit: {quantity: request, period: usage}
-        vat: included
-        byteBasis: not-applicable
-    notes: В прайсе 0,0106 ₽ за 10 операций; в каталоге — за 1 операцию (та же ставка).
+    notes: Официально 0,0106 ₽ за 10 операций PUT/POST/PATCH/LIST; в каталоге — за 1 операцию.
   - sku: mws.object-storage.cold.requests.get
-    name: Запросы GET — холодный класс
+    name: Объектное хранилище · Cold · GET
     meter: storage.object.requests
     status: available
     pricingMode: unit
@@ -537,48 +466,4 @@ spec:
         unit: {quantity: request, period: usage}
         vat: included
         byteBasis: not-applicable
-    notes: В прайсе 0,01 ₽ за 100 операций; в каталоге — за 1 операцию (та же ставка).
-  - sku: mws.object-storage.cold.requests.head
-    name: Запросы HEAD — холодный класс
-    meter: storage.object.requests
-    status: available
-    pricingMode: unit
-    region: Россия
-    effectiveFrom: '2026-08-01'
-    checkedAt: '2026-08-25'
-    sourceRefs: [mws.all-prices, mws.object-storage]
-    dimensions:
-      storageClass: cold
-      operation: HEAD
-      nativeBillingStepRequests: 100
-      nativeAmountPerStep: '0.01'
-    pricing:
-      rate:
-        amount: '0.0001'
-        currency: RUB
-        unit: {quantity: request, period: usage}
-        vat: included
-        byteBasis: not-applicable
-    notes: В прайсе 0,01 ₽ за 100 операций; в каталоге — за 1 операцию (та же ставка).
-  - sku: mws.object-storage.cold.requests.options
-    name: Запросы OPTIONS — холодный класс
-    meter: storage.object.requests
-    status: available
-    pricingMode: unit
-    region: Россия
-    effectiveFrom: '2026-08-01'
-    checkedAt: '2026-08-25'
-    sourceRefs: [mws.all-prices, mws.object-storage]
-    dimensions:
-      storageClass: cold
-      operation: OPTIONS
-      nativeBillingStepRequests: 100
-      nativeAmountPerStep: '0.01'
-    pricing:
-      rate:
-        amount: '0.0001'
-        currency: RUB
-        unit: {quantity: request, period: usage}
-        vat: included
-        byteBasis: not-applicable
-    notes: В прайсе 0,01 ₽ за 100 операций; в каталоге — за 1 операцию (та же ставка).
+    notes: Официально 0,01 ₽ за 100 операций GET/HEAD/OPTIONS; в каталоге — за 1 операцию.
