@@ -19,6 +19,7 @@ import {
 } from '@/lib/calculator/vcpu-share';
 import {
   explainShapeMiss,
+  meterAllowsShape,
   shapeAllowedForProvider,
 } from '@/lib/calculator/compute-shapes';
 import {
@@ -363,6 +364,7 @@ function pickUnitComputeCombo(
   preset: ComputePreset,
   period: PeriodMode,
   lowCost: boolean,
+  opts?: {forGpuHost?: boolean},
 ): UnitComputeCombo | null {
   const preference = purchaseModelOf(preset);
   const share = vcpuShareOf(preset);
@@ -388,7 +390,12 @@ function pickUnitComputeCombo(
     provider,
     'compute.vcpu',
     period,
-    (m) => notSynthetic(m) && vcpuPred(m),
+    (m) =>
+      notSynthetic(m) &&
+      vcpuPred(m) &&
+      meterAllowsShape(m, preset.vcpu, preset.ramGiB, {
+        ignoreEnvelope: opts?.forGpuHost,
+      }),
   );
   // GPU-platform host SKUs must not win ordinary VM quotes (cheaper AMD EPYC, etc.).
   if (wantGpuPlatform) {
@@ -408,7 +415,12 @@ function pickUnitComputeCombo(
     provider,
     'compute.ram',
     period,
-    (m) => notSynthetic(m) && ramPred(m),
+    (m) =>
+      notSynthetic(m) &&
+      ramPred(m) &&
+      meterAllowsShape(m, preset.vcpu, preset.ramGiB, {
+        ignoreEnvelope: opts?.forGpuHost,
+      }),
   );
   if (wantGpuPlatform) {
     const matched = rams.filter((x) => meterGpuPlatformId(x.m) === wantGpuPlatform);
@@ -505,7 +517,7 @@ function pickComputeCombo(
   ) {
     return null;
   }
-  const unit = pickUnitComputeCombo(provider, preset, period, lowCost);
+  const unit = pickUnitComputeCombo(provider, preset, period, lowCost, opts);
   const flavor = pickFlavorComputeCombo(provider, preset, period, lowCost);
   if (unit && flavor) return flavor.total < unit.total ? flavor : unit;
   return unit ?? flavor;

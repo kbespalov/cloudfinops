@@ -512,6 +512,30 @@ describe('calculator quote arbitration', () => {
     assert.match(miss.reason, /vmType/i);
   });
 
+  it('MWS overlapping shapes quote cheaper base Ice Lake; gen-only stays Sapphire', () => {
+    const shared = COMPUTE_PRESETS.find((p) => p.id === 'gen-4-16');
+    assert.ok(shared);
+    const sharedQuote = quotePreset(shared, 'hour').quotes.find((q) => q.provider === 'mws-cloud');
+    assert.ok(sharedQuote);
+    assert.equal(sharedQuote.meters[0]!.sku, 'mws.compute.base.vcpu');
+    assert.equal(sharedQuote.meters[1]!.sku, 'mws.compute.base.ram');
+
+    const genOnly: ComputePreset = {
+      id: 'gen-48-192',
+      kind: 'compute',
+      family: 'general',
+      title: '48 / 192',
+      subtitle: '',
+      vcpu: 48,
+      ramGiB: 192,
+      diskGiB: 10,
+    };
+    const large = quotePreset(genOnly, 'hour').quotes.find((q) => q.provider === 'mws-cloud');
+    assert.ok(large, 'gen-48-192 must stay orderable on general');
+    assert.equal(large.meters[0]!.sku, 'mws.compute.vcpu');
+    assert.equal(large.meters[1]!.sku, 'mws.compute.ram');
+  });
+
   it('larger compute presets cost at least as much as smaller ones per provider', () => {
     for (const family of ['general', 'high-cpu', 'high-memory', 'low-cost'] as const) {
       const presets = computePresetsByFamily(family);

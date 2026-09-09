@@ -1,6 +1,6 @@
 /**
  * Golden spot-check: critical public anchors verified against vendor pages
- * on 2026-08-01. Failures mean catalog drift or a bad edit — re-check source.
+ * on 2026-09-10. Failures mean catalog drift or a bad edit — re-check source.
  */
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
@@ -24,7 +24,7 @@ function nearly(a: number, b: number, eps = EPS) {
   assert.ok(Math.abs(a - b) <= eps, `expected ${b}, got ${a}`);
 }
 
-describe('price anchors — live-verified 2026-08-01', () => {
+describe('price anchors — live-verified 2026-09-10', () => {
   it('Yandex Ice Lake compute (docs/compute/pricing)', () => {
     nearly(hour('yc.compute.ice-lake-100.vcpu'), 1.24);
     nearly(hour('yc.compute.ice-lake.ram'), 0.33);
@@ -35,11 +35,16 @@ describe('price anchors — live-verified 2026-08-01', () => {
     nearly(amountNumber(m, 'month')!, 2.376);
   });
 
-  it('MWS compute rates effective 2026-08-01 (docs/compute + all-prices)', () => {
-    nearly(hour('mws.compute.vcpu'), 1.267458);
-    nearly(hour('mws.compute.ram'), 0.33733);
+  it('MWS compute rates: general Sapphire + cheaper base Ice Lake (docs/compute + all-prices)', () => {
+    nearly(hour('mws.compute.vcpu'), 1.2674);
+    nearly(hour('mws.compute.ram'), 0.3373);
+    nearly(hour('mws.compute.base.vcpu'), 1.1408);
+    nearly(hour('mws.compute.base.ram'), 0.3204);
     assert.equal(meter('mws.compute.vcpu').effectiveFrom, '2026-08-01');
     assert.equal(meter('mws.compute.vcpu').dimensions?.futureRateFrom, undefined);
+    assert.equal(meter('mws.compute.vcpu').dimensions?.vmCategory, 'general');
+    assert.equal(meter('mws.compute.base.vcpu').dimensions?.vmCategory, 'base');
+    assert.equal(meter('mws.compute.base.vcpu').dimensions?.cpuPlatformFamily, 'intel-ice-lake');
   });
 
   it('MWS Object Storage Cold (docs/storage + all-prices, 2026-08-25)', () => {
