@@ -263,6 +263,24 @@ export const newsItems: NewsItem[] = [
 
   // ——— MWS ———
   {
+    id: 'mws-2026-09-compute-base',
+    date: '2026-09-10',
+    provider: 'mws-cloud',
+    providerName: 'MWS Cloud',
+    title: 'Линейка Base: виртуальные машины на Ice Lake',
+    summary:
+      'MWS Cloud добавила в Compute линейку Base на Intel Xeon Ice Lake. Профили те же, что у general — High CPU, Balanced и High Memory, — но ставка ниже: сайты и приложения со средней нагрузкой, разработка и тестовые среды.',
+    body: [
+      'Ядро в Base стоит 1,1408 ₽/час, гигабайт памяти — 0,3204 ₽/час с НДС 22%. У general на Sapphire Rapids те же ресурсы дороже: 1,2674 и 0,3373 ₽/час. На типовой форме 4 vCPU / 16 ГиБ разница около 7% только за вычислительные ресурсы.',
+      'У Base платформа Ice Lake и память DDR4, к машине можно подключить только сетевые диски. General остаётся на Sapphire Rapids и DDR5: выше частота процессора и доступны локальные диски. В Base нет типов на 12 и 48 ядер — максимум 32 vCPU / 128 ГиБ или 24 vCPU / 192 ГиБ. Более крупные формы по-прежнему заказываются в general.',
+      'Обе линейки уже в каталоге Cloud FinOps: на одинаковых конфигурациях калькулятор берёт более дешёвый Base.',
+    ],
+    tags: ['compute', 'finops'],
+    sourceUrl: 'https://mws.ru/docs/cloud-platform/compute/general/vm-types.html',
+    sourceLabel: 'Документация MWS · типы ВМ',
+    catalogHref: '/catalog?category=compute&facet=vcpu&cpu=ice-lake&providers=mws-cloud',
+  },
+  {
     id: 'mws-2026-08-s3-cold',
     date: '2026-08-25',
     provider: 'mws-cloud',

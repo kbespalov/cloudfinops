@@ -186,6 +186,41 @@ function inEnvelope(env: ComputeEnvelope, vcpu: number, ramGiB: number): boolean
 }
 
 /**
+ * Can this unit vCPU/RAM meter actually sell the requested shape?
+ * Prefer the meter's own vmTypes lattice (MWS general vs base); else its envelope
+ * (Yandex Ice vs Cascade). Meters without markup stay compatible.
+ */
+export function meterAllowsShape(
+  meter: CatalogMeter,
+  vcpu: number,
+  ramGiB: number,
+  opts?: {ignoreEnvelope?: boolean},
+): boolean {
+  const types = availableVmTypesOf(meter);
+  if (types.length) {
+    return types.some((t) => t.vcpu === vcpu && t.ramGiB === ramGiB);
+  }
+  // GPU host lattices are allowed to exceed general-compute envelopes
+  // (Selectel H200 ≥40/256, etc.). Still honor an explicit vmTypes list.
+  if (opts?.ignoreEnvelope) return true;
+  const f = envelopeFieldsOf(meter);
+  if (f.maxVcpu != null && f.maxRamGiB != null) {
+    return inEnvelope(
+      {
+        minVcpu: f.minVcpu ?? 1,
+        minRamGiB: f.minRamGiB ?? 0,
+        maxVcpu: f.maxVcpu,
+        maxRamGiB: f.maxRamGiB,
+        ...(f.maxRamGiBPerVcpu != null ? {maxRamGiBPerVcpu: f.maxRamGiBPerVcpu} : {}),
+      },
+      vcpu,
+      ramGiB,
+    );
+  }
+  return true;
+}
+
+/**
  * Yes/no: can this provider order this vCPU/RAM shape from the public catalog?
  *
  * Data-driven from YAML dimensions — same path for VK, Yandex, Selectel, T1, MWS, Cloud.ru.

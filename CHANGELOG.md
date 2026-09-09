@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-09-10
+
+### Каталог / MWS: линейка Compute Base (Ice Lake)
+
+В публичном прайсе MWS две линейки ВМ с отдельными ставками vCPU/RAM:
+
+- **`base`** — Intel Xeon Gold 5318Y (Ice Lake), DDR4, только сетевые диски: **1,1408 ₽/vCPU·ч** и **0,3204 ₽/ГиБ·ч** (с НДС 22%). Типы `base-*`, без 12 и 48 vCPU; максимум `base-32-128` / `base-24-192`.
+- **`general`** — Intel Xeon Gold 6448H (Sapphire Rapids), DDR5: **1,2674 ₽/vCPU·ч** и **0,3373 ₽/ГиБ·ч**. Типы `gen-*`, максимум `gen-48-192`.
+
+SKU: `mws.compute.base.vcpu` / `mws.compute.base.ram`; у general оставили `mws.compute.vcpu` / `mws.compute.ram`. На одинаковых формах калькулятор берёт более дешёвый Base; `gen-12-*` и `gen-48-*` остаются на Sapphire. GPU A100 по-прежнему без публичной цены; в доке зафиксированы `gpu-a100-1-12-128` и `gpu-a100-2-24-256`. Источники: [тарификация Compute](https://mws.ru/docs/cloud-platform/compute/general/pricing.html), [типы ВМ](https://mws.ru/docs/cloud-platform/compute/general/vm-types.html), [all-prices](https://mws.ru/docs/cloud-platform/about/general/mws-cloud-platform-pricing.html). `asOf` каталога → `2026-09-10`.
+
 ## 2026-08-25
 
 ### Каталог / MWS: холодный класс Object Storage (COLD)

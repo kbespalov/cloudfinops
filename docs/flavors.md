@@ -4,7 +4,7 @@
 Нужна, чтобы калькулятор и чат не «придумывали» цены на формы, которые нельзя заказать из публичного self-serve каталога.
 
 > GPU, bare metal / HaaS и выделенные гипервизоры — вне этой таблицы (см. GPU price books).  
-> Дата сверки: 2026-07-28. При обновлении доков — править YAML `dimensions` и этот файл.
+> Дата сверки: 2026-09-10 (MWS base/general). Остальные провайдеры — 2026-07-28. При обновлении доков — править YAML `dimensions` и этот файл.
 
 ## Поля в каталоге (`dimensions`)
 
@@ -33,7 +33,7 @@
 | **Cloud.ru** (Evolution) | exact flavors + envelope | **1 / 1** | **32 / 128** (консоль self-serve) | AZ-зависимо: где-то 32/64; прайс знает до 64/320, но в UI часто недоступно |
 | **Selectel** | envelope (Standard dedicated) | **2 / 4** | **32 / 256** (фиксированные SL2 / docs fixed) | Docs произвольные ru-6: **232 / 1200** → `platformMax*`; Shared 1/0.5 в каталоге unit не котируем; пул-зависимо |
 | **T1 Cloud** | envelope (flavor grid) | **2 / 4** (`*.large.*`) | **64 / 640** (консоль 2026-07) | Naming/API допускают выше (напр. a5.16xlarge.14 = 896 GiB, GPU до 224 vCPU); для quote — то, что реально выбирается в UI |
-| **MWS Cloud** | exact `vmTypes` | **2 / 4** | **48 / 192** | Только опубликованные `gen-*`; не свободная сборка |
+| **MWS Cloud** | exact `vmTypes` | **2 / 4** | **48 / 192** | Две линейки: `general` (Sapphire, `gen-*`, до 48/192) и дешевле `base` (Ice Lake, `base-*`, до 32/128 и 24/192) |
 
 ## Провайдеры подробно
 
@@ -86,10 +86,14 @@
 
 ### MWS Cloud
 
-- Docs: [VM types](https://mws.ru/docs/cloud-platform/compute/general/vm-types.html)
-- Только фиксированные типы `gen-{vcpu}-{ram}`
-- Balanced 1:4 → до `gen-48-192`; CPU 1:2 → `gen-48-96`; Memory 1:8 → `gen-24-192`
-- Max: **48 vCPU / 192 GiB**; min: **2 / 4**
+- Docs: [VM types](https://mws.ru/docs/cloud-platform/compute/general/vm-types.html), [тарификация](https://mws.ru/docs/cloud-platform/compute/general/pricing.html)
+- Две линейки с отдельными unit-ставками (не свободная сборка):
+  - **`general`** — Intel Xeon Gold 6448H (Sapphire Rapids), DDR5, сетевые и локальные диски; типы `gen-*`
+  - **`base`** — Intel Xeon Gold 5318Y (Ice Lake), DDR4, только сетевые диски; типы `base-*`; дешевле general
+- Профили те же: High CPU 1:2, Balanced 1:4, High Memory 1:8
+- `general`: Balanced до `gen-48-192`; CPU до `gen-48-96`; Memory до `gen-24-192`. Есть линейка **12 vCPU**.
+- `base`: Balanced до `base-32-128`; CPU до `base-32-64`; Memory до `base-24-192`. **Нет 12 и 48 vCPU**.
+- Quote max: **48 vCPU / 192 GiB** (только general); min: **2 / 4** (обе категории)
 - YAML: `prices/mws-cloud/iaas/compute/general.yaml` → `availableVmTypes`
 
 ## Как это влияет на калькулятор

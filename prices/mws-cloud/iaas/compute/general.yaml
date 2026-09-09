@@ -9,21 +9,23 @@ metadata:
 spec:
   meters:
   - sku: mws.compute.vcpu
-    name: Intel Sapphire Rapids, 100% vCPU
+    name: Intel Sapphire Rapids, линейка General, 100% vCPU
     meter: compute.vcpu
     status: available
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-08-01'
-    checkedAt: '2026-08-01'
+    checkedAt: '2026-09-10'
     sourceRefs:
     - mws.all-prices
     - mws.compute
     - mws.vm-types
     dimensions:
-      publishedMonth: 912.56976
+      publishedMonth: 912.528
+      vmCategory: general
       cpuPlatformFamily: intel-sapphire-rapids
       cpuPlatformNative: Intel Xeon Gold 6448H (Sapphire Rapids)
+      cpuFrequencyGHz: '2.4'
       guaranteedVcpuShare: 100%
       purchaseModel: on-demand
       availableVmTypes:
@@ -100,7 +102,7 @@ spec:
       shapeMode: exact-vm-types
     pricing:
       rate:
-        amount: '1.267458'
+        amount: '1.2674'
         currency: RUB
         unit:
           quantity: vCPU
@@ -108,7 +110,7 @@ spec:
         vat: included
         byteBasis: not-applicable
       normalized:
-        amount: '1.267458'
+        amount: '1.2674'
         unit:
           currency: RUB
           quantity: vCPU
@@ -116,32 +118,103 @@ spec:
         formula: native hourly rate
         vat: included
     notes: >
-      Все опубликованные типы VM MWS используют полноценные vCPU с гарантированной долей 100%.
+      Линейка general: Intel Xeon Gold 6448H (Sapphire Rapids) 2,4 ГГц, память DDR5,
+      можно сетевые и локальные диски. Заказываются только опубликованные типы gen-*,
+      максимум — gen-48-192. Все ядра с гарантией 100%.
   - sku: mws.compute.ram
-    name: Intel Sapphire Rapids, RAM
+    name: Intel Sapphire Rapids, линейка General, RAM
     meter: compute.ram
     status: available
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-08-01'
-    checkedAt: '2026-08-01'
+    checkedAt: '2026-09-10'
     sourceRefs:
     - mws.all-prices
     - mws.compute
     - mws.vm-types
     dimensions:
-      publishedMonth: 242.8776
+      publishedMonth: 242.856
+      vmCategory: general
       cpuPlatformFamily: intel-sapphire-rapids
       cpuPlatformNative: Intel Xeon Gold 6448H (Sapphire Rapids)
+      cpuFrequencyGHz: '2.4'
       purchaseModel: on-demand
       minVcpu: 2
       minRamGiB: 4
       maxVcpu: 48
       maxRamGiB: 192
       shapeMode: exact-vm-types
+      availableVmTypes:
+      - id: gen-2-4
+        vcpu: 2
+        ramGb: 4
+      - id: gen-2-8
+        vcpu: 2
+        ramGb: 8
+      - id: gen-2-16
+        vcpu: 2
+        ramGb: 16
+      - id: gen-4-8
+        vcpu: 4
+        ramGb: 8
+      - id: gen-4-16
+        vcpu: 4
+        ramGb: 16
+      - id: gen-4-32
+        vcpu: 4
+        ramGb: 32
+      - id: gen-8-16
+        vcpu: 8
+        ramGb: 16
+      - id: gen-8-32
+        vcpu: 8
+        ramGb: 32
+      - id: gen-8-64
+        vcpu: 8
+        ramGb: 64
+      - id: gen-12-24
+        vcpu: 12
+        ramGb: 24
+      - id: gen-12-48
+        vcpu: 12
+        ramGb: 48
+      - id: gen-12-96
+        vcpu: 12
+        ramGb: 96
+      - id: gen-16-32
+        vcpu: 16
+        ramGb: 32
+      - id: gen-16-64
+        vcpu: 16
+        ramGb: 64
+      - id: gen-16-128
+        vcpu: 16
+        ramGb: 128
+      - id: gen-24-48
+        vcpu: 24
+        ramGb: 48
+      - id: gen-24-96
+        vcpu: 24
+        ramGb: 96
+      - id: gen-24-192
+        vcpu: 24
+        ramGb: 192
+      - id: gen-32-64
+        vcpu: 32
+        ramGb: 64
+      - id: gen-32-128
+        vcpu: 32
+        ramGb: 128
+      - id: gen-48-96
+        vcpu: 48
+        ramGb: 96
+      - id: gen-48-192
+        vcpu: 48
+        ramGb: 192
     pricing:
       rate:
-        amount: '0.33733'
+        amount: '0.3373'
         currency: RUB
         unit:
           quantity: GiB-RAM
@@ -149,7 +222,7 @@ spec:
         vat: included
         byteBasis: binary
       normalized:
-        amount: '0.33733'
+        amount: '0.3373'
         unit:
           currency: RUB
           quantity: GiB-RAM
@@ -157,5 +230,199 @@ spec:
         formula: native hourly rate
         vat: included
     notes: >
-      Конфигурация VM должна соответствовать одному из опубликованных типов gen-*; сочетание 4 vCPU
-      / 16 GB доступно как gen-4-16.
+      Объём RAM должен совпадать с одним из типов gen-*. Например, 4 vCPU и 16 ГиБ —
+      это gen-4-16.
+  - sku: mws.compute.base.vcpu
+    name: Intel Ice Lake, линейка Base, 100% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-09-10'
+    sourceRefs:
+    - mws.all-prices
+    - mws.compute
+    - mws.vm-types
+    dimensions:
+      publishedMonth: 821.376
+      vmCategory: base
+      cpuPlatformFamily: intel-ice-lake
+      cpuPlatformNative: Intel Xeon Gold 5318Y (Ice Lake)
+      cpuFrequencyGHz: '2.1'
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      availableVmTypes:
+      - id: base-2-4
+        vcpu: 2
+        ramGb: 4
+      - id: base-2-8
+        vcpu: 2
+        ramGb: 8
+      - id: base-2-16
+        vcpu: 2
+        ramGb: 16
+      - id: base-4-8
+        vcpu: 4
+        ramGb: 8
+      - id: base-4-16
+        vcpu: 4
+        ramGb: 16
+      - id: base-4-32
+        vcpu: 4
+        ramGb: 32
+      - id: base-8-16
+        vcpu: 8
+        ramGb: 16
+      - id: base-8-32
+        vcpu: 8
+        ramGb: 32
+      - id: base-8-64
+        vcpu: 8
+        ramGb: 64
+      - id: base-16-32
+        vcpu: 16
+        ramGb: 32
+      - id: base-16-64
+        vcpu: 16
+        ramGb: 64
+      - id: base-16-128
+        vcpu: 16
+        ramGb: 128
+      - id: base-24-48
+        vcpu: 24
+        ramGb: 48
+      - id: base-24-96
+        vcpu: 24
+        ramGb: 96
+      - id: base-24-192
+        vcpu: 24
+        ramGb: 192
+      - id: base-32-64
+        vcpu: 32
+        ramGb: 64
+      - id: base-32-128
+        vcpu: 32
+        ramGb: 128
+      minVcpu: 2
+      minRamGiB: 4
+      maxVcpu: 32
+      maxRamGiB: 192
+      shapeMode: exact-vm-types
+    pricing:
+      rate:
+        amount: '1.1408'
+        currency: RUB
+        unit:
+          quantity: vCPU
+          period: hour
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '1.1408'
+        unit:
+          currency: RUB
+          quantity: vCPU
+          period: hour
+        formula: native hourly rate
+        vat: included
+    notes: >
+      Линейка Base дешевле general на тех же формах: Intel Xeon Gold 5318Y (Ice Lake)
+      2,1 ГГц, память DDR4, только сетевые диски. Типы base-*; конфигураций на 12 и
+      48 vCPU нет, максимум — base-32-128 и base-24-192. Все ядра с гарантией 100%.
+  - sku: mws.compute.base.ram
+    name: Intel Ice Lake, линейка Base, RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-09-10'
+    sourceRefs:
+    - mws.all-prices
+    - mws.compute
+    - mws.vm-types
+    dimensions:
+      publishedMonth: 230.688
+      vmCategory: base
+      cpuPlatformFamily: intel-ice-lake
+      cpuPlatformNative: Intel Xeon Gold 5318Y (Ice Lake)
+      cpuFrequencyGHz: '2.1'
+      purchaseModel: on-demand
+      minVcpu: 2
+      minRamGiB: 4
+      maxVcpu: 32
+      maxRamGiB: 192
+      shapeMode: exact-vm-types
+      availableVmTypes:
+      - id: base-2-4
+        vcpu: 2
+        ramGb: 4
+      - id: base-2-8
+        vcpu: 2
+        ramGb: 8
+      - id: base-2-16
+        vcpu: 2
+        ramGb: 16
+      - id: base-4-8
+        vcpu: 4
+        ramGb: 8
+      - id: base-4-16
+        vcpu: 4
+        ramGb: 16
+      - id: base-4-32
+        vcpu: 4
+        ramGb: 32
+      - id: base-8-16
+        vcpu: 8
+        ramGb: 16
+      - id: base-8-32
+        vcpu: 8
+        ramGb: 32
+      - id: base-8-64
+        vcpu: 8
+        ramGb: 64
+      - id: base-16-32
+        vcpu: 16
+        ramGb: 32
+      - id: base-16-64
+        vcpu: 16
+        ramGb: 64
+      - id: base-16-128
+        vcpu: 16
+        ramGb: 128
+      - id: base-24-48
+        vcpu: 24
+        ramGb: 48
+      - id: base-24-96
+        vcpu: 24
+        ramGb: 96
+      - id: base-24-192
+        vcpu: 24
+        ramGb: 192
+      - id: base-32-64
+        vcpu: 32
+        ramGb: 64
+      - id: base-32-128
+        vcpu: 32
+        ramGb: 128
+    pricing:
+      rate:
+        amount: '0.3204'
+        currency: RUB
+        unit:
+          quantity: GiB-RAM
+          period: hour
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.3204'
+        unit:
+          currency: RUB
+          quantity: GiB-RAM
+          period: hour
+        formula: native hourly rate
+        vat: included
+    notes: >
+      Объём RAM должен совпадать с одним из типов base-*. Например, 4 vCPU и 16 ГиБ —
+      это base-4-16.

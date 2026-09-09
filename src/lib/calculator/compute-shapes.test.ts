@@ -4,6 +4,7 @@ import {describe, it} from 'node:test';
 import {
   explainShapeMiss,
   isComputeShapeAllowed,
+  meterAllowsShape,
   providerEnvelope,
   providerShapeLimits,
   providerVmTypes,
@@ -75,6 +76,17 @@ describe('compute-shapes', () => {
   it('MWS uses exact published vmTypes lattice', () => {
     assert.equal(shapeModeOf('mws-cloud'), 'exact-vm-types');
     assert.ok(providerVmTypes('mws-cloud').length >= 20);
+    assert.ok(isComputeShapeAllowed('mws-cloud', 12, 24)); // general-only
+    assert.ok(isComputeShapeAllowed('mws-cloud', 48, 192)); // general-only
+    assert.ok(isComputeShapeAllowed('mws-cloud', 32, 128)); // general + base
+    assert.ok(!isComputeShapeAllowed('mws-cloud', 12, 32));
+
+    const base = catalog.meters.find((m) => m.sku === 'mws.compute.base.vcpu');
+    const general = catalog.meters.find((m) => m.sku === 'mws.compute.vcpu');
+    assert.ok(base && general);
+    assert.ok(meterAllowsShape(base, 4, 16));
+    assert.ok(!meterAllowsShape(base, 48, 192));
+    assert.ok(meterAllowsShape(general, 48, 192));
   });
 
   it('T1 console envelope is 64 vCPU / 640 GiB', () => {

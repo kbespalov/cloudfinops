@@ -15,14 +15,27 @@ spec:
     pricingMode: status-only
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-10'
     sourceRefs:
     - mws.gpu-docs
+    - mws.vm-types
     dimensions:
       gpuModel: NVIDIA A100
       gpuCount: 1
       gpuMemoryGb: 80
       purchaseModel: on-demand
+      availableGpuCounts: [1, 2]
+      availableVmTypes:
+      - id: gpu-a100-1-12-128
+        gpuCount: 1
+        vcpu: 12
+        ramGb: 128
+      - id: gpu-a100-2-24-256
+        gpuCount: 2
+        vcpu: 24
+        ramGb: 256
     notes: >
-      В документации MWS есть ВМ с NVIDIA A100 80 ГБ (до 2 GPU), но публичной цены
-      в тарифах Cloud Platform нет — условия уточняются у провайдера.
+      В документации MWS есть типы gpu-a100-1-12-128 (1×A100 80 ГБ, 12 vCPU, 128 ГБ)
+      и gpu-a100-2-24-256 (2×A100, 24 vCPU, 256 ГБ) на Intel Xeon Gold 6348
+      (Ice Lake). Публичной цены в тарифах Cloud Platform нет — условия нужно
+      уточнять у провайдера.
