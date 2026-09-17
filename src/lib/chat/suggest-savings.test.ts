@@ -61,7 +61,7 @@ describe('suggestSavings', () => {
       diskMedia: 'ssd',
       publicIpCount: 1,
     });
-    assert.equal(r.ok, true, r.error);
+    assert.equal(r.ok, true, r.error ?? '');
     assert.ok(r.baseline);
     assert.ok(r.baseline!.monthlyRub > 0);
     assert.equal(r.baseline!.publicIpCount, 1);
@@ -81,7 +81,7 @@ describe('suggestSavings', () => {
       diskMedia: 'ssd',
       publicIpCount: 1,
     });
-    assert.equal(r.ok, true, r.error);
+    assert.equal(r.ok, true, r.error ?? '');
     assert.ok(leverIds(r).includes('drop-public-ip'));
     // Besides IP, expect disk/preemptible/provider/shrink family.
     assert.ok(
@@ -103,7 +103,7 @@ describe('suggestSavings', () => {
       diskMedia: 'ssd',
       publicIpCount: 0,
     });
-    assert.equal(r.ok, true, r.error);
+    assert.equal(r.ok, true, r.error ?? '');
     assert.ok(!leverIds(r).includes('drop-public-ip'));
     assertLeverInvariants(r.levers, r.baseline!.monthlyRub);
   });
@@ -116,7 +116,7 @@ describe('suggestSavings', () => {
       diskMedia: 'nvme',
       publicIpCount: 0,
     });
-    assert.equal(r.ok, true, r.error);
+    assert.equal(r.ok, true, r.error ?? '');
     assert.equal(r.baseline!.diskMedia, 'nvme');
     assert.ok(
       leverIds(r).includes('nvme-to-ssd') ||
@@ -140,7 +140,7 @@ describe('suggestSavings', () => {
       diskMedia: 'ssd',
       publicIpCount: 0,
     });
-    assert.equal(r.ok, true, r.error);
+    assert.equal(r.ok, true, r.error ?? '');
     if (leverIds(r).includes('ssd-to-hdd')) {
       const l = r.levers.find((x) => x.id === 'ssd-to-hdd')!;
       assert.equal(l.risk, 'breaking');
@@ -156,7 +156,7 @@ describe('suggestSavings', () => {
       diskMedia: 'hdd',
       publicIpCount: 0,
     });
-    assert.equal(r.ok, true, r.error);
+    assert.equal(r.ok, true, r.error ?? '');
     assert.equal(r.baseline!.diskMedia, 'hdd');
     assert.ok(!leverIds(r).includes('ssd-to-hdd'));
     assert.ok(!leverIds(r).includes('nvme-to-ssd'));
@@ -177,8 +177,8 @@ describe('suggestSavings', () => {
       diskMedia: 'ssd',
       publicIpCount: 0,
     });
-    assert.equal(fat.ok, true, fat.error);
-    assert.equal(thin.ok, true, thin.error);
+    assert.equal(fat.ok, true, fat.error ?? '');
+    assert.equal(thin.ok, true, thin.error ?? '');
     assert.ok(!leverIds(thin).includes('shrink-boot-disk'));
     // Fat disk often yields shrink; if catalog pricing equal, skip soft assert.
     if (leverIds(fat).includes('shrink-boot-disk')) {
@@ -196,7 +196,7 @@ describe('suggestSavings', () => {
       diskMedia: 'ssd',
       publicIpCount: 0,
     });
-    assert.equal(r.ok, true, r.error);
+    assert.equal(r.ok, true, r.error ?? '');
     const pre = r.levers.find((l) => l.id === 'preemptible');
     if (pre) {
       assert.equal(pre.risk, 'breaking');
@@ -213,7 +213,7 @@ describe('suggestSavings', () => {
       publicIpCount: 1,
       provider: 'Yandex',
     });
-    assert.equal(r.ok, true, r.error);
+    assert.equal(r.ok, true, r.error ?? '');
     assert.match(r.baseline!.provider, /yandex/i);
     // switch-provider should point away from focused baseline if cheaper exists
     const sw = r.levers.find((l) => l.id === 'switch-provider');
@@ -230,7 +230,7 @@ describe('suggestSavings', () => {
       diskGiB: 100,
       publicIpCount: 0,
     });
-    assert.equal(r.ok, true, r.error);
+    assert.equal(r.ok, true, r.error ?? '');
     assert.ok(r.baseline);
     assert.ok(r.baseline!.monthlyRub > 10_000, `H100 baseline too cheap: ${r.baseline!.monthlyRub}`);
     assert.match(r.baseline!.shape, /H100/i);
@@ -248,7 +248,7 @@ describe('suggestSavings', () => {
       diskGiB: 100,
       publicIpCount: 3,
     });
-    assert.equal(r.ok, true, r.error);
+    assert.equal(r.ok, true, r.error ?? '');
     const ip = r.levers.find((l) => l.id === 'drop-public-ip');
     if (ip) assert.match(ip.title, /×\s*3|×3/);
     assert.equal(r.baseline!.publicIpCount, 3);
@@ -261,14 +261,14 @@ describe('suggestSavings', () => {
       diskGiB: 40,
       publicIpCount: -2,
     });
-    assert.equal(r.ok, true, r.error);
+    assert.equal(r.ok, true, r.error ?? '');
     assert.equal(r.baseline!.publicIpCount, 0);
     assert.ok(!leverIds(r).includes('drop-public-ip'));
   });
 
   it('defaults disk to 100 GiB SSD when omitted', () => {
     const r = suggestSavings({vcpu: 4, ramGiB: 8});
-    assert.equal(r.ok, true, r.error);
+    assert.equal(r.ok, true, r.error ?? '');
     assert.match(r.baseline!.shape, /100 GiB SSD/i);
     assert.equal(r.baseline!.diskMedia, 'ssd');
   });
@@ -295,7 +295,7 @@ describe('suggestSavings', () => {
 
   it('note warns levers are mutually exclusive', () => {
     const r = suggestSavings({vcpu: 8, ramGiB: 32, publicIpCount: 1});
-    assert.equal(r.ok, true, r.error);
+    assert.equal(r.ok, true, r.error ?? '');
     assert.match(r.note, /взаимоисключающ|не складывай/i);
     assert.equal(r.currency, 'RUB');
     assert.equal(r.vatIncluded, true);

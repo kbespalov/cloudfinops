@@ -1,3 +1,4 @@
+import {cloudfinopsPublicApiPost} from '@/data/blog/posts/cloudfinops-public-api';
 import {focusCloudDetailingPost} from '@/data/blog/posts/focus-cloud-detailing';
 import {kimiK3VsGlm52Post} from '@/data/blog/posts/kimi-k3-vs-glm-5-2';
 import {slurmVsKubernetesPost} from '@/data/blog/posts/slurm-vs-kubernetes';
@@ -62,6 +63,7 @@ export function getBlogBySlug(slug: string): BlogPost | undefined {
 }
 
 export const blogPosts: BlogPost[] = [
+  cloudfinopsPublicApiPost,
   kimiK3VsGlm52Post,
   slurmVsKubernetesPost,
   focusCloudDetailingPost,

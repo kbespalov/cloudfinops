@@ -12,10 +12,10 @@ import {applyStorageIntentToDomains, matchPlanningDomains} from '@/lib/chat/syst
 
 describe('storageIntentLlmModeFromEnv', () => {
   it('defaults to on and accepts shadow/off', () => {
-    assert.equal(storageIntentLlmModeFromEnv({}), 'on');
-    assert.equal(storageIntentLlmModeFromEnv({CHAT_STORAGE_INTENT_LLM: 'shadow'}), 'shadow');
-    assert.equal(storageIntentLlmModeFromEnv({CHAT_STORAGE_INTENT_LLM: 'OFF'}), 'off');
-    assert.equal(storageIntentLlmModeFromEnv({CHAT_STORAGE_INTENT_LLM: 'weird'}), 'on');
+    assert.equal(storageIntentLlmModeFromEnv({NODE_ENV: 'test'}), 'on');
+    assert.equal(storageIntentLlmModeFromEnv({NODE_ENV: 'test', CHAT_STORAGE_INTENT_LLM: 'shadow'}), 'shadow');
+    assert.equal(storageIntentLlmModeFromEnv({NODE_ENV: 'test', CHAT_STORAGE_INTENT_LLM: 'OFF'}), 'off');
+    assert.equal(storageIntentLlmModeFromEnv({NODE_ENV: 'test', CHAT_STORAGE_INTENT_LLM: 'weird'}), 'on');
   });
 });
 

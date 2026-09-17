@@ -1,12 +1,13 @@
 import type {
   CatalogData,
   CatalogMeter,
+  CatalogRateTier,
   CatalogSource,
   CategoryKey,
 } from '../../scripts/build-catalog';
 import catalogJson from '@/data/catalog.generated.json';
 
-export type {CatalogData, CatalogMeter, CatalogSource, CategoryKey};
+export type {CatalogData, CatalogMeter, CatalogRateTier, CatalogSource, CategoryKey};
 
 /** Primary mutually exclusive categories (filters). */
 export type CategoryFilter = 'all' | Exclude<CategoryKey, 'other'>;
