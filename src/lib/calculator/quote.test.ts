@@ -515,7 +515,7 @@ describe('calculator quote arbitration', () => {
   it('MWS overlapping shapes quote cheaper base Ice Lake; gen-only stays Sapphire', () => {
     const shared = COMPUTE_PRESETS.find((p) => p.id === 'gen-4-16');
     assert.ok(shared);
-    const sharedQuote = quotePreset(shared, 'hour').quotes.find((q) => q.provider === 'mws-cloud');
+    const sharedQuote = quotePreset(shared, 'unit').quotes.find((q) => q.provider === 'mws-cloud');
     assert.ok(sharedQuote);
     assert.equal(sharedQuote.meters[0]!.sku, 'mws.compute.base.vcpu');
     assert.equal(sharedQuote.meters[1]!.sku, 'mws.compute.base.ram');
@@ -530,7 +530,7 @@ describe('calculator quote arbitration', () => {
       ramGiB: 192,
       diskGiB: 10,
     };
-    const large = quotePreset(genOnly, 'hour').quotes.find((q) => q.provider === 'mws-cloud');
+    const large = quotePreset(genOnly, 'unit').quotes.find((q) => q.provider === 'mws-cloud');
     assert.ok(large, 'gen-48-192 must stay orderable on general');
     assert.equal(large.meters[0]!.sku, 'mws.compute.vcpu');
     assert.equal(large.meters[1]!.sku, 'mws.compute.ram');

@@ -7,6 +7,7 @@ import {
   BookOpen,
   Calculator,
   CircleInfo,
+  Code,
   Gpu,
   LogoTelegram,
   Moon,
@@ -35,6 +36,7 @@ const NAV: NavItem[] = [
   {href: '/catalog', label: 'Каталог SKU', icon: SquareListUl},
   {href: '/gpu', label: 'GPU', icon: Gpu},
   {href: '/calculator', label: 'Калькулятор', icon: Calculator},
+  {href: '/api', label: 'MCP / API', icon: Code},
   {href: '/news', label: 'Новости', icon: BookOpen},
   {href: '/about', label: 'О нас', icon: CircleInfo},
   {

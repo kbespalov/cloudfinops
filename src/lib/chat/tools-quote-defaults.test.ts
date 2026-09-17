@@ -165,7 +165,7 @@ describe('get_quote compute defaults', () => {
     );
     const fromResult = sidebarConfigFromToolResult('get_quote', toolJson, 'month');
     assert.ok(nvmeArgs && fromResult);
-    const merged = applySidebarConfig(nvmeArgs, fromResult!, 'month');
+    const merged = applySidebarConfig(applySidebarConfig(null, nvmeArgs, 'month'), fromResult!, 'month');
     assert.ok(merged && merged.kind === 'adhoc');
     if (!merged || merged.kind !== 'adhoc' || merged.request.kind !== 'compute') return;
     assert.equal(merged.request.diskMedia, 'hdd');

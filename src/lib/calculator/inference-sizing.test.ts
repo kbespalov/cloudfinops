@@ -252,7 +252,7 @@ describe('KV bytes helpers', () => {
 
   it('does not invent hundreds of replicas on a weight-saturated GPU', () => {
     const plan = sizeInferenceDeployment({
-      weightVariant: {dtype: 'int4', weightsVramGiB: 65, weightFormat: 'mxfp4'},
+      weightVariant: {dtype: 'int4', weightsVramGiB: 65, weightFormat: 'int4'},
       totalParametersB: 117,
       kvCacheDtype: 'fp8',
       gpuCount: 1,

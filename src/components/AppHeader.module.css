@@ -44,6 +44,7 @@
 }
 
 .nav {
+  --g-button-padding: 8px;
   margin-left: 12px;
   min-width: 0;
   overflow: hidden;
@@ -101,10 +102,9 @@
 }
 
 /*
- * Collapse earlier: with GPU in the bar, ~900–1100px was overlapping
- * «Сообщество» and the theme toggle.
+ * Keep all eight links visible; below this width use the complete mobile menu.
  */
-@media (max-width: 1120px) {
+@media (max-width: 1160px) {
   .inner {
     padding: 10px 16px;
   }

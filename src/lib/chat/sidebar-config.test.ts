@@ -358,7 +358,7 @@ describe('applySidebarConfig merge basket', () => {
       'month',
     );
     assert.ok(first && second);
-    const merged = applySidebarConfig(first, second!, 'month');
+    const merged = applySidebarConfig(applySidebarConfig(null, first, 'month'), second!, 'month');
     assert.ok(merged && merged.kind === 'lakehouse');
     if (!merged || merged.kind !== 'lakehouse') return;
     assert.equal(merged.request.lakeTiB, 150);
@@ -407,7 +407,7 @@ describe('applySidebarConfig merge basket', () => {
     assert.ok(hdd && hdd.kind === 'adhoc');
     if (!hdd || hdd.kind !== 'adhoc') return;
 
-    const merged = applySidebarConfig(nvme, hdd, 'month');
+    const merged = applySidebarConfig(applySidebarConfig(null, nvme, 'month'), hdd, 'month');
     assert.ok(merged && merged.kind === 'adhoc');
     if (!merged || merged.kind !== 'adhoc' || merged.request.kind !== 'compute') return;
     assert.equal(merged.request.diskMedia, 'hdd');
@@ -428,7 +428,7 @@ describe('applySidebarConfig merge basket', () => {
       'month',
     );
     assert.ok(hdd && ramOnly);
-    const merged = applySidebarConfig(hdd, ramOnly!, 'month');
+    const merged = applySidebarConfig(applySidebarConfig(null, hdd, 'month'), ramOnly!, 'month');
     assert.ok(merged && merged.kind === 'adhoc');
     if (!merged || merged.kind !== 'adhoc' || merged.request.kind !== 'compute') return;
     assert.equal(merged.request.diskMedia, 'hdd');
@@ -447,7 +447,7 @@ describe('applySidebarConfig merge basket', () => {
       'month',
     );
     assert.ok(hdd && ssd);
-    const merged = applySidebarConfig(hdd, ssd!, 'month');
+    const merged = applySidebarConfig(applySidebarConfig(null, hdd, 'month'), ssd!, 'month');
     assert.ok(merged && merged.kind === 'adhoc');
     if (!merged || merged.kind !== 'adhoc' || merged.request.kind !== 'compute') return;
     assert.equal(merged.request.diskMedia, 'ssd');
@@ -468,7 +468,7 @@ describe('applySidebarConfig merge basket', () => {
       'month',
     );
     assert.ok(hdd && nvme);
-    const merged = applySidebarConfig(hdd, nvme!, 'month');
+    const merged = applySidebarConfig(applySidebarConfig(null, hdd, 'month'), nvme!, 'month');
     assert.ok(merged && merged.kind === 'adhoc');
     if (!merged || merged.kind !== 'adhoc' || merged.request.kind !== 'compute') return;
     assert.equal(merged.request.diskMedia, 'ssd');
@@ -488,7 +488,7 @@ describe('applySidebarConfig merge basket', () => {
       'month',
     );
     assert.ok(nvme && vcpuOnly);
-    const merged = applySidebarConfig(nvme, vcpuOnly!, 'month');
+    const merged = applySidebarConfig(applySidebarConfig(null, nvme, 'month'), vcpuOnly!, 'month');
     assert.ok(merged && merged.kind === 'adhoc');
     if (!merged || merged.kind !== 'adhoc' || merged.request.kind !== 'compute') return;
     assert.equal(merged.request.vcpu, 32);
@@ -557,7 +557,7 @@ describe('applySidebarConfig merge basket', () => {
       'month',
     );
     assert.ok(withExtras && hdd);
-    const merged = applySidebarConfig(withExtras, hdd!, 'month');
+    const merged = applySidebarConfig(applySidebarConfig(null, withExtras, 'month'), hdd!, 'month');
     assert.ok(merged && merged.kind === 'adhoc');
     if (!merged || merged.kind !== 'adhoc' || merged.request.kind !== 'compute') return;
     assert.equal(merged.request.diskMedia, 'hdd');
@@ -707,7 +707,7 @@ describe('sidebarConfigFromToolResult', () => {
       'month',
     );
     assert.ok(nvme && fromResult);
-    const merged = applySidebarConfig(nvme, fromResult!, 'month');
+    const merged = applySidebarConfig(applySidebarConfig(null, nvme, 'month'), fromResult!, 'month');
     assert.ok(merged && merged.kind === 'adhoc');
     if (!merged || merged.kind !== 'adhoc' || merged.request.kind !== 'compute') return;
     assert.equal(merged.request.diskMedia, 'hdd');

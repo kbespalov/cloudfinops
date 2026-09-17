@@ -1,6 +1,17 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import yaml from 'js-yaml';
+import {createHash} from 'node:crypto';
+
+export type CatalogRateTier = {
+  from: string;
+  to: string | null;
+  amount: string;
+  vat: string | null;
+  currency: string | null;
+  unitQuantity: string | null;
+  unitPeriod: string | null;
+};
 
 export type CatalogMeter = {
   id: string;
@@ -28,8 +39,12 @@ export type CatalogMeter = {
   nativeVat: string | null;
   normalizedAmount: string | null;
   normalizedPeriod: string | null;
+  normalizedQuantity?: string | null;
+  normalizedCurrency?: string | null;
   normalizedVat: string | null;
   currency: string;
+  /** Full YAML pricing.tiers — public API must not bill from the flattened list rate. */
+  rateTiers?: CatalogRateTier[] | null;
   cpuPlatformFamily: string | null;
   purchaseModel: string | null;
   comparableTier: string | null;
@@ -57,6 +72,8 @@ export type CatalogData = {
   asOf: string;
   taxonomyVersion: string;
   generatedAt: string;
+  /** Snapshot hash for public API cursors, including catalog data and generation time. */
+  catalogVersion?: string;
   meters: CatalogMeter[];
   providers: {id: string; name: string; count: number}[];
   categories: {key: CategoryKey; title: string; count: number}[];
@@ -141,6 +158,28 @@ function walkYamlFiles(dir: string): string[] {
     }
   }
   return out;
+}
+
+function parseRateTiers(rawTiers: unknown): CatalogRateTier[] | null {
+  if (!Array.isArray(rawTiers) || rawTiers.length === 0) return null;
+  const tiers: CatalogRateTier[] = [];
+  for (const raw of rawTiers) {
+    if (!raw || typeof raw !== 'object') continue;
+    const row = raw as Record<string, unknown>;
+    const tRate = {...((row.rate as Record<string, unknown>) || {})};
+    const unit = {...((tRate.unit as Record<string, unknown>) || {})};
+    if (tRate.amount == null && row.amount == null) continue;
+    tiers.push({
+      from: row.from == null ? '0' : String(row.from),
+      to: row.to == null ? null : String(row.to),
+      amount: String(tRate.amount ?? row.amount),
+      vat: tRate.vat == null ? null : String(tRate.vat),
+      currency: tRate.currency == null ? null : String(tRate.currency),
+      unitQuantity: unit.quantity == null ? null : String(unit.quantity),
+      unitPeriod: unit.period == null ? null : String(unit.period),
+    });
+  }
+  return tiers.length ? tiers : null;
 }
 
 function loadProviderSources(): Record<string, CatalogSource> {
@@ -268,8 +307,11 @@ function main() {
         nativeVat: rate.vat == null ? null : String(rate.vat),
         normalizedAmount: normalized.amount == null ? null : String(normalized.amount),
         normalizedPeriod: nUnit.period == null ? null : String(nUnit.period),
+        normalizedQuantity: nUnit.quantity == null ? null : String(nUnit.quantity),
+        normalizedCurrency: nUnit.currency == null ? null : String(nUnit.currency),
         normalizedVat: normalized.vat == null ? null : String(normalized.vat),
-        currency: String(rate.currency || nUnit.currency || 'RUB'),
+        currency: String(rate.currency || ''),
+        rateTiers: parseRateTiers(tiers),
         cpuPlatformFamily:
           dimensions.cpuPlatformFamily == null ? null : String(dimensions.cpuPlatformFamily),
         purchaseModel: dimensions.purchaseModel == null ? null : String(dimensions.purchaseModel),
@@ -298,10 +340,12 @@ function main() {
     other: 'Other',
   };
 
+  const generatedAt = new Date().toISOString();
   const catalog: CatalogData = {
     asOf: index.metadata.asOf,
     taxonomyVersion: index.metadata.taxonomyVersion,
-    generatedAt: new Date().toISOString(),
+    generatedAt,
+    catalogVersion: `cat_${createHash('sha256').update(JSON.stringify({generatedAt, meters, sources, metadata: index.metadata})).digest('hex').slice(0, 24)}`,
     meters,
     providers: [...providerCounts.entries()]
       .map(([id, count]) => ({id, name: PROVIDER_NAMES[id] || id, count}))

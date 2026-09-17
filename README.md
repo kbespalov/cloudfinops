@@ -133,3 +133,13 @@ src/lib/          # quote engines, chat tools, catalog helpers
 ## Дисклеймер
 
 Цены и новости собраны из **публичных** материалов провайдеров. Перед закупкой и архитектурными решениями сверяйте актуальные тарифы и условия у вендора. Cloud FinOps — инструмент прозрачности, а не оферта.
+
+## Public API и MCP
+
+REST `/api/v1`, MCP `/mcp`, интерактивная документация `/api`, OpenAPI `/api/v1/openapi.json`.
+[Контракт, ограничения и проверка релиза](docs/public-api.md).
+
+```sh
+npm run test:api
+npm run test:api:smoke -- http://127.0.0.1:3107
+```

@@ -22,13 +22,17 @@
     "seo:indexnow": "tsx scripts/indexnow.ts",
     "lint": "next lint",
     "theme:brand": "tsx scripts/generate-brand-theme.ts",
-    "test": "tsx --test $(find src/lib/calculator src/lib/chat src/lib/catalog src/lib scripts/eval -name '*.test.ts' | sort -u)"
+    "test": "tsx --test $(find src/lib/calculator src/lib/chat src/lib/catalog src/lib scripts/eval -name '*.test.ts' | sort -u)",
+    "typecheck": "tsc --noEmit",
+    "test:api": "tsx --test src/lib/public-api/*.test.ts",
+    "test:api:smoke": "tsx scripts/smoke-public-api.ts"
   },
   "dependencies": {
     "@gravity-ui/aikit": "^2.11.0",
     "@gravity-ui/icons": "^2.20.0",
     "@gravity-ui/illustrations": "^2.1.1",
     "@gravity-ui/uikit": "^7.46.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "@react-three/fiber": "^9.6.1",
     "@shadergradient/react": "^2.4.20",
     "camera-controls": "^3.1.2",
@@ -37,7 +41,8 @@
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "three": "^0.185.1",
-    "three-stdlib": "^2.36.1"
+    "three-stdlib": "^2.36.1",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@gravity-ui/uikit-themer": "^1.8.1",
