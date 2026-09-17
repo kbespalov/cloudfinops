@@ -3,6 +3,7 @@ import {blogPosts} from '@/data/blog';
 import {CALCULATOR_PROVIDER_SEO} from '@/data/calculator-providers-seo';
 import {GPU_LANDINGS, allGpuLandingSlugs} from '@/data/gpu-landings';
 import {newsItems} from '@/data/news';
+import {DOCUMENTATION_PAGES, DOCS_UPDATED_AT} from '@/lib/public-api/discovery';
 
 const SITE_URL = 'https://cloudfinops.ru';
 
@@ -77,12 +78,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: 'weekly',
       priority: 0.9,
     },
-    {
-      url: `${SITE_URL}/api`,
-      lastModified,
-      changeFrequency: 'monthly',
-      priority: 0.6,
-    },
+    ...DOCUMENTATION_PAGES.map(page => ({
+      url: `${SITE_URL}${page.path}`,
+      lastModified: new Date(`${DOCS_UPDATED_AT}T00:00:00Z`),
+      changeFrequency: 'monthly' as const,
+      priority: page.section === 'overview' || page.section === 'mcp-connect' ? 0.8 : 0.6,
+    })),
     {
       url: `${SITE_URL}/news`,
       lastModified,

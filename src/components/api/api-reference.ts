@@ -7,9 +7,9 @@ export type Endpoint = {
 export const endpoints: Endpoint[] = [
   {
     id: 'products', title: 'Поиск продуктов', method: 'GET', path: '/products', tool: 'search_products',
-    description: 'Метод позволяет искать биллинговые SKU по названию и характеристикам. Структурные фильтры ограничивают набор результатов, а текстовый запрос определяет порядок их отображения.',
+    description: 'Метод позволяет искать биллинговые SKU по названию, идентификатору, модели GPU и категории. Структурные фильтры ограничивают набор результатов, а текстовый запрос определяет порядок их отображения.',
     parameters: [
-      {name: 'q', type: 'string', description: 'Текст для поиска по названию или характеристикам, например H100, SSD или vCPU. Если параметр не задан, продукты упорядочены по провайдеру и SKU.'},
+      {name: 'q', type: 'string', description: 'Короткий поисковый запрос по названию, SKU или модели GPU, например H100, SSD или vCPU. Дополнительные providerAttributes не участвуют в текстовом поиске. Если параметр не задан, продукты упорядочены по провайдеру и SKU.'},
       {name: 'providers', type: 'string[]', description: 'Slug провайдеров, по которым нужно отфильтровать результаты. В REST перечислите их через запятую, например selectel,vk-cloud, а в MCP передайте массив.'},
       {name: 'categories', type: 'string[]', description: 'Категории для фильтрации: compute, gpu, storage, network, cdn, kubernetes или ai.'},
       {name: 'regions', type: 'string[]', description: 'Метки или коды регионов из словаря регионов. Значения должны совпадать точно.'},
@@ -64,7 +64,7 @@ export const endpoints: Endpoint[] = [
       {name: 'resource.gpuModel', type: 'string', description: 'Модель GPU, например L4 или H100. Параметр обязателен для GPU; при подборе физическая GPU не заменяется vGPU.'},
       {name: 'resource.gpuCount', type: 'integer', description: 'Минимальное число GPU. Параметр обязателен для GPU; фактическое количество ускорителей может быть больше запрошенного.'},
       {name: 'resource.scope', type: 'enum', default: 'instance', description: 'Состав расчёта для GPU: instance включает хост, а gpu_only учитывает только ускоритель.'},
-      {name: 'resource.region', type: 'string', description: 'Точная метка или код региона из каталога. Для конфигураций GPU дополнительно можно задать ограничения form и interconnect.'},
+      {name: 'resource.region', type: 'string', description: 'Точная метка или код региона из каталога. Для конфигураций GPU дополнительно можно задать interconnect. Параметр form требует явных данных о форм-факторе, которых в текущем каталоге нет.'},
       {name: 'resource.purchaseModel', type: 'enum', default: 'on-demand', description: 'Модель потребления: on-demand или preemptible. При подборе используется только указанная модель.'},
       {name: 'providers', type: 'string[]', description: 'Массив slug провайдеров, для которых нужно выполнить расчёт. Если параметр не задан, используются все провайдеры каталога.'},
       {name: 'period', type: 'enum', default: 'month', description: 'В v1 поддерживается только month: расчётный месяц составляет 720 часов.'},

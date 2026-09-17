@@ -15,3 +15,16 @@
   max-width: 40rem;
   margin-inline: auto;
 }
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 20px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.links a { color: var(--g-color-text-secondary); text-decoration: none; }
+.links a:hover { color: var(--g-color-text-link); text-decoration: underline; }

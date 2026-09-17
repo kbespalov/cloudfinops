@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {Client} from '@modelcontextprotocol/sdk/client/index.js';
 import {StreamableHTTPClientTransport} from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import {responseSchemas,errorSchema} from '../src/lib/public-api/responses';
+import {DOCUMENTATION_PAGES, SITE_URL} from '../src/lib/public-api/discovery';
 const base=process.argv[2]??'http://127.0.0.1:3107';
 const resource={type:'compute',vcpu:4,memoryGiB:8};
 async function request(path:string,options:RequestInit={}) {
@@ -42,13 +43,38 @@ async function main() {
   try {
     await client.connect(new StreamableHTTPClientTransport(new URL(base+'/mcp')));
     const listed=await client.listTools();assert.equal(listed.tools.length,5);
+    assert.ok(listed.tools.every(tool=>tool.outputSchema&&tool.title));
     for(const name of ['list_providers','search_products','get_product','list_product_alternatives','create_estimate'] as const) {
       const args=name==='create_estimate'?{resource}:name==='get_product'||name==='list_product_alternatives'?{id}:{};
       const result=await client.callTool({name,arguments:args});assert.ok(!result.isError,name);responseSchemas[name].parse(result.structuredContent);
     }
+    const resources=await client.listResources();assert.equal(resources.resources.length,2);
+    for(const resource of resources.resources) {
+      const result=await client.readResource({uri:resource.uri});assert.ok(result.contents.some(content=>'text' in content&&content.text.length>100));
+    }
+    const missing=await client.callTool({name:'get_product',arguments:{id:'prod_00000000000000000000'}});assert.equal(missing.isError,true);
   } finally {await client.close();}
-  assert.equal((await fetch(base+'/api')).status,200);
-  assert.ok((await (await fetch(base+'/llms.txt')).text()).includes('/api/v1'));
-  console.log(`PASS: REST catalog, pagination, estimates, errors, CORS, OpenAPI, MCP 5 tools, docs (${base})`);
+  const sitemap=await (await fetch(base+'/sitemap.xml')).text();
+  for(const page of DOCUMENTATION_PAGES) {
+    const response=await fetch(base+page.path);assert.equal(response.status,200,page.path);
+    const html=await response.text();
+    const rendered=html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'');
+    assert.ok(rendered.includes('<h1>'),`${page.path}: server-rendered heading`);
+    assert.ok(rendered.includes(`href="${SITE_URL}${page.path}"`),`${page.path}: canonical`);
+    assert.ok(rendered.includes('rel="describedby"'),`${page.path}: discovery`);
+    assert.ok(html.includes('application/ld+json'),`${page.path}: structured data`);
+    assert.ok(sitemap.includes(`${SITE_URL}${page.path}</loc>`),`${page.path}: sitemap`);
+    if(page.section==='mcp-connect') assert.ok(rendered.includes('Добавьте удалённый MCP-сервер'));
+    if(page.section==='estimates') assert.ok(rendered.includes('resource.memoryGiB'));
+    if(page.section==='models') assert.ok(rendered.includes('Price.unitQuantity'));
+  }
+  assert.equal((await fetch(base+'/api/not-a-documentation-page')).status,404);
+  for(const [path,type] of [['/llms.txt','text/plain'],['/llms-full.txt','text/plain'],['/api/reference.md','text/markdown']]) {
+    const response=await fetch(base+path);assert.equal(response.status,200,path);
+    assert.ok(response.headers.get('content-type')?.includes(type));
+    assert.ok(response.headers.get('link')?.includes('service-desc'));
+    assert.ok((await response.text()).includes('/api/v1'));
+  }
+  console.log(`PASS: REST, pagination, estimates, errors, CORS, OpenAPI, MCP tools/resources, ${DOCUMENTATION_PAGES.length} indexed documentation pages and Markdown (${base})`);
 }
 main().catch(error=>{console.error(error);process.exitCode=1;});
