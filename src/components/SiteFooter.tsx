@@ -1,6 +1,7 @@
 'use client';
 
 import {usePathname} from 'next/navigation';
+import Link from 'next/link';
 import {PRICING_DISCLAIMER} from '@/lib/pricing-disclaimer';
 import styles from './SiteFooter.module.css';
 
@@ -23,6 +24,12 @@ export function SiteFooter() {
 
   return (
     <footer className={styles.footer} role="contentinfo">
+      <nav className={styles.links} aria-label="Интеграции Cloud FinOps">
+        <Link href="/api">Public API</Link>
+        <Link href="/api/mcp">MCP для AI-ассистентов</Link>
+        <a href="/api/v1/openapi.json">OpenAPI</a>
+        <a href="/llms.txt">llms.txt</a>
+      </nav>
       <p className={styles.note}>{PRICING_DISCLAIMER}</p>
     </footer>
   );

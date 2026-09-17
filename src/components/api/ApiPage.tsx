@@ -2,15 +2,17 @@
 
 import {useEffect, useRef, useState, type ReactNode} from 'react';
 import Link from 'next/link';
+import {useRouter} from 'next/navigation';
 import {ArrowRight, ArrowUpRight, Bars, Check, ChevronRight, Copy, Magnifier, Moon, Play, Sun, Xmark} from '@gravity-ui/icons';
 import {useAppTheme} from '@/components/AppProviders';
 import type {EstimateResult, PublicProduct} from '@/lib/public-api/types';
 import {baseUrl, computeExample, endpoints, gpuExample, guides, mcpUrl, type Parameter} from './api-reference';
 import styles from './ApiPage.module.css';
+import {documentationPath} from '@/lib/public-api/discovery';
 
 type ApiResponse = {data?: unknown; meta?: Record<string, unknown>; pagination?: {nextCursor: string | null}; error?: {code: string; message: string; details?: unknown[]}};
 type Language = 'cURL' | 'JavaScript' | 'Python' | 'JSON';
-type Props = {exampleProduct: PublicProduct; exampleEstimate: EstimateResult; providers: Array<{id: string; name: string}>};
+type Props = {initialSection: string; exampleProduct: PublicProduct; exampleEstimate: EstimateResult; providers: Array<{id: string; name: string}>};
 const shellQuote = (value: string) => "'" + value.replaceAll("'", "'\\''") + "'";
 const pretty = (value: unknown) => JSON.stringify(value, null, 2);
 const validSection = (id: string) => guides.some(g => g.id === id) || endpoints.some(e => e.id === id) || id === 'mcp-connect' || endpoints.some(e => e.tool && 'mcp-' + e.id === id);
@@ -68,9 +70,10 @@ function QuoteSummary({estimate}: {estimate: EstimateResult}) {
   </div>;
 }
 
-export function ApiPage({exampleProduct, exampleEstimate, providers}: Props) {
+export function ApiPage({initialSection, exampleProduct, exampleEstimate, providers}: Props) {
   const {theme, setTheme} = useAppTheme();
-  const [section, setSection] = useState('overview');
+  const router = useRouter();
+  const section = initialSection;
   const [search, setSearch] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [language, setLanguage] = useState<Language>('cURL');
@@ -98,13 +101,12 @@ export function ApiPage({exampleProduct, exampleEstimate, providers}: Props) {
   useEffect(() => {
     function syncHash() {
       const id = window.location.hash.slice(1);
-      setSection(validSection(id) ? id : 'overview');
-      setResponse(null); setFailure(''); setCursor(''); setRequestInfo(null);
-      abortRef.current?.abort(); setPending(false);
+      // Preserve links shared before the documentation gained standalone URLs.
+      if (validSection(id)) router.replace(documentationPath(id));
     }
     syncHash(); window.addEventListener('hashchange', syncHash);
     return () => { window.removeEventListener('hashchange', syncHash); abortRef.current?.abort(); };
-  }, []);
+  }, [router]);
   useEffect(() => {
     if (!menuOpen) return;
     const sidebar = document.getElementById('api-navigation');
@@ -123,9 +125,9 @@ export function ApiPage({exampleProduct, exampleEstimate, providers}: Props) {
   }, [menuOpen]);
   function navigate(id: string) {
     abortRef.current?.abort(); setPending(false);
-    setSection(id); setResponse(null); setFailure(''); setRequestInfo(null); setCursor('');
+    setResponse(null); setFailure(''); setRequestInfo(null); setCursor('');
     setMenuOpen(false); setSearch(''); setResponseTab('json');
-    window.location.hash = id; window.scrollTo({top: 0, behavior: 'instant'});
+    router.push(documentationPath(id));
   }
   function resetResponse() { abortRef.current?.abort(); setPending(false); setResponse(null); setFailure(''); setRequestInfo(null); setCursor(''); }
   const params = new URLSearchParams();
@@ -182,8 +184,8 @@ export function ApiPage({exampleProduct, exampleEstimate, providers}: Props) {
   const products = Array.isArray(response?.data) && response.data.every(p => p && typeof p === 'object' && 'prices' in p) ? response.data as PublicProduct[] : null;
   const canSummarize = Boolean(estimate || products?.length);
   const filter = (label: string) => label.toLowerCase().includes(search.toLowerCase().trim());
-  const navLink = (id: string, label: string, badge?: string) => <a key={id} href={'#' + id} className={styles.navItem} aria-current={section === id ? 'page' : undefined}
-    onClick={event => { event.preventDefault(); navigate(id); }}>{badge && <span className={badge === 'POST' ? styles.navPost : styles.navMethod}>{badge}</span>}<span>{label}</span></a>;
+  const navLink = (id: string, label: string, badge?: string) => <Link key={id} href={documentationPath(id)} prefetch={false} className={styles.navItem} aria-current={section === id ? 'page' : undefined}
+    onClick={() => setMenuOpen(false)}>{badge && <span className={badge === 'POST' ? styles.navPost : styles.navMethod}>{badge}</span>}<span>{label}</span></Link>;
   const currentGroup = mcp ? 'MCP' : endpoint?.id === 'estimates' ? 'Калькулятор' : endpoint ? 'Каталог' : 'Начало работы';
 
   return <div className={styles.shell} data-theme={theme}>
@@ -191,8 +193,8 @@ export function ApiPage({exampleProduct, exampleEstimate, providers}: Props) {
     <header className={styles.topbar}>
       <Link href="/" className={styles.brand}><span className={styles.brandMark}>CF</span><span>Cloud FinOps<span className={styles.brandSuffix}> / developers</span></span></Link>
       <nav className={styles.surfaceTabs} aria-label="Раздел документации">
-        <a href="#overview" aria-current={!mcp ? 'page' : undefined} onClick={e => {e.preventDefault(); navigate('overview');}}>API Reference</a>
-        <a href="#mcp-connect" aria-current={mcp ? 'page' : undefined} onClick={e => {e.preventDefault(); navigate('mcp-connect');}}>MCP</a>
+        <Link href="/api" aria-current={!mcp ? 'page' : undefined}>API Reference</Link>
+        <Link href="/api/mcp" aria-current={mcp ? 'page' : undefined}>MCP</Link>
       </nav>
       <div className={styles.topActions}><span className={styles.version}>v1</span><a href="/api/v1/openapi.json" className={styles.topLink}>OpenAPI <ArrowUpRight width={13}/></a><Link href="/catalog" className={styles.topLink}>На сайт <ArrowUpRight width={13}/></Link>
         <button className={styles.iconButton} aria-label={theme === 'light' ? 'Включить тёмную тему' : 'Включить светлую тему'} onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>{theme === 'light' ? <Moon width={18}/> : <Sun width={18}/>}</button>
@@ -225,15 +227,15 @@ export function ApiPage({exampleProduct, exampleEstimate, providers}: Props) {
             {section === 'overview' && <>
               <p className={styles.lead}>Cloud FinOps API предоставляет доступ к каталогу SKU и публичным тарифам российских облаков, а также позволяет рассчитывать и сравнивать стоимость конфигураций.</p>
               <div className={styles.quickFacts}><span>JSON / HTTPS</span><span>Без API-ключа</span><span>Только чтение</span></div>
-              <section className={styles.docSection}><h2>Первый запрос</h2><p>В примере выполняется поиск GPU L4 в каталоге российских облаков. Нажмите «Выполнить запрос», чтобы получить актуальные данные и посмотреть полный ответ API.</p><div className={styles.baseUrl}><span>BASE URL</span><code>{baseUrl}</code><CopyButton value={baseUrl} label="Скопировать URL"/></div></section>
+              <section className={styles.docSection}><h2>Какие данные доступны</h2><p>В каталоге представлены {providers.map(p => p.name).join(', ')}. REST API позволяет изучать тарифы compute, GPU, хранилищ, сети, CDN, Kubernetes и AI. Для compute и GPU доступен расчёт конфигурации; для остальных категорий можно получить отдельные ставки и правила тарификации.</p></section><section className={styles.docSection}><h2>Первый запрос</h2><p>В примере выполняется поиск GPU L4 в каталоге российских облаков. Нажмите «Выполнить запрос», чтобы получить актуальные данные и посмотреть полный ответ API.</p><div className={styles.baseUrl}><span>BASE URL</span><code>{baseUrl}</code><CopyButton value={baseUrl} label="Скопировать URL"/></div></section>
               <section className={styles.docSection}><h2>Каталог и калькулятор</h2>
-                <a href="#products" className={styles.featureLink} onClick={e => {e.preventDefault(); navigate('products');}}><span className={styles.featureIndex}>01</span><div><h3>Каталог продуктов</h3><p>Каталог содержит характеристики SKU и правила тарификации, включая тарифные ступени, и позволяет находить сопоставимые альтернативы.</p></div><ArrowRight width={18}/></a>
-                <a href="#estimates" className={styles.featureLink} onClick={e => {e.preventDefault(); navigate('estimates');}}><span className={styles.featureIndex}>02</span><div><h3>Калькулятор конфигураций</h3><p>По минимально необходимым ресурсам калькулятор подбирает конфигурации у провайдеров и возвращает стоимость каждого компонента.</p></div><ArrowRight width={18}/></a>
+                <Link href="/api/products" className={styles.featureLink}><span className={styles.featureIndex}>01</span><div><h3>Каталог продуктов</h3><p>Каталог содержит характеристики SKU и правила тарификации, включая тарифные ступени, и позволяет находить сопоставимые альтернативы.</p></div><ArrowRight width={18}/></Link>
+                <Link href="/api/estimates" className={styles.featureLink}><span className={styles.featureIndex}>02</span><div><h3>Калькулятор конфигураций</h3><p>По минимально необходимым ресурсам калькулятор подбирает конфигурации у провайдеров и возвращает стоимость каждого компонента.</p></div><ArrowRight width={18}/></Link>
               </section>
-              <section className={styles.docSection}><h2>Доступ через REST и MCP</h2><p>REST и MCP используют общий контракт и возвращают одни и те же данные. Для интеграции с приложением доступны REST-методы, а для работы через AI-клиент — пять инструментов MCP.</p><button className={styles.textLink} onClick={() => navigate('mcp-connect')}>Подключить MCP <ArrowRight width={15}/></button></section>
+              <section className={styles.docSection}><h2>Доступ через REST и MCP</h2><p>REST и MCP используют общий контракт и возвращают одни и те же данные. Для интеграции с приложением доступны REST-методы, а для работы через AI-клиент — пять инструментов MCP.</p><Link className={styles.textLink} href="/api/mcp">Подключить MCP <ArrowRight width={15}/></Link></section>
             </>}
             {endpoint && <><p className={styles.lead}>{endpoint.description}</p><div className={styles.endpointSignature}><span className={endpoint.method === 'POST' ? styles.postBadge : styles.getBadge}>{mcp ? 'TOOL' : endpoint.method}</span><code>{mcp ? endpoint.tool : '/api/v1' + endpoint.path}</code></div>
-              {mcp && <p>Передайте параметры в поле <code>arguments</code>. Результат вызова возвращается в <code>structuredContent</code> и в виде JSON-текста.</p>}
+              {mcp && <p>Передайте параметры в поле <code>arguments</code>. Успешный результат возвращается в <code>structuredContent</code> и в виде JSON-текста.</p>}
               {isEstimate && <Callout>Месячная оценка рассчитывается за 720 часов. Итоговую цену и наличие мощностей уточняйте у провайдера.</Callout>}
               <Parameters items={endpoint.parameters}/><section className={styles.docSection}><h2>Ответ</h2><p>{endpoint.returns}</p></section>
               {isEstimate && <section className={styles.docSection}><h2>Статусы расчёта</h2><StatusReference/></section>}
@@ -255,9 +257,9 @@ export function ApiPage({exampleProduct, exampleEstimate, providers}: Props) {
             </>}
             {section === 'mcp-connect' && <><p className={styles.lead}>MCP-сервер предоставляет AI-клиенту доступ к каталогу облаков через пять инструментов для поиска SKU, изучения тарифов и расчёта стоимости конфигураций.</p><div className={styles.quickFacts}><span>Streamable HTTP</span><span>Без авторизации</span><span>5 инструментов</span></div>
               <ol className={styles.steps}><li><strong>Добавьте удалённый MCP-сервер</strong><p>В настройках AI-клиента выберите подключение удалённого сервера по URL и укажите транспорт Streamable HTTP.</p></li><li><strong>Вставьте адрес сервера</strong><div className={styles.baseUrl}><code>{mcpUrl}</code><CopyButton value={mcpUrl} label="Скопировать URL"/></div></li><li><strong>Проверьте доступные инструменты</strong><p>После подключения клиент получит список из пяти инструментов через tools/list. Они используют те же схемы данных, что и REST API.</p></li></ol>
-              <section className={styles.docSection}><h2>Пример запроса к AI-клиенту</h2><div className={styles.promptExample}>«Сравни месячную стоимость сервера с 4 vCPU, 8 GiB памяти и 100 GiB SSD у всех провайдеров»</div><p>Сравнивайте только предложения со статусом priced, а наличие мощностей уточняйте у провайдера.</p></section>
+              <section className={styles.docSection}><h2>Справочник для AI-клиентов</h2><p>После подключения клиент может прочитать документацию и OpenAPI через MCP resources. <a href="/api/reference.md">Markdown-справочник</a> содержит примеры вызовов, правила работы с ценами и последовательность выбора инструментов. Его также можно передать агенту, который выполняет обычные HTTP-запросы.</p></section><section className={styles.docSection}><h2>Пример запроса к AI-клиенту</h2><div className={styles.promptExample}>«Сравни месячную стоимость сервера с 4 vCPU, 8 GiB памяти и 100 GiB SSD у всех провайдеров»</div><p>Сравнивайте только предложения со статусом priced, а наличие мощностей уточняйте у провайдера.</p></section>
             </>}
-            <div className={styles.articleFooter}><span>Cloud FinOps · Public API v1</span><a href="/api/v1/openapi.json">Полная схема OpenAPI <ArrowUpRight width={12}/></a></div>
+            <div className={styles.articleFooter}><a href="/api/reference.md">Markdown</a><a href="/llms.txt">llms.txt</a><a href="/api/v1/openapi.json">OpenAPI 3.1 <ArrowUpRight width={12}/></a></div>
           </article>
           <aside className={styles.examples} id="api-examples" aria-label="Примеры и выполнение запросов"><div className={styles.examplesSticky}>
             {mcp ? <>

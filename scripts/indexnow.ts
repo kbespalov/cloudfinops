@@ -21,6 +21,7 @@
  */
 
 import {newsItems} from '../src/data/news';
+import {DOCUMENTATION_PAGES} from '../src/lib/public-api/discovery';
 
 const SITE_URL = (process.env.SITE_URL ?? 'https://cloudfinops.ru').replace(/\/$/, '');
 const KEY = process.env.INDEXNOW_KEY ?? 'd340d6f02d0606daf4eaff3243aa7dd0';
@@ -31,9 +32,9 @@ const HOST = new URL(SITE_URL).host;
 const ENDPOINTS = ['https://yandex.com/indexnow', 'https://api.indexnow.org/indexnow'];
 
 function allUrls(): string[] {
-  const staticRoutes = ['/', '/catalog', '/calculator', '/chat', '/api', '/news', '/about'];
+  const staticRoutes = ['/', '/catalog', '/calculator', '/chat', '/news', '/about', '/blog/cloudfinops-public-api'];
   const newsRoutes = newsItems.map((n) => `/news/${n.id}`);
-  return [...staticRoutes, ...newsRoutes].map((p) => `${SITE_URL}${p}`);
+  return [...new Set([...staticRoutes, ...DOCUMENTATION_PAGES.map(page => page.path), ...newsRoutes])].map((p) => `${SITE_URL}${p}`);
 }
 
 function targetUrls(): string[] {

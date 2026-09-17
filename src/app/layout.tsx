@@ -118,6 +118,11 @@ export const metadata: Metadata = {
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="ru" className={inter.variable} suppressHydrationWarning>
+      <head>
+        <link rel="describedby" href="/llms.txt" type="text/plain"/>
+        <link rel="service-desc" href="/api/v1/openapi.json" type="application/vnd.oai.openapi+json"/>
+        <link rel="service-doc" href="/api" type="text/html"/>
+      </head>
       <body suppressHydrationWarning>
         <script dangerouslySetInnerHTML={{__html: THEME_BOOT_SCRIPT}} />
         <AppProviders>

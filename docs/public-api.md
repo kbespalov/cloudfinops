@@ -22,7 +22,7 @@ No authentication or persisted estimates in v1. All operations are read-only;
 The operation registry drives REST, MCP and OpenAPI. Responses share
 `{data, meta: {apiVersion, catalogVersion, taxonomyVersion, generatedAt}}`;
 estimates additionally have `calculationVersion`. Lists include `pagination`.
-MCP returns that envelope as structuredContent and JSON text.
+Successful MCP calls return that envelope as structuredContent and JSON text. Tool errors set isError=true and return details in text content without structuredContent, so SDK clients do not validate an error against the success outputSchema.
 
 ## Catalog
 
@@ -159,3 +159,34 @@ and its proxy were not tested in this run.
 
 Out of scope: saved estimates, API keys, k8s/lakehouse/inference estimates, dense
 search, hour/year estimates and a generated client SDK.
+
+## Discovery and indexing
+
+Documentation sections have standalone server-rendered URLs under `/api`, including
+`/api/mcp`, `/api/products` and `/api/estimates`. Each page has its own canonical,
+title, description, Open Graph metadata and TechArticle/BreadcrumbList structured
+data. The sitemap and IndexNow submission list use the same page registry.
+Existing `/api#section` links are upgraded to the corresponding URL in the browser.
+
+`/llms.txt` is a compact index. `/llms-full.txt` and `/api/reference.md` expose the
+full usage guide without executing JavaScript. Provider coverage and operation
+examples are generated from the catalog and shared operation registry. The guide
+explains tool selection, SKU versus configuration pricing, source attribution,
+units, VAT, pagination and known metadata limitations.
+
+MCP advertises input/output schemas, task-oriented descriptions and two readable
+resources (the usage guide and OpenAPI). HTTP Link headers and HTML links connect
+the service to its documentation and machine-readable contract. robots.txt already
+allows crawling for all user agents; no special crawler content is served.
+
+After deployment, run `npm run test:api:smoke -- https://cloudfinops.ru`, check that
+the hosting/CDN also allows crawler requests, then run `npm run seo:indexnow`.
+Submit or refresh the sitemap in the site's existing search-console accounts.
+Run IndexNow only after the new URLs are live. Discovery files do not automatically
+install an MCP server in AI clients or guarantee indexing or API usage.
+
+References: Google Search Central AI features guidance
+(https://developers.google.com/search/docs/appearance/ai-features), MCP TypeScript
+SDK server guide (https://ts.sdk.modelcontextprotocol.io/server), the llms.txt
+proposal (https://llmstxt.org/), and service discovery links in RFC 8631
+(https://www.rfc-editor.org/rfc/rfc8631).

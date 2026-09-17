@@ -3,12 +3,13 @@ import {errorBody, successBody} from './envelope';
 import {CALCULATION_VERSION} from './constants';
 import {etagFor} from './pagination';
 import {clientIp, publicApiRateLimiter} from './rate-limit';
+import {DISCOVERY_LINKS} from './discovery';
 
 export const CORS_HEADERS: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, MCP-Protocol-Version, MCP-Session-Id',
-  'Access-Control-Expose-Headers': 'Request-Id, ETag, Retry-After',
+  'Access-Control-Expose-Headers': 'Request-Id, ETag, Retry-After, Link',
 };
 
 export function requestId(): string {
@@ -21,6 +22,7 @@ export function withHeaders(
 ): NextResponse {
   const id = requestId();
   response.headers.set('Request-Id', id);
+  response.headers.set('Link', DISCOVERY_LINKS);
   for (const [k, v] of Object.entries(CORS_HEADERS)) {
     response.headers.set(k, v);
   }
