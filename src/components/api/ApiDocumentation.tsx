@@ -1,4 +1,5 @@
 import type {Metadata} from 'next';
+import {listAttributes} from '@/lib/public-api/attributes';
 import {ApiPage} from './ApiPage';
 import {listProducts, listProviders, listRegions, listServices} from '@/lib/public-api/catalog';
 import {createEstimate} from '@/lib/public-api/estimates';
@@ -21,10 +22,6 @@ export function ApiDocumentation({section = 'overview'}: {section?: string}) {
   const exampleEstimate = createEstimate({resource: {type: 'compute', vcpu: 4, memoryGiB: 8}, providers: ['cloud-ru']});
   const regions = listRegions();
   const exampleRegion = regions.find(region => region.codes.length > 1) ?? regions[0];
-  const tokenExamples = [
-    listProducts({services: ['ai'], meters: ['ai.inference.tokens.input'], limit: 1}).items[0],
-    listProducts({services: ['ai'], meters: ['ai.embeddings.tokens'], limit: 1}).items[0],
-  ].filter(Boolean);
   const structuredData = {'@context': 'https://schema.org', '@graph': [
     {'@type': 'TechArticle', '@id': `${SITE_URL}${page.path}#documentation`, url: `${SITE_URL}${page.path}`,
       headline: page.title, description: page.description, inLanguage: 'ru', dateModified: DOCS_UPDATED_AT,
@@ -41,7 +38,7 @@ export function ApiDocumentation({section = 'overview'}: {section?: string}) {
   ]};
   return <>
     <script type="application/ld+json" dangerouslySetInnerHTML={{__html: JSON.stringify(structuredData).replace(/</g, '\\u003c')}}/>
-    <ApiPage key={section} initialSection={section} exampleProduct={exampleProduct} exampleRegion={exampleRegion} exampleEstimate={exampleEstimate} services={listServices()} tokenExamples={tokenExamples}
+    <ApiPage key={section} initialSection={section} exampleProduct={exampleProduct} exampleRegion={exampleRegion} exampleEstimate={exampleEstimate} services={listServices()} attributeCategories={listAttributes()} regions={regions}
       providers={listProviders().map(({id, name}) => ({id, name}))}/>
   </>;
 }

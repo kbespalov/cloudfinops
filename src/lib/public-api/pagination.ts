@@ -1,5 +1,6 @@
 import {createHash} from 'node:crypto';
 import {z} from 'zod';
+import {attributeFiltersSchema} from './attribute-schemas';
 import {catalogVersion} from './envelope';
 import {DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT} from './constants';
 const cursorSchema = z.strictObject({
@@ -8,6 +9,7 @@ const cursorSchema = z.strictObject({
   services:z.array(z.string()).default([]),serviceProducts:z.array(z.string()).default([]),
   meters:z.array(z.string()).default([]),units:z.array(z.string()).default([]),
   modelIds:z.array(z.string()).default([]),tokenDirections:z.array(z.string()).default([]),inferenceModes:z.array(z.string()).default([]),
+  attributes:attributeFiltersSchema.default({}),
   order:z.enum(['lexical-v1','provider-sku-v1']),
 });
 export type CursorPayload = z.infer<typeof cursorSchema>;

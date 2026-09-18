@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import {Client} from '@modelcontextprotocol/sdk/client/index.js';
 import {StreamableHTTPClientTransport} from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import {responseSchemas,errorSchema} from '../src/lib/public-api/responses';
+import type {CategoryAttributes} from '../src/lib/public-api/attribute-registry';
+import type {PublicProduct} from '../src/lib/public-api/types';
 import {DOCUMENTATION_PAGES, SITE_URL} from '../src/lib/public-api/discovery';
 const base=process.argv[2]??'http://127.0.0.1:3107';
 const resource={type:'compute',vcpu:4,memoryGiB:8};
@@ -11,7 +13,7 @@ async function request(path:string,options:RequestInit={}) {
   return {response,body:await response.json()};
 }
 async function main() {
-  for(const [path,schema] of [['providers','list_providers'],['categories','list_categories'],['services','list_services'],['regions','list_regions']] as const) {
+  for(const [path,schema] of [['providers','list_providers'],['categories','list_categories'],['attributes','list_attributes'],['services','list_services'],['regions','list_regions']] as const) {
     const r=await request('/api/v1/'+path);assert.equal(r.response.status,200);responseSchemas[schema].parse(r.body);
     assert.equal(r.response.headers.get('access-control-allow-origin'),'*');
   }
@@ -23,6 +25,34 @@ async function main() {
   }
   const second=await request('/api/v1/products?limit=2&cursor='+encodeURIComponent(first.body.pagination.nextCursor));
   assert.ok(second.body.data.every((p:{provider:{id:string}})=>p.provider.id==='vk-cloud'));assert.notEqual(first.body.data[0].id,second.body.data[0].id);
+  const registry=await request('/api/v1/attributes?categories=gpu');
+  assert.equal(registry.response.status,200);
+  responseSchemas.list_attributes.parse(registry.body);
+  const gpuRegistry=registry.body.data as CategoryAttributes[];
+  assert.equal(gpuRegistry.length,1);assert.equal(gpuRegistry[0].category,'gpu');
+  assert.deepEqual(gpuRegistry[0].attributes.find(a=>a.id==='gpuCount')?.operators,['eq','in','range']);
+  const gpuFilters={gpuModel:{eq:'NVIDIA L4'},gpuCount:{range:{min:1,max:4}}};
+  const gpuParams=new URLSearchParams({categories:'gpu',attributes:JSON.stringify(gpuFilters),limit:'1'});
+  const gpuFirst=await request('/api/v1/products?'+gpuParams);
+  assert.equal(gpuFirst.response.status,200);
+  responseSchemas.search_products.parse(gpuFirst.body);
+  const gpuPage=gpuFirst.body as {data:PublicProduct[];pagination:{nextCursor:string|null}};
+  assert.equal(gpuPage.data.length,1);assert.equal(gpuPage.data[0].attributes.gpuModel,'NVIDIA L4');
+  assert.ok(gpuPage.pagination.nextCursor);
+  const gpuNext=await request('/api/v1/products?'+new URLSearchParams({cursor:gpuPage.pagination.nextCursor!,limit:'1'}));
+  assert.equal(gpuNext.response.status,200);assert.equal(gpuNext.body.data[0].attributes.gpuModel,'NVIDIA L4');
+  assert.notEqual(gpuNext.body.data[0].id,gpuPage.data[0].id);
+  const aiQuery={services:['ai'],units:['token'],attributes:{modelId:{eq:'gpt-oss-120b'},tokenDirection:{in:['input','output']}}};
+  const ai=await request('/api/v1/products?'+new URLSearchParams({services:'ai',units:'token',attributes:JSON.stringify(aiQuery.attributes)}));
+  assert.equal(ai.response.status,200);
+  responseSchemas.search_products.parse(ai.body);
+  const aiProducts=ai.body.data as PublicProduct[];
+  assert.equal(aiProducts.length,6);
+  assert.ok(aiProducts.every(p=>p.attributes.modelId==='gpt-oss-120b'&&['input','output'].includes(String(p.attributes.tokenDirection))));
+  for(const attributes of [{vcpu:{eq:'4'}},{vcpu:{range:{min:8,max:4}}},{gpuModel:{contains:'L4'}}]) {
+    const invalid=await request('/api/v1/products?'+new URLSearchParams({attributes:JSON.stringify(attributes)}));
+    assert.equal(invalid.response.status,400);errorSchema.parse(invalid.body);
+  }
   const post={method:'POST',headers:{'content-type':'application/json'}};
   const estimate=await request('/api/v1/estimates',{...post,body:JSON.stringify({resource})});
   assert.equal(estimate.response.status,200);responseSchemas.create_estimate.parse(estimate.body);
@@ -48,6 +78,9 @@ async function main() {
       const args=name==='create_estimate'?{resource}:name==='get_product'||name==='list_product_alternatives'?{id}:{};
       const result=await client.callTool({name,arguments:args});assert.ok(!result.isError,name);responseSchemas[name].parse(result.structuredContent);
     }
+    const filtered=await client.callTool({name:'search_products',arguments:aiQuery});
+    assert.ok(!filtered.isError);
+    assert.deepEqual(responseSchemas.search_products.parse(filtered.structuredContent).data,aiProducts);
     const resources=await client.listResources();assert.equal(resources.resources.length,2);
     for(const resource of resources.resources) {
       const result=await client.readResource({uri:resource.uri});assert.ok(result.contents.some(content=>'text' in content&&content.text.length>100));

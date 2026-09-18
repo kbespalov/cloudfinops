@@ -1,11 +1,11 @@
 import type {CatalogMeter} from '@/lib/catalog';
-import {catalog, extractGpuCount, extractGpuModel, extractRamGiB, extractStorageClass, extractVcpu} from '@/lib/catalog';
+import {catalog} from '@/lib/catalog';
 import {priceId, productId} from './ids';
 import {decimalString, parseDecimal, linearAmount, type Money} from './money';
 import {effectiveRate, resolveUnit, resolveRawUnit, vatMode} from './units';
 import type {PriceTier, PublicPrice, PublicProduct} from './types';
 import {regionCode, regionCodes} from './regions';
-import {serviceAttributes} from './service-attributes';
+import {productAttributes} from './attributes';
 
 const CANON_KEYS = new Set([
   'vcpu',
@@ -45,17 +45,7 @@ export function meterToProduct(meter: CatalogMeter): PublicProduct {
     regionCode: regionCode(meter.region),
     regionCodes: regionCodes(meter.region),
     derived: Boolean(meter.synthetic),
-    attributes: {
-      ...serviceAttributes(meter),
-      vcpu: extractVcpu(meter),
-      memoryGiB: extractRamGiB(meter),
-      gpuModel: extractGpuModel(meter),
-      gpuCount: extractGpuCount(meter),
-      purchaseModel: meter.purchaseModel,
-      pricingMode: meter.pricingMode,
-      storageClass: extractStorageClass(meter),
-      region: meter.region,
-    },
+    attributes: productAttributes(meter),
     providerAttributes,
     prices: [price],
     source: {

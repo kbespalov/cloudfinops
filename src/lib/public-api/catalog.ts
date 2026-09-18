@@ -7,7 +7,8 @@ import {decodeCursor, encodeCursor, parseLimit, invalidParameter, type CursorPay
 import {meterToProduct} from './product';
 import {matchesRegion, regionCode, regionCodes} from './regions';
 import type {PublicCategory, PublicProduct, PublicProvider, PublicRegion, PublicService} from './types';
-import {serviceAttributes} from './service-attributes';
+import {matchesAttributes, productAttributes} from './attributes';
+import {attributeDefinitions, canonicalAttributeFilters} from './attribute-registry';
 import {resolveUnit} from './units';
 
 export type ProductListQuery = z.infer<typeof productQuerySchema>;
@@ -108,10 +109,6 @@ function applyFilters(meters: CatalogMeter[], query: Omit<CursorPayload, 'v' | '
     services: (m: CatalogMeter) => m.service,
     meters: (m: CatalogMeter) => m.meter,
     units: (m: CatalogMeter) => resolveUnit(m).unit,
-    serviceProducts: (m: CatalogMeter) => serviceAttributes(m).serviceProduct,
-    modelIds: (m: CatalogMeter) => serviceAttributes(m).modelId,
-    tokenDirections: (m: CatalogMeter) => serviceAttributes(m).tokenDirection,
-    inferenceModes: (m: CatalogMeter) => serviceAttributes(m).inferenceMode,
   };
   for (const key of Object.keys(fields) as Array<keyof typeof fields>) {
     if (!query[key].length) continue;
@@ -121,6 +118,15 @@ function applyFilters(meters: CatalogMeter[], query: Omit<CursorPayload, 'v' | '
       return value !== null && values.has(value);
     });
   }
+  for (const def of attributeDefinitions) {
+    if (!def.legacyParameter) continue;
+    const values = query[def.legacyParameter];
+    if (values.length) rows = rows.filter(m => {
+      const value = productAttributes(m)[def.id];
+      return value !== null && values.includes(String(value));
+    });
+  }
+  if (Object.keys(query.attributes).length) rows = rows.filter(m => matchesAttributes(m, query.attributes));
   if (query.regions?.length) {
     const regions = query.regions;
     rows = rows.filter(m => regions.some(region => matchesRegion(m.region, region)));
@@ -141,7 +147,7 @@ export function listProducts(
   const limit = query.limit ?? parseLimit(null);
   let offset = 0;
   let filters: Omit<CursorPayload, 'v' | 'offset' | 'order'> = {
-    q: query.q ?? '', status: query.status ?? '',
+    q: query.q ?? '', status: query.status ?? '', attributes: query.attributes ?? {},
     providers: query.providers ?? [], categories: query.categories ?? [], regions: query.regions ?? [],
     services: query.services ?? [], serviceProducts: query.serviceProducts ?? [],
     meters: query.meters ?? [], units: query.units ?? [], modelIds: query.modelIds ?? [],
@@ -158,11 +164,23 @@ export function listProducts(
         throw invalidParameter('cursor filters do not match this request', '/' + key);
       }
     }
+    if (query.attributes !== undefined && canonicalAttributeFilters(query.attributes) !== canonicalAttributeFilters(cur.attributes)) {
+      throw invalidParameter('cursor filters do not match this request', '/attributes');
+    }
     offset = cur.offset;
     const {v: _version, offset: _offset, order: _order, ...storedFilters} = cur;
     filters = storedFilters;
   }
 
+  // Keep every generated cursor within the documented 16,000-character limit, including UTF-8 values.
+  if (Buffer.byteLength(JSON.stringify(filters), 'utf8') > 11000) {
+    throw invalidParameter('combined filters must not exceed 11000 UTF-8 bytes', '/');
+  }
+  const activeAttributes = attributeDefinitions.filter(def => filters.attributes[def.id]);
+  const candidateCategories = filters.categories.length ? filters.categories : CATEGORY_IDS;
+  if (activeAttributes.length && !candidateCategories.some(category => activeAttributes.every(def => def.categories.includes(category)))) {
+    throw invalidParameter('attributes do not apply to a common selected category; see GET /attributes', '/attributes');
+  }
   const {q} = filters;
   const tokens = tokenize(q);
   let rows = applyFilters(metersOf(data), filters);

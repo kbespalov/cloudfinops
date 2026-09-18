@@ -8,11 +8,15 @@ import {useAppTheme} from '@/components/AppProviders';
 import type {EstimateResult, PublicProduct, PublicRegion, PublicService} from '@/lib/public-api/types';
 import {baseUrl, computeExample, endpoints, gpuExample, guides, mcpUrl, type Parameter} from './api-reference';
 import styles from './ApiPage.module.css';
+import {AttributeFields, AttributeReference} from './AttributeFields';
+import {compileAttributeDrafts, emptyAttributeDraft, type AttributeDrafts} from './attribute-form';
+import type {CategoryAttributes} from '@/lib/public-api/attribute-registry';
+import {PUBLIC_UNITS} from '@/lib/public-api/constants';
 import {documentationPath} from '@/lib/public-api/discovery';
 
 type ApiResponse = {data?: unknown; meta?: Record<string, unknown>; pagination?: {nextCursor: string | null}; error?: {code: string; message: string; details?: unknown[]}};
 type Language = 'cURL' | 'JavaScript' | 'Python' | 'JSON';
-type Props = {initialSection: string; exampleProduct: PublicProduct; exampleRegion: PublicRegion; exampleEstimate: EstimateResult; providers: Array<{id: string; name: string}>; services: PublicService[]; tokenExamples: PublicProduct[]};
+type Props = {initialSection: string; exampleProduct: PublicProduct; exampleRegion: PublicRegion; exampleEstimate: EstimateResult; providers: Array<{id: string; name: string}>; services: PublicService[]; attributeCategories: CategoryAttributes[]; regions: PublicRegion[]};
 const shellQuote = (value: string) => "'" + value.replaceAll("'", "'\\''") + "'";
 const pretty = (value: unknown) => JSON.stringify(value, null, 2);
 const validSection = (id: string) => guides.some(g => g.id === id) || endpoints.some(e => e.id === id) || id === 'mcp-connect' || endpoints.some(e => e.tool && 'mcp-' + e.id === id);
@@ -70,20 +74,22 @@ function QuoteSummary({estimate}: {estimate: EstimateResult}) {
   </div>;
 }
 
-export function ApiPage({initialSection, exampleProduct, exampleRegion, exampleEstimate, providers, services, tokenExamples}: Props) {
+export function ApiPage({initialSection, exampleProduct, exampleRegion, exampleEstimate, providers, services, attributeCategories, regions}: Props) {
   const {theme, setTheme} = useAppTheme();
   const router = useRouter();
   const section = initialSection;
   const [search, setSearch] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [language, setLanguage] = useState<Language>('cURL');
-  const [query, setQuery] = useState('L4');
+  const [query, setQuery] = useState('');
   const [provider, setProvider] = useState('');
   const [service, setService] = useState('');
   const [unit, setUnit] = useState('');
   const [meterFilter, setMeterFilter] = useState('');
-  const [modelId, setModelId] = useState('');
-  const [tokenDirection, setTokenDirection] = useState('');
+  const [category, setCategory] = useState('');
+  const [region, setRegion] = useState('');
+  const [attributeDrafts, setAttributeDrafts] = useState<AttributeDrafts>({});
+  const compiledAttributes = compileAttributeDrafts(attributeDrafts);
   const [productId, setProductId] = useState(exampleProduct.id);
   const [providerId, setProviderId] = useState('selectel');
   const [body, setBody] = useState(computeExample);
@@ -135,11 +141,14 @@ export function ApiPage({initialSection, exampleProduct, exampleRegion, exampleE
     router.push(documentationPath(id));
   }
   function resetResponse() { abortRef.current?.abort(); setPending(false); setResponse(null); setFailure(''); setRequestInfo(null); setCursor(''); }
+  function clearProductFilters() {
+    setQuery(''); setProvider(''); setCategory(''); setRegion(''); setService(''); setUnit(''); setMeterFilter(''); setAttributeDrafts({}); resetResponse();
+  }
   function selectProductExample(kind: 'gpu' | 'tokens' | 'embeddings') {
-    setQuery(kind === 'gpu' ? 'L4' : ''); setProvider('');
+    clearProductFilters(); setCategory(kind === 'gpu' ? 'gpu' : 'ai');
     setService(kind === 'gpu' ? '' : 'ai'); setUnit(kind === 'gpu' ? '' : 'token');
     setMeterFilter(kind === 'embeddings' ? 'ai.embeddings.tokens' : '');
-    setModelId(''); setTokenDirection(''); resetResponse();
+    if (kind === 'gpu') setAttributeDrafts({gpuModel: {...emptyAttributeDraft(), value: 'NVIDIA L4'}});
   }
   const params = new URLSearchParams();
   if (query) params.set('q', query);
@@ -147,15 +156,17 @@ export function ApiPage({initialSection, exampleProduct, exampleRegion, exampleE
   if (service) params.set('services', service);
   if (unit) params.set('units', unit);
   if (meterFilter) params.set('meters', meterFilter);
-  if (modelId) params.set('modelIds', modelId);
-  if (tokenDirection) params.set('tokenDirections', tokenDirection);
+  if (category) params.set('categories', category);
+  if (region) params.append('regions', region);
+  if (Object.keys(compiledAttributes.filters).length) params.set('attributes', JSON.stringify(compiledAttributes.filters));
   params.set('limit', '3');
   if (cursor) params.set('cursor', cursor);
   let path = '/api/v1' + activeEndpoint.path.replace('{id}', encodeURIComponent(hasProductId ? productId : providerId));
   if (activeEndpoint.id === 'products') path += '?' + params;
+  if (activeEndpoint.id === 'attributes' && category) path += '?' + new URLSearchParams({categories: category});
   const url = 'https://cloudfinops.ru' + path;
   const method = activeEndpoint.method;
-  const curl = 'curl ' + (method === 'POST' ? '-X POST ' : '--get ') + shellQuote(url) +
+  const curl = activeEndpoint.id === 'products' ? 'curl --get ' + shellQuote(baseUrl + '/products') + Array.from(params, ([key, value]) => ' \\\n  --data-urlencode ' + shellQuote(key + '=' + value)).join('') : 'curl ' + (method === 'POST' ? '-X POST ' : '--get ') + shellQuote(url) +
     (method === 'POST' ? " \\\n  -H 'Content-Type: application/json' \\\n  --data-raw " + shellQuote(body) : '');
   const js = 'const response = await fetch(\n  ' + JSON.stringify(url) +
     (method === 'POST' ? ',\n  {\n    method: "POST",\n    headers: { "Content-Type": "application/json" },\n    body: JSON.stringify(' + body.replaceAll('\n', '\n    ') + ')\n  }' : '') +
@@ -165,9 +176,11 @@ export function ApiPage({initialSection, exampleProduct, exampleRegion, exampleE
   const mcpArgs = endpoint?.id === 'estimates' ? body : endpoint?.id === 'products' ? pretty({services: ['ai'], units: ['token'], limit: 3}) : hasProductId ? pretty({id: productId}) : '{}';
   const mcpCode = endpoint ? 'const result = await client.callTool({\n  name: "' + endpoint.tool + '",\n  arguments: ' + mcpArgs.replaceAll('\n', '\n  ') + '\n});\n\nconsole.log(result.structuredContent);' :
     'import { Client } from\n  "@modelcontextprotocol/sdk/client/index.js";\nimport { StreamableHTTPClientTransport } from\n  "@modelcontextprotocol/sdk/client/streamableHttp.js";\n\nconst client = new Client({\n  name: "my-finops-app",\n  version: "1.0.0"\n});\n\nawait client.connect(\n  new StreamableHTTPClientTransport(\n    new URL("' + mcpUrl + '")\n  )\n);\n\nconst { tools } = await client.listTools();';
-  const currentCode = mcp ? mcpCode : language === 'JavaScript' ? js : language === 'Python' ? python : language === 'JSON' && isEstimate ? body : curl;
+  const invalidAttributes = activeEndpoint.id === 'products' ? compiledAttributes.error : '';
+  const currentCode = invalidAttributes ? '# ' + invalidAttributes : mcp ? mcpCode : language === 'JavaScript' ? js : language === 'Python' ? python : language === 'JSON' && isEstimate ? body : curl;
 
   async function run(nextCursor?: string) {
+    if (invalidAttributes) return;
     abortRef.current?.abort();
     const controller = new AbortController(); abortRef.current = controller;
     setPending(true); setFailure(''); setRequestInfo(null);
@@ -188,8 +201,7 @@ export function ApiPage({initialSection, exampleProduct, exampleRegion, exampleE
   }
 
   const examplePrice = exampleProduct.prices[0];
-  const selectedExample = activeEndpoint.id === 'products' && service === 'ai' && unit === 'token'
-    ? tokenExamples.find(product => !meterFilter || product.meter === meterFilter) ?? exampleProduct : exampleProduct;
+  const selectedExample = exampleProduct;
   const selectedPrice = selectedExample.prices[0];
   const productSample = {id: selectedExample.id, name: selectedExample.name, provider: selectedExample.provider, service: selectedExample.service, layer: selectedExample.layer, meter: selectedExample.meter,
     ...(selectedExample.service === 'ai' ? {attributes: {modelId: selectedExample.attributes.modelId, modelFamily: selectedExample.attributes.modelFamily, tokenDirection: selectedExample.attributes.tokenDirection, serviceProduct: selectedExample.attributes.serviceProduct, inferenceMode: selectedExample.attributes.inferenceMode}} : {}),
@@ -198,6 +210,7 @@ export function ApiPage({initialSection, exampleProduct, exampleRegion, exampleE
   if (activeEndpoint.id === 'product') example = {data: productSample, meta: {apiVersion: 'v1'}};
   if (activeEndpoint.id === 'providers' || activeEndpoint.id === 'provider') example = {data: activeEndpoint.id === 'provider' ? providers.find(p => p.id === providerId) : providers, meta: {apiVersion: 'v1'}};
   if (activeEndpoint.id === 'categories') example = {data: [{id: 'gpu', title: 'GPU'}], meta: {apiVersion: 'v1'}};
+  if (activeEndpoint.id === 'attributes') example = {data: attributeCategories.filter(item => !category || item.category === category), meta: {apiVersion: 'v1'}};
   if (activeEndpoint.id === 'services') example = {data: services, meta: {apiVersion: 'v1'}};
   if (activeEndpoint.id === 'regions') example = {data: [exampleRegion], meta: {apiVersion: 'v1'}};
   if (activeEndpoint.id === 'alternatives') example = {data: [], pagination: {nextCursor: null}, meta: {apiVersion: 'v1'}};
@@ -249,7 +262,7 @@ export function ApiPage({initialSection, exampleProduct, exampleRegion, exampleE
             {section === 'overview' && <>
               <p className={styles.lead}>Cloud FinOps API предоставляет доступ к каталогу SKU и публичным тарифам российских облаков, а также позволяет рассчитывать и сравнивать стоимость конфигураций.</p>
               <div className={styles.quickFacts}><span>JSON / HTTPS</span><span>Без API-ключа</span><span>Только чтение</span></div>
-              <section className={styles.docSection}><h2>Какие данные доступны</h2><p>В каталоге представлены {providers.map(p => p.name).join(', ')}. REST API позволяет изучать тарифы compute, GPU, хранилищ, сети, CDN, Kubernetes и AI. Для compute и GPU доступен расчёт конфигурации; для остальных категорий можно получить отдельные ставки и правила тарификации.</p></section><section className={styles.docSection}><h2>Первый запрос</h2><p>В примере выполняется поиск GPU L4 в каталоге российских облаков. Нажмите «Выполнить запрос», чтобы получить актуальные данные и посмотреть полный ответ API.</p><div className={styles.baseUrl}><span>BASE URL</span><code>{baseUrl}</code><CopyButton value={baseUrl} label="Скопировать URL"/></div></section>
+              <section className={styles.docSection}><h2>Какие данные доступны</h2><p>В каталоге представлены {providers.map(p => p.name).join(', ')}. REST API позволяет изучать тарифы compute, GPU, хранилищ, сети, CDN, Kubernetes и AI. Для compute и GPU доступен расчёт конфигурации; для остальных категорий можно получить отдельные ставки и правила тарификации.</p></section><section className={styles.docSection}><h2>Первый запрос</h2><p>Выберите категорию и характеристики или готовый пример запроса. Нажмите «Выполнить запрос», чтобы получить актуальные данные и посмотреть полный ответ API.</p><div className={styles.baseUrl}><span>BASE URL</span><code>{baseUrl}</code><CopyButton value={baseUrl} label="Скопировать URL"/></div></section>
               <section className={styles.docSection}><h2>Каталог и калькулятор</h2>
                 <Link href="/api/products" className={styles.featureLink}><span className={styles.featureIndex}>01</span><div><h3>Каталог продуктов</h3><p>Каталог содержит характеристики SKU и правила тарификации, включая тарифные ступени, и позволяет находить сопоставимые альтернативы.</p></div><ArrowRight width={18}/></Link>
                 <Link href="/api/estimates" className={styles.featureLink}><span className={styles.featureIndex}>02</span><div><h3>Калькулятор конфигураций</h3><p>По минимально необходимым ресурсам калькулятор подбирает конфигурации у провайдеров и возвращает стоимость каждого компонента.</p></div><ArrowRight width={18}/></Link>
@@ -260,6 +273,7 @@ export function ApiPage({initialSection, exampleProduct, exampleRegion, exampleE
               {mcp && <p>Передайте параметры в поле <code>arguments</code>. Успешный результат возвращается в <code>structuredContent</code> и в виде JSON-текста.</p>}
               {isEstimate && <Callout>Месячная оценка рассчитывается за 720 часов. Итоговую цену и наличие мощностей уточняйте у провайдера.</Callout>}
               <Parameters items={endpoint.parameters}/><section className={styles.docSection}><h2>Ответ</h2><p>{endpoint.returns}</p></section>
+              {['products', 'attributes'].includes(endpoint.id) && <AttributeReference categories={attributeCategories}/>}
               {isEstimate && <section className={styles.docSection}><h2>Статусы расчёта</h2><StatusReference/></section>}
             </>}
             {section === 'authentication' && <><p className={styles.lead}>Для доступа к публичным данным не нужны регистрация и API-ключ. Все операции выполняют чтение каталога или расчёт стоимости и не изменяют данные.</p>
@@ -290,37 +304,43 @@ export function ApiPage({initialSection, exampleProduct, exampleRegion, exampleE
               <div className={styles.codePanel}><div className={styles.codeToolbar}><span>JavaScript <small>· MCP SDK</small></span><CopyButton value={mcpCode}/></div><Code value={mcpCode}/></div>
               <div className={styles.toolsCard}><h3>Доступные инструменты <span>5</span></h3>{endpoints.filter(e => e.tool).map(e => <button key={e.id} onClick={() => navigate('mcp-' + e.id)}><span><code>{e.tool}</code><small>{e.title}</small></span><ChevronRight width={14}/></button>)}</div>
             </> : executable ? <>
-              <div className={styles.exampleCaption}><span>Попробуйте API</span><span className={styles.liveLabel}><i/>Live playground</span></div>
+              <div className={styles.exampleCaption}><span>Конструктор запроса</span><span className={styles.liveLabel}><i/>Запрос к API</span></div>
               <div className={styles.codePanel}>
                 <div className={styles.codeEndpoint}><span className={method === 'POST' ? styles.postBadge : styles.getBadge}>{method}</span><code>{'/api/v1' + activeEndpoint.path}</code><span className={styles.codeEndpointVersion}>v1</span></div>
                 <div className={styles.codeToolbar}><div className={styles.languageTabs} aria-label="Язык примера">{(['cURL', 'JavaScript', 'Python', ...(isEstimate ? ['JSON'] : [])] as Language[]).map(l => <button key={l} aria-pressed={language === l || language === 'JSON' && !isEstimate && l === 'cURL'} onClick={() => setLanguage(l)}>{l}</button>)}</div><CopyButton value={currentCode}/></div>
                 {language === 'JSON' && isEstimate ? <textarea className={styles.jsonEditor} spellCheck={false} aria-label="Тело запроса" value={body} onChange={e => {setBody(e.target.value); resetResponse();}}/> : <Code value={currentCode}/>}
                 {isEstimate && <div className={styles.presets}><span>Пример</span><button onClick={() => {setBody(computeExample); setLanguage('JSON'); resetResponse();}}>Compute</button><button onClick={() => {setBody(gpuExample); setLanguage('JSON'); resetResponse();}}>GPU L4</button><button className={styles.editBody} onClick={() => setLanguage('JSON')}>Изменить JSON</button></div>}
-                {activeEndpoint.id === 'products' && <div className={styles.presets}><span>Пример</span><button onClick={() => selectProductExample('gpu')}>GPU L4</button><button onClick={() => selectProductExample('tokens')}>Токены AI</button><button onClick={() => selectProductExample('embeddings')}>Embeddings</button></div>}
+                {activeEndpoint.id === 'products' && <div className={styles.presets}><span>Пример</span><button onClick={() => selectProductExample('gpu')}>GPU L4</button><button onClick={() => selectProductExample('tokens')}>Токены AI</button><button onClick={() => selectProductExample('embeddings')}>Эмбеддинги</button><button className={styles.editBody} onClick={clearProductFilters}>Сбросить</button></div>}
                 <div className={styles.requestControls}>
-                  {activeEndpoint.id === 'products' && <div className={styles.queryFields}>
-                    <label>Сервис<select value={service} onChange={e => {setService(e.target.value); setMeterFilter(''); resetResponse();}}><option value="">Все сервисы</option>{services.map(s => <option key={s.id} value={s.id}>{s.id}</option>)}</select></label>
-                    <label>Провайдер<select value={provider} onChange={e => {setProvider(e.target.value); resetResponse();}}><option value="">Все провайдеры</option>{providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
-                    <label>Единица оплаты<select value={unit} onChange={e => {setUnit(e.target.value); resetResponse();}}><option value="">Все единицы</option><option value="token">Токены</option></select></label>
-                    <label>Тип тарифа<select value={meterFilter} onChange={e => {setMeterFilter(e.target.value); resetResponse();}}><option value="">Все типы</option>{[...new Set(services.filter(s => !service || s.id === service).flatMap(s => s.meters))].sort().map(m => <option key={m} value={m}>{m}</option>)}</select></label>
-                    <label>AI modelId<input value={modelId} onChange={e => {setModelId(e.target.value); resetResponse();}} placeholder="gpt-oss-120b"/></label>
-                    <label>Направление токенов<select value={tokenDirection} onChange={e => {setTokenDirection(e.target.value); resetResponse();}}><option value="">Все, включая неизвестное</option><option value="input">input</option><option value="output">output</option></select></label>
-                    <label>Текстовый поиск · необязательно<input value={query} onChange={e => {setQuery(e.target.value); resetResponse();}} placeholder="H100, SSD, vCPU"/></label>
-                  </div>}
+                  {['products', 'attributes'].includes(activeEndpoint.id) && <label className={styles.idField}>Категория<select value={category} onChange={e => {setCategory(e.target.value); setAttributeDrafts({}); setService(''); setUnit(''); setMeterFilter(''); resetResponse();}}><option value="">Все категории</option>{attributeCategories.map(c => <option key={c.category} value={c.category}>{c.title}</option>)}</select></label>}
+                  {activeEndpoint.id === 'products' && <>
+                    <div className={styles.queryFields}>
+                      <label>Провайдер<select value={provider} onChange={e => {setProvider(e.target.value); resetResponse();}}><option value="">Все провайдеры</option>{providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
+                      <label>Регион<select value={region} onChange={e => {setRegion(e.target.value); resetResponse();}}><option value="">Не фильтровать</option>{regions.map(r => <option key={r.label} value={r.label}>{r.label}</option>)}</select></label>
+                    </div>
+                    <AttributeFields category={attributeCategories.find(c => c.category === category)} drafts={attributeDrafts} onChange={value => {setAttributeDrafts(value); resetResponse();}}/>
+                    {compiledAttributes.error && <p className={styles.filterHint} role="status">{compiledAttributes.error}</p>}
+                    <details className={styles.advancedFilters}><summary>Сервис и тарификация{[service, unit, meterFilter].filter(Boolean).length ? ' · фильтры заданы' : ''}</summary><div className={styles.queryFields}>
+                      <label>Сервис<select value={service} onChange={e => {setService(e.target.value); setMeterFilter(''); resetResponse();}}><option value="">Все сервисы</option>{services.filter(s => !category || s.categories.includes(category)).map(s => <option key={s.id} value={s.id}>{s.id}</option>)}</select></label>
+                      <label>Единица тарификации<select value={unit} onChange={e => {setUnit(e.target.value); resetResponse();}}><option value="">Все единицы</option>{PUBLIC_UNITS.map(u => <option key={u} value={u}>{u === 'token' ? 'Токены · token' : u}</option>)}</select></label>
+                      <label>Что тарифицируется<select value={meterFilter} onChange={e => {setMeterFilter(e.target.value); resetResponse();}}><option value="">Все ставки</option>{[...new Set(services.filter(s => (!category || s.categories.includes(category)) && (!service || s.id === service)).flatMap(s => s.meters))].sort().map(m => <option key={m} value={m}>{m === 'compute.ram' ? 'Оперативная память · ' + m : m}</option>)}</select></label>
+                    </div></details>
+                    <label className={styles.idField}>Поиск по названию или SKU · необязательно<input value={query} onChange={e => {setQuery(e.target.value); resetResponse();}} placeholder="Фрагмент названия или SKU"/></label>
+                  </>}
                   {hasProductId && <label className={styles.idField}>Product ID<input value={productId} onChange={e => {setProductId(e.target.value); resetResponse();}} spellCheck={false}/></label>}
                   {activeEndpoint.id === 'provider' && <label className={styles.idField}>Провайдер<select value={providerId} onChange={e => {setProviderId(e.target.value); resetResponse();}}>{providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>}
-                  <div className={styles.runRow}><span>Без ключа доступа</span><button className={styles.runButton} disabled={pending} onClick={() => void run()}><Play width={13}/>{pending ? 'Выполняется…' : 'Выполнить запрос'}</button></div>
+                  <div className={styles.runRow}><span>Без ключа доступа</span><button className={styles.runButton} disabled={pending || Boolean(invalidAttributes)} onClick={() => void run()}><Play width={13}/>{pending ? 'Выполняется…' : 'Выполнить запрос'}</button></div>
                 </div>
               </div>
               <div className={styles.responsePanel} aria-live="polite" aria-busy={pending}>
-                <div className={styles.responseToolbar}><span>{response ? 'Ответ' : 'Пример ответа'}{!response && <small>сокращён</small>}</span>{requestInfo ? <span className={requestInfo.status < 400 ? styles.responseOk : styles.responseError}>{requestInfo.status} <small>{requestInfo.ms} ms</small></span> : <span className={styles.exampleBadge}>JSON</span>}</div>
+                <div className={styles.responseToolbar}><span>{response ? 'Ответ' : activeEndpoint.id === 'products' ? 'Результат запроса' : 'Пример ответа'}{!response && activeEndpoint.id !== 'products' && <small>сокращён</small>}</span>{requestInfo ? <span className={requestInfo.status < 400 ? styles.responseOk : styles.responseError}>{requestInfo.status} <small>{requestInfo.ms} ms</small></span> : <span className={styles.exampleBadge}>JSON</span>}</div>
                 {failure && <div role="alert" className={styles.errorMessage}>{failure}</div>}
                 {canSummarize && <div className={styles.responseTabs}><button aria-pressed={responseTab === 'json'} onClick={() => setResponseTab('json')}>JSON</button><button aria-pressed={responseTab === 'summary'} onClick={() => setResponseTab('summary')}>Сводка</button></div>}
-                {responseTab === 'summary' && canSummarize ? estimate ? <QuoteSummary estimate={estimate}/> : <div className={styles.productSummary}>{products?.map(p => <div key={p.id}><strong>{p.name}</strong><span>{p.provider.name} · {p.region}</span><code>{p.id}</code>{p.prices.map(price => <small key={price.id}>{price.unitPrice?.amount ?? 'Ступенчатая ставка'} {price.currency} / {price.unitLabel} · НДС: {price.vat}</small>)}</div>)}</div> : <Code value={pretty(response ?? example)} compact/>}
+                {!response && activeEndpoint.id === 'products' ? <p className={styles.emptyResponse}>Выполните запрос, чтобы увидеть SKU, соответствующие выбранным фильтрам.</p> : responseTab === 'summary' && canSummarize ? estimate ? <QuoteSummary estimate={estimate}/> : <div className={styles.productSummary}>{products?.map(p => <div key={p.id}><strong>{p.name}</strong><span>{p.provider.name} · {p.region}</span><code>{p.id}</code>{p.prices.map(price => <small key={price.id}>{price.unitPrice?.amount ?? 'Ступенчатая ставка'} {price.currency} / {price.unitLabel} · НДС: {price.vat}</small>)}</div>)}</div> : <Code value={pretty(response ?? example)} compact/>}
                 {response?.pagination?.nextCursor && <button disabled={pending} className={styles.nextPage} onClick={() => void run(response.pagination!.nextCursor!)}>Следующая страница <ArrowRight width={14}/></button>}
                 {response && <div className={styles.responseFooter}><span title={requestInfo?.id ?? undefined}>{String(response.meta?.catalogVersion ?? requestInfo?.id ?? 'JSON response')}</span><CopyButton value={pretty(response)} label="Копировать JSON"/></div>}
               </div>
-              <p className={styles.exampleNote}>{response ? 'Это ответ API текущего сайта. Сведения о версиях и источниках данных приведены в JSON.' : 'В примере показана сокращённая структура ответа. Выполните запрос, чтобы получить актуальные данные со всеми полями.'}</p>
+              <p className={styles.exampleNote}>{response ? 'Это ответ API текущего сайта. Сведения о версиях и источниках данных приведены в JSON.' : activeEndpoint.id === 'products' ? 'Фильтры описывают характеристики SKU. Для подбора конфигурации по числу vCPU, памяти и GPU используйте /estimates.' : 'В примере показана сокращённая структура ответа. Выполните запрос, чтобы получить актуальные данные со всеми полями.'}</p>
             </> : <GuideExample section={section} product={productSample}/>}
           </div></aside>
         </div>

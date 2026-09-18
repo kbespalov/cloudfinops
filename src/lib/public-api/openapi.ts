@@ -21,9 +21,10 @@ export function buildOpenApi() {
       responses[status]={description,content:{'application/json':{schema:{$ref:'#/components/schemas/Error'}}}};
     }
     const properties=(input.properties??{}) as Record<string,Record<string,unknown>>;
-    const parameters=Object.entries(properties).map(([key,schema])=>({name:key,in:op.path.includes(`{${key}}`)?'path':'query',required:op.path.includes(`{${key}}`),schema,
+    const parameters=Object.entries(properties).map(([key,schema])=>({name:key,in:op.path.includes(`{${key}}`)?'path':'query',required:op.path.includes(`{${key}}`),
+      ...(key==='attributes'?{content:{'application/json':{schema}}}:{schema}),
       ...(schema.description ? {description: schema.description} : {}),
-      ...(examples[id][0].value[key] !== undefined ? {example: examples[id][0].value[key]} : {}),
+      ...(key !== 'attributes' && examples[id][0].value[key] !== undefined ? {example: examples[id][0].value[key]} : {}),
       ...(schema.type==='array'?{style:'form',explode:key==='regions'}:{}),
     }));
     paths[op.path]={[op.method]:{operationId:id,summary:documentation.title,description:documentation.description,tags:[id==='create_estimate'?'Calculator':'Catalog'],
