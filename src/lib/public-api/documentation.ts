@@ -84,6 +84,27 @@ ${providers.map(p => `- ${p.name}: provider ID \`${p.id}\`; ${p.productCount} bi
 
 Catalog categories are compute, gpu, storage, network, cdn, kubernetes and ai. Block disks belong to compute; object storage belongs to storage. Estimates support only compute and gpu; other categories remain available as individual price rules. Product counts describe coverage, not live supply.
 
+GET /services discovers service IDs, source layers, categories and billing meters. A Product exposes service and layer. Service differs from category: GPU SKUs have service=compute, and block disks have service=storage with category=compute.
+
+## Structured service and AI search
+
+q is optional. Use services=["ai"], units=["token"] to retrieve AI token tariffs, including inference and embeddings, without GPU rentals or per-request rates. categories=["ai"] alone is broader and includes ML infrastructure. Filter modelIds by exact attributes.modelId and tokenDirections by input/output. Use meters=["ai.embeddings.tokens"] for embeddings or the exact input/output inference meter. serviceProducts and inferenceModes filter attributes.serviceProduct and attributes.inferenceMode. Values are exact and case-sensitive, except region codes. No model aliases are inferred.
+
+Filters combine with AND; multiple values in one array combine with OR, without duplicates. Explicit filters exclude missing attribute values. Some embedding tariffs have no recorded tokenDirection; omit tokenDirections to include them. source modelId, modelFamily, tokenDirection, inferenceMode and serviceProduct are exposed in attributes and their original dimensions remain in providerAttributes. Respect prices[].unitQuantity: unit=token may represent a pack of 1,000 or 1,000,000 tokens.
+
+REST examples:
+\`\`\`sh
+curl '${API_URL}/services'
+curl '${API_URL}/products?services=ai&units=token&limit=100'
+curl '${API_URL}/products?services=ai&units=token&modelIds=gpt-oss-120b&tokenDirections=input'
+curl '${API_URL}/products?services=ai&meters=ai.embeddings.tokens'
+\`\`\`
+
+Equivalent MCP search_products arguments:
+\`\`\`json
+${JSON.stringify(examples.search_products.find(example => example.name === 'ai_model_input')!.value, null, 2)}
+\`\`\`
+
 ## First REST requests
 
 Find L4 GPU SKUs:
@@ -131,9 +152,13 @@ The five tools are ${OPERATION_IDS.map(id => `\`${id}\``).join(', ')}. Successfu
 
 A Product is one billing SKU, not necessarily a complete server. product.id (prod_…) is an opaque stable lookup ID; providerSku is a distinct source catalog identifier. Do not construct IDs. Price IDs can change when billing rules change.
 
-attributes contains vcpu, memoryGiB (host RAM), gpuModel, gpuCount, purchaseModel, pricingMode, storageClass and region. Null means unknown or not applicable. A GPU-only rate does not imply the host has no CPU or RAM. providerAttributes preserves additional source dimensions such as GPU memory, interconnect, CPU platform, disk media, AI model and Kubernetes topology. These fields are not uniformly normalized: gpuMemoryGb is per GPU, while vramGb may describe one GPU or the whole bundle. Inspect source conventions before comparing memory.
+attributes contains vcpu, memoryGiB (host RAM), gpuModel, gpuCount, purchaseModel, pricingMode, storageClass, region, serviceProduct, modelId, modelFamily, tokenDirection and inferenceMode. Null means unknown or not applicable. A GPU-only rate does not imply the host has no CPU or RAM. providerAttributes preserves source dimensions such as GPU memory, interconnect, CPU platform, disk media, AI model and Kubernetes topology. These fields are not uniformly normalized: gpuMemoryGb is per GPU, while vramGb may describe one GPU or the whole bundle. Inspect source conventions before comparing memory.
 
-region is the observed label; regionCode is populated only when a recognizable code is present. Do not guess missing GPU model names or normalize generic region labels into invented codes.
+region is the observed source label. regionCodes contains all distinct recognized provider codes, lowercased; regionCode is populated only when there is exactly one code, otherwise null. GET /regions exposes the corresponding label, codes, code and productCount. For example, Россия / ru-1, ru-3, ru-7 has codes=["ru-1","ru-3","ru-7"] and code=null. ru-msk and MZ1 are recognized (normalized to ru-msk and mz1). Do not guess missing GPU model names or normalize generic region labels into invented codes.
+
+Region labels may describe countries, cities, zones, groups or tariff scopes such as Базовая сеть; — means unspecified. This is a list of observed labels, not a geographic hierarchy. productCount counts billing SKUs with that exact label. A code filter matches every label containing that code, including groups, so it can return more products than an individual row's count. Match labels exactly or codes case-insensitively. Multiple regions use OR and do not duplicate products. Combine regions with providers to scope provider-specific codes. Neither Москва nor Россия automatically includes nested locations, and Все регионы is a literal source label, not a wildcard.
+
+REST supports repeated regions parameters: use URLSearchParams.append('regions', label) for each value. Legacy comma-separated codes still work; an exact observed label containing commas is kept as one value. For several labels containing commas, repeat the parameter. MCP uses a JSON array. Estimates accept one exact label or any member code via resource.region.
 
 A Price contains model (per_unit, fixed or tiered), unit, unitQuantity, unitPrice or tiers, currency, vat, effectiveFrom and checkedAt. Amounts and denominators are decimal strings. Catalog prices may have unknown currency or VAT; only complete included-VAT RUB rates can produce a priced estimate. A null price is not a free resource.
 
@@ -154,7 +179,7 @@ lowestPriceProviderIds includes all ties among priced quotes. capacityVerified i
 
 ## Pagination, limits and errors
 
-GET /products accepts q, providers, categories, regions, status, limit and cursor. Use short lexical q terms rather than a natural-language configuration; q does not search every provider attribute. Without q, ordering is provider then SKU. Structural filters always apply.
+GET /products accepts q, providers, categories, services, serviceProducts, meters, units, modelIds, tokenDirections, inferenceModes, regions, status, limit and cursor. Use structured filters for exact selection; q is optional and does not search every provider attribute. Without q, ordering is provider then SKU. Structural filters always apply and are retained in the cursor.
 
 limit is 1–100, default 50. Follow pagination.nextCursor verbatim until null. A cursor retains filters, ordering and catalogVersion. Either omit filters on subsequent pages or repeat the same values. A changed filter returns 400; an expired catalog snapshot returns 409 and requires a fresh first page. Never construct or decode cursors as part of the client contract.
 

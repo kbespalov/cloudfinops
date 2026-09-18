@@ -123,7 +123,7 @@ test('cursor preserves filters/order, rejects mismatches, malformed and expired 
   assert.throws(()=>listProducts({cursor:encodeCursor({...payload,offset:-1})}),/invalid/);
 });
 test('one registry produces full OpenAPI and schema-valid operation responses',()=>{
-  const doc=buildOpenApi();assert.equal(Object.keys(doc.paths).length,8);
+  const doc=buildOpenApi();assert.equal(Object.keys(doc.paths).length,9);
   const pid=meterToProduct(catalog.meters[0]).id;
   for(const id of OPERATION_IDS) {
     const input=id==='create_estimate'?{resource}:id==='get_product'||id==='list_product_alternatives'?{id:pid}:{};

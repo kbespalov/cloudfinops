@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-09-18
+
+### Public API: структурный поиск сервисов и AI-тарифов
+
+- Добавлены `/services`, поля Product.service/layer и фильтры `services`, `serviceProducts`, `meters`, `units`, `modelIds`, `tokenDirections`, `inferenceModes` для REST и MCP. `services=ai&units=token` выбирает токенные тарифы без текстового запроса.
+- В attributes опубликованы serviceProduct, modelId, modelFamily, tokenDirection и inferenceMode. Исходные providerAttributes сохранены.
+- Новые фильтры сохраняются в cursor; обновлены OpenAPI, документация и примеры поиска.
+
+### Public API: регионы и составные метки
+
+- В `/regions` добавлен массив `codes`, в Product — `regionCodes`. Поля `code` / `regionCode` заполнены только при одном распознанном коде; у составных меток теперь `null` вместо первого кода.
+- Фильтры продуктов и расчётов учитывают каждый код составной метки, распознают `ru-msk` и `MZ1`, сравнивают коды без учёта регистра. Географическая вложенность не предполагается.
+- REST сохраняет точные метки с запятыми и поддерживает повторяемый параметр `regions`; прежнее перечисление кодов через запятую работает.
+- Документация и OpenAPI описывают исходные метки и счётчик `productCount` по точной метке.
+
 ## 2026-09-10
 
 ### Каталог / MWS: линейка Compute Base (Ice Lake)

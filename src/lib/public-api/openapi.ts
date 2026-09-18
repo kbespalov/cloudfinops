@@ -24,7 +24,7 @@ export function buildOpenApi() {
     const parameters=Object.entries(properties).map(([key,schema])=>({name:key,in:op.path.includes(`{${key}}`)?'path':'query',required:op.path.includes(`{${key}}`),schema,
       ...(schema.description ? {description: schema.description} : {}),
       ...(examples[id][0].value[key] !== undefined ? {example: examples[id][0].value[key]} : {}),
-      ...(schema.type==='array'?{style:'form',explode:false}:{}),
+      ...(schema.type==='array'?{style:'form',explode:key==='regions'}:{}),
     }));
     paths[op.path]={[op.method]:{operationId:id,summary:documentation.title,description:documentation.description,tags:[id==='create_estimate'?'Calculator':'Catalog'],
       externalDocs: {url: `${SITE_URL}${documentationPath(documentation.section)}`},

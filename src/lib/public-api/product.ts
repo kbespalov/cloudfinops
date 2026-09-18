@@ -4,6 +4,8 @@ import {priceId, productId} from './ids';
 import {decimalString, parseDecimal, linearAmount, type Money} from './money';
 import {effectiveRate, resolveUnit, resolveRawUnit, vatMode} from './units';
 import type {PriceTier, PublicPrice, PublicProduct} from './types';
+import {regionCode, regionCodes} from './regions';
+import {serviceAttributes} from './service-attributes';
 
 const CANON_KEYS = new Set([
   'vcpu',
@@ -36,11 +38,15 @@ export function meterToProduct(meter: CatalogMeter): PublicProduct {
     status: meter.status,
     provider: {id: meter.provider, name: meter.providerName},
     category: meter.categoryKey,
+    service: meter.service,
+    layer: meter.layer,
     meter: meter.meter,
     region: meter.region,
     regionCode: regionCode(meter.region),
+    regionCodes: regionCodes(meter.region),
     derived: Boolean(meter.synthetic),
     attributes: {
+      ...serviceAttributes(meter),
       vcpu: extractVcpu(meter),
       memoryGiB: extractRamGiB(meter),
       gpuModel: extractGpuModel(meter),
@@ -85,12 +91,6 @@ export function meterToPrice(meter: CatalogMeter): PublicPrice {
     currency: tiers.length ? currencies.size === 1 ? [...currencies][0] : null : rate.currency,
     effectiveFrom: meter.effectiveFrom, checkedAt: meter.checkedAt,
   };
-}
-
-export function regionCode(label: string | null): string | null {
-  if (!label) return null;
-  const m = label.match(/\b(ru-\d+[a-z]?|ru-central\d*(?:-[a-z])?|kz-\d+[a-z]?)\b/i);
-  return m ? m[1].toLowerCase() : null;
 }
 
 export function findMeterByProductId(

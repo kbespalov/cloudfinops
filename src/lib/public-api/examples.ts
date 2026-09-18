@@ -9,8 +9,14 @@ export function operationExamples(): Record<RestOperationId, Array<{name: string
     list_providers: [{name: 'all', summary: 'Discover provider IDs', value: {}}],
     get_provider: [{name: 'selectel', summary: 'Selectel catalog coverage', value: {id: 'selectel'}}],
     list_categories: [{name: 'all', summary: 'Catalog categories', value: {}}],
+    list_services: [{name: 'all', summary: 'Discover service IDs and billing meters', value: {}}],
     list_regions: [{name: 'all', summary: 'Observed region labels and codes', value: {}}],
-    search_products: [{name: 'gpu', summary: 'Find L4 GPU billing SKUs', value: {q: 'L4', categories: ['gpu'], limit: 3}}],
+    search_products: [
+      {name: 'gpu', summary: 'Find L4 GPU billing SKUs', value: {q: 'L4', categories: ['gpu'], limit: 3}},
+      {name: 'ai_tokens', summary: 'All AI token tariffs without text search', value: {services: ['ai'], units: ['token'], limit: 100}},
+      {name: 'ai_model_input', summary: 'Input token rates for one explicit model ID', value: {services: ['ai'], units: ['token'], modelIds: ['gpt-oss-120b'], tokenDirections: ['input']}},
+      {name: 'embeddings', summary: 'Embedding token tariffs only', value: {services: ['ai'], meters: ['ai.embeddings.tokens'], units: ['token']}},
+    ],
     get_product: [{name: 'gpu', summary: 'Read a GPU SKU from this catalog snapshot', value: {id}}],
     list_product_alternatives: [{name: 'gpu', summary: 'Find alternatives for a discovered GPU SKU', value: {id}}],
     create_estimate: [

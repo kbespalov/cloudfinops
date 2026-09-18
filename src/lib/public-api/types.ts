@@ -59,6 +59,11 @@ export type ProductSource = {
 };
 
 export type ProductAttributes = {
+  serviceProduct: string | null;
+  modelId: string | null;
+  modelFamily: string | null;
+  tokenDirection: 'input' | 'output' | null;
+  inferenceMode: string | null;
   vcpu: number | null;
   memoryGiB: number | null;
   gpuModel: string | null;
@@ -76,9 +81,12 @@ export type PublicProduct = {
   status: string;
   provider: {id: string; name: string};
   category: Exclude<CategoryKey, 'other'> | 'other';
+  service: string;
+  layer: string;
   meter: string;
   region: string | null;
   regionCode: string | null;
+  regionCodes: string[];
   derived: boolean;
   attributes: ProductAttributes;
   providerAttributes: Record<string, unknown>;
@@ -101,9 +109,18 @@ export type PublicCategory = {
   productCount: number;
 };
 
+export type PublicService = {
+  id: string;
+  productCount: number;
+  layers: string[];
+  categories: string[];
+  meters: string[];
+};
+
 export type PublicRegion = {
   label: string;
   code: string | null;
+  codes: string[];
   productCount: number;
 };
 

@@ -1,20 +1,16 @@
+import type {z} from 'zod';
 import {catalog, type CatalogMeter, type CatalogData} from '@/lib/catalog';
-import {CATEGORY_IDS} from './constants';
+import {CATEGORY_IDS, PRODUCT_ARRAY_FILTERS} from './constants';
 import {productQuerySchema} from './schemas';
 import {catalogVersion} from './envelope';
 import {decodeCursor, encodeCursor, parseLimit, invalidParameter, type CursorPayload} from './pagination';
-import {meterToProduct, regionCode} from './product';
-import type {PublicCategory, PublicProduct, PublicProvider, PublicRegion} from './types';
+import {meterToProduct} from './product';
+import {matchesRegion, regionCode, regionCodes} from './regions';
+import type {PublicCategory, PublicProduct, PublicProvider, PublicRegion, PublicService} from './types';
+import {serviceAttributes} from './service-attributes';
+import {resolveUnit} from './units';
 
-export type ProductListQuery = {
-  q?: string;
-  providers?: string[];
-  categories?: string[];
-  regions?: string[];
-  status?: string;
-  limit?: number;
-  cursor?: string;
-};
+export type ProductListQuery = z.infer<typeof productQuerySchema>;
 
 function metersOf(data: CatalogData = catalog): CatalogMeter[] {
   return data.meters;
@@ -49,16 +45,27 @@ export function listCategories(data: CatalogData = catalog): PublicCategory[] {
 }
 
 export function listRegions(data: CatalogData = catalog): PublicRegion[] {
-  const counts = new Map<string, {code: string | null; count: number}>();
+  const counts = new Map<string, number>();
   for (const m of metersOf(data)) {
     if (!m.region) continue;
-    const cur = counts.get(m.region) ?? {code: regionCode(m.region), count: 0};
-    cur.count += 1;
-    counts.set(m.region, cur);
+    counts.set(m.region, (counts.get(m.region) ?? 0) + 1);
   }
   return [...counts.entries()]
-    .map(([label, v]) => ({label, code: v.code, productCount: v.count}))
+    .map(([label, count]) => ({label, code: regionCode(label), codes: regionCodes(label), productCount: count}))
     .sort((a, b) => a.label.localeCompare(b.label, 'ru'));
+}
+
+export function listServices(data: CatalogData = catalog): PublicService[] {
+  const services = [...new Set(metersOf(data).map(m => m.service))].sort();
+  return services.map(id => {
+    const rows = metersOf(data).filter(m => m.service === id);
+    return {
+      id, productCount: rows.length,
+      layers: [...new Set(rows.map(m => m.layer))].sort(),
+      categories: [...new Set(rows.map(m => m.categoryKey))].sort(),
+      meters: [...new Set(rows.map(m => m.meter))].sort(),
+    };
+  });
 }
 
 function tokenize(q: string): string[] {
@@ -87,7 +94,7 @@ function scoreMeter(meter: CatalogMeter, tokens: string[]): number {
   return score;
 }
 
-function applyFilters(meters: CatalogMeter[], query: ProductListQuery): CatalogMeter[] {
+function applyFilters(meters: CatalogMeter[], query: Omit<CursorPayload, 'v' | 'offset' | 'order'>): CatalogMeter[] {
   let rows = meters;
   if (query.providers?.length) {
     const set = new Set(query.providers);
@@ -97,13 +104,26 @@ function applyFilters(meters: CatalogMeter[], query: ProductListQuery): CatalogM
     const set = new Set(query.categories);
     rows = rows.filter((m) => set.has(m.categoryKey));
   }
-  if (query.regions?.length) {
-    const set = new Set(query.regions);
-    rows = rows.filter((m) => {
-      if (!m.region) return false;
-      const code = regionCode(m.region);
-      return set.has(m.region) || (code != null && set.has(code));
+  const fields = {
+    services: (m: CatalogMeter) => m.service,
+    meters: (m: CatalogMeter) => m.meter,
+    units: (m: CatalogMeter) => resolveUnit(m).unit,
+    serviceProducts: (m: CatalogMeter) => serviceAttributes(m).serviceProduct,
+    modelIds: (m: CatalogMeter) => serviceAttributes(m).modelId,
+    tokenDirections: (m: CatalogMeter) => serviceAttributes(m).tokenDirection,
+    inferenceModes: (m: CatalogMeter) => serviceAttributes(m).inferenceMode,
+  };
+  for (const key of Object.keys(fields) as Array<keyof typeof fields>) {
+    if (!query[key].length) continue;
+    const values = new Set(query[key]);
+    rows = rows.filter(m => {
+      const value = fields[key](m);
+      return value !== null && values.has(value);
     });
+  }
+  if (query.regions?.length) {
+    const regions = query.regions;
+    rows = rows.filter(m => regions.some(region => matchesRegion(m.region, region)));
   }
   if (query.status) {
     rows = rows.filter((m) => m.status === query.status);
@@ -120,15 +140,17 @@ export function listProducts(
   query = checked.data;
   const limit = query.limit ?? parseLimit(null);
   let offset = 0;
-  let q = (query.q || '').trim();
-  let providers = query.providers ?? [];
-  let categories = query.categories ?? [];
-  let regions = query.regions ?? [];
-  let status = query.status ?? '';
+  let filters: Omit<CursorPayload, 'v' | 'offset' | 'order'> = {
+    q: query.q ?? '', status: query.status ?? '',
+    providers: query.providers ?? [], categories: query.categories ?? [], regions: query.regions ?? [],
+    services: query.services ?? [], serviceProducts: query.serviceProducts ?? [],
+    meters: query.meters ?? [], units: query.units ?? [], modelIds: query.modelIds ?? [],
+    tokenDirections: query.tokenDirections ?? [], inferenceModes: query.inferenceModes ?? [],
+  };
 
   if (query.cursor) {
     const cur = decodeCursor(query.cursor, catalogVersion(data));
-    for (const key of ['q', 'providers', 'categories', 'regions', 'status'] as const) {
+    for (const key of ['q', ...PRODUCT_ARRAY_FILTERS, 'status'] as const) {
       const supplied = query[key];
       const normalized = Array.isArray(supplied) ? [...new Set(supplied)].sort() : supplied?.trim();
       const stored = Array.isArray(cur[key]) ? [...new Set(cur[key])].sort() : cur[key];
@@ -137,15 +159,13 @@ export function listProducts(
       }
     }
     offset = cur.offset;
-    q = cur.q;
-    providers = cur.providers;
-    categories = cur.categories;
-    regions = cur.regions;
-    status = cur.status;
+    const {v: _version, offset: _offset, order: _order, ...storedFilters} = cur;
+    filters = storedFilters;
   }
 
+  const {q} = filters;
   const tokens = tokenize(q);
-  let rows = applyFilters(metersOf(data), {providers, categories, regions, status});
+  let rows = applyFilters(metersOf(data), filters);
   if (tokens.length) {
     rows = rows
       .map((m) => ({m, s: scoreMeter(m, tokens)}))
@@ -162,11 +182,7 @@ export function listProducts(
     v: catalogVersion(data),
     order: q ? 'lexical-v1' : 'provider-sku-v1',
     offset: nextOffset,
-    q,
-    providers,
-    categories,
-    regions,
-    status,
+    ...filters,
   };
   return {
     items: slice.map(meterToProduct),
