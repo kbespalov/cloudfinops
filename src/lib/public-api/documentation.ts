@@ -1,4 +1,5 @@
 import {listProviders} from './catalog';
+import {attributeDefinitions, attributeOperators} from './attribute-registry';
 import {OPERATIONS, OPERATION_IDS, type RestOperationId} from './operations';
 import {OPERATION_DOCS, MCP_INSTRUCTIONS} from './operation-docs';
 import {operationExamples} from './examples';
@@ -86,6 +87,29 @@ Catalog categories are compute, gpu, storage, network, cdn, kubernetes and ai. B
 
 GET /services discovers service IDs, source layers, categories and billing meters. A Product exposes service and layer. Service differs from category: GPU SKUs have service=compute, and block disks have service=storage with category=compute.
 
+## Attribute registry and filters
+
+GET /attributes (optionally ?categories=gpu,ai) returns fields per category, their types, supported operators, units, closed enum allowedValues and observed values with SKU counts. values, observedRange, knownCount and missingCount describe that category in the current catalog before other filters. For strings allowedValues=null: observed values are suggestions, not a closed enum. Values are exact and case-sensitive; no GPU/model aliases are inferred.
+
+The following table is generated from the same registry as request validation and the form:
+
+| Attribute | Type | Categories | Operators | Unit / enum |
+| --- | --- | --- | --- | --- |
+${attributeDefinitions.map(def => `| ${def.id} | ${def.type} | ${def.categories.join(', ')} | ${attributeOperators(def).join(', ')} | ${def.unit ?? def.values?.join(', ') ?? '—'} |`).join('\n')}
+
+Pass attributes as a JSON object in MCP, or a single URL-encoded JSON query parameter in REST. Use eq for exact equality, in for OR within a list, and range for inclusive numeric min and/or max. Only one operator is accepted per field. Different fields and other filters combine with AND. Missing/null values never match. Empty lists, empty/reversed ranges, wrong types, unknown fields/operators, and fields with no common applicable category return 400. Omit a field to include unknown values. Arbitrary providerAttributes paths are not supported.
+
+Numeric filters describe existing SKU metadata. They do not assemble a VM from per-unit tariffs or verify available capacity; use /estimates for requested configurations. Existing modelIds, tokenDirections, serviceProducts and inferenceModes remain compatibility filters; if also supplied with attributes, both constraints apply.
+
+REST example (shell and URL encoding are handled explicitly):
+\`\`\`sh
+curl --get '${API_URL}/products' \\
+  --data-urlencode 'categories=gpu' \\
+  --data-urlencode 'attributes={"gpuModel":{"eq":"NVIDIA L4"},"gpuCount":{"range":{"min":1,"max":4}}}'
+\`\`\`
+
+In JavaScript use url.searchParams.set('attributes', JSON.stringify(filters)). A list such as {"gpuModel":{"in":["NVIDIA L4","NVIDIA H100"]}} matches either exact model name, not L40S or vGPU variants. Cursor pagination retains the complete filter object. Compact attributes JSON is limited to 8000 UTF-8 bytes; all combined filters to 11000 UTF-8 bytes so that the cursor remains usable.
+
 ## Structured service and AI search
 
 q is optional. Use services=["ai"], units=["token"] to retrieve AI token tariffs, including inference and embeddings, without GPU rentals or per-request rates. categories=["ai"] alone is broader and includes ML infrastructure. Filter modelIds by exact attributes.modelId and tokenDirections by input/output. Use meters=["ai.embeddings.tokens"] for embeddings or the exact input/output inference meter. serviceProducts and inferenceModes filter attributes.serviceProduct and attributes.inferenceMode. Values are exact and case-sensitive, except region codes. No model aliases are inferred.
@@ -109,7 +133,7 @@ ${JSON.stringify(examples.search_products.find(example => example.name === 'ai_m
 
 Find L4 GPU SKUs:
 \`\`\`sh
-curl '${API_URL}/products?q=L4&categories=gpu&limit=3'
+curl --get '${API_URL}/products' --data-urlencode 'categories=gpu' --data-urlencode 'attributes={"gpuModel":{"eq":"NVIDIA L4"}}' --data-urlencode 'limit=3'
 \`\`\`
 
 Compare a 4 vCPU / 8 GiB RAM / 100 GiB SSD instance:
@@ -179,7 +203,7 @@ lowestPriceProviderIds includes all ties among priced quotes. capacityVerified i
 
 ## Pagination, limits and errors
 
-GET /products accepts q, providers, categories, services, serviceProducts, meters, units, modelIds, tokenDirections, inferenceModes, regions, status, limit and cursor. Use structured filters for exact selection; q is optional and does not search every provider attribute. Without q, ordering is provider then SKU. Structural filters always apply and are retained in the cursor.
+GET /products accepts attributes, q, providers, categories, services, serviceProducts, meters, units, modelIds, tokenDirections, inferenceModes, regions, status, limit and cursor. Use structured filters for exact selection; q is optional and does not search every provider attribute. Without q, ordering is provider then SKU. Structural filters always apply and are retained in the cursor.
 
 limit is 1–100, default 50. Follow pagination.nextCursor verbatim until null. A cursor retains filters, ordering and catalogVersion. Either omit filters on subsequent pages or repeat the same values. A changed filter returns 400; an expired catalog snapshot returns 409 and requires a fresh first page. Never construct or decode cursors as part of the client contract.
 

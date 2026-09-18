@@ -11,6 +11,11 @@ export function GET(request:Request) {
   for(const [key,value] of params) {
     if(key==='regions') continue;
     if(params.getAll(key).length>1) return jsonError(400,'invalid_parameter','Use comma-separated filters',[{path:'/'+key,code:'duplicate_parameter'}]);
+    if(key==='attributes') {
+      if(value.length>8000) return jsonError(400,'invalid_parameter','attributes is too large',[{path:'/attributes',code:'too_big'}]);
+      try {input.attributes=JSON.parse(value);} catch {return jsonError(400,'invalid_parameter','attributes must be a JSON object',[{path:'/attributes',code:'invalid_json'}]);}
+      continue;
+    }
     input[key]=(PRODUCT_ARRAY_FILTERS as readonly string[]).includes(key)?csvParam(value):key==='limit'?Number(value):value;
   }
   return operationResponse('search_products',request,input);

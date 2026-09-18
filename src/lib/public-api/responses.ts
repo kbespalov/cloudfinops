@@ -1,4 +1,5 @@
 import {z} from 'zod';
+import {productAttributesSchema} from './attribute-schemas';
 import {PUBLIC_UNITS} from './constants';
 import {computeResourceSchema,gpuResourceSchema} from './schemas';
 const text=z.string(), nullable=text.nullable();
@@ -16,7 +17,7 @@ export const priceSchema=z.strictObject({
 export const productSchema=z.strictObject({
   id:text,providerSku:text,name:text,status:text,provider:providerRef,category:text,service:text.describe('Source service ID, e.g. ai, compute, storage or containers. Distinct from the display category.'),layer:text.describe('Source service layer, e.g. iaas or paas.'),meter:text,
   region:nullable.describe('Original source label, which may describe a city, country, zone, group or tariff scope.'),regionCode,regionCodes,derived:z.boolean(),
-  attributes:z.strictObject({serviceProduct:nullable,modelId:nullable.describe('Explicit source model ID; null means no model ID is recorded. Provider IDs are not automatically aliased.'),modelFamily:nullable,tokenDirection:z.enum(['input','output']).nullable().describe('Explicit token direction or direction from the billing meter; null means unknown or not applicable.'),inferenceMode:nullable,vcpu:z.number().nullable(),memoryGiB:z.number().nullable(),gpuModel:nullable,gpuCount:z.number().nullable(),purchaseModel:nullable,pricingMode:nullable,storageClass:nullable,region:nullable}),
+  attributes:productAttributesSchema,
   providerAttributes:z.record(text,z.unknown()).describe('Additional source dimensions. Conventions may differ across providers: gpuMemoryGb is per GPU, while vramGb may be per GPU or per bundle.'),prices:z.array(priceSchema),
   source:z.strictObject({id:nullable,title:nullable,url:nullable,checkedAt:nullable}),
 });
@@ -42,6 +43,13 @@ const envelope=(data:z.ZodType,listed=false)=>z.strictObject({data,meta,...(list
 export const responseSchemas={
   list_providers:envelope(z.array(provider),true), get_provider:envelope(provider),
   list_categories:envelope(z.array(z.strictObject({id:text,title:text,productCount:z.number()})),true),
+  list_attributes:envelope(z.array(z.strictObject({category:text,title:text,productCount:z.number().int().nonnegative(),attributes:z.array(z.strictObject({
+    id:text,label:text,description:text,type:z.enum(['string','enum','integer','number']),unit:nullable,minimum:z.number().nullable(),
+    operators:z.array(z.enum(['eq','in','range'])),allowedValues:z.array(text).nullable().describe('Closed enum when non-null. Strings accept any nonempty exact value; observed values are suggestions, not a closed enum.'),
+    values:z.array(z.strictObject({value:z.union([text,z.number()]),label:text,productCount:z.number().int().nonnegative()})).describe('Distinct observed values and SKU counts in this category, before other filters.'),
+    observedRange:z.strictObject({min:z.number(),max:z.number()}).nullable().describe('Observed numeric bounds, not limits on configurable resources.'),
+    knownCount:z.number().int().nonnegative(),missingCount:z.number().int().nonnegative(),
+  }))})),true),
   list_services:envelope(z.array(z.strictObject({id:text,productCount:z.number().int().nonnegative(),layers:z.array(text),categories:z.array(text),meters:z.array(text)})),true),
   list_regions:envelope(z.array(z.strictObject({label:text.describe('Exact observed source label. A dash is an unspecified location, not a region code.'),code:regionCode,codes:regionCodes,productCount:z.number().int().nonnegative().describe('Number of billing SKUs with this exact label. Filtering by a code can match several labels and return more products.')})),true),
   search_products:envelope(z.array(productSchema),true),get_product:envelope(productSchema),

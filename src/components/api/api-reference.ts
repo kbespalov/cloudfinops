@@ -6,9 +6,10 @@ export type Endpoint = {
 
 export const endpoints: Endpoint[] = [
   {
-    id: 'products', title: 'Поиск продуктов', method: 'GET', path: '/products', tool: 'search_products',
-    description: 'Метод выбирает биллинговые SKU по сервису, типу тарифа, единице оплаты, модели и другим признакам. Для токенных AI-тарифов задайте services=ai&units=token; q не нужен. Значения одного фильтра объединяются через ИЛИ, разные фильтры — через И.',
+    id: 'products', title: 'Поиск SKU', method: 'GET', path: '/products', tool: 'search_products',
+    description: 'Метод выбирает биллинговые SKU по категории, характеристикам, сервису и единице тарификации. Доступные характеристики и операции перечислены в GET /attributes. Для токенных AI-тарифов задайте services=ai&units=token; q не нужен. Значения одного фильтра объединяются через ИЛИ, разные фильтры — через И.',
     parameters: [
+      {name: 'attributes', type: 'object (JSON)', description: 'Характеристики из GET /attributes. Для каждого поля одна операция: eq — точно, in — одно из значений, range — включительный диапазон min/max. Пример: {"gpuModel":{"eq":"NVIDIA L4"},"gpuCount":{"range":{"min":1,"max":4}}}. В REST передайте JSON через URLSearchParams или --data-urlencode; в MCP — объект. Разные поля объединяются через И. null не соответствует фильтру; неподдерживаемые поля и операции возвращают 400. Числа описывают существующий SKU, для подбора конфигурации используйте /estimates.'},
       {name: 'q', type: 'string', description: 'Короткий поисковый запрос по названию, SKU или модели GPU, например H100, SSD или vCPU. Дополнительные providerAttributes не участвуют в текстовом поиске. Если параметр не задан, продукты упорядочены по провайдеру и SKU.'},
       {name: 'providers', type: 'string[]', description: 'Slug провайдеров, по которым нужно отфильтровать результаты. В REST перечислите их через запятую, например selectel,vk-cloud, а в MCP передайте массив.'},
       {name: 'categories', type: 'string[]', description: 'Категории для фильтрации: compute, gpu, storage, network, cdn, kubernetes или ai.'},
@@ -53,6 +54,12 @@ export const endpoints: Endpoint[] = [
     id: 'categories', title: 'Категории', method: 'GET', path: '/categories',
     description: 'Метод возвращает категории биллинговых SKU и число продуктов в каждой из них. Блочные диски относятся к категории compute, а объектное хранилище — к storage.',
     parameters: [], returns: 'Для каждой категории ответ содержит id, title и productCount.',
+  },
+  {
+    id: 'attributes', title: 'Характеристики по категориям', method: 'GET', path: '/attributes',
+    description: 'Справочник фильтруемых характеристик: типы, операции, единицы, допустимые перечисления и значения в каталоге. Из этого же справочника строятся валидация API и поля конструктора запроса.',
+    parameters: [{name: 'categories', type: 'string[]', description: 'Необязательный список категорий через запятую. По умолчанию возвращаются все категории.'}],
+    returns: 'Для каждой категории: attributes с id, type, operators и allowedValues (закрытое перечисление либо null). values содержит наблюдаемые значения и число SKU до применения других фильтров; observedRange — границы числовых значений в каталоге. knownCount и missingCount показывают заполненность. Строковые значения сравниваются точно, с учётом регистра; значения вне наблюдаемого списка допустимы и могут дать пустую выдачу.',
   },
   {
     id: 'services', title: 'Сервисы', method: 'GET', path: '/services',

@@ -1,4 +1,5 @@
 import {z} from 'zod';
+import {attributeFiltersSchema, legacyAttributeQueryShape} from './attribute-schemas';
 import {CATEGORY_IDS, MAX_PAGE_LIMIT, PUBLIC_UNITS} from './constants';
 const size = z.number().finite().min(0.001).max(1_000_000);
 const count = z.number().int().min(1).max(4096);
@@ -30,17 +31,16 @@ export const estimateRequestSchema = z.strictObject({
     cdnEgressGiB: z.number().finite().min(0).max(1e9).default(0),
   }).default({publicIpCount: 0, objectStorageGiB: 0, internetEgressGiB: 0, cdnEgressGiB: 0}),
 });
+export const attributeQuerySchema = z.strictObject({categories: z.array(z.enum(CATEGORY_IDS)).max(7).optional()});
 export const productQuerySchema = z.strictObject({
+  attributes: attributeFiltersSchema.optional(),
+  ...legacyAttributeQueryShape,
   q: z.string().trim().max(500).optional().describe('Short lexical query, e.g. L4, H100 or SSD. Searches names, SKUs, GPU model and category, not arbitrary attributes. Omit to enumerate products.'),
   providers: z.array(label).max(100).optional().describe('Provider IDs from list_providers. REST: comma-separated; MCP: JSON array.'),
   categories: z.array(z.enum(CATEGORY_IDS)).max(7).optional().describe('Filter catalog categories. Block disks belong to compute; object storage belongs to storage.'),
   services: z.array(label).max(100).optional().describe('Exact service IDs from GET /services, e.g. ai, compute, storage, network, cdn, containers. Use services=["ai"], units=["token"] for AI token tariffs without q. OR within each array, AND across filters.'),
-  serviceProducts: z.array(label).max(100).optional().describe('Exact attributes.serviceProduct values, e.g. foundation-models, gpt-model-hub, ai-studio or ml-inference. Combine with providers for a provider-specific product.'),
   meters: z.array(label).max(100).optional().describe('Exact billing meter IDs from GET /services or Product.meter, e.g. ai.inference.tokens.input, ai.inference.tokens.output, ai.embeddings.tokens. No prefix or full-text matching.'),
   units: z.array(z.enum(PUBLIC_UNITS)).max(PUBLIC_UNITS.length).optional().describe('Exact Price.unit values. token selects token-billed tariffs across pack sizes; read Price.unitQuantity for the denominator. Excludes GPU-hour and per-request rates.'),
-  modelIds: z.array(label).max(100).optional().describe('Exact attributes.modelId values, e.g. gpt-oss-120b. Source IDs are case-sensitive and may differ between providers; no model aliases are inferred.'),
-  tokenDirections: z.array(z.enum(['input', 'output'])).max(2).optional().describe('Filter attributes.tokenDirection. Omit to include both directions and unknown directions, including some embedding tariffs. Does not imply token billing: also set units=["token"].'),
-  inferenceModes: z.array(label).max(100).optional().describe('Exact attributes.inferenceMode values, e.g. synchronous or batch. Unknown modes do not match; omit to include them.'),
   regions: z.array(label).max(100).optional().describe('OR filter: exact source labels or any code from GET /regions codes / Product.regionCodes. Codes are case-insensitive; no city/region hierarchy is inferred. REST: repeat regions for multiple values; legacy comma-separated codes also work. An exact observed label containing commas is one value. MCP: JSON array. Combine with providers for provider-specific codes.'),
   status: label.optional().describe('Catalog status, for example available. This does not verify current provider capacity.'),
   limit: z.number().int().min(1).max(MAX_PAGE_LIMIT).optional().describe('Products per page, 1–100; default 50.'),
