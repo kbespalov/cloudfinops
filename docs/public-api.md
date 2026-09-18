@@ -13,6 +13,7 @@ No authentication or persisted estimates in v1. All operations are read-only;
 | GET /providers | list_providers |
 | GET /providers/{id} | — |
 | GET /categories | — |
+| GET /services | — |
 | GET /regions | — |
 | GET /products | search_products |
 | GET /products/{id} | get_product |
@@ -31,11 +32,79 @@ there is no separate prices endpoint. IDs are opaque. Use `providerSku` for sour
 traceability. Product IDs survive rate changes. Price IDs include units, amounts,
 tiers, VAT, currency and effective date, but not source recheck dates.
 
-Product filters: `q`, `providers`, `categories`, `regions`, `status`, `limit`,
-`cursor`. REST arrays are comma-separated; MCP arrays are JSON arrays. Without q,
+Product filters: `q`, `providers`, `categories`, `services`, `serviceProducts`,
+`meters`, `units`, `modelIds`, `tokenDirections`, `inferenceModes`, `regions`, `status`, `limit`,
+`cursor`. REST arrays are comma-separated; `regions` also supports repeated query
+parameters (preferred for labels containing commas). MCP arrays are JSON arrays. Without q,
 order is provider then SKU. With q, lexical rank precedes SKU tie-breaking.
 Structural filters always apply. Region matching uses exact observed labels or
 codes from `/regions`; it does not assume an AWS-style region taxonomy.
+
+### Service and AI token search
+
+Text search is optional. `GET /services` returns service IDs, product counts,
+layers, categories and meter IDs. Products expose `service` and `layer`; service
+is not a display category (GPU uses service `compute`, block disks use service
+`storage` and category `compute`).
+
+```text
+GET /api/v1/products?services=ai&units=token&limit=100
+GET /api/v1/products?services=ai&units=token&modelIds=gpt-oss-120b&tokenDirections=input
+GET /api/v1/products?services=ai&meters=ai.embeddings.tokens
+```
+
+The first request selects inference and embedding token tariffs, excluding ML
+infrastructure and per-request services that also belong to category `ai`.
+`units` matches `Price.unit`; inspect `Price.unitQuantity` for the token pack size.
+
+`attributes` exposes `serviceProduct`, `modelId`, `modelFamily`, `tokenDirection`
+and `inferenceMode`, retaining original source dimensions in `providerAttributes`.
+Filters use exact, case-sensitive values: `modelIds`, `serviceProducts`,
+`inferenceModes` match their respective attributes; `meters` matches `Product.meter`.
+No model aliases are guessed across providers. `tokenDirections` accepts `input`
+and `output`; omit it to retain tariffs with unknown direction, such as some
+embedding SKUs. Unknown attribute values do not match explicit filters.
+
+Values in each array use OR; different filters use AND. All filters persist in
+the cursor. MCP `search_products` accepts the same filters as JSON arrays:
+
+```json
+{"services":["ai"],"units":["token"],"modelIds":["gpt-oss-120b"],"tokenDirections":["input"]}
+```
+
+### Regions
+
+`GET /regions` returns observed source labels, not a geographic hierarchy. Countries,
+cities, zones, groups and tariff scopes (such as `Базовая сеть`) are preserved;
+`—` means unspecified. `Все регионы` is a literal label, not a wildcard. Omit the
+region filter to search all products. A city/country filter does not include other
+labels automatically.
+
+Each row contains `label`, `code`, `codes` and `productCount`. `codes` contains all
+distinct recognized provider codes in source order, lowercased. `code` is the sole
+code only when `codes.length === 1`; otherwise it is null. Products expose the
+same information as `region`, `regionCode` and `regionCodes`.
+
+For `Россия / ru-1, ru-3, ru-7`, `codes` is `["ru-1", "ru-3", "ru-7"]` and `code`
+is null. `Москва / ru-msk` exposes `ru-msk`; `Москва / MZ1` exposes `mz1`.
+Codes match case-insensitively. Generic city names never receive invented codes.
+
+`productCount` counts billing SKUs with the **exact label**. Filtering by a code
+matches every label containing that code, including composite labels, so it may
+return more products than a single row's count. Multiple filters use OR without
+duplicating products. Combine `regions` with `providers` for provider-specific
+codes. The same matching rules apply to `resource.region` in estimates.
+
+```javascript
+const url = new URL('https://cloudfinops.ru/api/v1/products');
+url.searchParams.append('regions', 'Россия / ru-1, ru-3, ru-7');
+url.searchParams.append('regions', 'Москва / ru-msk');
+```
+
+An exact observed label containing commas is kept as a single value. For multiple
+such labels, repeat `regions`. Existing `?regions=ru-3,ru-7` requests still work.
+Clients using the former first-code behavior for composite labels should use
+`codes` / `regionCodes`; the singular fields now return null for ambiguity.
 
 `limit` is 1–100 (default 50). Use nextCursor with the same filters or omit the
 filters; the cursor retains them. A conflicting filter is 400, an old snapshot is

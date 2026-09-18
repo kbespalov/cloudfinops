@@ -11,7 +11,7 @@ async function request(path:string,options:RequestInit={}) {
   return {response,body:await response.json()};
 }
 async function main() {
-  for(const [path,schema] of [['providers','list_providers'],['categories','list_categories'],['regions','list_regions']] as const) {
+  for(const [path,schema] of [['providers','list_providers'],['categories','list_categories'],['services','list_services'],['regions','list_regions']] as const) {
     const r=await request('/api/v1/'+path);assert.equal(r.response.status,200);responseSchemas[schema].parse(r.body);
     assert.equal(r.response.headers.get('access-control-allow-origin'),'*');
   }

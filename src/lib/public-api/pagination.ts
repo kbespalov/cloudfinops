@@ -5,6 +5,9 @@ import {DEFAULT_PAGE_LIMIT, MAX_PAGE_LIMIT} from './constants';
 const cursorSchema = z.strictObject({
   v:z.string(),offset:z.number().int().nonnegative().max(1e7),q:z.string().max(500),
   providers:z.array(z.string()),categories:z.array(z.string()),regions:z.array(z.string()),status:z.string(),
+  services:z.array(z.string()).default([]),serviceProducts:z.array(z.string()).default([]),
+  meters:z.array(z.string()).default([]),units:z.array(z.string()).default([]),
+  modelIds:z.array(z.string()).default([]),tokenDirections:z.array(z.string()).default([]),inferenceModes:z.array(z.string()).default([]),
   order:z.enum(['lexical-v1','provider-sku-v1']),
 });
 export type CursorPayload = z.infer<typeof cursorSchema>;

@@ -4,7 +4,8 @@ import {extractTrafficRoute} from '@/lib/catalog/peer-match';
 import {isConfirmedAvailable, isSharedVcpu} from '@/lib/calculator/quote';
 import {MONTH_HOURS} from './constants';
 import {productId, priceId} from './ids';
-import {meterToPrice, regionCode} from './product';
+import {meterToPrice} from './product';
+import {matchesRegion as matchesRegionLabel} from './regions';
 import {priceLine} from './price-engine';
 import {compareAmounts, parseDecimal, sumAmounts, toMoney} from './money';
 import {estimateRequestSchema, validationDetails} from './schemas';
@@ -36,7 +37,7 @@ const ramOf = (m: CatalogMeter) => num(m.dimensions.ramGiB ?? m.dimensions.ramGb
 const purchase = (m: CatalogMeter) => String(m.purchaseModel ?? m.dimensions.purchaseModel ?? 'on-demand');
 const usable = (m: CatalogMeter) => m.status === 'available' && !m.synthetic && isConfirmedAvailable(m);
 const sameRegion = (a: CatalogMeter, b: CatalogMeter) => a.region === b.region;
-const matchesRegion = (m: CatalogMeter, region?: string) => !region || m.region === region || regionCode(m.region) === region;
+const matchesRegion = (m: CatalogMeter, region?: string) => !region || matchesRegionLabel(m.region, region);
 const platform = (m: CatalogMeter) => m.cpuPlatformFamily ?? String(m.dimensions.cpuPlatformFamily ?? '');
 const compatible = (a: CatalogMeter, b: CatalogMeter) => sameRegion(a,b) && (!platform(a) || !platform(b) || platform(a) === platform(b));
 const gpuPlatform = (m: CatalogMeter) => String(m.dimensions.gpuPlatformId ?? m.dimensions.platformId ?? '');

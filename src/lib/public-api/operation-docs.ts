@@ -14,13 +14,17 @@ export const OPERATION_DOCS: Record<RestOperationId, {title: string; description
     title: 'List catalog categories', section: 'categories',
     description: 'Discover category IDs and product counts for filtering products. The compute category includes block disks; storage covers object storage. Estimate calculation supports compute and GPU, not every catalog category.',
   },
+  list_services: {
+    title: 'List catalog services and billing meters', section: 'services',
+    description: 'Discover exact service IDs for the services filter, product counts, source layers, display categories and billing meter IDs. Services and categories differ: GPU belongs to service compute; block disks belong to service storage and category compute. Use service ai with unit token for AI token prices, or a discovered meter for a specific billed operation.',
+  },
   list_regions: {
     title: 'List observed cloud regions', section: 'regions',
-    description: 'Discover region labels and codes present in the pricing catalog. Copy an exact label or non-null code into a region filter; do not infer a provider region from a city or another provider’s naming scheme.',
+    description: 'Discover observed source labels, all recognized codes and billing SKU counts. Labels can describe geography, zones, groups or tariff scopes; a dash means unspecified. code is non-null only for a single code; codes contains every recognized code in a group. productCount counts the exact label, so filtering by a code can return more products across several labels. Match an exact label or any code, and combine with providers to scope provider-specific codes. Do not infer a region from a city or another provider’s naming scheme.',
   },
   search_products: {
     title: 'Search cloud SKUs and public prices', section: 'products',
-    description: 'Find billing SKUs and price rules for Russian cloud compute, GPU, storage, networking, CDN, Kubernetes and AI services. Use short queries such as L4, H100 or SSD; q searches names, SKU IDs, GPU model and category, not every provider attribute. Apply providers/categories/regions filters explicitly. Follow pagination.nextCursor until null when a complete comparison is needed. A SKU may be a single billed component, not a complete VM. Use create_estimate for a monthly compute/GPU configuration total.',
+    description: 'Find billing SKUs using structured filters; q is optional. For AI token tariffs set services=["ai"] and units=["token"]. Narrow by modelIds and tokenDirections (input/output), serviceProducts or inferenceModes. Use meters=["ai.embeddings.tokens"] for embeddings. Filter services, meters, units, categories, providers and regions explicitly: OR within arrays, AND between filters. Read attributes.modelId, modelFamily, tokenDirection and inferenceMode; unknown values do not match explicit filters. q is only a short lexical search over names, SKU IDs, GPU model and category. Follow pagination.nextCursor until null. A SKU is one billing component; use create_estimate for complete monthly compute/GPU totals.',
   },
   get_product: {
     title: 'Get SKU attributes and billing rules', section: 'product',
@@ -38,5 +42,6 @@ export const OPERATION_DOCS: Record<RestOperationId, {title: string; description
 
 export const MCP_INSTRUCTIONS = `CloudFinOps provides read-only public cloud pricing and configuration estimates for Russia through REST and MCP. It does not access user cloud accounts or provision resources.
 Use list_providers to discover supported provider IDs. Use search_products for SKU discovery, get_product for detailed price rules and sources, list_product_alternatives for comparable SKUs, and create_estimate for complete monthly VM/GPU costs. Do not replace a configuration estimate with the price of one CPU or GPU billing component.
+For AI token prices, call search_products with services=["ai"], units=["token"] and no q. Add modelIds, tokenDirections or meters for exact selection. categories=["ai"] alone also includes ML infrastructure and per-request services. Use Price.unitQuantity when comparing token packs; a token SKU does not represent a GPU rental.
 Use the documentation resource at https://cloudfinops.ru/llms-full.txt and the OpenAPI resource at https://cloudfinops.ru/api/v1/openapi.json for parameters and examples. Both are available through resources/read.
 Money is represented as decimal strings. Respect unitQuantity, unit, tiers and VAT; null is not zero. Compare only priced estimates or alternatives with priceComparable=true. Report matchedResource, differences and the 720-hour assumption. A catalog status is not live capacity confirmation. Cite CloudFinOps and the underlying product source with checkedAt; catalogVersion identifies a snapshot, not the date a provider last changed its price. For missing data, explain the gap rather than inventing a price.`;

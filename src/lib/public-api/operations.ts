@@ -1,6 +1,6 @@
 import {z} from 'zod';
 import {listAlternatives} from './alternatives';
-import {getProvider,listCategories,listProducts,listProviders,listRegions} from './catalog';
+import {getProvider,listCategories,listProducts,listProviders,listRegions,listServices} from './catalog';
 import {createEstimate} from './estimates';
 import {findMeterByProductId,meterToProduct} from './product';
 import {estimateRequestSchema,productQuerySchema,productIdSchema,emptySchema,validationDetails} from './schemas';
@@ -20,8 +20,9 @@ export const OPERATIONS = {
   list_providers:operation('/providers','get','Провайдеры и покрытие каталога.',emptySchema,()=>list(listProviders())),
   get_provider:operation('/providers/{id}','get','Провайдер по slug.',z.strictObject({id:z.string().min(1)}),({id})=>successBody(getProvider(id)??notFound('Provider not found'))),
   list_categories:operation('/categories','get','Категории SKU.',emptySchema,()=>list(listCategories())),
-  list_regions:operation('/regions','get','Наблюдаемые регионы и нормализованные коды.',emptySchema,()=>list(listRegions())),
-  search_products:operation('/products','get','SKU: lexical search, структурные фильтры, cursor.',productQuerySchema,(input)=>{
+  list_services:operation('/services','get','Сервисы каталога, категории и типы биллинговых тарифов.',emptySchema,()=>list(listServices())),
+  list_regions:operation('/regions','get','Исходные метки регионов, все распознанные коды и число SKU с точной меткой.',emptySchema,()=>list(listRegions())),
+  search_products:operation('/products','get','SKU: фильтры по сервису, типу тарифа, единице оплаты и AI-модели; необязательный текстовый поиск и cursor.',productQuerySchema,(input)=>{
     const result=listProducts(input);return successBody(result.items,undefined,{nextCursor:result.nextCursor,limit:result.limit});
   }),
   get_product:operation('/products/{id}','get','Product и правила тарификации Price.',productIdSchema,({id})=>successBody(meterToProduct(product(id)))),

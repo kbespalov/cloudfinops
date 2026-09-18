@@ -5,14 +5,14 @@ import Link from 'next/link';
 import {useRouter} from 'next/navigation';
 import {ArrowRight, ArrowUpRight, Bars, Check, ChevronRight, Copy, Magnifier, Moon, Play, Sun, Xmark} from '@gravity-ui/icons';
 import {useAppTheme} from '@/components/AppProviders';
-import type {EstimateResult, PublicProduct} from '@/lib/public-api/types';
+import type {EstimateResult, PublicProduct, PublicRegion, PublicService} from '@/lib/public-api/types';
 import {baseUrl, computeExample, endpoints, gpuExample, guides, mcpUrl, type Parameter} from './api-reference';
 import styles from './ApiPage.module.css';
 import {documentationPath} from '@/lib/public-api/discovery';
 
 type ApiResponse = {data?: unknown; meta?: Record<string, unknown>; pagination?: {nextCursor: string | null}; error?: {code: string; message: string; details?: unknown[]}};
 type Language = 'cURL' | 'JavaScript' | 'Python' | 'JSON';
-type Props = {initialSection: string; exampleProduct: PublicProduct; exampleEstimate: EstimateResult; providers: Array<{id: string; name: string}>};
+type Props = {initialSection: string; exampleProduct: PublicProduct; exampleRegion: PublicRegion; exampleEstimate: EstimateResult; providers: Array<{id: string; name: string}>; services: PublicService[]; tokenExamples: PublicProduct[]};
 const shellQuote = (value: string) => "'" + value.replaceAll("'", "'\\''") + "'";
 const pretty = (value: unknown) => JSON.stringify(value, null, 2);
 const validSection = (id: string) => guides.some(g => g.id === id) || endpoints.some(e => e.id === id) || id === 'mcp-connect' || endpoints.some(e => e.tool && 'mcp-' + e.id === id);
@@ -70,7 +70,7 @@ function QuoteSummary({estimate}: {estimate: EstimateResult}) {
   </div>;
 }
 
-export function ApiPage({initialSection, exampleProduct, exampleEstimate, providers}: Props) {
+export function ApiPage({initialSection, exampleProduct, exampleRegion, exampleEstimate, providers, services, tokenExamples}: Props) {
   const {theme, setTheme} = useAppTheme();
   const router = useRouter();
   const section = initialSection;
@@ -79,6 +79,11 @@ export function ApiPage({initialSection, exampleProduct, exampleEstimate, provid
   const [language, setLanguage] = useState<Language>('cURL');
   const [query, setQuery] = useState('L4');
   const [provider, setProvider] = useState('');
+  const [service, setService] = useState('');
+  const [unit, setUnit] = useState('');
+  const [meterFilter, setMeterFilter] = useState('');
+  const [modelId, setModelId] = useState('');
+  const [tokenDirection, setTokenDirection] = useState('');
   const [productId, setProductId] = useState(exampleProduct.id);
   const [providerId, setProviderId] = useState('selectel');
   const [body, setBody] = useState(computeExample);
@@ -130,9 +135,20 @@ export function ApiPage({initialSection, exampleProduct, exampleEstimate, provid
     router.push(documentationPath(id));
   }
   function resetResponse() { abortRef.current?.abort(); setPending(false); setResponse(null); setFailure(''); setRequestInfo(null); setCursor(''); }
+  function selectProductExample(kind: 'gpu' | 'tokens' | 'embeddings') {
+    setQuery(kind === 'gpu' ? 'L4' : ''); setProvider('');
+    setService(kind === 'gpu' ? '' : 'ai'); setUnit(kind === 'gpu' ? '' : 'token');
+    setMeterFilter(kind === 'embeddings' ? 'ai.embeddings.tokens' : '');
+    setModelId(''); setTokenDirection(''); resetResponse();
+  }
   const params = new URLSearchParams();
   if (query) params.set('q', query);
   if (provider) params.set('providers', provider);
+  if (service) params.set('services', service);
+  if (unit) params.set('units', unit);
+  if (meterFilter) params.set('meters', meterFilter);
+  if (modelId) params.set('modelIds', modelId);
+  if (tokenDirection) params.set('tokenDirections', tokenDirection);
   params.set('limit', '3');
   if (cursor) params.set('cursor', cursor);
   let path = '/api/v1' + activeEndpoint.path.replace('{id}', encodeURIComponent(hasProductId ? productId : providerId));
@@ -146,7 +162,7 @@ export function ApiPage({initialSection, exampleProduct, exampleEstimate, provid
     '\n);\n\nconst result = await response.json();';
   const python = 'import requests\n\nresponse = requests.' + method.toLowerCase() + '(\n    ' + JSON.stringify(url) +
     (method === 'POST' ? ',\n    headers={"Content-Type": "application/json"},\n    data=' + JSON.stringify(body) : '') + '\n)\n\nprint(response.json())';
-  const mcpArgs = endpoint?.id === 'estimates' ? body : endpoint?.id === 'products' ? pretty({q: 'L4', limit: 3}) : hasProductId ? pretty({id: productId}) : '{}';
+  const mcpArgs = endpoint?.id === 'estimates' ? body : endpoint?.id === 'products' ? pretty({services: ['ai'], units: ['token'], limit: 3}) : hasProductId ? pretty({id: productId}) : '{}';
   const mcpCode = endpoint ? 'const result = await client.callTool({\n  name: "' + endpoint.tool + '",\n  arguments: ' + mcpArgs.replaceAll('\n', '\n  ') + '\n});\n\nconsole.log(result.structuredContent);' :
     'import { Client } from\n  "@modelcontextprotocol/sdk/client/index.js";\nimport { StreamableHTTPClientTransport } from\n  "@modelcontextprotocol/sdk/client/streamableHttp.js";\n\nconst client = new Client({\n  name: "my-finops-app",\n  version: "1.0.0"\n});\n\nawait client.connect(\n  new StreamableHTTPClientTransport(\n    new URL("' + mcpUrl + '")\n  )\n);\n\nconst { tools } = await client.listTools();';
   const currentCode = mcp ? mcpCode : language === 'JavaScript' ? js : language === 'Python' ? python : language === 'JSON' && isEstimate ? body : curl;
@@ -172,12 +188,18 @@ export function ApiPage({initialSection, exampleProduct, exampleEstimate, provid
   }
 
   const examplePrice = exampleProduct.prices[0];
-  const productSample = {id: exampleProduct.id, name: exampleProduct.name, provider: exampleProduct.provider, meter: exampleProduct.meter, prices: [{unit: examplePrice.unit, unitQuantity: examplePrice.unitQuantity, unitPrice: examplePrice.unitPrice, vat: examplePrice.vat}]};
+  const selectedExample = activeEndpoint.id === 'products' && service === 'ai' && unit === 'token'
+    ? tokenExamples.find(product => !meterFilter || product.meter === meterFilter) ?? exampleProduct : exampleProduct;
+  const selectedPrice = selectedExample.prices[0];
+  const productSample = {id: selectedExample.id, name: selectedExample.name, provider: selectedExample.provider, service: selectedExample.service, layer: selectedExample.layer, meter: selectedExample.meter,
+    ...(selectedExample.service === 'ai' ? {attributes: {modelId: selectedExample.attributes.modelId, modelFamily: selectedExample.attributes.modelFamily, tokenDirection: selectedExample.attributes.tokenDirection, serviceProduct: selectedExample.attributes.serviceProduct, inferenceMode: selectedExample.attributes.inferenceMode}} : {}),
+    prices: [{unit: selectedPrice.unit, unitQuantity: selectedPrice.unitQuantity, unitPrice: selectedPrice.unitPrice, vat: selectedPrice.vat}]};
   let example: unknown = {data: [productSample], meta: {apiVersion: 'v1'}};
   if (activeEndpoint.id === 'product') example = {data: productSample, meta: {apiVersion: 'v1'}};
   if (activeEndpoint.id === 'providers' || activeEndpoint.id === 'provider') example = {data: activeEndpoint.id === 'provider' ? providers.find(p => p.id === providerId) : providers, meta: {apiVersion: 'v1'}};
   if (activeEndpoint.id === 'categories') example = {data: [{id: 'gpu', title: 'GPU'}], meta: {apiVersion: 'v1'}};
-  if (activeEndpoint.id === 'regions') example = {data: [{label: exampleProduct.region, code: exampleProduct.regionCode}], meta: {apiVersion: 'v1'}};
+  if (activeEndpoint.id === 'services') example = {data: services, meta: {apiVersion: 'v1'}};
+  if (activeEndpoint.id === 'regions') example = {data: [exampleRegion], meta: {apiVersion: 'v1'}};
   if (activeEndpoint.id === 'alternatives') example = {data: [], pagination: {nextCursor: null}, meta: {apiVersion: 'v1'}};
   if (isEstimate) example = {data: {quotes: exampleEstimate.quotes.map(({provider, status, total, matchedResource}) => ({provider, status, total, matchedResource})), assumptions: exampleEstimate.assumptions}, meta: {apiVersion: 'v1'}};
   const estimate = response?.data && typeof response.data === 'object' && 'quotes' in response.data ? response.data as EstimateResult : null;
@@ -274,8 +296,17 @@ export function ApiPage({initialSection, exampleProduct, exampleEstimate, provid
                 <div className={styles.codeToolbar}><div className={styles.languageTabs} aria-label="Язык примера">{(['cURL', 'JavaScript', 'Python', ...(isEstimate ? ['JSON'] : [])] as Language[]).map(l => <button key={l} aria-pressed={language === l || language === 'JSON' && !isEstimate && l === 'cURL'} onClick={() => setLanguage(l)}>{l}</button>)}</div><CopyButton value={currentCode}/></div>
                 {language === 'JSON' && isEstimate ? <textarea className={styles.jsonEditor} spellCheck={false} aria-label="Тело запроса" value={body} onChange={e => {setBody(e.target.value); resetResponse();}}/> : <Code value={currentCode}/>}
                 {isEstimate && <div className={styles.presets}><span>Пример</span><button onClick={() => {setBody(computeExample); setLanguage('JSON'); resetResponse();}}>Compute</button><button onClick={() => {setBody(gpuExample); setLanguage('JSON'); resetResponse();}}>GPU L4</button><button className={styles.editBody} onClick={() => setLanguage('JSON')}>Изменить JSON</button></div>}
+                {activeEndpoint.id === 'products' && <div className={styles.presets}><span>Пример</span><button onClick={() => selectProductExample('gpu')}>GPU L4</button><button onClick={() => selectProductExample('tokens')}>Токены AI</button><button onClick={() => selectProductExample('embeddings')}>Embeddings</button></div>}
                 <div className={styles.requestControls}>
-                  {activeEndpoint.id === 'products' && <div className={styles.queryFields}><label>Поиск<input value={query} onChange={e => {setQuery(e.target.value); resetResponse();}} placeholder="H100, SSD, vCPU"/></label><label>Провайдер<select value={provider} onChange={e => {setProvider(e.target.value); resetResponse();}}><option value="">Все провайдеры</option>{providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label></div>}
+                  {activeEndpoint.id === 'products' && <div className={styles.queryFields}>
+                    <label>Сервис<select value={service} onChange={e => {setService(e.target.value); setMeterFilter(''); resetResponse();}}><option value="">Все сервисы</option>{services.map(s => <option key={s.id} value={s.id}>{s.id}</option>)}</select></label>
+                    <label>Провайдер<select value={provider} onChange={e => {setProvider(e.target.value); resetResponse();}}><option value="">Все провайдеры</option>{providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
+                    <label>Единица оплаты<select value={unit} onChange={e => {setUnit(e.target.value); resetResponse();}}><option value="">Все единицы</option><option value="token">Токены</option></select></label>
+                    <label>Тип тарифа<select value={meterFilter} onChange={e => {setMeterFilter(e.target.value); resetResponse();}}><option value="">Все типы</option>{[...new Set(services.filter(s => !service || s.id === service).flatMap(s => s.meters))].sort().map(m => <option key={m} value={m}>{m}</option>)}</select></label>
+                    <label>AI modelId<input value={modelId} onChange={e => {setModelId(e.target.value); resetResponse();}} placeholder="gpt-oss-120b"/></label>
+                    <label>Направление токенов<select value={tokenDirection} onChange={e => {setTokenDirection(e.target.value); resetResponse();}}><option value="">Все, включая неизвестное</option><option value="input">input</option><option value="output">output</option></select></label>
+                    <label>Текстовый поиск · необязательно<input value={query} onChange={e => {setQuery(e.target.value); resetResponse();}} placeholder="H100, SSD, vCPU"/></label>
+                  </div>}
                   {hasProductId && <label className={styles.idField}>Product ID<input value={productId} onChange={e => {setProductId(e.target.value); resetResponse();}} spellCheck={false}/></label>}
                   {activeEndpoint.id === 'provider' && <label className={styles.idField}>Провайдер<select value={providerId} onChange={e => {setProviderId(e.target.value); resetResponse();}}>{providers.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>}
                   <div className={styles.runRow}><span>Без ключа доступа</span><button className={styles.runButton} disabled={pending} onClick={() => void run()}><Play width={13}/>{pending ? 'Выполняется…' : 'Выполнить запрос'}</button></div>

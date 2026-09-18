@@ -3,6 +3,7 @@ export const CALCULATION_VERSION = 'calc_v1';
 export const MONTH_HOURS = 720;
 export const DEFAULT_PAGE_LIMIT = 50;
 export const MAX_PAGE_LIMIT = 100;
+export const PRODUCT_ARRAY_FILTERS = ['providers', 'categories', 'regions', 'services', 'serviceProducts', 'meters', 'units', 'modelIds', 'tokenDirections', 'inferenceModes'] as const;
 export const DISCLAIMER =
   'Публичные прайсы, НДС указан у каждой ставки. Месяц в estimate = 720 часов. Не оферта.';
 

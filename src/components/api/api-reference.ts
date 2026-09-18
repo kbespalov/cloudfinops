@@ -7,12 +7,19 @@ export type Endpoint = {
 export const endpoints: Endpoint[] = [
   {
     id: 'products', title: 'Поиск продуктов', method: 'GET', path: '/products', tool: 'search_products',
-    description: 'Метод позволяет искать биллинговые SKU по названию, идентификатору, модели GPU и категории. Структурные фильтры ограничивают набор результатов, а текстовый запрос определяет порядок их отображения.',
+    description: 'Метод выбирает биллинговые SKU по сервису, типу тарифа, единице оплаты, модели и другим признакам. Для токенных AI-тарифов задайте services=ai&units=token; q не нужен. Значения одного фильтра объединяются через ИЛИ, разные фильтры — через И.',
     parameters: [
       {name: 'q', type: 'string', description: 'Короткий поисковый запрос по названию, SKU или модели GPU, например H100, SSD или vCPU. Дополнительные providerAttributes не участвуют в текстовом поиске. Если параметр не задан, продукты упорядочены по провайдеру и SKU.'},
       {name: 'providers', type: 'string[]', description: 'Slug провайдеров, по которым нужно отфильтровать результаты. В REST перечислите их через запятую, например selectel,vk-cloud, а в MCP передайте массив.'},
       {name: 'categories', type: 'string[]', description: 'Категории для фильтрации: compute, gpu, storage, network, cdn, kubernetes или ai.'},
-      {name: 'regions', type: 'string[]', description: 'Метки или коды регионов из словаря регионов. Значения должны совпадать точно.'},
+      {name: 'services', type: 'string[]', description: 'ID сервисов из GET /services: ai, compute, storage, network, cdn, containers. Сервис отличается от категории: GPU относится к compute, а блочные диски — к storage.'},
+      {name: 'serviceProducts', type: 'string[]', description: 'Точные значения attributes.serviceProduct: например foundation-models, gpt-model-hub, ai-studio или ml-inference. При необходимости ограничьте провайдера.'},
+      {name: 'meters', type: 'string[]', description: 'Точный тип биллинговой ставки из GET /services или Product.meter: например ai.inference.tokens.input, ai.inference.tokens.output или ai.embeddings.tokens.'},
+      {name: 'units', type: 'string[]', description: 'Единицы оплаты Price.unit. Значение token выбирает токенные тарифы независимо от размера пакета; размер пакета указан в Price.unitQuantity. GPU и запросы с другой единицей оплаты не попадут в выборку.'},
+      {name: 'modelIds', type: 'string[]', description: 'Точные значения attributes.modelId, например gpt-oss-120b. Регистр важен; разные идентификаторы провайдеров автоматически не объединяются.'},
+      {name: 'tokenDirections', type: 'string[]', description: 'input и/или output. Если направление не указано в каталоге, такой SKU не соответствует фильтру. Для всех токенных тарифов, включая embeddings с неизвестным направлением, задайте только units=token.'},
+      {name: 'inferenceModes', type: 'string[]', description: 'Точные значения attributes.inferenceMode, например synchronous или batch. Тарифы с неизвестным режимом не соответствуют заданному фильтру.'},
+      {name: 'regions', type: 'string[]', description: 'Точные метки или любой код из codes словаря регионов. Регистр кодов не важен; совпадение по любому значению, без дубликатов. В REST повторяйте параметр regions для нескольких меток, особенно с запятыми. Перечисление кодов через запятую также поддерживается. Для кодов конкретного провайдера задайте providers.'},
       {name: 'status', type: 'string', description: 'Статус продукта в каталоге, например available.'},
       {name: 'limit', type: 'integer', default: '50', description: 'Число продуктов на странице, от 1 до 100.'},
       {name: 'cursor', type: 'string', description: 'Значение pagination.nextCursor из предыдущего ответа. Cursor сохраняет фильтры, порядок результатов и версию каталога.'},
@@ -48,9 +55,14 @@ export const endpoints: Endpoint[] = [
     parameters: [], returns: 'Для каждой категории ответ содержит id, title и productCount.',
   },
   {
+    id: 'services', title: 'Сервисы', method: 'GET', path: '/services',
+    description: 'Справочник сервисов и типов тарифов, по которым можно фильтровать SKU. Сервисы отражают исходную структуру каталога; категории используются для группировки продуктов на сайте.',
+    parameters: [], returns: 'Для каждого сервиса ответ содержит id, productCount, layers, categories и meters. Передавайте id в фильтр services, а типы ставок из meters — в фильтр meters. Например, сервис ai включает токены, ML-инфраструктуру и запросы классификации.',
+  },
+  {
     id: 'regions', title: 'Регионы', method: 'GET', path: '/regions',
-    description: 'Метод возвращает метки регионов из источников тарифов. Поле code содержит нормализованный код, если его удалось определить.',
-    parameters: [], returns: 'Для каждого региона ответ содержит label, code и productCount. При фильтрации используйте точное значение label или code.',
+    description: 'Метод возвращает исходные метки: страны, города, зоны, группы и области действия тарифов. Это не географическая иерархия: «—» означает неуказанное расположение, а «Все регионы» — исходную метку, а не поиск без ограничений.',
+    parameters: [], returns: 'Ответ содержит label, code, codes и productCount. В codes — все распознанные коды в нижнем регистре; code заполнен только при одном коде. Например, «Россия / ru-1, ru-3, ru-7» содержит три кода и code: null. productCount считает SKU с точной меткой; фильтр по коду может вернуть больше SKU из нескольких меток. В Product аналогичный массив называется regionCodes.',
   },
   {
     id: 'estimates', title: 'Создать расчёт', method: 'POST', path: '/estimates', tool: 'create_estimate',
@@ -64,7 +76,7 @@ export const endpoints: Endpoint[] = [
       {name: 'resource.gpuModel', type: 'string', description: 'Модель GPU, например L4 или H100. Параметр обязателен для GPU; при подборе физическая GPU не заменяется vGPU.'},
       {name: 'resource.gpuCount', type: 'integer', description: 'Минимальное число GPU. Параметр обязателен для GPU; фактическое количество ускорителей может быть больше запрошенного.'},
       {name: 'resource.scope', type: 'enum', default: 'instance', description: 'Состав расчёта для GPU: instance включает хост, а gpu_only учитывает только ускоритель.'},
-      {name: 'resource.region', type: 'string', description: 'Точная метка или код региона из каталога. Для конфигураций GPU дополнительно можно задать interconnect. Параметр form требует явных данных о форм-факторе, которых в текущем каталоге нет.'},
+      {name: 'resource.region', type: 'string', description: 'Точная метка или любой код из codes региона / regionCodes продукта; регистр кодов не важен. Для конфигураций GPU дополнительно можно задать interconnect. Параметр form требует явных данных о форм-факторе, которых в текущем каталоге нет.'},
       {name: 'resource.purchaseModel', type: 'enum', default: 'on-demand', description: 'Модель потребления: on-demand или preemptible. При подборе используется только указанная модель.'},
       {name: 'providers', type: 'string[]', description: 'Массив slug провайдеров, для которых нужно выполнить расчёт. Если параметр не задан, используются все провайдеры каталога.'},
       {name: 'period', type: 'enum', default: 'month', description: 'В v1 поддерживается только month: расчётный месяц составляет 720 часов.'},
