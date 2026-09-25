@@ -709,6 +709,21 @@ export function isGpuGbShareMeter(meter: CatalogMeter): boolean {
   return /\b1\s*gb\s*gpu\b/.test(hay) || /\bgb-gpu\b/.test(hay);
 }
 
+/** GPU-хост vCPU/RAM (T1 g1–g7) — не аренда карты. */
+function isGpuHostComponent(meter: CatalogMeter): boolean {
+  const flag = meter.dimensions.gpuHostOnly;
+  return flag === true || flag === 'true';
+}
+
+/** Явный запрос ставки хоста, а не карты: «vCPU g1», «RAM хоста H100». */
+function wantsGpuHostUnits(query: string | undefined): boolean {
+  if (!query) return false;
+  const q = normalize(query);
+  if (q.includes('хост') || q.includes('gpu host') || q.includes('gpuhost')) return true;
+  const hostSeries = /g[1-7]|gpu|h100|h200|a100|l40/.test(q);
+  return hostSeries && (q.includes('vcpu') || /\bram\b/.test(q) || q.includes('памят'));
+}
+
 /** Explicit «цена за 1 ГБ GPU» / share asks — keep GB-GPU meters. */
 function wantsGpuGbShare(query: string | undefined): boolean {
   if (!query) return false;
@@ -1167,6 +1182,11 @@ function collectCandidates(params: SearchParams): FilterContext {
       Boolean(queryGpuFamily) ||
       /\b(h100|h200|a100|a10|l40s?|l4|b300|v100|t4|rtx)\b/i.test(params.query ?? '');
     if (isGpuGbShareMeter(meter) && !wantsGpuGbShare(params.query) && queryLooksLikeGpuCard) {
+      continue;
+    }
+    // T1 GPUaaS публикует vCPU/RAM хоста отдельно. В имени есть модель карты,
+    // но это не аренда H100/H200.
+    if (isGpuHostComponent(meter) && !wantsGpuHostUnits(params.query)) {
       continue;
     }
     if (vcpuUnitOnly && !isVcpuMeter(meter)) continue;

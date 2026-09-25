@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.compute
@@ -57,7 +57,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.compute
@@ -98,7 +98,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.compute
@@ -138,7 +138,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.compute
@@ -178,7 +178,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.compute
@@ -218,7 +218,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.compute
@@ -258,7 +258,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.compute
@@ -298,7 +298,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.compute
@@ -338,9 +338,10 @@ spec:
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: '2026-04-30'
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
     sourceRefs:
+    - yc.billing-api
     - yc.compute
     dimensions:
       platform: Intel Cascade Lake
@@ -355,6 +356,7 @@ spec:
       maxRamGiB: 1280
       maxRamGiBPerVcpu: 16
       shapeMode: envelope
+      yandexSkuId: dn218a07u143r9v1r5ms
     pricing:
       rate:
         amount: '1.41'
@@ -373,9 +375,10 @@ spec:
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: '2026-04-30'
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
     sourceRefs:
+    - yc.billing-api
     - yc.compute
     dimensions:
       platform: Intel Cascade Lake
@@ -389,6 +392,7 @@ spec:
       maxRamGiB: 1280
       maxRamGiBPerVcpu: 16
       shapeMode: envelope
+      yandexSkuId: dn2fhtcoocq50j1uj4tg
     pricing:
       rate:
         amount: '0.3676'
@@ -407,9 +411,10 @@ spec:
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: '2026-04-30'
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
     sourceRefs:
+    - yc.billing-api
     - yc.compute
     dimensions:
       cpuPlatformFamily: intel-cascade-lake
@@ -422,6 +427,7 @@ spec:
       maxRamGiB: 16
       maxRamGiBPerVcpu: 4
       shapeMode: envelope
+      yandexSkuId: dn26skitjdon841jqit7
     pricing:
       rate:
         amount: '0.58'
@@ -440,9 +446,10 @@ spec:
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: '2026-04-30'
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
     sourceRefs:
+    - yc.billing-api
     - yc.compute
     dimensions:
       cpuPlatformFamily: intel-cascade-lake
@@ -455,6 +462,7 @@ spec:
       maxRamGiB: 16
       maxRamGiBPerVcpu: 4
       shapeMode: envelope
+      yandexSkuId: dn2qbqi1am9oq6oc9s05
     pricing:
       rate:
         amount: '0.85'
@@ -473,9 +481,10 @@ spec:
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: '2026-04-30'
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
     sourceRefs:
+    - yc.billing-api
     - yc.compute
     dimensions:
       cpuPlatformFamily: intel-cascade-lake
@@ -488,6 +497,7 @@ spec:
       maxRamGiB: 8
       maxRamGiBPerVcpu: 2
       shapeMode: envelope
+      yandexSkuId: dn2l09d8brnv9s8m5p2r
     pricing:
       rate:
         amount: '0.1897'
@@ -506,9 +516,10 @@ spec:
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: '2026-04-30'
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
     sourceRefs:
+    - yc.billing-api
     - yc.compute
     dimensions:
       cpuPlatformFamily: intel-cascade-lake
@@ -521,6 +532,7 @@ spec:
       maxRamGiB: 16
       maxRamGiBPerVcpu: 4
       shapeMode: envelope
+      yandexSkuId: dn2krclp8uj3432vmpre
     pricing:
       rate:
         amount: '0.1897'
@@ -539,9 +551,10 @@ spec:
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: '2026-04-30'
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
     sourceRefs:
+    - yc.billing-api
     - yc.compute
     dimensions:
       cpuPlatformFamily: intel-cascade-lake
@@ -554,6 +567,7 @@ spec:
       maxRamGiB: 16
       maxRamGiBPerVcpu: 4
       shapeMode: envelope
+      yandexSkuId: dn20jng1b3a6ggtn52bo
     pricing:
       rate:
         amount: '0.26'
@@ -572,9 +586,10 @@ spec:
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: '2026-04-30'
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
     sourceRefs:
+    - yc.billing-api
     - yc.compute
     dimensions:
       cpuPlatformFamily: intel-cascade-lake
@@ -587,6 +602,7 @@ spec:
       maxRamGiB: 1280
       maxRamGiBPerVcpu: 16
       shapeMode: envelope
+      yandexSkuId: dn2ipnaa10sls6i7osfv
     pricing:
       rate:
         amount: '0.3794'
@@ -605,9 +621,10 @@ spec:
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: '2026-04-30'
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
     sourceRefs:
+    - yc.billing-api
     - yc.compute
     dimensions:
       cpuPlatformFamily: intel-cascade-lake
@@ -620,6 +637,7 @@ spec:
       maxRamGiB: 8
       maxRamGiBPerVcpu: 2
       shapeMode: envelope
+      yandexSkuId: dn292ebti5dcjio7vh2s
     pricing:
       rate:
         amount: '0.1185'
@@ -638,9 +656,10 @@ spec:
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: '2026-04-30'
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
     sourceRefs:
+    - yc.billing-api
     - yc.compute
     dimensions:
       cpuPlatformFamily: intel-cascade-lake
@@ -652,6 +671,7 @@ spec:
       maxRamGiB: 1280
       maxRamGiBPerVcpu: 16
       shapeMode: envelope
+      yandexSkuId: dn2sp66rt1l381la6q7p
     pricing:
       rate:
         amount: '0.083'
@@ -662,5 +682,996 @@ spec:
       normalized:
         amount: '0.083'
         unit: {currency: RUB, quantity: GiB-RAM, period: hour}
+        formula: native hourly rate
+        vat: included
+
+  # Intel Ice Lake Compute-Optimized (highfreq-v3), Intel Xeon 6354, 3.0 GHz — только 100% vCPU — from https://yandex.cloud/ru/docs/compute/pricing
+  - sku: yc.compute.ice-lake-co-100.vcpu
+    name: Intel Ice Lake Compute-Optimized, 100% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      platform: Intel Ice Lake Compute-Optimized
+      cpuPlatformFamily: intel-ice-lake
+      workloadFamily: compute-optimized
+      cpuPlatformNative: Intel Ice Lake (Compute Optimized)
+      platformId: highfreq-v3
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      yandexSkuId: dn2lag3718gm9oq8dus2
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 2
+      maxVcpu: 56
+      maxRamGiB: 448
+      maxRamGiBPerVcpu: 16
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '2.08'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '2.08'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+    notes: Высокочастотная платформа (3,0 ГГц), доступна только с гарантированной долей 100%; прерываемый тариф в прайсе не опубликован.
+  - sku: yc.compute.ice-lake-co.ram
+    name: Intel Ice Lake Compute-Optimized, RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      platform: Intel Ice Lake Compute-Optimized
+      cpuPlatformFamily: intel-ice-lake
+      workloadFamily: compute-optimized
+      cpuPlatformNative: Intel Ice Lake (Compute Optimized)
+      platformId: highfreq-v3
+      purchaseModel: on-demand
+      yandexSkuId: dn23hq90a5khr3o6fivm
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 2
+      maxVcpu: 56
+      maxRamGiB: 448
+      maxRamGiBPerVcpu: 16
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '0.3794'
+        currency: RUB
+        unit: {quantity: GiB-RAM, period: hour}
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.3794'
+        unit: {currency: RUB, quantity: GiB-RAM, period: hour}
+        formula: native hourly rate
+        vat: included
+
+  # AMD Zen 4 (standard-v4a), AMD EPYC 9654, 2.4 GHz — from https://yandex.cloud/ru/docs/compute/pricing
+  - sku: yc.compute.zen4-100.vcpu
+    name: AMD Zen 4, 100% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      platform: AMD Zen 4
+      cpuPlatformFamily: amd-zen4
+      cpuPlatformNative: AMD Zen 4
+      platformId: standard-v4a
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      yandexSkuId: dn28kn5h601tc7lk5fbu
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 288
+      maxRamGiB: 1792
+      maxRamGiBPerVcpu: 8
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '1.26'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '1.26'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+    notes: При 100% vCPU RAM на ядро — 1, 2, 4 или 8 ГБ (для 256 и 288 vCPU — до 4 ГБ). ВМ больше 256 vCPU — только Linux с ядром 5.15+, для Windows максимум 224 vCPU.
+  - sku: yc.compute.zen4.ram
+    name: AMD Zen 4, RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      platform: AMD Zen 4
+      cpuPlatformFamily: amd-zen4
+      cpuPlatformNative: AMD Zen 4
+      platformId: standard-v4a
+      purchaseModel: on-demand
+      yandexSkuId: dn29sa4d441spg8aokdn
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 288
+      maxRamGiB: 1792
+      maxRamGiBPerVcpu: 8
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '0.3381'
+        currency: RUB
+        unit: {quantity: GiB-RAM, period: hour}
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.3381'
+        unit: {currency: RUB, quantity: GiB-RAM, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.zen4-50.vcpu
+    name: AMD Zen 4, 50% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      platform: AMD Zen 4
+      cpuPlatformFamily: amd-zen4
+      cpuPlatformNative: AMD Zen 4
+      platformId: standard-v4a
+      guaranteedVcpuShare: 50%
+      purchaseModel: on-demand
+      yandexSkuId: dn292qoem8pkl2rig4i7
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 4
+      maxRamGiB: 16
+      maxRamGiBPerVcpu: 4
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '0.77'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.77'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.zen4-20.vcpu
+    name: AMD Zen 4, 20% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      platform: AMD Zen 4
+      cpuPlatformFamily: amd-zen4
+      cpuPlatformNative: AMD Zen 4
+      platformId: standard-v4a
+      guaranteedVcpuShare: 20%
+      purchaseModel: on-demand
+      yandexSkuId: dn27k0tchllteq9ida4q
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 4
+      maxRamGiB: 8
+      maxRamGiBPerVcpu: 2
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '0.53'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.53'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.zen4-100.preemptible-vcpu
+    name: AMD Zen 4, 100% preemptible vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: amd-zen4
+      cpuPlatformNative: AMD Zen 4
+      platformId: standard-v4a
+      guaranteedVcpuShare: 100%
+      purchaseModel: preemptible
+      yandexSkuId: dn2p24jgv2e06fqoc480
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 288
+      maxRamGiB: 1792
+      maxRamGiBPerVcpu: 8
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '0.35'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.35'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.zen4.preemptible-ram
+    name: AMD Zen 4, preemptible RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: amd-zen4
+      cpuPlatformNative: AMD Zen 4
+      platformId: standard-v4a
+      purchaseModel: preemptible
+      yandexSkuId: dn2vulur9lrq1m6phk7l
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 288
+      maxRamGiB: 1792
+      maxRamGiBPerVcpu: 8
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '0.0845'
+        currency: RUB
+        unit: {quantity: GiB-RAM, period: hour}
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.0845'
+        unit: {currency: RUB, quantity: GiB-RAM, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.zen4-50.preemptible-vcpu
+    name: AMD Zen 4, 50% preemptible vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: amd-zen4
+      cpuPlatformNative: AMD Zen 4
+      platformId: standard-v4a
+      guaranteedVcpuShare: 50%
+      purchaseModel: preemptible
+      yandexSkuId: dn2n2sjma3n090p2n8cl
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 4
+      maxRamGiB: 16
+      maxRamGiBPerVcpu: 4
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '0.24'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.24'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.zen4-20.preemptible-vcpu
+    name: AMD Zen 4, 20% preemptible vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: amd-zen4
+      cpuPlatformNative: AMD Zen 4
+      platformId: standard-v4a
+      guaranteedVcpuShare: 20%
+      purchaseModel: preemptible
+      yandexSkuId: dn2fhnobji0sfn7kgb9n
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 4
+      maxRamGiB: 8
+      maxRamGiBPerVcpu: 2
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '0.169'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.169'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+
+  # AMD Zen 4 Compute-Optimized (highfreq-v4a), AMD EPYC 9374F, 3.85 GHz — from https://yandex.cloud/ru/docs/compute/pricing
+  - sku: yc.compute.zen4-co-100.vcpu
+    name: AMD Zen 4 Compute-Optimized, 100% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      platform: AMD Zen 4 Compute-Optimized
+      cpuPlatformFamily: amd-zen4
+      workloadFamily: compute-optimized
+      cpuPlatformNative: AMD Zen 4 Compute-Optimized
+      platformId: highfreq-v4a
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      yandexSkuId: dn2bnom85ie58bpvmtmn
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 80
+      maxRamGiB: 960
+      maxRamGiBPerVcpu: 12
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '2.56'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '2.56'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+    notes: Высокочастотная платформа (3,85 ГГц). При 100% vCPU — 2–80 vCPU, RAM на ядро 1, 2, 4, 8, 10 или 12 ГБ.
+  - sku: yc.compute.zen4-co.ram
+    name: AMD Zen 4 Compute-Optimized, RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      platform: AMD Zen 4 Compute-Optimized
+      cpuPlatformFamily: amd-zen4
+      workloadFamily: compute-optimized
+      cpuPlatformNative: AMD Zen 4 Compute-Optimized
+      platformId: highfreq-v4a
+      purchaseModel: on-demand
+      yandexSkuId: dn2dq9mqiklrm87pc1h2
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 80
+      maxRamGiB: 960
+      maxRamGiBPerVcpu: 12
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '0.4697'
+        currency: RUB
+        unit: {quantity: GiB-RAM, period: hour}
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.4697'
+        unit: {currency: RUB, quantity: GiB-RAM, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.zen4-co-50.vcpu
+    name: AMD Zen 4 Compute-Optimized, 50% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      platform: AMD Zen 4 Compute-Optimized
+      cpuPlatformFamily: amd-zen4
+      workloadFamily: compute-optimized
+      cpuPlatformNative: AMD Zen 4 Compute-Optimized
+      platformId: highfreq-v4a
+      guaranteedVcpuShare: 50%
+      purchaseModel: on-demand
+      yandexSkuId: dn2320h8kdhmslmt2imq
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 4
+      maxRamGiB: 16
+      maxRamGiBPerVcpu: 4
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '1.28'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '1.28'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.zen4-co-20.vcpu
+    name: AMD Zen 4 Compute-Optimized, 20% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      platform: AMD Zen 4 Compute-Optimized
+      cpuPlatformFamily: amd-zen4
+      workloadFamily: compute-optimized
+      cpuPlatformNative: AMD Zen 4 Compute-Optimized
+      platformId: highfreq-v4a
+      guaranteedVcpuShare: 20%
+      purchaseModel: on-demand
+      yandexSkuId: dn214i62l70at9bdhfln
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 4
+      maxRamGiB: 8
+      maxRamGiBPerVcpu: 2
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '0.51'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.51'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.zen4-co-100.preemptible-vcpu
+    name: AMD Zen 4 Compute-Optimized, 100% preemptible vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: amd-zen4
+      workloadFamily: compute-optimized
+      cpuPlatformNative: AMD Zen 4 Compute-Optimized
+      platformId: highfreq-v4a
+      guaranteedVcpuShare: 100%
+      purchaseModel: preemptible
+      yandexSkuId: dn2i8hbduq7pn24un5n4
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 80
+      maxRamGiB: 960
+      maxRamGiBPerVcpu: 12
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '1.79'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '1.79'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.zen4-co.preemptible-ram
+    name: AMD Zen 4 Compute-Optimized, preemptible RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: amd-zen4
+      workloadFamily: compute-optimized
+      cpuPlatformNative: AMD Zen 4 Compute-Optimized
+      platformId: highfreq-v4a
+      purchaseModel: preemptible
+      yandexSkuId: dn2tqniq656s6p8nlv0j
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 80
+      maxRamGiB: 960
+      maxRamGiBPerVcpu: 12
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '0.14'
+        currency: RUB
+        unit: {quantity: GiB-RAM, period: hour}
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.14'
+        unit: {currency: RUB, quantity: GiB-RAM, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.zen4-co-50.preemptible-vcpu
+    name: AMD Zen 4 Compute-Optimized, 50% preemptible vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: amd-zen4
+      workloadFamily: compute-optimized
+      cpuPlatformNative: AMD Zen 4 Compute-Optimized
+      platformId: highfreq-v4a
+      guaranteedVcpuShare: 50%
+      purchaseModel: preemptible
+      yandexSkuId: dn2mdhedbqekff7m2mll
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 4
+      maxRamGiB: 16
+      maxRamGiBPerVcpu: 4
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '0.38'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.38'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.zen4-co-20.preemptible-vcpu
+    name: AMD Zen 4 Compute-Optimized, 20% preemptible vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: amd-zen4
+      workloadFamily: compute-optimized
+      cpuPlatformNative: AMD Zen 4 Compute-Optimized
+      platformId: highfreq-v4a
+      guaranteedVcpuShare: 20%
+      purchaseModel: preemptible
+      yandexSkuId: dn2etb71vuqc01rjma1b
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 4
+      maxRamGiB: 8
+      maxRamGiBPerVcpu: 2
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '0.1536'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.1536'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+
+  # Intel Broadwell (standard-v1), Intel Xeon E5-2660 v4, 2.0 GHz — не поддерживается в зонах ru-central1-d/e — from https://yandex.cloud/ru/docs/compute/pricing
+  - sku: yc.compute.broadwell-100.vcpu
+    name: Intel Broadwell, 100% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      platform: Intel Broadwell
+      cpuPlatformFamily: intel-broadwell
+      cpuPlatformNative: Intel Broadwell
+      platformId: standard-v1
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      yandexSkuId: dn299ll54t5jt2gojh7e
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 256
+      maxRamGiBPerVcpu: 8
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '1.26'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '1.26'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+    notes: "Старшая платформа: не поддерживается в зонах ru-central1-d и ru-central1-e."
+  - sku: yc.compute.broadwell.ram
+    name: Intel Broadwell, RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      platform: Intel Broadwell
+      cpuPlatformFamily: intel-broadwell
+      cpuPlatformNative: Intel Broadwell
+      platformId: standard-v1
+      purchaseModel: on-demand
+      yandexSkuId: dn2dka206olokggsieuu
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 256
+      maxRamGiBPerVcpu: 8
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '0.44'
+        currency: RUB
+        unit: {quantity: GiB-RAM, period: hour}
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.44'
+        unit: {currency: RUB, quantity: GiB-RAM, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.broadwell-20.vcpu
+    name: Intel Broadwell, 20% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      platform: Intel Broadwell
+      cpuPlatformFamily: intel-broadwell
+      cpuPlatformNative: Intel Broadwell
+      platformId: standard-v1
+      guaranteedVcpuShare: 20%
+      purchaseModel: on-demand
+      yandexSkuId: dn2vmq6na03r9vlds7j8
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 4
+      maxRamGiB: 16
+      maxRamGiBPerVcpu: 4
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '0.99'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.99'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.broadwell-5.vcpu
+    name: Intel Broadwell, 5% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      platform: Intel Broadwell
+      cpuPlatformFamily: intel-broadwell
+      cpuPlatformNative: Intel Broadwell
+      platformId: standard-v1
+      guaranteedVcpuShare: 5%
+      purchaseModel: on-demand
+      yandexSkuId: dn2pm2gap1cc09a33s06
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 4
+      maxRamGiB: 8
+      maxRamGiBPerVcpu: 2
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '0.35'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.35'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.broadwell-100.preemptible-vcpu
+    name: Intel Broadwell, 100% preemptible vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: intel-broadwell
+      cpuPlatformNative: Intel Broadwell
+      platformId: standard-v1
+      guaranteedVcpuShare: 100%
+      purchaseModel: preemptible
+      yandexSkuId: dn247qigcq66fq6t3tk5
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 256
+      maxRamGiBPerVcpu: 8
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '0.38'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.38'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.broadwell.preemptible-ram
+    name: Intel Broadwell, preemptible RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: intel-broadwell
+      cpuPlatformNative: Intel Broadwell
+      platformId: standard-v1
+      purchaseModel: preemptible
+      yandexSkuId: dn2u497ok1kl70on0ta2
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 32
+      maxRamGiB: 256
+      maxRamGiBPerVcpu: 8
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '0.1357'
+        currency: RUB
+        unit: {quantity: GiB-RAM, period: hour}
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '0.1357'
+        unit: {currency: RUB, quantity: GiB-RAM, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.broadwell-20.preemptible-vcpu
+    name: Intel Broadwell, 20% preemptible vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: intel-broadwell
+      cpuPlatformNative: Intel Broadwell
+      platformId: standard-v1
+      guaranteedVcpuShare: 20%
+      purchaseModel: preemptible
+      yandexSkuId: dn24sf8vh5cvj53voa7k
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 4
+      maxRamGiB: 16
+      maxRamGiBPerVcpu: 4
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '0.3053'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.3053'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
+        formula: native hourly rate
+        vat: included
+  - sku: yc.compute.broadwell-5.preemptible-vcpu
+    name: Intel Broadwell, 5% preemptible vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - yc.billing-api
+    - yc.compute
+    dimensions:
+      cpuPlatformFamily: intel-broadwell
+      cpuPlatformNative: Intel Broadwell
+      platformId: standard-v1
+      guaranteedVcpuShare: 5%
+      purchaseModel: preemptible
+      yandexSkuId: dn2g5qo1211n5k8i1s3v
+      serviceId: dn22pas77ftg9h3f2djj
+      minVcpu: 2
+      minRamGiB: 1
+      maxVcpu: 4
+      maxRamGiB: 8
+      maxRamGiBPerVcpu: 2
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '0.2148'
+        currency: RUB
+        unit: {quantity: vCPU, period: hour}
+        vat: included
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.2148'
+        unit: {currency: RUB, quantity: vCPU, period: hour}
         formula: native hourly rate
         vat: included

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import {Button, Flex, Icon, Label, Text} from '@gravity-ui/uikit';
+import {Button, Flex, Icon, Label, Table, Text, type TableColumnConfig} from '@gravity-ui/uikit';
 import {
   ArrowUpRightFromSquare,
   Calculator,
@@ -14,6 +14,7 @@ import {
   NEWS_TAG_TITLE,
   formatNewsDate,
   getRelatedNews,
+  type NewsChange,
   type NewsItem,
   type NewsTag,
 } from '@/data/news';
@@ -26,6 +27,12 @@ function tagTheme(tag: NewsTag): 'info' | 'success' | 'warning' | 'utility' | 'n
   if (tag === 'network' || tag === 'kubernetes') return 'info';
   return 'normal';
 }
+
+const CHANGE_COLUMNS: TableColumnConfig<NewsChange>[] = [
+  {id: 'provider', name: 'Провайдер', width: 112},
+  {id: 'service', name: 'Сервис', width: 112},
+  {id: 'change', name: 'Что поменялось'},
+];
 
 export function NewsArticle({item}: {item: NewsItem}) {
   const related = getRelatedNews(item);
@@ -65,6 +72,22 @@ export function NewsArticle({item}: {item: NewsItem}) {
           <Text as="p" variant="body-2" className={styles.summary}>
             {item.summary}
           </Text>
+
+          {item.changes?.length ? (
+            <div className={styles.changesWrap}>
+              <Table
+                className={styles.changes}
+                data={item.changes}
+                columns={CHANGE_COLUMNS}
+                wordWrap
+                verticalAlign="top"
+                width="max"
+                edgePadding={false}
+                getRowId={(row) => `${row.provider}:${row.service}`}
+                aria-label="Основные изменения цен"
+              />
+            </div>
+          ) : null}
 
           {item.body?.length ? (
             <Flex direction="column" gap={4} className={styles.body}>

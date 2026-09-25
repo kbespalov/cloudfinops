@@ -15,15 +15,16 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     dimensions:
       gpuModel: NVIDIA A100 40GB PCIe
       gpuInterconnect: PCIe
       gpuCount: 1
       gpuMemoryGb: 40
       series: g2
+      gpuPlatformId: g2
       cpuPlatformFamily: intel-cascade-lake
       purchaseModel: on-demand
       availableGpuCounts:
@@ -58,11 +59,12 @@ spec:
     pricingMode: unit
     region: ru-central1-a
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     dimensions:
       series: g1
+      gpuPlatformId: g1
       gpuModel: NVIDIA H100 80GB PCIe
       gpuInterconnect: PCIe
       gpuCount: 1
@@ -100,11 +102,12 @@ spec:
     pricingMode: unit
     region: ru-central2-a
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     dimensions:
       series: g3
+      gpuPlatformId: g3
       gpuModel: NVIDIA H100 80GB SXM5
       gpuInterconnect: SXM5
       gpuCount: 1
@@ -139,11 +142,12 @@ spec:
     pricingMode: unit
     region: ru-central2-a
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     dimensions:
       series: g6
+      gpuPlatformId: g6
       gpuModel: NVIDIA L40S 48GB PCIe
       gpuInterconnect: PCIe
       gpuCount: 1
@@ -181,11 +185,12 @@ spec:
     pricingMode: unit
     region: ru-central2-a
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     dimensions:
       series: g7
+      gpuPlatformId: g7
       gpuModel: NVIDIA H200 141GB SXM
       gpuInterconnect: SXM
       gpuCount: 1
@@ -223,9 +228,9 @@ spec:
     pricingMode: status-only
     region: ru-central3-a
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     dimensions:
       series: g4
       gpuModel: Metax C500
@@ -244,9 +249,9 @@ spec:
     pricingMode: status-only
     region: ru-central3-a
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     dimensions:
       series: g5
       gpuModel: Metax C550 64GB
@@ -274,9 +279,9 @@ spec:
     region: ru-central2-a
     priceProvenance: derived
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-24'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     dimensions:
       series: g7
       gpuModel: NVIDIA H200 141GB SXM
@@ -334,9 +339,9 @@ spec:
     region: ru-central2-a
     priceProvenance: derived
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-24'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     dimensions:
       series: g7
       gpuModel: NVIDIA H200 141GB SXM

@@ -13,7 +13,7 @@ spec:
     type: dynamic-pdf-entry
     access: public
     priority: 1
-    effectiveFrom: '2026-07-13'
+    effectiveFrom: '2026-09-14'
     covers:
     - compute.gpu
     - compute.ram
@@ -30,6 +30,31 @@ spec:
     - storage.image.capacity
     - storage.snapshot.capacity
     - storage.object.capacity
+    - storage.object.requests
+  - id: t1.rates-pdf-2026-09-14
+    title: Тарифное приложение от 07.09.2026
+    url: https://t1-cloud.ru/media-files/t1cloud/sitepages/Prilozhenie_1_Tarifnoe_prilozhenie_07.09.2026.pdf
+    type: pdf
+    access: public
+    priority: 1
+    effectiveFrom: '2026-09-14'
+    covers:
+    - compute.gpu
+    - compute.ram
+    - compute.vcpu
+    - containers.kubernetes.control-plane
+    - network.ipv4.attached
+    - network.ipv4.reserved
+    - network.traffic.egress
+    - cdn.traffic.egress
+    - cdn.requests
+    - cdn.origin.shielding
+    - cdn.logs
+    - storage.block.capacity
+    - storage.image.capacity
+    - storage.snapshot.capacity
+    - storage.object.capacity
+    - storage.object.requests
   - id: t1.rates-pdf-2026-07-13
     title: Тарифное приложение от 08.07.2026
     url: https://t1-cloud.ru/media-files/T1Cloud/sitepages/Prilozhenie_1_Tarifnoe_prilozhenie_08_07_2026.pdf
@@ -74,6 +99,14 @@ spec:
     - compute.ram
     - compute.vcpu
     - storage.block.capacity
+  - id: t1.docs-disk-order
+    title: Документация Cloud Engine — заказ диска (типы дисков и IOPS)
+    url: https://t1-cloud.ru/docs/article/cloud-engine-openstack/cloud-compute/diski/zakaz-diska
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - storage.block.capacity
   - id: t1.s3
     title: Объектное хранилище S3
     url: https://t1-cloud.ru/service/s3
@@ -82,6 +115,7 @@ spec:
     priority: 2
     covers:
     - storage.object.capacity
+    - storage.object.requests
     - network.traffic.ingress
     - network.traffic.egress
   - id: t1.network-traffic

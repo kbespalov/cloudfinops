@@ -15,7 +15,7 @@ spec:
     pricingMode: fixed
     region: Санкт-Петербург / ru-9
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - selectel.prices
     - selectel.calculator
@@ -60,7 +60,7 @@ spec:
     pricingMode: fixed
     region: Санкт-Петербург / ru-9
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - selectel.prices
     - selectel.calculator

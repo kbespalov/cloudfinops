@@ -15,8 +15,10 @@ import {
   buildQuotesByPeriod,
   quoteAllPresets,
   quotePreset,
+  ramCompatible,
   toViewQuote,
 } from '@/lib/calculator/quote';
+import {catalog} from '@/lib/catalog';
 
 const MONTH_HOURS = 720;
 const GPU_PRESETS = buildGpuFlavorPresets();
@@ -900,5 +902,33 @@ describe('calculator quote arbitration', () => {
     assert.ok(part, 'expected internet egress part');
     assert.match(part!.label, /Internet egress/);
     assert.ok(part!.amount > 0);
+  });
+});
+
+describe('ram pairing across shared CPU generations', () => {
+  function meter(sku: string) {
+    const found = catalog.meters.find((m) => m.sku === sku);
+    assert.ok(found, sku);
+    return found;
+  }
+
+  it('keeps compute-optimized RAM off the general Ice Lake and Zen 4 lines', () => {
+    const ice = meter('yc.compute.ice-lake-100.vcpu');
+    const iceRam = meter('yc.compute.ice-lake.ram');
+    const iceCo = meter('yc.compute.ice-lake-co-100.vcpu');
+    const iceCoRam = meter('yc.compute.ice-lake-co.ram');
+    const zen = meter('yc.compute.zen4-100.vcpu');
+    const zenRam = meter('yc.compute.zen4.ram');
+    const zenCo = meter('yc.compute.zen4-co-100.vcpu');
+    const zenCoRam = meter('yc.compute.zen4-co.ram');
+
+    assert.equal(ramCompatible(ice, iceRam), true);
+    assert.equal(ramCompatible(iceCo, iceCoRam), true);
+    assert.equal(ramCompatible(ice, iceCoRam), false);
+    assert.equal(ramCompatible(iceCo, iceRam), false);
+    assert.equal(ramCompatible(zen, zenRam), true);
+    assert.equal(ramCompatible(zenCo, zenCoRam), true);
+    assert.equal(ramCompatible(zen, zenCoRam), false);
+    assert.equal(ramCompatible(zenCo, zenRam), false);
   });
 });

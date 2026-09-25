@@ -20,6 +20,12 @@ export type NewsTag =
   | 'security'
   | 'finops';
 
+export type NewsChange = {
+  provider: string;
+  service: string;
+  change: string;
+};
+
 export type NewsItem = {
   id: string;
   date: string;
@@ -29,6 +35,8 @@ export type NewsItem = {
   summary: string;
   /** Extra paragraphs on the article page. The feed card still uses `summary`. */
   body?: string[];
+  /** Main catalog changes for this note. Rendered as a table on the article page. */
+  changes?: NewsChange[];
   tags: NewsTag[];
   sourceUrl: string;
   sourceLabel: string;
@@ -63,6 +71,96 @@ export const NEWS_TAG_TITLE: Record<NewsTag, string> = {
 /** Curated industry feature news — start: June 2026. */
 export const newsItems: NewsItem[] = [
   // ——— Cloud FinOps (hub → blog / tools) ———
+  {
+    id: 'cloudfinops-2026-09-price-snapshot',
+    date: '2026-09-25',
+    provider: 'market',
+    providerName: 'Cloud FinOps',
+    title: 'Обновили цены в каталоге на 25 сентября',
+    summary:
+      'Всем привет. На 25 сентября мы обновили цены в каталоге по публичным прайсам Yandex Cloud, VK Cloud, Cloud.ru, T1 Cloud, MWS Cloud и Selectel. Ниже — основные изменения.',
+    changes: [
+      {
+        provider: 'Yandex Cloud',
+        service: 'Compute',
+        change:
+          'В каталоге появились платформы Broadwell, Ice Lake Compute-Optimized и AMD Zen 4, в том числе Compute-Optimized',
+      },
+      {
+        provider: 'Yandex Cloud',
+        service: 'GPU',
+        change:
+          'Прерываемая T4i — 21,09 ₽/час вместо 158,11 ₽/час. Обычная T4i по-прежнему 158,11 ₽/час',
+      },
+      {
+        provider: 'Yandex Cloud',
+        service: 'AI',
+        change:
+          'DeepSeek v4.1 Flash — 300 ₽ и 500 ₽ за 1 млн входных и выходных токенов. У Speech Realtime Max TTS Live и Speech Realtime DeepSeek V4 Flash те же 300 ₽ и 500 ₽',
+      },
+      {
+        provider: 'VK Cloud',
+        service: 'Compute',
+        change: 'В каталоге появились высокочастотные процессоры. Ставки прайса от 12 января 2026 не менялись',
+      },
+      {
+        provider: 'VK Cloud',
+        service: 'Диски',
+        change: 'В каталоге появились диски High-IOPS и High-IOPS HA',
+      },
+      {
+        provider: 'VK Cloud',
+        service: 'Kubernetes',
+        change: 'В каталоге появились отдельные ставки vCPU мастера для разных платформ',
+      },
+      {
+        provider: 'Cloud.ru',
+        service: 'CDN',
+        change:
+          'С НДС: до 100 ТБ — 1,098 ₽/ГБ, дальше — 0,854 ₽/ГБ. Покрытие APAC — 6,10 ₽/ГБ (в прошлой версии каталога было 1,68 ₽)',
+      },
+      {
+        provider: 'Cloud.ru',
+        service: 'AI',
+        change:
+          'GigaChat Ultra — 96,2214 ₽ и 288,6032 ₽ за 1 млн входных и выходных токенов с НДС. GigaChat 3 Pro — 73,0292 ₽ и 176,3876 ₽',
+      },
+      {
+        provider: 'T1 Cloud',
+        service: 'Compute',
+        change: 'По приложению от 7 сентября: прерываемые ядра и ресурсы GPU-серверов',
+      },
+      {
+        provider: 'T1 Cloud',
+        service: 'Диски',
+        change: 'По тому же приложению: зашифрованные диски',
+      },
+      {
+        provider: 'T1 Cloud',
+        service: 'Object Storage',
+        change: 'По тому же приложению: плата за запросы',
+      },
+      {
+        provider: 'MWS Cloud',
+        service: 'AI',
+        change:
+          'GLM 5.3 — 178,12 ₽ и 746,64 ₽ за 1 млн входных и выходных токенов, как у GLM 5.2',
+      },
+      {
+        provider: 'Selectel',
+        service: 'GPU',
+        change:
+          'Выделенный сервер HGX B300, 8 карт — 9 000 000 ₽/мес (в прошлой версии каталога было 8 000 000). В каталоге также RTX 4090 на 48 ГБ и A4000',
+      },
+    ],
+    body: [
+      'Новые позиции добавлены в сервисы, которые уже были в каталоге. Если в прайсе провайдера сумма указана с НДС, в каталоге стоит та же сумма. Тарифы T1 опубликованы без НДС; для сравнения мы показываем их с НДС 22%. Месяц в калькуляторе — 720 часов. Это справочные публичные цены: итоговую стоимость и наличие услуг определяет договор с провайдером.',
+    ],
+    tags: ['finops', 'compute', 'storage', 'kubernetes', 'ai'],
+    sourceUrl: 'https://cloudfinops.ru/catalog',
+    sourceLabel: 'Каталог Cloud FinOps',
+    catalogHref: '/catalog',
+  },
   {
     id: 'cloudfinops-2026-09-public-api',
     date: '2026-09-18',

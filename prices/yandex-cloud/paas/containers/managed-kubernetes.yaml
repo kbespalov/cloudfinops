@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.kubernetes
@@ -53,7 +53,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.kubernetes
@@ -90,7 +90,7 @@ spec:
     pricingMode: fixed
     region: Россия
     effectiveFrom: '2025-06-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.kubernetes
@@ -125,7 +125,7 @@ spec:
     pricingMode: fixed
     region: Россия
     effectiveFrom: '2025-06-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.kubernetes
@@ -161,7 +161,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.kubernetes
@@ -216,7 +216,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.kubernetes
@@ -272,7 +272,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.kubernetes
@@ -327,7 +327,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.kubernetes
@@ -381,7 +381,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.kubernetes
@@ -436,7 +436,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.kubernetes
@@ -490,7 +490,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.kubernetes
@@ -545,7 +545,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.kubernetes
@@ -599,7 +599,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.kubernetes
@@ -654,7 +654,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.kubernetes
@@ -708,7 +708,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.kubernetes
@@ -763,7 +763,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.kubernetes

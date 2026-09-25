@@ -18,9 +18,9 @@ spec:
     pricingMode: fixed
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     - t1.kubernetes
     dimensions:
       sizingModel: marketing-tier
@@ -65,9 +65,9 @@ spec:
     pricingMode: fixed
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     - t1.kubernetes
     dimensions:
       sizingModel: marketing-tier
@@ -112,9 +112,9 @@ spec:
     pricingMode: fixed
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     - t1.kubernetes
     dimensions:
       sizingModel: marketing-tier
@@ -159,9 +159,9 @@ spec:
     pricingMode: fixed
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     - t1.kubernetes
     dimensions:
       sizingModel: marketing-tier
@@ -207,9 +207,9 @@ spec:
     pricingMode: fixed
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     - t1.kubernetes
     dimensions:
       sizingModel: marketing-tier
@@ -253,9 +253,9 @@ spec:
     pricingMode: fixed
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     - t1.kubernetes
     dimensions:
       sizingModel: marketing-tier

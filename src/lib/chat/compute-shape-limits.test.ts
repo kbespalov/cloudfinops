@@ -33,10 +33,10 @@ describe('get_compute_shape_limits', () => {
 
     assert.ok(byId['yandex-cloud']!.max);
     assert.ok(byId['yandex-cloud']!.max!.vcpu >= 80);
-    // Union of Ice (96/640) + Cascade (80/1280) — not one orderable pair.
-    assert.deepEqual(byId['yandex-cloud']!.max, {vcpu: 96, ramGiB: 1280});
+    // Union across platforms. Zen 4 (standard-v4a) sets both ceilings: 288 vCPU and 1792 GiB.
+    assert.deepEqual(byId['yandex-cloud']!.max, {vcpu: 288, ramGiB: 1792});
     assert.match(byId['yandex-cloud']!.note ?? '', /объединение потолков|не одна orderable/i);
-    assert.match(byId['yandex-cloud']!.note ?? '', /96×1280|96 vCPU \/ 640|80 vCPU \/ 1280/);
+    assert.match(byId['yandex-cloud']!.note ?? '', /288×1792|288 vCPU \/ 1792/);
     assert.deepEqual(byId['selectel']!.min, {vcpu: 2, ramGiB: 4});
     assert.deepEqual(byId['selectel']!.max, {vcpu: 32, ramGiB: 256});
     assert.deepEqual(byId['selectel']!.platformMax, {vcpu: 232, ramGiB: 1200});

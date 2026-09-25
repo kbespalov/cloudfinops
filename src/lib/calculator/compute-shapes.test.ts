@@ -123,6 +123,7 @@ describe('compute-shapes', () => {
       (m) =>
         m.provider === 'vk-cloud' &&
         (m.meter === 'compute.vcpu' || m.meter === 'compute.ram') &&
+        !String(m.sku).includes('high-freq') &&
         !m.synthetic,
     );
     assert.ok(meters.length >= 4);
@@ -145,12 +146,11 @@ describe('compute-shapes', () => {
 
   it('Yandex max is a union of platform ceilings, not one orderable pair', () => {
     const yc = providerShapeLimits('yandex-cloud');
-    assert.deepEqual(yc.max, {vcpu: 96, ramGiB: 1280});
+    assert.deepEqual(yc.max, {vcpu: 288, ramGiB: 1792});
     assert.ok(yc.envelopes.length > 1);
     assert.match(yc.note ?? '', /объединение потолков|не одна orderable/i);
-    assert.match(yc.note ?? '', /96 vCPU \/ 640 GiB/);
-    assert.match(yc.note ?? '', /80 vCPU \/ 1280 GiB/);
-    assert.match(yc.note ?? '', /96×1280/);
+    assert.match(yc.note ?? '', /288 vCPU \/ 1792 GiB/);
+    assert.match(yc.note ?? '', /288×1792/);
     assert.equal(isComputeShapeAllowed('yandex-cloud', 96, 1280), false);
   });
 

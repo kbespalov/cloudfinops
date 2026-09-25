@@ -17,7 +17,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: amd-epyc
@@ -39,7 +39,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: amd-epyc
@@ -59,7 +59,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: amd-epyc
@@ -80,7 +80,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: amd-epyc
@@ -101,7 +101,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-01-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: amd-epyc
@@ -122,7 +122,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: amd-epyc
@@ -142,7 +142,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-01-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: amd-epyc
@@ -164,7 +164,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: amd-epyc
@@ -186,7 +186,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-01-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: platform-v4
@@ -207,7 +207,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: platform-v4
@@ -227,7 +227,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-01-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: platform-v4
@@ -249,7 +249,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: platform-v4
@@ -270,7 +270,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: intel-ice-lake
@@ -291,7 +291,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: intel-ice-lake
@@ -311,7 +311,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: intel-ice-lake
@@ -332,7 +332,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: intel-ice-lake
@@ -353,7 +353,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: intel-ice-lake
@@ -374,7 +374,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: intel-ice-lake
@@ -394,7 +394,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: intel-ice-lake
@@ -416,7 +416,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: intel-ice-lake
@@ -437,7 +437,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: intel-cascade-lake
@@ -458,7 +458,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: intel-cascade-lake
@@ -478,7 +478,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: intel-cascade-lake
@@ -499,7 +499,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: intel-cascade-lake
@@ -520,7 +520,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: intel-broadwell
@@ -541,7 +541,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: intel-broadwell
@@ -561,7 +561,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: intel-broadwell
@@ -582,7 +582,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       cpuPlatformFamily: intel-broadwell

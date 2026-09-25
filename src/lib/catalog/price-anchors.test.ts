@@ -1,6 +1,6 @@
 /**
- * Golden spot-check: critical public anchors verified against vendor pages
- * on 2026-09-10. Failures mean catalog drift or a bad edit — re-check source.
+ * Golden spot-check of public anchors in the 2026-09-25 catalog snapshot.
+ * A failure means the catalog drifted from these figures — re-check the source.
  */
 import assert from 'node:assert/strict';
 import {describe, it} from 'node:test';
@@ -24,7 +24,7 @@ function nearly(a: number, b: number, eps = EPS) {
   assert.ok(Math.abs(a - b) <= eps, `expected ${b}, got ${a}`);
 }
 
-describe('price anchors — live-verified 2026-09-10', () => {
+describe('price anchors — snapshot 2026-09-25', () => {
   it('Yandex Ice Lake compute (docs/compute/pricing)', () => {
     nearly(hour('yc.compute.ice-lake-100.vcpu'), 1.24);
     nearly(hour('yc.compute.ice-lake.ram'), 0.33);

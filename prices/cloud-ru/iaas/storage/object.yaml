@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - cloudru.s3-pdf
     - cloudru.s3-rules
@@ -57,7 +57,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - cloudru.s3-pdf
     - cloudru.s3-rules
@@ -81,7 +81,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - cloudru.s3-pdf
     - cloudru.s3-rules
@@ -106,7 +106,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - cloudru.s3-pdf
     - cloudru.s3-rules
@@ -134,7 +134,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-19'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.s3-pdf, cloudru.s3-rules]
     dimensions:
       storageClass: standard
@@ -156,7 +156,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-19'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.s3-pdf, cloudru.s3-rules]
     dimensions:
       storageClass: standard
@@ -178,7 +178,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-19'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.s3-pdf, cloudru.s3-rules]
     dimensions:
       storageClass: cold
@@ -199,7 +199,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-19'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.s3-pdf, cloudru.s3-rules]
     dimensions:
       storageClass: cold
@@ -220,7 +220,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-19'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.s3-pdf, cloudru.s3-rules]
     dimensions:
       storageClass: ice
@@ -241,7 +241,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-19'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.s3-pdf, cloudru.s3-rules]
     dimensions:
       storageClass: ice
@@ -262,7 +262,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-19'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.s3-pdf, cloudru.s3-rules]
     dimensions:
       storageClass: single-zone
@@ -283,7 +283,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-19'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.s3-pdf, cloudru.s3-rules]
     dimensions:
       storageClass: single-zone

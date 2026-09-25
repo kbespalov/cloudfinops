@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - selectel.prices
     - selectel.calculator
@@ -42,7 +42,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - selectel.prices
     - selectel.calculator
@@ -70,7 +70,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - selectel.prices
     - selectel.calculator
@@ -98,7 +98,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - selectel.prices
     - selectel.calculator
@@ -126,7 +126,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - selectel.prices
     - selectel.calculator
@@ -154,7 +154,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
     dimensions: {poolDependent: true, gpuModel: NVIDIA A100, gpuCount: 1, gpuMemoryGb: 80, purchaseModel: preemptible, publishedMonthlyAmount: 106590.00}
     pricing:
@@ -167,7 +167,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
     dimensions: {poolDependent: true, gpuModel: NVIDIA H200, gpuInterconnect: NVLink, gpuCount: 1, gpuMemoryGb: 141, purchaseModel: preemptible, publishedMonthlyAmount: 321750.00}
     pricing:
@@ -180,7 +180,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
     dimensions: {poolDependent: true, gpuModel: NVIDIA L4, gpuInterconnect: PCIe, gpuCount: 1, gpuMemoryGb: 24, purchaseModel: preemptible, publishedMonthlyAmount: 18156.60}
     pricing:
@@ -193,7 +193,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
     dimensions: {poolDependent: true, gpuModel: NVIDIA RTX 6000 Pro, gpuInterconnect: PCIe, gpuCount: 1, gpuMemoryGb: 96, purchaseModel: preemptible, publishedMonthlyAmount: 118095.45}
     pricing:
@@ -206,7 +206,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
     dimensions: {poolDependent: true, gpuModel: NVIDIA A100, gpuCount: 1, gpuMemoryGb: 40, purchaseModel: preemptible, publishedMonthlyAmount: 64566.83}
     pricing:
@@ -219,7 +219,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
     dimensions: {poolDependent: true, gpuModel: NVIDIA A30, gpuInterconnect: PCIe, gpuCount: 1, gpuMemoryGb: 24, purchaseModel: on-demand, publishedMonthlyAmount: 42075.11}
     pricing:
@@ -232,7 +232,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
     dimensions: {poolDependent: true, gpuModel: NVIDIA A30, gpuInterconnect: PCIe, gpuCount: 1, gpuMemoryGb: 24, purchaseModel: preemptible, publishedMonthlyAmount: 22630.63}
     pricing:
@@ -245,7 +245,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
     dimensions: {poolDependent: true, gpuModel: NVIDIA A5000, gpuInterconnect: PCIe, gpuCount: 1, gpuMemoryGb: 24, purchaseModel: on-demand, publishedMonthlyAmount: 44000.00}
     pricing:
@@ -258,7 +258,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
     dimensions: {poolDependent: true, gpuModel: NVIDIA A5000, gpuInterconnect: PCIe, gpuCount: 1, gpuMemoryGb: 24, purchaseModel: preemptible, publishedMonthlyAmount: 22000.00}
     pricing:
@@ -271,7 +271,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
     dimensions: {poolDependent: true, gpuModel: NVIDIA RTX 2080 Ti, gpuInterconnect: PCIe, gpuCount: 1, gpuMemoryGb: 11, purchaseModel: on-demand, publishedMonthlyAmount: 14087.83}
     pricing:
@@ -284,7 +284,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
     dimensions: {poolDependent: true, gpuModel: NVIDIA RTX 2080 Ti, gpuInterconnect: PCIe, gpuCount: 1, gpuMemoryGb: 11, purchaseModel: preemptible, publishedMonthlyAmount: 4226.35}
     pricing:
@@ -297,7 +297,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
     dimensions: {poolDependent: true, gpuModel: NVIDIA RTX 4090, gpuInterconnect: PCIe, gpuCount: 1, gpuMemoryGb: 24, purchaseModel: on-demand, publishedMonthlyAmount: 55040.83}
     pricing:
@@ -310,12 +310,64 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
     dimensions: {poolDependent: true, gpuModel: NVIDIA RTX 4090, gpuInterconnect: PCIe, gpuCount: 1, gpuMemoryGb: 24, purchaseModel: preemptible, publishedMonthlyAmount: 27520.42}
     pricing:
       rate: {amount: '37.6992', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
     notes: vCPU, RAM и локальные диски оплачиваются отдельно; доступность зависит от пула.
+  - sku: selectel.gpu.rtx-4090-48
+    name: NVIDIA RTX 4090 48 ГБ
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: Москва / ru-6a
+    effectiveFrom: '2026-09-25'
+    checkedAt: '2026-09-25'
+    sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
+    dimensions: {poolDependent: true, poolId: ru-6a, gpuModel: NVIDIA RTX 4090, gpuInterconnect: PCIe, gpuCount: 1, gpuMemoryGb: 48, purchaseModel: on-demand, publishedMonthlyAmount: 80957.80}
+    pricing:
+      rate: {amount: '110.9011', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
+    notes: Процессор, оперативная память и локальные диски оплачиваются отдельно. Это другая позиция, не RTX 4090 на 24 ГБ. Тариф пула ru-6a, Москва.
+  - sku: selectel.gpu.rtx-4090-48.preemptible
+    name: NVIDIA RTX 4090 48 ГБ, прерываемая
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: Москва / ru-6a
+    effectiveFrom: '2026-09-25'
+    checkedAt: '2026-09-25'
+    sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
+    dimensions: {poolDependent: true, poolId: ru-6a, gpuModel: NVIDIA RTX 4090, gpuInterconnect: PCIe, gpuCount: 1, gpuMemoryGb: 48, purchaseModel: preemptible, publishedMonthlyAmount: 40478.90}
+    pricing:
+      rate: {amount: '55.4505', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
+    notes: Процессор, оперативная память и локальные диски оплачиваются отдельно. Тариф пула ru-6a, Москва.
+  - sku: selectel.gpu.a4000-16
+    name: NVIDIA A4000 16 ГБ
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: Москва / ru-6a
+    effectiveFrom: '2026-09-25'
+    checkedAt: '2026-09-25'
+    sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
+    dimensions: {poolDependent: true, poolId: ru-6a, gpuModel: NVIDIA A4000, gpuInterconnect: PCIe, gpuCount: 1, gpuMemoryGb: 16, purchaseModel: on-demand, publishedMonthlyAmount: 28300.00}
+    pricing:
+      rate: {amount: '38.7671', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
+    notes: Процессор, оперативная память и локальные диски оплачиваются отдельно. В прайсе Selectel карта указана для пула ru-6a (Москва). Объём 16 ГБ взят из спецификации NVIDIA RTX A4000, в строке тарифа он не указан.
+  - sku: selectel.gpu.a4000-16.preemptible
+    name: NVIDIA A4000 16 ГБ, прерываемая
+    meter: compute.gpu
+    status: available
+    pricingMode: unit
+    region: Москва / ru-6a
+    effectiveFrom: '2026-09-25'
+    checkedAt: '2026-09-25'
+    sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
+    dimensions: {poolDependent: true, poolId: ru-6a, gpuModel: NVIDIA A4000, gpuInterconnect: PCIe, gpuCount: 1, gpuMemoryGb: 16, purchaseModel: preemptible, publishedMonthlyAmount: 14150.00}
+    pricing:
+      rate: {amount: '19.3836', currency: RUB, unit: {quantity: GPU, period: hour}, vat: included, byteBasis: not-applicable}
+    notes: Процессор, оперативная память и локальные диски оплачиваются отдельно. В прайсе Selectel карта указана для пула ru-6a (Москва). Объём 16 ГБ взят из спецификации NVIDIA RTX A4000, в строке тарифа он не указан.
   - sku: selectel.gpu.rtx-6000-ada-48
     name: NVIDIA RTX 6000 Ada 48 ГБ
     meter: compute.gpu
@@ -323,7 +375,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
     dimensions: {poolDependent: true, gpuModel: NVIDIA RTX 6000 Ada, gpuInterconnect: PCIe, gpuCount: 1, gpuMemoryGb: 48, purchaseModel: on-demand, publishedMonthlyAmount: 88088.00}
     pricing:
@@ -336,7 +388,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
     dimensions: {poolDependent: true, gpuModel: NVIDIA RTX 6000 Ada, gpuInterconnect: PCIe, gpuCount: 1, gpuMemoryGb: 48, purchaseModel: preemptible, publishedMonthlyAmount: 44044.00}
     pricing:
@@ -349,7 +401,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
     dimensions: {poolDependent: true, gpuModel: NVIDIA Tesla T4, gpuInterconnect: PCIe, gpuCount: 1, gpuMemoryGb: 16, purchaseModel: on-demand, publishedMonthlyAmount: 31451.90}
     pricing:
@@ -362,7 +414,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-6a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.prices, selectel.calculator, selectel.compute-rules]
     dimensions: {poolDependent: true, gpuModel: NVIDIA Tesla T4, gpuInterconnect: PCIe, gpuCount: 1, gpuMemoryGb: 16, purchaseModel: preemptible, publishedMonthlyAmount: 9435.57}
     pricing:
@@ -375,7 +427,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-1a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.prices, selectel.compute-rules]
     dimensions: {poolDependent: true, poolId: ru-1a, gpuModel: NVIDIA GTX 1080, gpuInterconnect: PCIe, gpuCount: 1, gpuMemoryGb: 8, purchaseModel: on-demand}
     pricing:
@@ -388,7 +440,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-1a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.prices, selectel.compute-rules]
     dimensions: {poolDependent: true, poolId: ru-1a, gpuModel: NVIDIA GTX 1080, gpuInterconnect: PCIe, gpuCount: 1, gpuMemoryGb: 8, purchaseModel: preemptible}
     pricing:
@@ -401,7 +453,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-7a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.prices, selectel.compute-rules]
     dimensions: {poolDependent: true, poolId: ru-7a, gpuModel: NVIDIA A2, gpuInterconnect: PCIe, gpuCount: 1, gpuMemoryGb: 16, purchaseModel: on-demand}
     pricing:
@@ -414,7 +466,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-7a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.prices, selectel.compute-rules]
     dimensions: {poolDependent: true, poolId: ru-7a, gpuModel: NVIDIA A2, gpuInterconnect: PCIe, gpuCount: 1, gpuMemoryGb: 16, purchaseModel: preemptible}
     pricing:
@@ -427,7 +479,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-7a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.prices, selectel.compute-rules]
     dimensions: {poolDependent: true, poolId: ru-7a, gpuModel: NVIDIA A2000, gpuInterconnect: PCIe, gpuCount: 1, gpuMemoryGb: 6, purchaseModel: on-demand}
     pricing:
@@ -440,7 +492,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-7a
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.prices, selectel.compute-rules]
     dimensions: {poolDependent: true, poolId: ru-7a, gpuModel: NVIDIA A2000, gpuInterconnect: PCIe, gpuCount: 1, gpuMemoryGb: 6, purchaseModel: preemptible}
     pricing:
@@ -453,7 +505,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-7b
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.prices, selectel.compute-rules]
     dimensions: {poolDependent: true, poolId: ru-7b, gpuModel: NVIDIA H100, gpuInterconnect: NVLink, gpuCount: 1, gpuMemoryGb: 80, purchaseModel: on-demand}
     pricing:
@@ -466,7 +518,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-7b
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.prices, selectel.compute-rules]
     dimensions: {poolDependent: true, poolId: ru-7b, gpuModel: NVIDIA H100, gpuInterconnect: NVLink, gpuCount: 1, gpuMemoryGb: 80, purchaseModel: preemptible}
     pricing:
@@ -479,7 +531,7 @@ spec:
     pricingMode: bundle
     region: Санкт-Петербург
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-25'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - selectel.prices
     - selectel.gpu-landing
@@ -503,7 +555,7 @@ spec:
       dataDiskGb: 15360
     pricing:
       rate:
-        amount: '8000000'
+        amount: '9000000'
         currency: RUB
         unit:
           quantity: flavor
@@ -511,7 +563,7 @@ spec:
         vat: included
         byteBasis: not-applicable
       normalized:
-        amount: '8000000'
+        amount: '9000000'
         unit:
           currency: RUB
           quantity: flavor
@@ -519,10 +571,11 @@ spec:
         formula: published dedicated monthly rate
         vat: included
     notes: >
-      Выделенный сервер (не облачная GPU-ВМ): GL8-B300-HGX-25GE —
-      8×B300 288GB, 2×Intel Xeon 6767P (128 ядер), 2048 ГБ DDR5,
-      1×1000 ГБ + 2×7680 ГБ NVMe. 8 000 000 ₽/мес по публичному прайсу Selectel.
-      Спека хоста: selectel.ru/services/gpu/ (таблица HGX B300).
+      Выделенный сервер GL8-B300-HGX-25GE, не облачная виртуальная машина:
+      8 карт B300 по 288 ГБ, 2 процессора Intel Xeon 6767P (128 ядер),
+      2048 ГБ DDR5, диск 1000 ГБ и два диска по 7680 ГБ NVMe.
+      На 25 сентября 2026 публичный прайс — 9 000 000 ₽ в месяц.
+      Состав сервера опубликован на selectel.ru/services/gpu/.
 
   # ---------------------------------------------------------------------------
   # Synthetic full-node estimates for catalog compare (not a published Selectel SKU).
@@ -537,7 +590,7 @@ spec:
     region: Москва / ru-6a
     priceProvenance: derived
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-24'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - selectel.prices
     - selectel.calculator
@@ -594,7 +647,7 @@ spec:
     region: Москва / ru-6a
     priceProvenance: derived
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-24'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - selectel.prices
     - selectel.calculator

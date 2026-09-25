@@ -22,7 +22,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: gpt-oss-120b
@@ -49,7 +49,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: gpt-oss-120b
@@ -76,7 +76,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: Qwen3.6-35B-A3B
@@ -104,7 +104,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: Qwen3.6-35B-A3B
@@ -132,7 +132,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: Qwen3-Coder-Next
@@ -160,7 +160,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: Qwen3-Coder-Next
@@ -188,7 +188,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: Qwen3.5-397B-A17B
@@ -216,7 +216,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: Qwen3.5-397B-A17B
@@ -244,7 +244,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: GLM-4.7
@@ -272,7 +272,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: GLM-4.7
@@ -300,7 +300,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: GigaChat-2-Max
@@ -327,7 +327,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: GigaChat-2-Max
@@ -354,7 +354,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: GigaChat3-10B-A1.8B
@@ -382,7 +382,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: GigaChat3-10B-A1.8B
@@ -410,7 +410,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: MiniMax-M2.5
@@ -438,7 +438,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: MiniMax-M2.5
@@ -466,7 +466,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: MiniMax M3
@@ -493,7 +493,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: MiniMax M3
@@ -522,7 +522,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: kimi-k2.6
@@ -553,7 +553,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.foundation-models]
     dimensions:
       modelFamily: kimi-k2.6
@@ -573,6 +573,176 @@ spec:
     pricing:
       rate:
         amount: '725.90'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.ai.gigachat-ultra.input
+    name: GigaChat Ultra · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-09-25'
+    sourceRefs: [cloudru.foundation-models, cloudru.foundation-models-pdf]
+    dimensions:
+      modelFamily: GigaChat Ultra
+      modelId: gigachat-ultra
+      openWeights: false
+      modelCapability: text-generation
+      inferenceScope: local
+      serviceProduct: foundation-models
+      placement: internal
+      tokenDirection: input
+    notes: >
+      GigaChat Ultra в сервисе Evolution Foundation Models. Цена за 1 млн
+      токенов указана с НДС по тарифу 7.EVO.11.2 от 15 сентября 2026.
+    pricing:
+      rate:
+        amount: '96.2214'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.ai.gigachat-ultra.output
+    name: GigaChat Ultra · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-09-25'
+    sourceRefs: [cloudru.foundation-models, cloudru.foundation-models-pdf]
+    dimensions:
+      modelFamily: GigaChat Ultra
+      modelId: gigachat-ultra
+      openWeights: false
+      modelCapability: text-generation
+      inferenceScope: local
+      serviceProduct: foundation-models
+      placement: internal
+      tokenDirection: output
+    notes: >
+      GigaChat Ultra в сервисе Evolution Foundation Models. Цена за 1 млн
+      токенов указана с НДС по тарифу 7.EVO.11.2 от 15 сентября 2026.
+    pricing:
+      rate:
+        amount: '288.6032'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.ai.gigachat-3-pro.input
+    name: GigaChat 3 Pro · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-09-25'
+    sourceRefs: [cloudru.foundation-models, cloudru.foundation-models-pdf]
+    dimensions:
+      modelFamily: GigaChat 3 Pro
+      modelId: gigachat-3-pro
+      openWeights: false
+      modelCapability: text-generation
+      inferenceScope: local
+      serviceProduct: foundation-models
+      placement: internal
+      tokenDirection: input
+    notes: >
+      GigaChat 3 Pro в сервисе Evolution Foundation Models. Цена за 1 млн
+      токенов указана с НДС по тарифу 7.EVO.11.2 от 15 сентября 2026.
+    pricing:
+      rate:
+        amount: '73.0292'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.ai.gigachat-3-pro.output
+    name: GigaChat 3 Pro · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-09-25'
+    sourceRefs: [cloudru.foundation-models, cloudru.foundation-models-pdf]
+    dimensions:
+      modelFamily: GigaChat 3 Pro
+      modelId: gigachat-3-pro
+      openWeights: false
+      modelCapability: text-generation
+      inferenceScope: local
+      serviceProduct: foundation-models
+      placement: internal
+      tokenDirection: output
+    notes: >
+      GigaChat 3 Pro в сервисе Evolution Foundation Models. Цена за 1 млн
+      токенов указана с НДС по тарифу 7.EVO.11.2 от 15 сентября 2026.
+    pricing:
+      rate:
+        amount: '176.3876'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.ai.deepseek-v4.1-flash.input
+    name: DeepSeek V4.1 Flash · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-09-25'
+    sourceRefs: [cloudru.foundation-models, cloudru.foundation-models-pdf]
+    dimensions:
+      modelFamily: DeepSeek V4.1 Flash
+      modelId: deepseek-v4.1-flash
+      openWeights: true
+      modelCapability: text-generation
+      inferenceScope: external
+      serviceProduct: foundation-models
+      placement: external
+      tokenDirection: input
+    notes: >
+      В тарифе 7.EVO.11.2 от 15 сентября 2026 эта строка указана как
+      партнёрская модель DeepSeek, а не как модель Cloud.ru. Цена за 1 млн
+      токенов, с НДС.
+    pricing:
+      rate:
+        amount: '64.9406'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: cloudru.ai.deepseek-v4.1-flash.output
+    name: DeepSeek V4.1 Flash · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-09-25'
+    sourceRefs: [cloudru.foundation-models, cloudru.foundation-models-pdf]
+    dimensions:
+      modelFamily: DeepSeek V4.1 Flash
+      modelId: deepseek-v4.1-flash
+      openWeights: true
+      modelCapability: text-generation
+      inferenceScope: external
+      serviceProduct: foundation-models
+      placement: external
+      tokenDirection: output
+    notes: >
+      В тарифе 7.EVO.11.2 от 15 сентября 2026 эта строка указана как
+      партнёрская модель DeepSeek, а не как модель Cloud.ru. Цена за 1 млн
+      токенов, с НДС.
+    pricing:
+      rate:
+        amount: '194.8096'
         currency: RUB
         unit: {quantity: 1M-token, period: usage}
         vat: included

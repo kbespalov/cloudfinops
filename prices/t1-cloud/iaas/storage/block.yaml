@@ -15,9 +15,9 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     dimensions:
       published30Days: 3.66
       diskType: light
@@ -56,9 +56,9 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     dimensions:
       published30Days: 6.55
       diskType: basic
@@ -97,11 +97,11 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     dimensions:
-      published30Days: 10.75
+      published30Days: 10.76
       diskType: average
       nativePerformanceTier: average
       performanceTier: nvme
@@ -138,11 +138,11 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     dimensions:
-      published30Days: 18.25
+      published30Days: 18.27
       diskType: high
       nativePerformanceTier: high
       performanceTier: nvme
@@ -172,6 +172,97 @@ spec:
         formula: 0.00042292 × 60 × 1.22 VAT
         vat: included
     notes: Класс диска High; до 15 000 IOPS включено в ставку.
+  - sku: t1.disk.high-encrypted
+    name: Дисковое пространство High Encrypted
+    meter: storage.block.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - t1.rates-pdf-2026-09-14
+    - t1.docs-disk-order
+    dimensions:
+      published30Days: 45.68
+      diskType: high-encrypted
+      nativePerformanceTier: high
+      performanceTier: nvme
+      storageMedia: ssd
+      storageInterface: nvme
+      storageTopology: network
+      encryption: true
+      includedIops: 15000
+      maximumIops: 15000
+      iopsChargedSeparately: false
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.00105741'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: minute
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '0.0774024'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: hour
+        formula: 0.00105741 × 60 × 1.22 VAT
+        vat: included
+    notes: >
+      Класс диска High с шифрованием на уровне инфраструктуры (AES-XTS-PLAIN64,
+      ключ 256 бит); до 15 000 IOPS чтения / 5 000 IOPS записи. Доступен в
+      ru-central1-a, ru-central2-a и ru-central3-a.
+  - sku: t1.disk.average-encrypted
+    name: Дисковое пространство Average Encrypted
+    meter: storage.block.capacity
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - t1.rates-pdf-2026-09-14
+    dimensions:
+      published30Days: 26.90
+      diskType: average-encrypted
+      nativePerformanceTier: average
+      performanceTier: nvme
+      storageMedia: ssd
+      storageInterface: nvme
+      storageTopology: network
+      encryption: true
+      includedIops: 10000
+      maximumIops: 10000
+      iopsChargedSeparately: false
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.00062269'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: minute
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '0.0455809'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: hour
+        formula: 0.00062269 × 60 × 1.22 VAT
+        vat: included
+    notes: >
+      Класс диска Average с шифрованием; IOPS указаны по классу Average. Тарифицируется,
+      но в документации по заказу дисков среди доступных типов не указан — доступность
+      для заказа не подтверждена.
   - sku: t1.compute.image.capacity
     name: Образ ВМ
     meter: storage.image.capacity
@@ -179,9 +270,9 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     dimensions:
       published30Days: 3.66
       billingBasis: stored-size
@@ -213,9 +304,9 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     dimensions:
       published30Days: 3.66
       billingBasis: stored-size

@@ -15,7 +15,7 @@ spec:
     pricingMode: fixed
     region: Россия
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-25'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.cdn-price-list, yc.cdn]
     dimensions:
       includedEgressGiBMonth: 150
@@ -47,7 +47,7 @@ spec:
     pricingMode: tiered
     region: Россия
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-25'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.cdn-price-list, yc.cdn]
     dimensions:
       freeTierGiBMonth: 150
@@ -99,7 +99,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-25'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.cdn, yc.cdn-price-list]
     dimensions:
       trafficScope: origin-and-internet-to-cdn
@@ -128,7 +128,7 @@ spec:
     pricingMode: tiered
     region: Россия
     effectiveFrom: '2026-07-01'
-    checkedAt: '2026-07-25'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.cdn-price-list, yc.cdn]
     dimensions:
       freeTierRequestsMonth: 100000000
@@ -183,7 +183,7 @@ spec:
     pricingMode: fixed
     region: Россия
     effectiveFrom: '2025-12-31'
-    checkedAt: '2026-07-25'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.cdn-price-list, yc.cdn]
     dimensions:
       serviceId: dn2rse5n40m8h0bu8jqa
@@ -210,7 +210,7 @@ spec:
     pricingMode: fixed
     region: Россия
     effectiveFrom: '2025-12-31'
-    checkedAt: '2026-07-25'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.cdn-price-list, yc.cdn]
     dimensions:
       serviceId: dn2rse5n40m8h0bu8jqa
@@ -237,7 +237,7 @@ spec:
     pricingMode: fixed
     region: Россия
     effectiveFrom: '2026-05-06'
-    checkedAt: '2026-07-25'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.cdn-price-list, yc.cdn]
     dimensions:
       billingScope: per-resource
@@ -266,7 +266,7 @@ spec:
     pricingMode: fixed
     region: Россия
     effectiveFrom: '2026-01-31'
-    checkedAt: '2026-07-25'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.cdn-price-list, yc.cdn]
     dimensions:
       billingScope: billing-account

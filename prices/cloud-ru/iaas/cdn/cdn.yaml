@@ -14,34 +14,33 @@ spec:
     status: available
     pricingMode: tiered
     region: Базовая сеть
-    effectiveFrom: null
-    checkedAt: '2026-07-25'
-    sourceRefs: [cloudru.cdn-tariffs, cloudru.cdn]
+    effectiveFrom: '2026-06-12'
+    checkedAt: '2026-09-25'
+    sourceRefs: [cloudru.cdn-tariffs-crs, cloudru.cdn-tariffs-crs-pdf, cloudru.cdn]
     dimensions:
       trafficScope: cdn-to-client
       coverage: base
       nativeName: Размещение информации на сети CDN, с исходящим трафиком до/более 100 ТБ
-      nativeUnit: Гб
+      nativeUnit: ГБ
       comparabilityClass: egress-payg
       contractByteUnit: decimal-GB
-      sourceVatRatePercent: 20
-      sourceDocument: prilozheniye_7A.CRS.1
-      sourceDocumentVersion: '240621'
+      sourceVatRatePercent: 22
+      sourceDocument: 7.CRS.1
+      sourceDocumentVersion: '260602'
     pricing:
-      # List rate = first PAYG band (до 100 ТБ). Amounts = «Цена с НДС» from CRS.1.
-      # Catalog UI uses GiB like other providers; contract unit is decimal Гб (see notes).
+      # Первая ступень — трафик до 100 ТБ. Суммы из колонки «Цена с НДС» приложения 7.CRS.1.
       rate:
-        amount: '1.08'
+        amount: '1.098'
         currency: RUB
         unit: {quantity: GiB, period: usage}
         vat: included
         byteBasis: decimal
       tiers:
-      # Contract band «100 ТБ» = 100 000 десятичных Гб.
+      # В договоре 100 ТБ = 100 000 десятичных ГБ.
       - from: '0'
         to: '100000'
         rate:
-          amount: '1.08'
+          amount: '1.098'
           currency: RUB
           unit: {quantity: GiB, period: usage}
           vat: included
@@ -49,18 +48,19 @@ spec:
       - from: '100000'
         to: null
         rate:
-          amount: '0.84'
+          amount: '0.854'
           currency: RUB
           unit: {quantity: GiB, period: usage}
           vat: included
           byteBasis: decimal
     notes: >
-      PAYG по приложению 7A.CRS.1 (версия 240621): только исходящий трафик с узлов
-      CDN к пользователям; внутри CDN не тарифицируется. В договоре единица —
-      «Гб» (десятичные GB). В таблице каталога для единообразия показан GiB и
-      ставка 1,08 / 0,84 ₽ как в колонке «Цена с НДС» без пересчёта GB→GiB
-      (~7,4% на точном TCO). НДС в PDF — 20%. Абонплаты за ресурс нет. Источник:
-      CRS.1 PDF + описание услуги CDN.
+      Оплачивается только исходящий трафик от узлов CDN к пользователям.
+      Трафик внутри сети CDN не тарифицируется. По приложению 7.CRS.1
+      до 100 ТБ — 1,098 ₽ за ГБ с НДС 22% (0,90 ₽ без НДС), свыше 100 ТБ —
+      0,854 ₽ за ГБ с НДС (0,70 ₽ без НДС). В договоре ГБ десятичный.
+      В каталоге то же число, а единица подписана как GiB, как у других
+      провайдеров: пересчёта из десятичных ГБ в GiB нет. Абонентской платы
+      за ресурс нет.
 
   - sku: cloudru.cdn.traffic.egress.apac
     name: Исходящий трафик CDN · APAC
@@ -68,30 +68,32 @@ spec:
     status: available
     pricingMode: unit
     region: APAC
-    effectiveFrom: null
-    checkedAt: '2026-07-25'
-    sourceRefs: [cloudru.cdn-tariffs-pril7, cloudru.cdn]
+    effectiveFrom: '2026-06-12'
+    checkedAt: '2026-09-25'
+    sourceRefs: [cloudru.cdn-tariffs-crs, cloudru.cdn-tariffs-crs-pdf, cloudru.cdn]
     dimensions:
       trafficScope: cdn-to-client
       coverage: apac
-      nativeName: Размещение информации на сети CDN с улучшенным покрытием в регионах APAC
-      nativeUnit: Гб
+      nativeName: Размещение информации на сети CDN с улучшенным покрытием в регионах APAC (Индия)
+      nativeUnit: ГБ
       comparabilityClass: egress-coverage-addon
       contractByteUnit: decimal-GB
-      sourceVatRatePercent: 20
-      sourceDocument: Prilozheniye_7_Tarrifs
+      sourceVatRatePercent: 22
+      sourceDocument: 7.CRS.1
+      sourceDocumentVersion: '260602'
     pricing:
       rate:
-        amount: '1.68'
+        amount: '6.10'
         currency: RUB
         unit: {quantity: GiB, period: usage}
         vat: included
         byteBasis: decimal
     notes: >
-      Улучшенное покрытие APAC — 1,68 ₽ с НДС за договорной Гб (приложение 7:
-      1,40 без НДС + 0,28 НДС 20%). В таблице — GiB для единообразия, без
-      пересчёта GB→GiB. В CRS.1 строки нет — источник Prilozheniye_7. Не замена
-      1:1 базовой ставке «Исходящий трафик CDN».
+      Улучшенное покрытие APAC. В тарифе строка называется «APAC (Индия)»:
+      6,10 ₽ за ГБ с НДС 22% (5,00 ₽ без НДС) по приложению 7.CRS.1.
+      ГБ в договоре десятичный. В каталоге то же число под единицей GiB,
+      без пересчёта. Это отдельная ставка, она не заменяет базовый исходящий
+      трафик CDN.
 
   - sku: cloudru.cdn.traffic.egress.na-eu
     name: Исходящий трафик CDN · NA/EU

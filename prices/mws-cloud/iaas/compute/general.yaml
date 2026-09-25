@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-08-01'
-    checkedAt: '2026-09-10'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - mws.all-prices
     - mws.compute
@@ -128,7 +128,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-08-01'
-    checkedAt: '2026-09-10'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - mws.all-prices
     - mws.compute
@@ -239,7 +239,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-09-10'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - mws.all-prices
     - mws.compute
@@ -337,7 +337,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-09-10'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - mws.all-prices
     - mws.compute

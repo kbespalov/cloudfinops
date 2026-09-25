@@ -19,6 +19,7 @@ spec:
     - compute.vcpu
     - network.ipv4.attached
     - network.ipv4.reserved
+    - network.nat.gateway
     - network.traffic.egress
     - storage.block.capacity
     - storage.snapshot.capacity
@@ -51,7 +52,7 @@ spec:
     type: pdf
     access: public
     priority: 1
-    documentVersion: '260619'
+    documentVersion: '260909'
     covers:
     - compute.flavor
     - compute.gpu
@@ -87,6 +88,7 @@ spec:
     type: pdf
     access: public
     priority: 1
+    documentVersion: '260909'
     covers:
     - compute.flavor
     - compute.gpu
@@ -119,9 +121,32 @@ spec:
     type: html
     access: public
     priority: 2
+    documentVersion: '260915'
     covers:
     - ai.inference.tokens.input
     - ai.inference.tokens.output
+    - ai.embeddings.tokens
+  - id: cloudru.foundation-models-pdf
+    title: Тарифы Evolution Foundation Models (7.EVO.11.2, PDF)
+    url: https://cdn.cloud.ru/docs/legal/tariffs/evolution/current-version/foundation-models.pdf
+    type: pdf
+    access: public
+    priority: 1
+    documentVersion: '260915'
+    covers:
+    - ai.inference.tokens.input
+    - ai.inference.tokens.output
+    - ai.embeddings.tokens
+  - id: cloudru.foundation-models-catalog
+    title: Обзор доступных AI-моделей Foundation Models (внутренние / внешние)
+    url: https://cloud.ru/docs/foundation-models/ug/topics/overview__available__models
+    type: html
+    access: public
+    priority: 3
+    covers:
+    - ai.inference.tokens.input
+    - ai.inference.tokens.output
+    - ai.embeddings.tokens
   - id: cloudru.ml-inference
     title: Тарифы Evolution ML Inference (7.EVO.11.1)
     url: https://cloud.ru/documents/tariffs/evolution/evolution-ml-inference.html
@@ -142,6 +167,24 @@ spec:
     covers:
     - cdn.traffic.egress
     - cdn.origin.shielding
+  - id: cloudru.cdn-tariffs-crs
+    title: Тарифы «Сеть доставки контента (CDN-Видео)». Приложение №7.CRS.1
+    url: https://cloud.ru/documents/tariffs/crs/cdn
+    type: html
+    access: public
+    priority: 1
+    documentVersion: '260602'
+    covers:
+    - cdn.traffic.egress
+  - id: cloudru.cdn-tariffs-crs-pdf
+    title: Тарифы CDN (7.CRS.1, PDF)
+    url: https://cdn.cloud.ru/docs/legal/tariffs/crs/current-version/cdn.pdf
+    type: pdf
+    access: public
+    priority: 1
+    documentVersion: '260619'
+    covers:
+    - cdn.traffic.egress
   - id: cloudru.cdn-tariffs
     title: Тарифы на кроссплатформенные услуги (CDN, CRS.1)
     url: https://cdn.cloud.ru/backend/docs/contracts/prilozheniye_7A.CRS.1.pdf
