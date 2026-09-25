@@ -1,6 +1,6 @@
 'use client';
 
-import {useCallback, useEffect, useRef, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import dynamic from 'next/dynamic';
 import type {
   ChatStatus,
@@ -19,6 +19,8 @@ import {
 } from '@/lib/chat/sidebar-config';
 import type {PeriodMode} from '@/lib/calculator/quote-view';
 import {PRICING_DISCLAIMER} from '@/lib/pricing-disclaimer';
+import {decorateAssistantContent, wantsChart} from '@/lib/chat/chart-spec';
+import {useChartMessageRegistry} from '@/components/chat/useChartMessageRegistry';
 import chatStyles from '@/components/chat/ChatPage.module.css';
 import styles from './CalculatorChat.module.css';
 
@@ -72,6 +74,7 @@ export function CalculatorChat({
   const [showingProgress, setShowingProgress] = useState(false);
   const [storageReady, setStorageReady] = useState(false);
   const [narrow, setNarrow] = useState(false);
+  const chartRegistry = useChartMessageRegistry();
 
   const abortRef = useRef<AbortController | null>(null);
   const progressAssistantRef = useRef<{chatId: string; messageId: string} | null>(null);
@@ -117,6 +120,24 @@ export function CalculatorChat({
 
   const activeChat = chats.find((c) => c.id === activeChatId) ?? null;
   const messages = activeChatId ? messagesByChat[activeChatId] ?? [] : [];
+  const streaming =
+    showingProgress || status === 'streaming' || status === 'streaming_loading' || status === 'submitted';
+  const visibleMessages = useMemo(() => {
+    let chartRequested = false;
+    return messages.map((message, index) => {
+      if (message.role === 'user') {
+        chartRequested = wantsChart(typeof message.content === 'string' ? message.content : '');
+        return message;
+      }
+      if (message.role !== 'assistant' || typeof message.content !== 'string') return message;
+      const last = index === messages.length - 1;
+      const content = decorateAssistantContent(message.content, {
+        deriveFromTables: !(streaming && last),
+        requested: chartRequested,
+      });
+      return content === message.content ? message : {...message, content};
+    });
+  }, [messages, streaming]);
 
   const setAssistantContent = useCallback((chatId: string, messageId: string, content: string) => {
     setMessagesByChat((prev) => {
@@ -333,7 +354,7 @@ export function CalculatorChat({
       <ChatContainer
         chats={chats}
         activeChat={activeChat}
-        messages={messages}
+        messages={visibleMessages as TChatMessage[]}
         status={status}
         error={error}
         onSendMessage={onSendMessage}
@@ -348,6 +369,7 @@ export function CalculatorChat({
         openMarkdownLinksInNewTab
         messageListConfig={{
           loaderStatuses: [],
+          ...(chartRegistry ? {messageRendererRegistry: chartRegistry} : {}),
         }}
         promptInputProps={{
           bodyProps: {

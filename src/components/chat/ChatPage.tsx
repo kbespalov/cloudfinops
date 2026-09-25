@@ -1,6 +1,6 @@
 'use client';
 
-import {useCallback, useEffect, useRef, useState} from 'react';
+import {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import dynamic from 'next/dynamic';
 import {useRouter, useSearchParams} from 'next/navigation';
 import {Icon, Text} from '@gravity-ui/uikit';
@@ -24,7 +24,9 @@ import {
   CHAT_STATUS_THINKING,
   createChatStreamParser,
 } from '@/lib/chat/stream-protocol';
+import {decorateAssistantContent, wantsChart} from '@/lib/chat/chart-spec';
 import {CHAT_SUGGESTIONS} from './suggestions';
+import {useChartMessageRegistry} from './useChartMessageRegistry';
 import styles from './ChatPage.module.css';
 
 const STORAGE_KEY = 'cf-chat-v1';
@@ -59,6 +61,7 @@ export function ChatPage() {
   // Start false for SSR/hydration match; matchMedia updates after mount.
   const [narrow, setNarrow] = useState(false);
   const [storageReady, setStorageReady] = useState(false);
+  const chartRegistry = useChartMessageRegistry();
 
   const deeplinkHandled = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -188,6 +191,24 @@ export function ChatPage() {
 
   const activeChat = chats.find((c) => c.id === activeChatId) ?? null;
   const messages = activeChatId ? messagesByChat[activeChatId] ?? [] : [];
+  const streaming =
+    showingProgress || status === 'streaming' || status === 'streaming_loading' || status === 'submitted';
+  const visibleMessages = useMemo(() => {
+    let chartRequested = false;
+    return messages.map((message, index) => {
+      if (message.role === 'user') {
+        chartRequested = wantsChart(typeof message.content === 'string' ? message.content : '');
+        return message;
+      }
+      if (message.role !== 'assistant' || typeof message.content !== 'string') return message;
+      const last = index === messages.length - 1;
+      const content = decorateAssistantContent(message.content, {
+        deriveFromTables: !(streaming && last),
+        requested: chartRequested,
+      });
+      return content === message.content ? message : {...message, content};
+    });
+  }, [messages, streaming]);
 
   const setAssistantContent = useCallback((chatId: string, messageId: string, content: string) => {
     setMessagesByChat((prev) => {
@@ -447,7 +468,7 @@ export function ChatPage() {
             </Text>
           </div>
           <Text as="p" variant="body-short" color="secondary" className={styles.heroLead}>
-            Спросите про ВМ, GPU, S3, трафик или AI-модели — ответ таблицей, цены с НДС.
+            Спросите про ВМ, GPU, S3, трафик или AI-модели — ответ таблицей, цены с НДС. График построим, если попросите.
           </Text>
         </div>
 
@@ -458,7 +479,7 @@ export function ChatPage() {
           <ChatContainer
             chats={chats}
             activeChat={activeChat}
-            messages={messages}
+            messages={visibleMessages as TChatMessage[]}
             status={status}
             error={error}
             onSendMessage={onSendMessage}
@@ -474,6 +495,7 @@ export function ChatPage() {
             messageListConfig={{
               // Progress is rendered inside the assistant bubble; hide the footer loader.
               loaderStatuses: [],
+              ...(chartRegistry ? {messageRendererRegistry: chartRegistry} : {}),
             }}
             promptInputProps={{
               bodyProps: {
