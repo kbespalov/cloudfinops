@@ -1,6 +1,6 @@
 'use client';
 
-import {useEffect, useRef, useState, type ReactNode} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import Link from 'next/link';
 import {useRouter} from 'next/navigation';
 import {ArrowRight, ArrowUpRight, Bars, Check, ChevronRight, Copy, Magnifier, Moon, Play, Sun, Xmark} from '@gravity-ui/icons';
@@ -13,6 +13,7 @@ import {compileAttributeDrafts, emptyAttributeDraft, type AttributeDrafts} from 
 import type {CategoryAttributes} from '@/lib/public-api/attribute-registry';
 import {PUBLIC_UNITS} from '@/lib/public-api/constants';
 import {documentationPath} from '@/lib/public-api/discovery';
+import {rich, typograph} from './doc-text';
 
 type ApiResponse = {data?: unknown; meta?: Record<string, unknown>; pagination?: {nextCursor: string | null}; error?: {code: string; message: string; details?: unknown[]}};
 type Language = 'cURL' | 'JavaScript' | 'Python' | 'JSON';
@@ -47,23 +48,23 @@ function Parameters({items}: {items: Parameter[]}) {
   return <section className={styles.docSection}><h2>Параметры</h2>
     {items.length ? <div className={styles.parameters}>{items.map(p => <div className={styles.parameter} key={p.name}>
       <div className={styles.parameterHead}><code>{p.name}</code><span>{p.type}</span>{p.required && <b>обязательный</b>}</div>
-      <p>{p.description}</p>{p.default && <small>По умолчанию: <code>{p.default}</code></small>}
+      <p>{rich(p.description)}</p>{p.default && <small>По умолчанию: <code>{p.default}</code></small>}
     </div>)}</div> : <p>Этот метод не принимает параметры.</p>}
   </section>;
 }
-function Callout({children}: {children: ReactNode}) {
-  return <div className={styles.callout}><span className={styles.calloutMark}>i</span><div>{children}</div></div>;
+function Callout({children}: {children: string}) {
+  return <div className={styles.callout} role="note"><strong>Примечание</strong><div>{rich(children)}</div></div>;
 }
 function StatusReference() {
   return <div className={styles.statusList}>{[
-    ['priced', 'Стоимость всех компонентов рассчитана, поэтому предложение участвует в сравнении цен.'],
-    ['incomplete', 'Для расчёта не хватает ставки, сведений о НДС или условий тарификации, поэтому итоговая стоимость равна null.'],
-    ['unavailable', 'В каталоге нет SKU, соответствующих заданным ограничениям.'],
-    ['error', 'Не удалось выполнить расчёт для этого провайдера.'],
-  ].map(([name, description]) => <div key={name}><code>{name}</code><p>{description}</p></div>)}</div>;
+    ['priced', 'Все обязательные компоненты оценены. Только такие предложения входят в `lowestPriceProviderIds` и в сравнение цен.'],
+    ['incomplete', 'Не хватает ставки, сведений о НДС или условий тарификации. `total` равен `null` — это не нулевая цена.'],
+    ['unavailable', 'В каталоге нет SKU, удовлетворяющих ограничениям запроса. Это не значит, что услуга отсутствует у провайдера.'],
+    ['error', 'Расчёт для этого провайдера завершился ошибкой.'],
+  ].map(([name, description]) => <div key={name}><code>{name}</code><p>{rich(description)}</p></div>)}</div>;
 }
 function QuoteSummary({estimate}: {estimate: EstimateResult}) {
-  return <div className={styles.summary}><p className={styles.summaryCaption}>Полный расчёт за 720 часов доступен для {estimate.coverage.priced} из {estimate.coverage.requested} провайдеров.</p>
+  return <div className={styles.summary}><p className={styles.summaryCaption}>{typograph(`Полный расчёт за 720 часов доступен для ${estimate.coverage.priced} из ${estimate.coverage.requested} провайдеров.`)}</p>
     {estimate.quotes.map(q => <details className={styles.quote} key={q.provider.id}>
       <summary><span><strong>{q.provider.name}</strong><small>{q.status}</small></span><span className={styles.quotePrice}>{q.total ? Number(q.total.amount).toLocaleString('ru-RU', {minimumFractionDigits: 2}) + ' ₽' : 'Нет оценки'}<ChevronRight width={13}/></span></summary>
       {q.reason && <p>{q.reason.message} <code>{q.reason.path}</code></p>}
@@ -222,6 +223,7 @@ export function ApiPage({initialSection, exampleProduct, exampleRegion, exampleE
   const navLink = (id: string, label: string, badge?: string) => <Link key={id} href={documentationPath(id)} prefetch={false} className={styles.navItem} aria-current={section === id ? 'page' : undefined}
     onClick={() => setMenuOpen(false)}>{badge && <span className={badge === 'POST' ? styles.navPost : styles.navMethod}>{badge}</span>}<span>{label}</span></Link>;
   const currentGroup = mcp ? 'MCP' : endpoint?.id === 'estimates' ? 'Калькулятор' : endpoint ? 'Каталог' : 'Начало работы';
+  const pageLabel = mcp ? endpoint?.tool ?? 'Подключение MCP' : endpoint?.title ?? guides.find(g => g.id === section)?.title ?? title;
 
   return <div className={styles.shell} data-theme={theme}>
     <a className={styles.skipLink} href="#reference-content" onClick={e => {e.preventDefault(); document.getElementById('reference-content')?.focus();}}>К содержимому</a>
@@ -235,7 +237,7 @@ export function ApiPage({initialSection, exampleProduct, exampleRegion, exampleE
         <button className={styles.iconButton} aria-label={theme === 'light' ? 'Включить тёмную тему' : 'Включить светлую тему'} onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>{theme === 'light' ? <Moon width={18}/> : <Sun width={18}/>}</button>
       </div>
     </header>
-    <div className={styles.mobileBar}><button ref={menuButtonRef} onClick={() => setMenuOpen(!menuOpen)} aria-expanded={menuOpen} aria-controls="api-navigation"><Bars width={16}/>Навигация</button><span>{currentGroup}<ChevronRight width={12}/>{endpoint?.title ?? (mcp ? 'Подключение' : 'Введение')}</span></div>
+    <div className={styles.mobileBar}><button ref={menuButtonRef} onClick={() => setMenuOpen(!menuOpen)} aria-expanded={menuOpen} aria-controls="api-navigation"><Bars width={16}/>Навигация</button><span>{currentGroup}<ChevronRight width={12}/>{pageLabel}</span></div>
     {menuOpen && <button className={styles.scrim} aria-label="Закрыть навигацию" onClick={() => setMenuOpen(false)}/>}
     <div className={styles.layout}>
       <aside className={styles.sidebar} data-open={menuOpen} id="api-navigation">
@@ -251,62 +253,62 @@ export function ApiPage({initialSection, exampleProduct, exampleRegion, exampleE
         </>}
         {search && !(mcp ? [{title: 'Подключение MCP'}, ...endpoints.filter(e => e.tool).map(e => ({title: e.tool + ' ' + e.title}))] : [...guides, ...endpoints.map(e => ({title: e.title + ' ' + e.path}))]).some(e => filter(e.title)) && <p className={styles.noResults}>Разделы не найдены</p>}
         </nav>
-        <div className={styles.sidebarFooter}><span className={styles.publicStatus}><i/>Публичный API · без ключа</span><a href="/llms.txt">Документация для LLM <ArrowUpRight width={13}/></a></div>
+        <div className={styles.sidebarFooter}><span className={styles.publicStatus}>Публичный API, без ключа</span><a href="/llms.txt">Документация для LLM <ArrowUpRight width={13}/></a></div>
       </aside>
       <main className={styles.workspace} id="reference-content" tabIndex={-1}>
-        <div className={styles.breadcrumb}>Разработчикам <ChevronRight width={12}/>{currentGroup}<span className={styles.breadcrumbVersion}>{mcp ? 'Streamable HTTP' : 'REST · v1'}</span></div>
+        <nav className={styles.breadcrumb} aria-label="Путь к странице"><span>Разработчикам</span><ChevronRight width={12}/><span>{currentGroup}</span><ChevronRight width={12}/><span aria-current="page">{pageLabel}</span></nav>
         <div className={styles.referenceGrid}>
           <article className={styles.article}>
-            <div className={styles.eyebrow}>{mcp ? 'Model Context Protocol' : endpoint ? <><span className={styles.eyebrowMethod}>{activeEndpoint.method}</span><span>{activeEndpoint.path}</span></> : 'Public API / v1'}</div><h1>{title}</h1>
+            <h1>{title}</h1>
             <button className={styles.mobileExampleLink} onClick={() => document.getElementById('api-examples')?.scrollIntoView({behavior: 'smooth', block: 'start'})}>{executable ? 'Перейти к выполнению запроса' : 'Перейти к примеру кода'} <ArrowRight width={14}/></button>
             {section === 'overview' && <>
-              <p className={styles.lead}>Cloud FinOps API предоставляет доступ к каталогу SKU и публичным тарифам российских облаков, а также позволяет рассчитывать и сравнивать стоимость конфигураций.</p>
+              <p className={styles.lead}>{rich('Cloud FinOps API предоставляет доступ к каталогу SKU и публичным тарифам российских облаков, а также позволяет рассчитывать и сравнивать стоимость конфигураций.')}</p>
               <div className={styles.quickFacts}><span>JSON / HTTPS</span><span>Без API-ключа</span><span>Только чтение</span></div>
-              <section className={styles.docSection}><h2>Какие данные доступны</h2><p>В каталоге представлены {providers.map(p => p.name).join(', ')}. REST API позволяет изучать тарифы compute, GPU, хранилищ, сети, CDN, Kubernetes и AI. Для compute и GPU доступен расчёт конфигурации; для остальных категорий можно получить отдельные ставки и правила тарификации.</p></section><section className={styles.docSection}><h2>Первый запрос</h2><p>Выберите категорию и характеристики или готовый пример запроса. Нажмите «Выполнить запрос», чтобы получить актуальные данные и посмотреть полный ответ API.</p><div className={styles.baseUrl}><span>BASE URL</span><code>{baseUrl}</code><CopyButton value={baseUrl} label="Скопировать URL"/></div></section>
+              <section className={styles.docSection}><h2>Какие данные доступны</h2><p>{rich(`В каталоге представлены ${providers.map(p => p.name).join(', ')}. REST API позволяет изучать тарифы compute, GPU, хранилищ, сети, CDN, Kubernetes и AI. Для compute и GPU доступен расчёт конфигурации; для остальных категорий можно получить отдельные ставки и правила тарификации.`)}</p></section><section className={styles.docSection}><h2>Первый запрос</h2><p>{rich('Выберите категорию и характеристики или готовый пример запроса. Нажмите «Выполнить запрос», чтобы получить актуальные данные и посмотреть полный ответ API.')}</p><div className={styles.baseUrl}><span>Базовый URL</span><code>{baseUrl}</code><CopyButton value={baseUrl} label="Скопировать URL"/></div></section>
               <section className={styles.docSection}><h2>Каталог и калькулятор</h2>
-                <Link href="/api/products" className={styles.featureLink}><span className={styles.featureIndex}>01</span><div><h3>Каталог продуктов</h3><p>Каталог содержит характеристики SKU и правила тарификации, включая тарифные ступени, и позволяет находить сопоставимые альтернативы.</p></div><ArrowRight width={18}/></Link>
-                <Link href="/api/estimates" className={styles.featureLink}><span className={styles.featureIndex}>02</span><div><h3>Калькулятор конфигураций</h3><p>По минимально необходимым ресурсам калькулятор подбирает конфигурации у провайдеров и возвращает стоимость каждого компонента.</p></div><ArrowRight width={18}/></Link>
+                <Link href="/api/products" className={styles.featureLink}><div><h3>Каталог продуктов</h3><p>{rich('Каталог содержит характеристики SKU и правила тарификации, включая тарифные ступени, и позволяет находить сопоставимые альтернативы.')}</p></div><ArrowRight width={18}/></Link>
+                <Link href="/api/estimates" className={styles.featureLink}><div><h3>Калькулятор конфигураций</h3><p>{rich('По минимально необходимым ресурсам калькулятор подбирает конфигурации у провайдеров и возвращает стоимость каждого компонента.')}</p></div><ArrowRight width={18}/></Link>
               </section>
-              <section className={styles.docSection}><h2>Доступ через REST и MCP</h2><p>REST и MCP используют общий контракт и возвращают одни и те же данные. Для интеграции с приложением доступны REST-методы, а для работы через AI-клиент — пять инструментов MCP.</p><Link className={styles.textLink} href="/api/mcp">Подключить MCP <ArrowRight width={15}/></Link></section>
+              <section className={styles.docSection}><h2>Доступ через REST и MCP</h2><p>{rich('REST и MCP используют общий контракт и возвращают одни и те же данные. Для интеграции с приложением доступны REST-методы, а для работы через AI-клиент — пять инструментов MCP.')}</p><Link className={styles.textLink} href="/api/mcp">Подключить MCP <ArrowRight width={15}/></Link></section>
             </>}
-            {endpoint && <><p className={styles.lead}>{endpoint.description}</p><div className={styles.endpointSignature}><span className={endpoint.method === 'POST' ? styles.postBadge : styles.getBadge}>{mcp ? 'TOOL' : endpoint.method}</span><code>{mcp ? endpoint.tool : '/api/v1' + endpoint.path}</code></div>
-              {mcp && <p>Передайте параметры в поле <code>arguments</code>. Успешный результат возвращается в <code>structuredContent</code> и в виде JSON-текста.</p>}
-              {isEstimate && <Callout>Месячная оценка рассчитывается за 720 часов. Итоговую цену и наличие мощностей уточняйте у провайдера.</Callout>}
-              <Parameters items={endpoint.parameters}/><section className={styles.docSection}><h2>Ответ</h2><p>{endpoint.returns}</p></section>
+            {endpoint && <><p className={styles.lead}>{rich(endpoint.description)}</p><div className={styles.endpointSignature}><span className={endpoint.method === 'POST' ? styles.postBadge : styles.getBadge}>{mcp ? 'TOOL' : endpoint.method}</span><code>{mcp ? endpoint.tool : '/api/v1' + endpoint.path}</code></div>
+              {mcp && <p>{rich('Параметры — в `arguments`. Успех: `structuredContent` и тот же JSON в текстовом блоке. Ошибка: `isError=true`, без `structuredContent`.')}</p>}
+              {isEstimate && <Callout>Месяц в расчёте — 720 часов. Суммы — оценка по публичным тарифам: итоговую цену и ёмкость уточняйте у провайдера. Ссылайтесь на `source` выбранного SKU и поле `checkedAt`.</Callout>}
+              <Parameters items={endpoint.parameters}/><section className={styles.docSection}><h2>Ответ</h2><p>{rich(endpoint.returns)}</p></section>
               {['products', 'attributes'].includes(endpoint.id) && <AttributeReference categories={attributeCategories}/>}
               {isEstimate && <section className={styles.docSection}><h2>Статусы расчёта</h2><StatusReference/></section>}
             </>}
-            {section === 'authentication' && <><p className={styles.lead}>Для доступа к публичным данным не нужны регистрация и API-ключ. Все операции выполняют чтение каталога или расчёт стоимости и не изменяют данные.</p>
-              <Parameters items={[{name: '60 запросов / минуту', type: 'на IP / процесс', description: 'Если лимит превышен, API возвращает 429 и указывает время ожидания в заголовке Retry-After.'}, {name: '64 KiB', type: 'тело запроса', description: 'Тело JSON-запроса к REST или MCP не должно превышать 64 KiB. Для запроса большего размера API возвращает 413.'}, {name: 'Request-Id', type: 'response header', description: 'HTTP-заголовок с идентификатором запроса, который можно использовать для диагностики.'}]}/>
-              <section className={styles.docSection}><h2>Браузерные приложения</h2><p>REST поддерживает CORS для запросов из браузера, а MCP отдельно проверяет Host и Origin. Оба интерфейса доступны без ключа авторизации.</p></section><section className={styles.docSection}><h2>Актуальность данных</h2><p>Актуальность ставки можно оценить по полю checkedAt и указанному источнику. Поле catalogVersion идентифицирует снимок каталога, а calculationVersion — версию расчёта.</p></section>
+            {section === 'authentication' && <><p className={styles.lead}>{rich('Ключ и регистрация не нужны. Методы только читают каталог или считают стоимость и не меняют данные у провайдеров.')}</p>
+              <Parameters items={[{name: '60 запросов / минуту', type: 'на IP / процесс', description: 'При превышении — 429. Время ожидания указано в заголовке `Retry-After`.'}, {name: '64 KiB', type: 'тело запроса', description: 'Максимальный размер JSON в REST и MCP. Больше — 413.'}, {name: 'Request-Id', type: 'response header', description: 'Идентификатор запроса. Сохраняйте его при обращении в поддержку.'}]}/>
+              <section className={styles.docSection}><h2>Браузерные приложения</h2><p>{rich('REST отвечает с CORS. MCP отдельно проверяет `Host` и `Origin`. Авторизация не требуется ни там, ни там.')}</p></section><section className={styles.docSection}><h2>Актуальность данных</h2><p>{rich('Дата проверки ставки — в `checkedAt` у продукта и у цены; это не гарантия живой цены. `catalogVersion` — снимок каталога, `calculationVersion` — версия алгоритма расчёта. Ни то ни другое не равно дате, когда провайдер менял прайс.')}</p></section>
             </>}
-            {section === 'models' && <><p className={styles.lead}>Product описывает биллинговый SKU, а вложенный объект Price — правило его тарификации. При расчёте конфигурации продукты и их цены объединяются в Estimate.</p>
-              <Parameters items={[{name: 'Product.id', type: 'string', description: 'Непрозрачный идентификатор prod_…, который сохраняется при обновлении ставки. Исходный идентификатор SKU доступен в поле providerSku.'}, {name: 'Price.unit', type: 'enum', description: 'Единица потребления: vcpu_hour, gib_month, token, flavor_hour и другие значения закрытого словаря.'}, {name: 'Price.unitQuantity', type: 'decimal string', description: 'Знаменатель ставки — количество единиц потребления, за которое указана цена. Например, для цены за миллион токенов используется значение "1000000".'}, {name: 'Price.tiers', type: 'array | null', description: 'Тарифные ступени с границами [from, to) и ставкой unitPrice. Значение to=null означает, что у ступени нет верхней границы.'}, {name: 'Price.vat', type: 'enum', description: 'Режим НДС: included, excluded или unknown. Если сведения о НДС или валюте отсутствуют, API не подставляет предполагаемые значения.'}]}/>
-              <section className={styles.docSection}><h2>Расчёт стоимости</h2><p>Стоимость рассчитывается по формуле: объём / знаменатель × ставка. При умножении сохраняются все десятичные знаки ставки, после чего сумма каждой строки округляется до копеек по правилу half-up. Итоговая стоимость равна сумме отображаемых строк.</p><Callout>При сравнении стоимости учитываются только полные расчёты со статусом priced.</Callout></section>
+            {section === 'models' && <><p className={styles.lead}>{rich('`Product` — биллинговый SKU. `Price` — правило его тарификации. `Estimate` собирает продукты в месячную стоимость конфигурации.')}</p>
+              <Parameters items={[{name: 'Product.id', type: 'string', description: 'Непрозрачный идентификатор `prod_…`. Сохраняется при обновлении ставки. Исходный SKU провайдера — в `providerSku`.'}, {name: 'Price.unit', type: 'enum', description: 'Единица потребления вместе с периодом, если он есть: `vcpu_hour`, `gib_month`, `token`, `flavor_hour` и другие значения закрытого словаря.'}, {name: 'Price.unitQuantity', type: 'decimal string', description: 'Знаменатель ставки: цена указана за это число единиц. Для пакета в миллион токенов — `"1000000"`.'}, {name: 'Price.tiers', type: 'array | null', description: 'Ступени с полуинтервалом `[from, to)` и ставкой `unitPrice`. `to=null` — ступень без верхней границы.'}, {name: 'Price.vat', type: 'enum', description: '`included`, `excluded` или `unknown`. Если НДС или валюта неизвестны, API не подставляет значения по умолчанию. `null` в денежных полях — не ноль.'}]}/>
+              <section className={styles.docSection}><h2>Расчёт стоимости</h2><p>{rich('Строка: объём / `unitQuantity` × ставка. Промежуточные знаки ставки сохраняются; каждая строка округляется до копеек по half-up. Итог — сумма уже округлённых строк, десятичная строка в ₽.')}</p><Callout>В сравнение входят только предложения со статусом `priced`. `incomplete` с `total: null` — не нулевая цена.</Callout></section>
             </>}
-            {section === 'pagination' && <><p className={styles.lead}>Для постраничного просмотра каталога используется непрозрачный cursor, который связывает последовательность страниц с одним снимком данных.</p>
-              <ol className={styles.steps}><li><strong>Запросите первую страницу</strong><p>В первом запросе укажите limit от 1 до 100 и необходимые фильтры.</p></li><li><strong>Передайте nextCursor</strong><p>Для следующего запроса используйте значение pagination.nextCursor из ответа. Повторно передавать фильтры не нужно: они сохраняются в cursor.</p></li><li><strong>Завершите просмотр страниц</strong><p>Если pagination.nextCursor равен null, вы получили последнюю страницу.</p></li></ol><Callout>Если каталог обновился, запрос со старым cursor вернёт 409: начните просмотр с первой страницы. Если переданные фильтры отличаются от сохранённых в cursor, API вернёт 400.</Callout>
+            {section === 'pagination' && <><p className={styles.lead}>{rich('Списки каталога отдаются страницами. Непрозрачный `cursor` фиксирует фильтры, порядок и снимок данных.')}</p>
+              <ol className={styles.steps}><li><strong>Первая страница</strong><p>{rich('Передайте фильтры и `limit` от 1 до 100. `cursor` не указывайте.')}</p></li><li><strong>Следующая страница</strong><p>{rich('Подставьте `pagination.nextCursor` как есть. Повторять фильтры не нужно: они уже внутри `cursor`.')}</p></li><li><strong>Конец выборки</strong><p>{rich('`pagination.nextCursor` равен `null`.')}</p></li></ol><Callout>Снимок каталога сменился — 409, начните без `cursor`. Фильтры в запросе не совпали с сохранёнными в `cursor` — 400.</Callout>
             </>}
-            {section === 'errors' && <><p className={styles.lead}>API возвращает ошибки в едином JSON-формате с кодом code и сведениями об ошибках валидации. Для диагностики сохраняйте идентификатор из HTTP-заголовка Request-Id.</p>
-              <div className={styles.errorList}>{[['400', 'Некорректный запрос', 'Проверьте параметры запроса; поле error.details[].path указывает, где обнаружена ошибка.'], ['404', 'Объект не найден', 'Проверьте идентификатор продукта или провайдера.'], ['409', 'Снимок каталога изменился', 'Запросите первую страницу заново, не передавая cursor.'], ['413', 'Превышен размер запроса', 'Размер JSON не должен превышать 64 KiB.'], ['429', 'Превышен лимит', 'Повторите запрос после ожидания, указанного в заголовке Retry-After.'], ['500', 'Внутренняя ошибка', 'Повторите запрос позже.']].map(([code, label, description]) => <div key={code}><code>{code}</code><span><strong>{label}</strong><p>{description}</p></span></div>)}</div>
-              <section className={styles.docSection}><h2>Статусы предложений в расчёте</h2><p>При успешной обработке запроса POST /estimates возвращает 200, а результат расчёта для каждого провайдера описывается отдельным статусом. Если подходящий SKU не найден в каталоге, это не означает, что услуга недоступна у провайдера.</p><StatusReference/></section>
+            {section === 'errors' && <><p className={styles.lead}>{rich('Ошибка — JSON с полями `code` и `message`. Ошибки валидации перечислены в `error.details[]`. Для разбора сохраняйте `Request-Id`.')}</p>
+              <div className={styles.errorList}>{[['400', 'Некорректный запрос', 'Неверные параметры, типы или операции. Путь к полю — в `error.details[].path`.'], ['404', 'Объект не найден', 'Нет продукта или провайдера с указанным идентификатором.'], ['409', 'Снимок каталога изменился', 'Начните с первой страницы без `cursor`.'], ['413', 'Превышен размер запроса', 'Тело JSON больше 64 KiB.'], ['429', 'Превышен лимит', 'Подождите время из заголовка `Retry-After`.'], ['500', 'Внутренняя ошибка', 'Повторите запрос позже.']].map(([code, label, description]) => <div key={code}><code>{code}</code><span><strong>{label}</strong><p>{rich(description)}</p></span></div>)}</div>
+              <section className={styles.docSection}><h2>Статусы предложений в расчёте</h2><p>{rich('`POST /estimates` при корректном теле отвечает 200. Статус каждого провайдера — в `quotes[].status`, это не HTTP-код. `unavailable` значит «нет SKU в каталоге», а не «услуги нет у провайдера».')}</p><StatusReference/></section>
             </>}
-            {section === 'mcp-connect' && <><p className={styles.lead}>MCP-сервер предоставляет AI-клиенту доступ к каталогу облаков через пять инструментов для поиска SKU, изучения тарифов и расчёта стоимости конфигураций.</p><div className={styles.quickFacts}><span>Streamable HTTP</span><span>Без авторизации</span><span>5 инструментов</span></div>
-              <ol className={styles.steps}><li><strong>Добавьте удалённый MCP-сервер</strong><p>В настройках AI-клиента выберите подключение удалённого сервера по URL и укажите транспорт Streamable HTTP.</p></li><li><strong>Вставьте адрес сервера</strong><div className={styles.baseUrl}><code>{mcpUrl}</code><CopyButton value={mcpUrl} label="Скопировать URL"/></div></li><li><strong>Проверьте доступные инструменты</strong><p>После подключения клиент получит список из пяти инструментов через tools/list. Они используют те же схемы данных, что и REST API.</p></li></ol>
-              <section className={styles.docSection}><h2>Справочник для AI-клиентов</h2><p>После подключения клиент может прочитать документацию и OpenAPI через MCP resources. <a href="/api/reference.md">Markdown-справочник</a> содержит примеры вызовов, правила работы с ценами и последовательность выбора инструментов. Его также можно передать агенту, который выполняет обычные HTTP-запросы.</p></section><section className={styles.docSection}><h2>Пример запроса к AI-клиенту</h2><div className={styles.promptExample}>«Сравни месячную стоимость сервера с 4 vCPU, 8 GiB памяти и 100 GiB SSD у всех провайдеров»</div><p>Сравнивайте только предложения со статусом priced, а наличие мощностей уточняйте у провайдера.</p></section>
+            {section === 'mcp-connect' && <><p className={styles.lead}>{rich('MCP-сервер предоставляет AI-клиенту доступ к каталогу облаков через пять инструментов для поиска SKU, изучения тарифов и расчёта стоимости конфигураций.')}</p><div className={styles.quickFacts}><span>Streamable HTTP</span><span>Без авторизации</span><span>5 инструментов</span></div>
+              <ol className={styles.steps}><li><strong>Добавьте удалённый MCP-сервер</strong><p>{rich('В настройках AI-клиента выберите подключение удалённого сервера по URL и укажите транспорт Streamable HTTP.')}</p></li><li><strong>Вставьте адрес сервера</strong><div className={styles.baseUrl}><code>{mcpUrl}</code><CopyButton value={mcpUrl} label="Скопировать URL"/></div></li><li><strong>Проверьте доступные инструменты</strong><p>{rich('После подключения клиент получит список из пяти инструментов через `tools/list`. Они используют те же схемы данных, что и REST API.')}</p></li></ol>
+              <section className={styles.docSection}><h2>Справочник для AI-клиентов</h2><p>{rich('После подключения клиент может прочитать документацию и OpenAPI через MCP resources.')} <a href="/api/reference.md">Markdown-справочник</a> {rich('содержит примеры вызовов, правила работы с ценами и последовательность выбора инструментов. Его также можно передать агенту, который выполняет обычные HTTP-запросы.')}</p></section><section className={styles.docSection}><h2>Пример запроса к AI-клиенту</h2><div className={styles.promptExample}>{rich('«Сравни месячную стоимость сервера с 4 vCPU, 8 GiB памяти и 100 GiB SSD у всех провайдеров»')}</div><p>{rich('Сравнивайте только предложения со статусом `priced`, а наличие мощностей уточняйте у провайдера.')}</p></section>
             </>}
             <div className={styles.articleFooter}><a href="/api/reference.md">Markdown</a><a href="/llms.txt">llms.txt</a><a href="/api/v1/openapi.json">OpenAPI 3.1 <ArrowUpRight width={12}/></a></div>
           </article>
           <aside className={styles.examples} id="api-examples" aria-label="Примеры и выполнение запросов"><div className={styles.examplesSticky}>
             {mcp ? <>
-              <div className={styles.exampleCaption}><span>Подключение</span><span className={styles.liveLabel}><i/>Read-only</span></div>
+              <div className={styles.exampleCaption}><span>Подключение</span><span className={styles.liveLabel}>Только чтение</span></div>
               <div className={styles.serverCard}><span>URL сервера</span><div><code>{mcpUrl}</code><CopyButton value={mcpUrl}/></div><small>Streamable HTTP · stateless</small></div>
               <div className={styles.codePanel}><div className={styles.codeToolbar}><span>JavaScript <small>· MCP SDK</small></span><CopyButton value={mcpCode}/></div><Code value={mcpCode}/></div>
               <div className={styles.toolsCard}><h3>Доступные инструменты <span>5</span></h3>{endpoints.filter(e => e.tool).map(e => <button key={e.id} onClick={() => navigate('mcp-' + e.id)}><span><code>{e.tool}</code><small>{e.title}</small></span><ChevronRight width={14}/></button>)}</div>
             </> : executable ? <>
-              <div className={styles.exampleCaption}><span>Конструктор запроса</span><span className={styles.liveLabel}><i/>Запрос к API</span></div>
+              <div className={styles.exampleCaption}><span>Конструктор запроса</span></div>
               <div className={styles.codePanel}>
-                <div className={styles.codeEndpoint}><span className={method === 'POST' ? styles.postBadge : styles.getBadge}>{method}</span><code>{'/api/v1' + activeEndpoint.path}</code><span className={styles.codeEndpointVersion}>v1</span></div>
+                <div className={styles.codeEndpoint}><span className={method === 'POST' ? styles.postBadge : styles.getBadge}>{method}</span><code>{'/api/v1' + activeEndpoint.path}</code></div>
                 <div className={styles.codeToolbar}><div className={styles.languageTabs} aria-label="Язык примера">{(['cURL', 'JavaScript', 'Python', ...(isEstimate ? ['JSON'] : [])] as Language[]).map(l => <button key={l} aria-pressed={language === l || language === 'JSON' && !isEstimate && l === 'cURL'} onClick={() => setLanguage(l)}>{l}</button>)}</div><CopyButton value={currentCode}/></div>
                 {language === 'JSON' && isEstimate ? <textarea className={styles.jsonEditor} spellCheck={false} aria-label="Тело запроса" value={body} onChange={e => {setBody(e.target.value); resetResponse();}}/> : <Code value={currentCode}/>}
                 {isEstimate && <div className={styles.presets}><span>Пример</span><button onClick={() => {setBody(computeExample); setLanguage('JSON'); resetResponse();}}>Compute</button><button onClick={() => {setBody(gpuExample); setLanguage('JSON'); resetResponse();}}>GPU L4</button><button className={styles.editBody} onClick={() => setLanguage('JSON')}>Изменить JSON</button></div>}
@@ -340,7 +342,7 @@ export function ApiPage({initialSection, exampleProduct, exampleRegion, exampleE
                 {response?.pagination?.nextCursor && <button disabled={pending} className={styles.nextPage} onClick={() => void run(response.pagination!.nextCursor!)}>Следующая страница <ArrowRight width={14}/></button>}
                 {response && <div className={styles.responseFooter}><span title={requestInfo?.id ?? undefined}>{String(response.meta?.catalogVersion ?? requestInfo?.id ?? 'JSON response')}</span><CopyButton value={pretty(response)} label="Копировать JSON"/></div>}
               </div>
-              <p className={styles.exampleNote}>{response ? 'Это ответ API текущего сайта. Сведения о версиях и источниках данных приведены в JSON.' : activeEndpoint.id === 'products' ? 'Фильтры описывают характеристики SKU. Для подбора конфигурации по числу vCPU, памяти и GPU используйте /estimates.' : 'В примере показана сокращённая структура ответа. Выполните запрос, чтобы получить актуальные данные со всеми полями.'}</p>
+              <p className={styles.exampleNote}>{rich(response ? 'Это ответ API текущего сайта. Сведения о версиях и источниках данных приведены в JSON.' : activeEndpoint.id === 'products' ? 'Фильтры описывают характеристики SKU. Для подбора конфигурации по числу vCPU, памяти и GPU используйте `/estimates`.' : 'В примере показана сокращённая структура ответа. Выполните запрос, чтобы получить актуальные данные со всеми полями.')}</p>
             </> : <GuideExample section={section} product={productSample}/>}
           </div></aside>
         </div>
@@ -351,12 +353,12 @@ export function ApiPage({initialSection, exampleProduct, exampleRegion, exampleE
 
 function GuideExample({section, product}: {section: string; product: unknown}) {
   const examples: Record<string, {title: string; code: string; note: string}> = {
-    authentication: {title: 'Заголовки ответа', code: 'HTTP/1.1 200 OK\nContent-Type: application/json\nRequest-Id: 9c…\nAccess-Control-Allow-Origin: *\nCache-Control: public, max-age=300', note: 'Ответы каталога кэшируются, а результаты расчётов возвращаются с заголовком Cache-Control: no-store.'},
-    models: {title: 'Product · сокращённый пример', code: pretty(product), note: 'Полный набор полей Product и Price описан в схеме OpenAPI 3.1.'},
-    pagination: {title: 'Следующая страница', code: 'const url = new URL(\n  "https://cloudfinops.ru/api/v1/products"\n);\nurl.searchParams.set("limit", "50");\nurl.searchParams.set(\n  "cursor", result.pagination.nextCursor\n);\n\nconst next = await fetch(url);\nconst page = await next.json();', note: 'Передавайте cursor без изменений: он уже содержит фильтры и версию каталога.'},
-    errors: {title: '400 · Invalid request', code: pretty({error: {code: 'invalid_parameter', message: 'Invalid request', details: [{path: '/resource/vcpu', code: 'too_small'}]}}), note: 'HTTP-статус относится к запросу целиком, а статус quote описывает результат расчёта для одного провайдера.'},
+    authentication: {title: 'Заголовки ответа', code: 'HTTP/1.1 200 OK\nContent-Type: application/json\nRequest-Id: 9c…\nAccess-Control-Allow-Origin: *\nCache-Control: public, max-age=300', note: 'Ответы каталога кэшируются, а результаты расчётов возвращаются с заголовком `Cache-Control: no-store`.'},
+    models: {title: 'Product · сокращённый пример', code: pretty(product), note: 'Полный набор полей `Product` и `Price` описан в схеме OpenAPI 3.1.'},
+    pagination: {title: 'Следующая страница', code: 'const url = new URL(\n  "https://cloudfinops.ru/api/v1/products"\n);\nurl.searchParams.set("limit", "50");\nurl.searchParams.set(\n  "cursor", result.pagination.nextCursor\n);\n\nconst next = await fetch(url);\nconst page = await next.json();', note: 'Передавайте `cursor` без изменений: он уже содержит фильтры и версию каталога.'},
+    errors: {title: '400 · Invalid request', code: pretty({error: {code: 'invalid_parameter', message: 'Invalid request', details: [{path: '/resource/vcpu', code: 'too_small'}]}}), note: 'HTTP-статус относится к запросу целиком, а статус `quote` описывает результат расчёта для одного провайдера.'},
   };
   const example = examples[section];
   if (!example) return null;
-  return <><div className={styles.exampleCaption}><span>Справочник</span><span>v1</span></div><div className={styles.codePanel}><div className={styles.codeToolbar}><span>{example.title}</span><CopyButton value={example.code}/></div><Code value={example.code}/></div><p className={styles.exampleNote}>{example.note}</p></>;
+  return <><div className={styles.exampleCaption}><span>Пример</span></div><div className={styles.codePanel}><div className={styles.codeToolbar}><span>{example.title}</span><CopyButton value={example.code}/></div><Code value={example.code}/></div><p className={styles.exampleNote}>{rich(example.note)}</p></>;
 }

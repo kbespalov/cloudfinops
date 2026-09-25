@@ -3,6 +3,7 @@ import type {FormEvent} from 'react';
 import {OPERATOR_LABELS, type AttributeId, type AttributeOperator, type CategoryAttributes} from '@/lib/public-api/attribute-registry';
 import {emptyAttributeDraft, type AttributeDrafts} from './attribute-form';
 import styles from './ApiPage.module.css';
+import {typograph} from './doc-text';
 
 export function AttributeFields({category, drafts, onChange}: {category?: CategoryAttributes; drafts: AttributeDrafts; onChange: (value: AttributeDrafts) => void}) {
   if (!category) return <p className={styles.filterHint}>Выберите категорию, чтобы добавить фильтры по её характеристикам.</p>;
@@ -39,9 +40,9 @@ export function AttributeFields({category, drafts, onChange}: {category?: Catego
 }
 
 export function AttributeReference({categories}: {categories: CategoryAttributes[]}) {
-  return <section className={styles.docSection}><h2>Доступные характеристики</h2><p>Список получен из того же реестра, который проверяет запросы API. Значения и заполненность относятся ко всей категории, до применения других фильтров.</p>
+  return <section className={styles.docSection}><h2>Доступные характеристики</h2><p>{typograph('Список получен из того же реестра, который проверяет запросы API. Значения и заполненность относятся ко всей категории, до применения других фильтров.')}</p>
     {categories.map(category => <details key={category.category} className={styles.attributeReference}><summary>{category.title} · {category.productCount} SKU</summary>
-      {category.attributes.map(def => <div className={styles.parameter} key={def.id}><div className={styles.parameterHead}><code>{def.id}</code><span>{def.type}{def.unit ? ' · ' + def.unit : ''}</span></div><p>{def.label}. {def.description}</p><small>{def.operators.map(op => OPERATOR_LABELS[op]).join(' · ')}. Заполнено: {def.knownCount} / {category.productCount}.</small>
+      {category.attributes.map(def => <div className={styles.parameter} key={def.id}><div className={styles.parameterHead}><code>{def.id}</code><span>{def.type}{def.unit ? ' · ' + def.unit : ''}</span></div><p>{typograph(`${def.label}. ${def.description}`)}</p><small>{def.operators.map(op => OPERATOR_LABELS[op]).join(' · ')}. Заполнено: {def.knownCount} / {category.productCount}.</small>
         {def.allowedValues && <p>Допустимые значения: <code>{def.allowedValues.join(', ')}</code>.</p>}
         <p>Значения в каталоге: {def.values.length ? def.values.map(v => v.label).join(', ') : 'Нет данных'}.</p>
       </div>)}

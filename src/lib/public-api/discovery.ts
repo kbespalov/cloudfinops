@@ -1,4 +1,5 @@
 import {endpoints, guides} from '@/components/api/api-reference';
+import {plainText} from './doc-typography';
 
 export const SITE_URL = 'https://cloudfinops.ru';
 export const API_URL = `${SITE_URL}/api/v1`;
@@ -22,11 +23,11 @@ export const DOCUMENTATION_PAGES = [
   ...guides.map(g => ({section: g.id, title: g.id === 'overview' ? 'CloudFinOps Public API — каталог облаков и MCP' : g.title,
     description: guideDescriptions[g.id], path: documentationPath(g.id)})),
   ...endpoints.map(e => ({section: e.id, title: `${e.title} — ${e.method} ${e.path}`,
-    description: e.description, path: documentationPath(e.id)})),
+    description: plainText(e.description), path: documentationPath(e.id)})),
   {section: 'mcp-connect', title: 'MCP-сервер CloudFinOps — тарифы облаков для AI-ассистентов',
     description: 'Подключение CloudFinOps MCP по Streamable HTTP: пять инструментов для поиска облачных SKU, изучения тарифов и расчёта стоимости VM и GPU без API-ключа.', path: '/api/mcp'},
   ...endpoints.filter(e => e.tool).map(e => ({section: `mcp-${e.id}`, title: `${e.tool} — инструмент CloudFinOps MCP`,
-    description: `MCP ${e.tool}: ${e.description}`, path: documentationPath(`mcp-${e.id}`)})),
+    description: `MCP ${e.tool}: ${plainText(e.description)}`, path: documentationPath(`mcp-${e.id}`)})),
 ];
 
 export function documentationPage(section: string) {
