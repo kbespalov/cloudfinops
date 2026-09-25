@@ -17,7 +17,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - cloudru.k8s-pdf
     dimensions:
@@ -61,7 +61,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-06-19'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - cloudru.k8s-pdf
     dimensions:
@@ -105,7 +105,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-06-19'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - cloudru.k8s-pdf
     dimensions:
@@ -149,7 +149,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-06-19'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - cloudru.k8s-pdf
     dimensions:
@@ -197,7 +197,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - cloudru.k8s-pdf
     - cloudru.k8s-docs
@@ -253,7 +253,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-06-19'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - cloudru.k8s-pdf
     - cloudru.k8s-docs
@@ -308,7 +308,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-06-19'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - cloudru.k8s-pdf
     - cloudru.k8s-docs
@@ -363,7 +363,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-06-19'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - cloudru.k8s-pdf
     - cloudru.k8s-docs

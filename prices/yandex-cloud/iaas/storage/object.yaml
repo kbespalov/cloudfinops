@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.object-storage
@@ -55,7 +55,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.object-storage
@@ -87,7 +87,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.object-storage
@@ -120,7 +120,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-17'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.object-storage
@@ -144,7 +144,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-17'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.object-storage
@@ -168,7 +168,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-17'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.object-storage
@@ -196,9 +196,10 @@ spec:
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: '2026-04-30'
-    checkedAt: '2026-07-19'
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
     sourceRefs:
+    - yc.billing-api
     - yc.object-storage
     dimensions:
       storageClass: standard
@@ -206,6 +207,7 @@ spec:
       nativeBillingStepRequests: 1000
       nativeAmountPerStep: '0.5692'
       freeTierRequestsMonth: 10000
+      yandexSkuId: dn2c17otu20ij2eu4k18
     pricing:
       rate:
         amount: '0.0005692'
@@ -223,9 +225,10 @@ spec:
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: '2026-04-30'
-    checkedAt: '2026-07-19'
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
     sourceRefs:
+    - yc.billing-api
     - yc.object-storage
     dimensions:
       storageClass: standard
@@ -233,6 +236,7 @@ spec:
       nativeBillingStepRequests: 10000
       nativeAmountPerStep: '0.46'
       freeTierRequestsMonth: 100000
+      yandexSkuId: dn2tsb3bn2sgk6tict7r
     pricing:
       rate:
         amount: '0.000046'
@@ -250,15 +254,17 @@ spec:
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: '2026-04-30'
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
     sourceRefs:
+    - yc.billing-api
     - yc.object-storage
     dimensions:
       storageClass: cold
       operation: PUT
       nativeBillingStepRequests: 1000
       nativeAmountPerStep: '1.39'
+      yandexSkuId: dn25qacc5r7akcmnejs0
     pricing:
       rate:
         amount: '0.00139'
@@ -273,15 +279,17 @@ spec:
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: '2026-04-30'
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
     sourceRefs:
+    - yc.billing-api
     - yc.object-storage
     dimensions:
       storageClass: cold
       operation: GET
       nativeBillingStepRequests: 10000
       nativeAmountPerStep: '1.15'
+      yandexSkuId: dn2auvpb9pkcfgvg5ej5
     pricing:
       rate:
         amount: '0.000115'
@@ -296,15 +304,17 @@ spec:
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: '2026-04-30'
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
     sourceRefs:
+    - yc.billing-api
     - yc.object-storage
     dimensions:
       storageClass: ice
       operation: PUT
       nativeBillingStepRequests: 1000
       nativeAmountPerStep: '2.79'
+      yandexSkuId: dn2i8mgfpk3844deotvd
     pricing:
       rate:
         amount: '0.00279'
@@ -319,15 +329,17 @@ spec:
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: '2026-04-30'
-    checkedAt: '2026-07-17'
+    effectiveFrom: '2026-05-01'
+    checkedAt: '2026-09-25'
     sourceRefs:
+    - yc.billing-api
     - yc.object-storage
     dimensions:
       storageClass: ice
       operation: GET
       nativeBillingStepRequests: 10000
       nativeAmountPerStep: '2.3'
+      yandexSkuId: dn2ms5j11g26d136reej
     pricing:
       rate:
         amount: '0.00023'

@@ -15,14 +15,14 @@ spec:
     pricingMode: fixed
     region: Россия
     effectiveFrom: '2026-08-01'
-    checkedAt: '2026-08-01'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - mws.all-prices
     - mws.kubernetes
     dimensions:
       sizingModel: cluster-fee
       nativeName: Базовый мастер
-      publishedMonth: 6325.62192
+      publishedMonth: 6325.56
       availability: zonal
       faultTolerant: false
       topology: zonal
@@ -32,7 +32,7 @@ spec:
       masterSize: small
     pricing:
       rate:
-        amount: '8.785586'
+        amount: '8.7855'
         currency: RUB
         unit:
           quantity: master
@@ -40,7 +40,7 @@ spec:
         vat: included
         byteBasis: not-applicable
       normalized:
-        amount: '8.785586'
+        amount: '8.7855'
         unit:
           currency: RUB
           quantity: master
@@ -59,14 +59,14 @@ spec:
     pricingMode: fixed
     region: Россия
     effectiveFrom: '2026-08-01'
-    checkedAt: '2026-08-01'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - mws.all-prices
     - mws.kubernetes
     dimensions:
       sizingModel: cluster-fee
       nativeName: Отказоустойчивый мастер
-      publishedMonth: 16610.9832
+      publishedMonth: 16610.976
       availability: regional
       faultTolerant: true
       topology: regional
@@ -76,7 +76,7 @@ spec:
       masterSize: small
     pricing:
       rate:
-        amount: '23.07081'
+        amount: '23.0708'
         currency: RUB
         unit:
           quantity: master
@@ -84,7 +84,7 @@ spec:
         vat: included
         byteBasis: not-applicable
       normalized:
-        amount: '23.07081'
+        amount: '23.0708'
         unit:
           currency: RUB
           quantity: master

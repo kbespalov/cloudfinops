@@ -18,7 +18,7 @@ spec:
     pricingMode: status-only
     region: Россия / ru-7
     effectiveFrom: null
-    checkedAt: '2026-07-20'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.fmc, selectel.fmc-payment, selectel.calculator]
     dimensions:
       serviceProduct: foundation-models-catalog

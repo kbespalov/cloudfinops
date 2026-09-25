@@ -47,6 +47,23 @@ spec:
     - storage.block.capacity
     - storage.image.capacity
     - storage.snapshot.capacity
+  - id: vk.flavors
+    title: Шаблоны конфигурации ВМ Cloud Servers
+    url: https://cloud.vk.ru/docs/ru/computing/iaas/concepts/vm/flavor
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - compute.ram
+    - compute.vcpu
+  - id: vk.disk-types
+    title: Диски блочного хранения Cloud Servers
+    url: https://cloud.vk.ru/docs/ru/computing/iaas/concepts/data-storage/disk-types
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - storage.block.capacity
   - id: vk.k8s-rules
     title: Тарификация Cloud Containers
     url: https://cloud.vk.com/docs/ru/kubernetes/k8s/tariffication

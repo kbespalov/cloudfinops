@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -49,7 +49,7 @@ spec:
     pricingMode: unit
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -76,6 +76,84 @@ spec:
           period: month
         formula: published 30-day rate
         vat: included
+  - sku: vk.disk.high-iops
+    name: Жесткий диск, High-IOPS SSD
+    meter: storage.block.capacity
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - vk.pricelist
+    - vk.disk-types
+    dimensions:
+      publishedPerMinute: 0.000358
+      diskType: high-iops
+      performanceTier: ssd
+      storageMedia: ssd
+      storageInterface: unknown
+      storageTopology: network
+    pricing:
+      rate:
+        amount: '15'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: month
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '15'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: month
+        formula: published 30-day rate
+        vat: included
+    notes: >
+      Сетевой SSD с повышенной скоростью. По описанию VK Cloud две копии
+      хранятся на одном сервере системы хранения: при отказе этого сервера
+      диски нужно переносить. Доступен в зонах MS1, GZ1, ME1 и PA2.
+  - sku: vk.disk.high-iops-ha
+    name: Жесткий диск, High-IOPS HA SSD
+    meter: storage.block.capacity
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-01-12'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - vk.pricelist
+    - vk.disk-types
+    dimensions:
+      publishedPerMinute: 0.000407
+      diskType: high-iops-ha
+      performanceTier: ssd
+      storageMedia: ssd
+      storageInterface: unknown
+      storageTopology: network
+    pricing:
+      rate:
+        amount: '18'
+        currency: RUB
+        unit:
+          quantity: GiB
+          period: month
+        vat: included
+        byteBasis: binary
+      normalized:
+        amount: '18'
+        unit:
+          currency: RUB
+          quantity: GiB
+          period: month
+        formula: published 30-day rate
+        vat: included
+    notes: >
+      Сетевой SSD с повышенной скоростью и двумя копиями на разных серверах
+      системы хранения. По описанию VK Cloud переключение при сбое занимает
+      от 30 секунд до 5 минут. Доступен только в зоне ME1.
   - sku: vk.disk.nvme
     name: Low Latency NVME
     meter: storage.block.capacity
@@ -83,7 +161,7 @@ spec:
     pricingMode: unit
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - vk.pricelist
     dimensions:
@@ -117,7 +195,7 @@ spec:
     pricingMode: unit
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - vk.pricelist
     - vk.iaas-rules
@@ -154,7 +232,7 @@ spec:
     pricingMode: unit
     region: Москва
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - vk.pricelist
     - vk.iaas-rules

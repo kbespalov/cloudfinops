@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.compute
@@ -51,7 +51,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.compute
@@ -87,7 +87,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.compute
@@ -123,7 +123,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.compute
@@ -166,7 +166,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-01-23'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.compute
@@ -207,7 +207,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.compute
@@ -246,7 +246,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.compute
@@ -288,7 +288,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       gpuModel: NVIDIA A100
@@ -322,7 +322,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       gpuModel: NVIDIA V100
@@ -356,7 +356,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       gpuModel: NVIDIA V100
@@ -390,7 +390,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       gpuModel: NVIDIA T4
@@ -426,8 +426,8 @@ spec:
     status: available
     pricingMode: unit
     region: Россия
-    effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    effectiveFrom: '2026-07-30'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       gpuModel: unknown
@@ -449,14 +449,14 @@ spec:
       serviceId: dn28okfvqh19eiue6l2m
     pricing:
       rate:
-        amount: '158.11'
+        amount: '21.09'
         currency: RUB
         unit: {quantity: GPU, period: hour}
         vat: included
         byteBasis: not-applicable
     notes: >
-      Прерываемый T4i: в Billing API ставка GPU совпадает с on-demand (скидки нет).
-      Только 1 GPU. Чип в прайсе не назван.
+      Прерываемый T4i (~13% от on-demand). Только 1 GPU. vCPU/RAM платформы
+      Ice Lake with T4i — по ставке on-demand (скидки нет). Чип в прайсе не назван.
   - sku: yc.gpu.gen2.preemptible
     name: Gen2 GPU, прерываемый
     meter: compute.gpu
@@ -464,7 +464,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       gpuModel: unknown
@@ -499,7 +499,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-01-23'
-    checkedAt: '2026-07-27'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.compute]
     dimensions:
       gpuModel: unknown

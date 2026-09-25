@@ -80,11 +80,11 @@ describe('GPU cross-validation', () => {
     }
   });
 
-  it('Selectel B300 stays 8_000_000 ₽/month dedicated', () => {
+  it('Selectel B300 stays 9_000_000 ₽/month dedicated', () => {
     const b300 = buildGpuFlavorPresets().find((p) => p.gpuModelMatch === 'B300')!;
     const result = quotePreset(b300, 'month');
     assert.equal(result.best?.provider, 'selectel');
-    assert.equal(result.best?.total, 8_000_000);
+    assert.equal(result.best?.total, 9_000_000);
   });
 
   it('composed quote parts always sum to total', () => {

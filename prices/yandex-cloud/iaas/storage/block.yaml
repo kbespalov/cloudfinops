@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.compute
@@ -43,7 +43,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.compute
@@ -71,7 +71,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.compute
@@ -100,7 +100,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - yc.billing-api
     - yc.compute
@@ -129,12 +129,14 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
+    - yc.billing-api
     - yc.compute
     dimensions:
       billingBasis: stored-size
       nativeName: Образ
+      yandexSkuId: dn2gnu9gs67vf056r8dj
     pricing:
       rate:
         amount: '0.0051'
@@ -160,12 +162,14 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
+    - yc.billing-api
     - yc.compute
     dimensions:
       billingBasis: stored-size
       nativeName: Снимок
+      yandexSkuId: dn2d7s257l01hsl9rc6d
     pricing:
       rate:
         amount: '0.0051'

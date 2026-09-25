@@ -23,7 +23,7 @@ spec:
     pricingMode: unit
     region: ru-central1
     effectiveFrom: '2026-08-01'
-    checkedAt: '2026-08-01'
+    checkedAt: '2026-09-25'
     sourceRefs: [mws.gpt-model-hub, mws.all-prices]
     dimensions:
       modelFamily: gpt-oss-120b
@@ -49,7 +49,7 @@ spec:
     pricingMode: unit
     region: ru-central1
     effectiveFrom: '2026-08-01'
-    checkedAt: '2026-08-01'
+    checkedAt: '2026-09-25'
     sourceRefs: [mws.gpt-model-hub, mws.all-prices]
     dimensions:
       modelFamily: gpt-oss-120b
@@ -75,7 +75,7 @@ spec:
     pricingMode: unit
     region: ru-central1
     effectiveFrom: '2026-08-01'
-    checkedAt: '2026-08-01'
+    checkedAt: '2026-09-25'
     sourceRefs: [mws.gpt-model-hub, mws.all-prices]
     dimensions:
       modelFamily: gemma-4-31b-it
@@ -101,7 +101,7 @@ spec:
     pricingMode: unit
     region: ru-central1
     effectiveFrom: '2026-08-01'
-    checkedAt: '2026-08-01'
+    checkedAt: '2026-09-25'
     sourceRefs: [mws.gpt-model-hub, mws.all-prices]
     dimensions:
       modelFamily: gemma-4-31b-it
@@ -127,7 +127,7 @@ spec:
     pricingMode: unit
     region: ru-central1
     effectiveFrom: '2026-08-01'
-    checkedAt: '2026-08-01'
+    checkedAt: '2026-09-25'
     sourceRefs: [mws.gpt-model-hub, mws.all-prices]
     dimensions:
       modelFamily: qwen3.6-35b-a3b
@@ -154,7 +154,7 @@ spec:
     pricingMode: unit
     region: ru-central1
     effectiveFrom: '2026-08-01'
-    checkedAt: '2026-08-01'
+    checkedAt: '2026-09-25'
     sourceRefs: [mws.gpt-model-hub, mws.all-prices]
     dimensions:
       modelFamily: qwen3.6-35b-a3b
@@ -289,7 +289,7 @@ spec:
     pricingMode: unit
     region: ru-central1
     effectiveFrom: '2026-08-01'
-    checkedAt: '2026-08-01'
+    checkedAt: '2026-09-25'
     sourceRefs: [mws.gpt-model-hub, mws.all-prices]
     dimensions:
       modelFamily: glm-5.2
@@ -316,7 +316,7 @@ spec:
     pricingMode: unit
     region: ru-central1
     effectiveFrom: '2026-08-01'
-    checkedAt: '2026-08-01'
+    checkedAt: '2026-09-25'
     sourceRefs: [mws.gpt-model-hub, mws.all-prices]
     dimensions:
       modelFamily: glm-5.2
@@ -336,6 +336,60 @@ spec:
         unit: {quantity: 1M-token, period: usage}
         vat: included
         byteBasis: not-applicable
+  - sku: mws.ai.glm-5.3.input
+    name: glm-5.3 · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: '2026-09-04'
+    checkedAt: '2026-09-25'
+    sourceRefs: [mws.gpt-model-hub, mws.all-prices, mws.gpt-models, mws.news-glm-5-3]
+    dimensions:
+      modelFamily: glm-5.3
+      modelId: glm-5.3
+      openWeights: true
+      modelCapability: text-generation
+      parameterCountB: 753  # total params, billions
+      activeParameterCountB: 40  # MoE active params, billions
+      inferenceScope: local
+      serviceProduct: gpt-model-hub
+      tokenDirection: input
+    notes: GLM 5.3 в GPT Model Hub. Цена за 1 млн токенов взята из публичного прайса MWS.
+    pricing:
+      rate:
+        amount: '178.12'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: mws.ai.glm-5.3.output
+    name: glm-5.3 · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: ru-central1
+    effectiveFrom: '2026-09-04'
+    checkedAt: '2026-09-25'
+    sourceRefs: [mws.gpt-model-hub, mws.all-prices, mws.gpt-models, mws.news-glm-5-3]
+    dimensions:
+      modelFamily: glm-5.3
+      modelId: glm-5.3
+      openWeights: true
+      modelCapability: text-generation
+      parameterCountB: 753  # total params, billions
+      activeParameterCountB: 40  # MoE active params, billions
+      inferenceScope: local
+      serviceProduct: gpt-model-hub
+      tokenDirection: output
+    notes: GLM 5.3 в GPT Model Hub. Цена за 1 млн токенов взята из публичного прайса MWS.
+    pricing:
+      rate:
+        amount: '746.64'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
   - sku: mws.ai.kimi-k2.6.input
     name: kimi-k2.6 · input
     meter: ai.inference.tokens.input
@@ -343,7 +397,7 @@ spec:
     pricingMode: unit
     region: ru-central1
     effectiveFrom: '2026-08-01'
-    checkedAt: '2026-08-01'
+    checkedAt: '2026-09-25'
     sourceRefs: [mws.gpt-model-hub, mws.all-prices]
     dimensions:
       modelFamily: kimi-k2.6
@@ -370,7 +424,7 @@ spec:
     pricingMode: unit
     region: ru-central1
     effectiveFrom: '2026-08-01'
-    checkedAt: '2026-08-01'
+    checkedAt: '2026-09-25'
     sourceRefs: [mws.gpt-model-hub, mws.all-prices]
     dimensions:
       modelFamily: kimi-k2.6
@@ -397,7 +451,7 @@ spec:
     pricingMode: unit
     region: ru-central1
     effectiveFrom: '2026-08-01'
-    checkedAt: '2026-08-01'
+    checkedAt: '2026-09-25'
     sourceRefs: [mws.gpt-model-hub]
     dimensions:
       modelFamily: bge-m3
@@ -422,7 +476,7 @@ spec:
     pricingMode: unit
     region: ru-central1
     effectiveFrom: '2026-08-01'
-    checkedAt: '2026-08-01'
+    checkedAt: '2026-09-25'
     sourceRefs: [mws.gpt-model-hub]
     dimensions:
       modelFamily: bge-multilingual-gemma2

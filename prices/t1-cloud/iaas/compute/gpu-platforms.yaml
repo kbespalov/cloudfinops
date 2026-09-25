@@ -1,0 +1,407 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: t1-cloud
+  layer: iaas
+  service: compute
+  category: iaas.compute.general
+  title: GPU platform host compute
+spec:
+  # vCPU/RAM GPU-инстансов (группа GPUaaS в тарифном приложении) — отдельные ставки
+  # по сериям g1–g7. dimensions.gpuHostOnly — не участвуют в котировках обычных ВМ.
+  meters:
+  - sku: t1.compute.g1.vcpu
+    name: AMD EPYC 9004 (GPU H100 PCIe), 100% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: ru-central1-a
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - t1.rates-pdf-2026-09-14
+    dimensions:
+      family: GPU
+      series: g1
+      published30Days: 894.13
+      cpuPlatformFamily: amd-zen4
+      cpuPlatformNative: AMD EPYC 9004 3.85 GHz
+      gpuPlatformId: g1
+      gpuHostOnly: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.02069745'
+        currency: RUB
+        unit:
+          quantity: vCPU
+          period: minute
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '1.5150533'
+        unit:
+          currency: RUB
+          quantity: vCPU
+          period: hour
+        formula: 0.02069745 × 60 × 1.22 VAT
+        vat: included
+    notes: Ядра хоста GPU-инстанса серии g1 (NVIDIA H100 80GB PCIe), не для обычных ВМ.
+  - sku: t1.compute.g1.ram
+    name: AMD EPYC 9004 (GPU H100 PCIe), RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: ru-central1-a
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - t1.rates-pdf-2026-09-14
+    dimensions:
+      family: GPU
+      series: g1
+      published30Days: 178.31
+      cpuPlatformFamily: amd-zen4
+      cpuPlatformNative: AMD EPYC 9004 3.85 GHz
+      gpuPlatformId: g1
+      gpuHostOnly: true
+      purchaseModel: on-demand
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.00412755'
+        currency: RUB
+        unit:
+          quantity: GiB-RAM
+          period: minute
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '0.3021367'
+        unit:
+          currency: RUB
+          quantity: GiB-RAM
+          period: hour
+        formula: 0.00412755 × 60 × 1.22 VAT
+        vat: included
+    notes: Память хоста GPU-инстанса серии g1 (NVIDIA H100 80GB PCIe), не для обычных ВМ.
+  - sku: t1.compute.g2.vcpu
+    name: Intel Cascade Lake (GPU A100 PCIe), 100% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - t1.rates-pdf-2026-09-14
+    dimensions:
+      family: GPU
+      series: g2
+      published30Days: 600.00
+      cpuPlatformFamily: intel-cascade-lake
+      cpuPlatformNative: Intel Cascade Lake 3.1 GHz
+      gpuPlatformId: g2
+      gpuHostOnly: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.01388889'
+        currency: RUB
+        unit:
+          quantity: vCPU
+          period: minute
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '1.0166667'
+        unit:
+          currency: RUB
+          quantity: vCPU
+          period: hour
+        formula: 0.01388889 × 60 × 1.22 VAT
+        vat: included
+    notes: Ядра хоста GPU-инстанса серии g2 (NVIDIA A100 40GB PCIe), не для обычных ВМ.
+  - sku: t1.compute.g2.ram
+    name: Intel Cascade Lake (GPU A100 PCIe), RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - t1.rates-pdf-2026-09-14
+    dimensions:
+      family: GPU
+      series: g2
+      published30Days: 178.31
+      cpuPlatformFamily: intel-cascade-lake
+      cpuPlatformNative: Intel Cascade Lake 3.1 GHz
+      gpuPlatformId: g2
+      gpuHostOnly: true
+      purchaseModel: on-demand
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.00412755'
+        currency: RUB
+        unit:
+          quantity: GiB-RAM
+          period: minute
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '0.3021367'
+        unit:
+          currency: RUB
+          quantity: GiB-RAM
+          period: hour
+        formula: 0.00412755 × 60 × 1.22 VAT
+        vat: included
+    notes: Память хоста GPU-инстанса серии g2 (NVIDIA A100 40GB PCIe), не для обычных ВМ.
+  - sku: t1.compute.g3.vcpu
+    name: Intel Sapphire Rapids (GPU H100 SXM5), 100% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: ru-central2-a
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - t1.rates-pdf-2026-09-14
+    dimensions:
+      family: GPU
+      series: g3
+      published30Days: 867.31
+      cpuPlatformFamily: intel-sapphire-rapids
+      cpuPlatformNative: Intel Sapphire Rapids 2.0 GHz
+      gpuPlatformId: g3
+      gpuHostOnly: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.02007662'
+        currency: RUB
+        unit:
+          quantity: vCPU
+          period: minute
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '1.4696086'
+        unit:
+          currency: RUB
+          quantity: vCPU
+          period: hour
+        formula: 0.02007662 × 60 × 1.22 VAT
+        vat: included
+    notes: Ядра хоста GPU-инстанса серии g3 (NVIDIA H100 80GB SXM5), не для обычных ВМ.
+  - sku: t1.compute.g3.ram
+    name: Intel Sapphire Rapids (GPU H100 SXM5), RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: ru-central2-a
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - t1.rates-pdf-2026-09-14
+    dimensions:
+      family: GPU
+      series: g3
+      published30Days: 178.31
+      cpuPlatformFamily: intel-sapphire-rapids
+      cpuPlatformNative: Intel Sapphire Rapids 2.0 GHz
+      gpuPlatformId: g3
+      gpuHostOnly: true
+      purchaseModel: on-demand
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.00412755'
+        currency: RUB
+        unit:
+          quantity: GiB-RAM
+          period: minute
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '0.3021367'
+        unit:
+          currency: RUB
+          quantity: GiB-RAM
+          period: hour
+        formula: 0.00412755 × 60 × 1.22 VAT
+        vat: included
+    notes: Память хоста GPU-инстанса серии g3 (NVIDIA H100 80GB SXM5), не для обычных ВМ.
+  - sku: t1.compute.g6.vcpu
+    name: AMD EPYC 9004 (GPU L40S), 100% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: ru-central2-a
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - t1.rates-pdf-2026-09-14
+    dimensions:
+      family: GPU
+      series: g6
+      published30Days: 894.13
+      cpuPlatformFamily: amd-zen4
+      cpuPlatformNative: AMD EPYC 9004 3.85 GHz
+      gpuPlatformId: g6
+      gpuHostOnly: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.02069745'
+        currency: RUB
+        unit:
+          quantity: vCPU
+          period: minute
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '1.5150533'
+        unit:
+          currency: RUB
+          quantity: vCPU
+          period: hour
+        formula: 0.02069745 × 60 × 1.22 VAT
+        vat: included
+    notes: Ядра хоста GPU-инстанса серии g6 (NVIDIA L40S 48GB PCIe), не для обычных ВМ.
+  - sku: t1.compute.g6.ram
+    name: AMD EPYC 9004 (GPU L40S), RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: ru-central2-a
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - t1.rates-pdf-2026-09-14
+    dimensions:
+      family: GPU
+      series: g6
+      published30Days: 178.31
+      cpuPlatformFamily: amd-zen4
+      cpuPlatformNative: AMD EPYC 9004 3.85 GHz
+      gpuPlatformId: g6
+      gpuHostOnly: true
+      purchaseModel: on-demand
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.00412755'
+        currency: RUB
+        unit:
+          quantity: GiB-RAM
+          period: minute
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '0.3021367'
+        unit:
+          currency: RUB
+          quantity: GiB-RAM
+          period: hour
+        formula: 0.00412755 × 60 × 1.22 VAT
+        vat: included
+    notes: Память хоста GPU-инстанса серии g6 (NVIDIA L40S 48GB PCIe), не для обычных ВМ.
+  - sku: t1.compute.g7.vcpu
+    name: Intel Sapphire Rapids (GPU H200), 100% vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: ru-central2-a
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - t1.rates-pdf-2026-09-14
+    dimensions:
+      family: GPU
+      series: g7
+      published30Days: 926.80
+      cpuPlatformFamily: intel-sapphire-rapids
+      cpuPlatformNative: Intel Sapphire Rapids 2.8 GHz
+      gpuPlatformId: g7
+      gpuHostOnly: true
+      guaranteedVcpuShare: 100%
+      purchaseModel: on-demand
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.02145370'
+        currency: RUB
+        unit:
+          quantity: vCPU
+          period: minute
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '1.5704108'
+        unit:
+          currency: RUB
+          quantity: vCPU
+          period: hour
+        formula: 0.02145370 × 60 × 1.22 VAT
+        vat: included
+    notes: Ядра хоста GPU-инстанса серии g7 (NVIDIA H200 141GB SXM), не для обычных ВМ.
+  - sku: t1.compute.g7.ram
+    name: Intel Sapphire Rapids (GPU H200), RAM
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: ru-central2-a
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - t1.rates-pdf-2026-09-14
+    dimensions:
+      family: GPU
+      series: g7
+      published30Days: 178.31
+      cpuPlatformFamily: intel-sapphire-rapids
+      cpuPlatformNative: Intel Sapphire Rapids 2.8 GHz
+      gpuPlatformId: g7
+      gpuHostOnly: true
+      purchaseModel: on-demand
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.00412755'
+        currency: RUB
+        unit:
+          quantity: GiB-RAM
+          period: minute
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '0.3021367'
+        unit:
+          currency: RUB
+          quantity: GiB-RAM
+          period: hour
+        formula: 0.00412755 × 60 × 1.22 VAT
+        vat: included
+    notes: Память хоста GPU-инстанса серии g7 (NVIDIA H200 141GB SXM), не для обычных ВМ.

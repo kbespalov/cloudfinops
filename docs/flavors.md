@@ -4,7 +4,7 @@
 Нужна, чтобы калькулятор и чат не «придумывали» цены на формы, которые нельзя заказать из публичного self-serve каталога.
 
 > GPU, bare metal / HaaS и выделенные гипервизоры — вне этой таблицы (см. GPU price books).  
-> Дата сверки: 2026-09-10 (MWS base/general). Остальные провайдеры — 2026-07-28. При обновлении доков — править YAML `dimensions` и этот файл.
+> Дата сверки: 25 сентября 2026. В каталоге Yandex Cloud появились Zen 4 и Broadwell; базовая линейка MWS сверена 10 сентября 2026. Остальные провайдеры — 28 июля 2026, кроме новых высокочастотных процессоров VK Cloud. Если меняете описание, поправьте и поля в YAML.
 
 ## Поля в каталоге (`dimensions`)
 
@@ -28,8 +28,8 @@
 | **VK Cloud** | envelope (STD2/STD3) | ~1–2 / 2–4 | **16 / 64** | Platform hard: **32 / 1024**; >16/64 — поддержка |
 | **Yandex Cloud** Ice Lake (`standard-v3`) | envelope + share rules | 2 / 1 (доля ≥20%) | **96 / 640** (100%) | RAM ≤16 GiB/ядро; доля 20/50% → только 2\|4 vCPU, ≤4 GiB/ядро |
 | **Yandex Cloud** Cascade Lake (`standard-v2`) | envelope + share rules | 2 / 0.5 (5%) | **80 / 1280** (100%) | Доля 5% → ≤2 GiB/ядро; 20/50% → ≤4 GiB/ядро, 2\|4 vCPU |
-| **Yandex Cloud** *(сводка chat/tool)* | union envelopes | 2 / 0.5 | **96 / 1280** *(не форма)* | max = max(Ice vCPU, Cascade RAM); пара **96×1280 не orderable** |
-| **Yandex Cloud** Zen 4 (`standard-v4a`) | docs only* | 2 / 1 | **288 / 1792** | *В каталоге unit SKU пока Ice/Cascade; Windows ≤224 vCPU |
+| **Yandex Cloud** *(сводка chat/tool)* | union envelopes | 2 / 0.5 | **288 / 1792** *(потолок Zen 4)* | Это потолок платформы Zen 4, а не одна конфигурация для Ice Lake или Cascade Lake |
+| **Yandex Cloud** Zen 4 (`standard-v4a`) | envelope + share rules | 2 / 1 | **288 / 1792** (100%) | Ставки vCPU и памяти есть в каталоге. При 256 и 288 vCPU — не больше 4 ГиБ памяти на ядро. Для Windows максимум 224 vCPU |
 | **Cloud.ru** (Evolution) | exact flavors + envelope | **1 / 1** | **32 / 128** (консоль self-serve) | AZ-зависимо: где-то 32/64; прайс знает до 64/320, но в UI часто недоступно |
 | **Selectel** | envelope (Standard dedicated) | **2 / 4** | **32 / 256** (фиксированные SL2 / docs fixed) | Docs произвольные ru-6: **232 / 1200** → `platformMax*`; Shared 1/0.5 в каталоге unit не котируем; пул-зависимо |
 | **T1 Cloud** | envelope (flavor grid) | **2 / 4** (`*.large.*`) | **64 / 640** (консоль 2026-07) | Naming/API допускают выше (напр. a5.16xlarge.14 = 896 GiB, GPU до 224 vCPU); для quote — то, что реально выбирается в UI |
@@ -51,7 +51,7 @@
 - Доли &lt;100%: только **2 или 4** vCPU; RAM/ядро зависит от доли (уже в `vcpu-share.ts`)
 - Ice Lake 100%: до **96 vCPU / 640 GiB**, ≤16 GiB/ядро
 - Cascade Lake 100%: до **80 vCPU / 1280 GiB**, ≤16 GiB/ядро
-- Zen 4: до **288 / 1792** (в каталоге unit SKU пока нет)
+- Zen 4 (`standard-v4a`): до **288 vCPU и 1792 ГиБ**, не больше 8 ГиБ на ядро; при 256 и 288 vCPU — не больше 4 ГиБ на ядро. Ставки vCPU и памяти есть в каталоге.
 - YAML: `prices/yandex-cloud/iaas/compute/general.yaml`
 
 ### Cloud.ru (Сбер / Evolution Compute)

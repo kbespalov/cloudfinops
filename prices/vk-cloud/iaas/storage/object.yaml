@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-msk
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - vk.pricelist
     - vk.s3-rules
@@ -24,7 +24,7 @@ spec:
       storageClassNative: Hotbox
       verificationStatus: verified
       verificationMethod: official-pricelist
-      verifiedAt: '2026-07-13'
+      verifiedAt: '2026-09-25'
       vatRatePercent: 22
       nativeBillingPeriodDays: 30
       nativeMinuteAmount: '0.000053'
@@ -55,7 +55,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - vk.pricelist
     - vk.s3-rules
@@ -93,7 +93,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-msk
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [vk.s3-rules]
     dimensions:
       storageClass: standard
@@ -116,7 +116,7 @@ spec:
     pricingMode: unit
     region: Москва / ru-msk
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [vk.s3-rules]
     dimensions:
       storageClass: standard
@@ -139,7 +139,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [vk.s3-rules]
     dimensions:
       storageClass: cold
@@ -162,7 +162,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-01-12'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [vk.s3-rules]
     dimensions:
       storageClass: cold

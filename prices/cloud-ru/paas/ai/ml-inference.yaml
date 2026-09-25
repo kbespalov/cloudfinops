@@ -19,7 +19,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-20'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.ml-inference]
     dimensions:
       serviceProduct: ml-inference
@@ -40,7 +40,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-20'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.ml-inference]
     dimensions:
       serviceProduct: ml-inference
@@ -67,7 +67,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-20'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.ml-inference]
     dimensions:
       serviceProduct: ml-inference
@@ -91,7 +91,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-20'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.ml-inference]
     dimensions:
       serviceProduct: ml-inference
@@ -115,7 +115,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-20'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.ml-inference]
     dimensions:
       serviceProduct: ml-inference
@@ -139,7 +139,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-20'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.ml-inference]
     dimensions:
       serviceProduct: ml-inference
@@ -163,7 +163,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-20'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.ml-inference]
     dimensions:
       serviceProduct: ml-inference
@@ -189,7 +189,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-20'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.ml-inference]
     dimensions:
       serviceProduct: ml-inference
@@ -214,7 +214,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-20'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.ml-inference]
     dimensions:
       serviceProduct: ml-inference
@@ -239,7 +239,7 @@ spec:
     pricingMode: bundle
     region: Россия
     effectiveFrom: '2026-06-29'
-    checkedAt: '2026-07-20'
+    checkedAt: '2026-09-25'
     sourceRefs: [cloudru.ml-inference]
     dimensions:
       serviceProduct: ml-inference

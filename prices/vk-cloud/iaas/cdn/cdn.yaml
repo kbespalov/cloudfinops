@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-25'
+    checkedAt: '2026-09-25'
     sourceRefs: [vk.pricelist, vk.cdn, vk.cdn-rules]
     dimensions:
       trafficScope: cdn-cache-servers

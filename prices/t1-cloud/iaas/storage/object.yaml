@@ -15,9 +15,9 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     - t1.s3
     dimensions:
       calculated30Days: 1.649808
@@ -28,7 +28,7 @@ spec:
       copies: 3
       verificationStatus: verified
       verificationMethod: official-tariff-pdf
-      verifiedAt: '2026-07-13'
+      verifiedAt: '2026-09-25'
       vatRatePercent: 22
       storageClassNative: S3 single-zone
       nativeVat: excluded
@@ -57,9 +57,9 @@ spec:
     pricingMode: unit
     region: Москва / MZ1
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     - t1.s3
     dimensions:
       calculated30Days: 2.983392
@@ -71,7 +71,7 @@ spec:
       datacenterCount: 2
       verificationStatus: verified
       verificationMethod: official-tariff-pdf
-      verifiedAt: '2026-07-13'
+      verifiedAt: '2026-09-25'
       vatRatePercent: 22
       storageClassNative: S3 multi-zone
       nativeVat: excluded
@@ -93,3 +93,283 @@ spec:
         formula: 0.00006906 × 60 × 1.22 VAT
         vat: included
     notes: Репликация выполняется между двумя ЦОД; операции и скачивание тарифицируются отдельно.
+  - sku: t1.object-storage.single-zone.requests.put
+    name: Объектное хранилище · Standard · Single-zone · PUT
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - t1.rates-pdf-2026-09-14
+    - t1.s3
+    dimensions:
+      storageClass: standard
+      availability: zonal
+      topology: single-zone
+      operation: PUT
+      nativeBillingStepRequests: 1000
+      nativeAmountPerStep: '0.24'
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.00024'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.0002928'
+        unit: {currency: RUB, quantity: request, period: usage}
+        formula: 0.24 / 1000 × 1.22 VAT
+        vat: included
+    notes: >
+      В тарифе — 0,24 ₽ без НДС за 1 000 запросов Put/Post (однозонное S3), начисляется
+      помесячно; в каталоге — за 1 запрос. Бесплатного объёма в тарифе нет.
+  - sku: t1.object-storage.single-zone.requests.post
+    name: Объектное хранилище · Standard · Single-zone · POST
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - t1.rates-pdf-2026-09-14
+    - t1.s3
+    dimensions:
+      storageClass: standard
+      availability: zonal
+      topology: single-zone
+      operation: POST
+      nativeBillingStepRequests: 1000
+      nativeAmountPerStep: '0.24'
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.00024'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.0002928'
+        unit: {currency: RUB, quantity: request, period: usage}
+        formula: 0.24 / 1000 × 1.22 VAT
+        vat: included
+    notes: >
+      В тарифе — 0,24 ₽ без НДС за 1 000 запросов Put/Post (однозонное S3), начисляется
+      помесячно; в каталоге — за 1 запрос. Бесплатного объёма в тарифе нет.
+  - sku: t1.object-storage.single-zone.requests.get
+    name: Объектное хранилище · Standard · Single-zone · GET
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - t1.rates-pdf-2026-09-14
+    - t1.s3
+    dimensions:
+      storageClass: standard
+      availability: zonal
+      topology: single-zone
+      operation: GET
+      nativeBillingStepRequests: 10000
+      nativeAmountPerStep: '0.24'
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.000024'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.00002928'
+        unit: {currency: RUB, quantity: request, period: usage}
+        formula: 0.24 / 10000 × 1.22 VAT
+        vat: included
+    notes: >
+      В тарифе — 0,24 ₽ без НДС за 10 000 запросов Get/Head (однозонное S3), начисляется
+      помесячно; в каталоге — за 1 запрос. Бесплатного объёма в тарифе нет.
+  - sku: t1.object-storage.single-zone.requests.head
+    name: Объектное хранилище · Standard · Single-zone · HEAD
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - t1.rates-pdf-2026-09-14
+    - t1.s3
+    dimensions:
+      storageClass: standard
+      availability: zonal
+      topology: single-zone
+      operation: HEAD
+      nativeBillingStepRequests: 10000
+      nativeAmountPerStep: '0.24'
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.000024'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.00002928'
+        unit: {currency: RUB, quantity: request, period: usage}
+        formula: 0.24 / 10000 × 1.22 VAT
+        vat: included
+    notes: >
+      В тарифе — 0,24 ₽ без НДС за 10 000 запросов Get/Head (однозонное S3), начисляется
+      помесячно; в каталоге — за 1 запрос. Бесплатного объёма в тарифе нет.
+  - sku: t1.object-storage.multi-zone.requests.put
+    name: Объектное хранилище · Standard · Multi-zone · PUT
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - t1.rates-pdf-2026-09-14
+    - t1.s3
+    dimensions:
+      storageClass: standard
+      availability: multi-zone
+      topology: multi-zone
+      operation: PUT
+      nativeBillingStepRequests: 1000
+      nativeAmountPerStep: '0.24'
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.00024'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.0002928'
+        unit: {currency: RUB, quantity: request, period: usage}
+        formula: 0.24 / 1000 × 1.22 VAT
+        vat: included
+    notes: >
+      В тарифе — 0,24 ₽ без НДС за 1 000 запросов Put/Post (мультизональное S3), начисляется
+      помесячно; в каталоге — за 1 запрос. Бесплатного объёма в тарифе нет.
+  - sku: t1.object-storage.multi-zone.requests.post
+    name: Объектное хранилище · Standard · Multi-zone · POST
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - t1.rates-pdf-2026-09-14
+    - t1.s3
+    dimensions:
+      storageClass: standard
+      availability: multi-zone
+      topology: multi-zone
+      operation: POST
+      nativeBillingStepRequests: 1000
+      nativeAmountPerStep: '0.24'
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.00024'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.0002928'
+        unit: {currency: RUB, quantity: request, period: usage}
+        formula: 0.24 / 1000 × 1.22 VAT
+        vat: included
+    notes: >
+      В тарифе — 0,24 ₽ без НДС за 1 000 запросов Put/Post (мультизональное S3), начисляется
+      помесячно; в каталоге — за 1 запрос. Бесплатного объёма в тарифе нет.
+  - sku: t1.object-storage.multi-zone.requests.get
+    name: Объектное хранилище · Standard · Multi-zone · GET
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - t1.rates-pdf-2026-09-14
+    - t1.s3
+    dimensions:
+      storageClass: standard
+      availability: multi-zone
+      topology: multi-zone
+      operation: GET
+      nativeBillingStepRequests: 10000
+      nativeAmountPerStep: '0.24'
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.000024'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.00002928'
+        unit: {currency: RUB, quantity: request, period: usage}
+        formula: 0.24 / 10000 × 1.22 VAT
+        vat: included
+    notes: >
+      В тарифе — 0,24 ₽ без НДС за 10 000 запросов Get/Head (мультизональное S3), начисляется
+      помесячно; в каталоге — за 1 запрос. Бесплатного объёма в тарифе нет.
+  - sku: t1.object-storage.multi-zone.requests.head
+    name: Объектное хранилище · Standard · Multi-zone · HEAD
+    meter: storage.object.requests
+    status: available
+    pricingMode: unit
+    region: Москва
+    effectiveFrom: '2026-07-13'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - t1.rates-pdf-2026-09-14
+    - t1.s3
+    dimensions:
+      storageClass: standard
+      availability: multi-zone
+      topology: multi-zone
+      operation: HEAD
+      nativeBillingStepRequests: 10000
+      nativeAmountPerStep: '0.24'
+      vatRatePercent: 22
+      nativeVat: excluded
+    pricing:
+      rate:
+        amount: '0.000024'
+        currency: RUB
+        unit: {quantity: request, period: usage}
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.00002928'
+        unit: {currency: RUB, quantity: request, period: usage}
+        formula: 0.24 / 10000 × 1.22 VAT
+        vat: included
+    notes: >
+      В тарифе — 0,24 ₽ без НДС за 10 000 запросов Get/Head (мультизональное S3), начисляется
+      помесячно; в каталоге — за 1 запрос. Бесплатного объёма в тарифе нет.

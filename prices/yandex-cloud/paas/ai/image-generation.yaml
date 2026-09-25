@@ -19,7 +19,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.ai-studio]
     dimensions:
       modelFamily: Alice AI ART
@@ -43,7 +43,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.ai-studio]
     dimensions:
       modelFamily: YandexART

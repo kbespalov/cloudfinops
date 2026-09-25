@@ -15,8 +15,8 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-25'
-    sourceRefs: [t1.rates-pdf-2026-07-13, t1.rates, t1.cdn]
+    checkedAt: '2026-09-25'
+    sourceRefs: [t1.rates-pdf-2026-09-14, t1.rates, t1.cdn]
     dimensions:
       coverage: default
       trafficScope: cdn-to-client
@@ -26,7 +26,7 @@ spec:
       vatRatePercent: 22
       nativeVat: excluded
       comparabilityClass: egress-payg
-      sourceDocument: Prilozhenie_1_Tarifnoe_prilozhenie_08_07_2026
+      sourceDocument: Prilozhenie_1_Tarifnoe_prilozhenie_07.09.2026
     pricing:
       rate:
         amount: '1.00'
@@ -43,7 +43,7 @@ spec:
         formula: 1.00 × 1.22 VAT
         vat: included
     notes: >
-      В тарифном приложении T1 (08.07.2026, с 13.07.2026) — 1,00 ₽/ГБ без НДС.
+      В тарифном приложении T1 (07.09.2026, с 14.09.2026) — 1,00 ₽/ГБ без НДС.
       В каталоге для сравнения показаны 1,22 ₽/GiB с НДС 22% (норма каталога
       prices/index.yaml). Подключение сервиса и создание ресурсов бесплатны.
       Платите за исходящий трафик. Региональные ставки — отдельные SKU.
@@ -56,8 +56,8 @@ spec:
     pricingMode: unit
     region: Европа
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-25'
-    sourceRefs: [t1.rates-pdf-2026-07-13, t1.cdn]
+    checkedAt: '2026-09-25'
+    sourceRefs: [t1.rates-pdf-2026-09-14, t1.cdn]
     dimensions:
       coverage: europe
       trafficScope: cdn-to-client
@@ -67,7 +67,7 @@ spec:
       vatRatePercent: 22
       nativeVat: excluded
       comparabilityClass: egress-regional
-      sourceDocument: Prilozhenie_1_Tarifnoe_prilozhenie_08_07_2026
+      sourceDocument: Prilozhenie_1_Tarifnoe_prilozhenie_07.09.2026
     pricing:
       rate:
         amount: '1.42'
@@ -94,8 +94,8 @@ spec:
     pricingMode: unit
     region: Латинская Америка
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-25'
-    sourceRefs: [t1.rates-pdf-2026-07-13, t1.cdn]
+    checkedAt: '2026-09-25'
+    sourceRefs: [t1.rates-pdf-2026-09-14, t1.cdn]
     dimensions:
       coverage: latam
       trafficScope: cdn-to-client
@@ -105,7 +105,7 @@ spec:
       vatRatePercent: 22
       nativeVat: excluded
       comparabilityClass: egress-regional
-      sourceDocument: Prilozhenie_1_Tarifnoe_prilozhenie_08_07_2026
+      sourceDocument: Prilozhenie_1_Tarifnoe_prilozhenie_07.09.2026
     pricing:
       rate:
         amount: '2.58'
@@ -131,8 +131,8 @@ spec:
     pricingMode: unit
     region: Северная Америка
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-25'
-    sourceRefs: [t1.rates-pdf-2026-07-13, t1.cdn]
+    checkedAt: '2026-09-25'
+    sourceRefs: [t1.rates-pdf-2026-09-14, t1.cdn]
     dimensions:
       coverage: north-america
       trafficScope: cdn-to-client
@@ -142,7 +142,7 @@ spec:
       vatRatePercent: 22
       nativeVat: excluded
       comparabilityClass: egress-regional
-      sourceDocument: Prilozhenie_1_Tarifnoe_prilozhenie_08_07_2026
+      sourceDocument: Prilozhenie_1_Tarifnoe_prilozhenie_07.09.2026
     pricing:
       rate:
         amount: '2.58'
@@ -168,8 +168,8 @@ spec:
     pricingMode: unit
     region: Азия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-25'
-    sourceRefs: [t1.rates-pdf-2026-07-13, t1.cdn]
+    checkedAt: '2026-09-25'
+    sourceRefs: [t1.rates-pdf-2026-09-14, t1.cdn]
     dimensions:
       coverage: asia
       trafficScope: cdn-to-client
@@ -179,7 +179,7 @@ spec:
       vatRatePercent: 22
       nativeVat: excluded
       comparabilityClass: egress-regional
-      sourceDocument: Prilozhenie_1_Tarifnoe_prilozhenie_08_07_2026
+      sourceDocument: Prilozhenie_1_Tarifnoe_prilozhenie_07.09.2026
     pricing:
       rate:
         amount: '2.58'
@@ -205,8 +205,8 @@ spec:
     pricingMode: unit
     region: —
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-25'
-    sourceRefs: [t1.rates-pdf-2026-07-13, t1.cdn]
+    checkedAt: '2026-09-25'
+    sourceRefs: [t1.rates-pdf-2026-09-14, t1.cdn]
     dimensions:
       freeTierRequestsMonth: 100000000
       billablePackRequests: 10000
@@ -216,7 +216,7 @@ spec:
       vatRatePercent: 22
       nativeVat: excluded
       comparabilityClass: requests-overage
-      sourceDocument: Prilozhenie_1_Tarifnoe_prilozhenie_08_07_2026
+      sourceDocument: Prilozhenie_1_Tarifnoe_prilozhenie_07.09.2026
     pricing:
       rate:
         amount: '0.67'
@@ -244,8 +244,8 @@ spec:
     pricingMode: fixed
     region: —
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-25'
-    sourceRefs: [t1.rates-pdf-2026-07-13, t1.cdn]
+    checkedAt: '2026-09-25'
+    sourceRefs: [t1.rates-pdf-2026-09-14, t1.cdn]
     dimensions:
       nativeName: CDN. Экранирование (шилдинг)
       nativeUnit: шт / месяц
@@ -253,7 +253,7 @@ spec:
       vatRatePercent: 22
       nativeVat: excluded
       comparabilityClass: optional-addon
-      sourceDocument: Prilozhenie_1_Tarifnoe_prilozhenie_08_07_2026
+      sourceDocument: Prilozhenie_1_Tarifnoe_prilozhenie_07.09.2026
     pricing:
       rate:
         amount: '2916.67'
@@ -280,8 +280,8 @@ spec:
     pricingMode: fixed
     region: —
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-25'
-    sourceRefs: [t1.rates-pdf-2026-07-13, t1.cdn]
+    checkedAt: '2026-09-25'
+    sourceRefs: [t1.rates-pdf-2026-09-14, t1.cdn]
     dimensions:
       nativeName: CDN. Сырые логи
       nativeUnit: шт / месяц
@@ -289,7 +289,7 @@ spec:
       vatRatePercent: 22
       nativeVat: excluded
       comparabilityClass: optional-addon
-      sourceDocument: Prilozhenie_1_Tarifnoe_prilozhenie_08_07_2026
+      sourceDocument: Prilozhenie_1_Tarifnoe_prilozhenie_07.09.2026
     pricing:
       rate:
         amount: '4000'

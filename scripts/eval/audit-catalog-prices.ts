@@ -11,7 +11,7 @@ import {catalog, amountNumber} from '../../src/lib/catalog';
 
 type Issue = {level: 'critical' | 'warn'; code: string; id: string; detail: string};
 
-const today = new Date('2026-09-10'); // pin for reproducible CI; bump with catalog asOf
+const today = new Date('2026-09-25'); // pin for reproducible CI; bump with catalog asOf
 const issues: Issue[] = [];
 
 function add(level: Issue['level'], code: string, id: string, detail: string) {

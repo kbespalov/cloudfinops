@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: ru-central1
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [mws.all-prices, mws.vpc]
     dimensions: {sourceService: compute, trafficScope: public-internet}
     pricing:
@@ -34,7 +34,7 @@ spec:
     pricingMode: unit
     region: ru-central1
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [mws.all-prices, mws.vpc]
     dimensions: {sourceService: compute, trafficScope: public-internet}
     pricing:
@@ -51,7 +51,7 @@ spec:
     pricingMode: unit
     region: ru-central1
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [mws.all-prices, mws.object-storage]
     dimensions:
       sourceService: object-storage
@@ -71,7 +71,7 @@ spec:
     pricingMode: unit
     region: ru-central1
     effectiveFrom: null
-    checkedAt: '2026-07-26'
+    checkedAt: '2026-09-25'
     sourceRefs: [mws.all-prices, mws.vpc]
     dimensions:
       sourceService: vpc
@@ -94,7 +94,7 @@ spec:
     pricingMode: unit
     region: ru-central1
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [mws.all-prices, mws.vpc]
     dimensions:
       sourceService: vpc
@@ -113,7 +113,7 @@ spec:
     pricingMode: fixed
     region: ru-central1
     effectiveFrom: null
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [mws.all-prices, mws.vpc]
     dimensions:
       publishedMonth: 365.4144

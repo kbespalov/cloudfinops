@@ -15,9 +15,9 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     dimensions:
       family: General-purpose
       published30Days: 280.78
@@ -57,9 +57,9 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     dimensions:
       family: Advanced
       cpuPlatformFamily: intel-cascade-lake
@@ -99,9 +99,9 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     dimensions:
       family: Advanced
       cpuPlatformFamily: intel-ice-lake
@@ -141,9 +141,9 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     dimensions:
       family: General-purpose
       cpuPlatformFamily: intel-cascade-lake
@@ -182,9 +182,9 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     dimensions:
       family: General-purpose
       cpuPlatformFamily: amd-zen4
@@ -225,9 +225,9 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     dimensions:
       family: General-purpose
       cpuPlatformFamily: intel-ice-lake
@@ -266,9 +266,9 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-07-13'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs:
-    - t1.rates-pdf-2026-07-13
+    - t1.rates-pdf-2026-09-14
     dimensions:
       published30Days: 178.31
       vatRatePercent: 22
@@ -296,3 +296,88 @@ spec:
           period: hour
         formula: 0.00412755 × 60 × 1.22 VAT
         vat: included
+  - sku: t1.compute.b3.spot-vcpu
+    name: Intel Cascade Lake 3.0 GHz (b3 Spot), прерываемый, 1:3 vCPU
+    meter: compute.vcpu
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-09-14'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - t1.rates-pdf-2026-09-14
+    dimensions:
+      family: Spot
+      published30Days: 51.29
+      cpuPlatformFamily: intel-cascade-lake
+      cpuPlatformNative: Intel Cascade Lake 3.0 GHz
+      cpuAllocation: '1:3'
+      purchaseModel: preemptible
+      vatRatePercent: 22
+      nativeVat: excluded
+      minVcpu: 2
+      minRamGiB: 4
+      maxVcpu: 64
+      maxRamGiB: 640
+      platformMaxVcpu: 224
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '0.00118727'
+        currency: RUB
+        unit:
+          quantity: vCPU
+          period: minute
+        vat: excluded
+        byteBasis: not-applicable
+      normalized:
+        amount: '0.0869082'
+        unit:
+          currency: RUB
+          quantity: vCPU
+          period: hour
+        formula: 0.00118727 × 60 × 1.22 VAT
+        vat: included
+    notes: >
+      Прерываемые ВМ (семейство Spot) на серии b3. Переподписка и границы
+      конфигурации взяты по обычной серии b3 — отдельно для Spot не опубликованы.
+  - sku: t1.compute.ram.spot
+    name: RAM прерываемых ВМ (Spot)
+    meter: compute.ram
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: '2026-09-14'
+    checkedAt: '2026-09-25'
+    sourceRefs:
+    - t1.rates-pdf-2026-09-14
+    dimensions:
+      family: Spot
+      published30Days: 26.75
+      purchaseModel: preemptible
+      vatRatePercent: 22
+      nativeVat: excluded
+      minVcpu: 2
+      minRamGiB: 4
+      maxVcpu: 64
+      maxRamGiB: 640
+      platformMaxVcpu: 224
+      shapeMode: envelope
+    pricing:
+      rate:
+        amount: '0.00061921'
+        currency: RUB
+        unit:
+          quantity: GiB-RAM
+          period: minute
+        vat: excluded
+        byteBasis: binary
+      normalized:
+        amount: '0.0453262'
+        unit:
+          currency: RUB
+          quantity: GiB-RAM
+          period: hour
+        formula: 0.00061921 × 60 × 1.22 VAT
+        vat: included
+    notes: Память прерываемых ВМ (Spot); в тарифе — отдельная строка «RAM Spot».

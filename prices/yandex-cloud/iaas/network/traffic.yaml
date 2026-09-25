@@ -15,7 +15,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.vpc]
     dimensions:
       sourceService: compute
@@ -35,7 +35,7 @@ spec:
     pricingMode: tiered
     region: Россия
     effectiveFrom: '2026-05-01'
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.vpc]
     dimensions:
       sourceService: compute
@@ -77,7 +77,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: '2026-01-01'
-    checkedAt: '2026-07-17'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.object-storage]
     dimensions:
       sourceService: object-storage
@@ -98,7 +98,7 @@ spec:
     pricingMode: tiered
     region: Россия
     effectiveFrom: '2026-01-01'
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.billing-api, yc.object-storage]
     dimensions:
       sourceService: object-storage

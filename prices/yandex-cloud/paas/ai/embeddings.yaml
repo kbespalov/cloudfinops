@@ -19,7 +19,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.ai-studio]
     dimensions:
       modelFamily: Yandex Text Embeddings (doc)
@@ -45,7 +45,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.ai-studio]
     dimensions:
       modelFamily: Yandex Text Embeddings (query)
@@ -71,7 +71,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.ai-studio]
     dimensions:
       modelFamily: Yandex Text Embeddings v2 (doc)
@@ -97,7 +97,7 @@ spec:
     pricingMode: unit
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-07-19'
+    checkedAt: '2026-09-25'
     sourceRefs: [yc.ai-studio]
     dimensions:
       modelFamily: Yandex Text Embeddings v2 (query)

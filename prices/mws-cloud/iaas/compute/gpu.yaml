@@ -15,10 +15,12 @@ spec:
     pricingMode: status-only
     region: Россия
     effectiveFrom: null
-    checkedAt: '2026-09-10'
+    checkedAt: '2026-09-25'
     sourceRefs:
     - mws.gpu-docs
     - mws.vm-types
+    - mws.compute
+    - mws.all-prices
     dimensions:
       gpuModel: NVIDIA A100
       gpuCount: 1
@@ -34,8 +36,15 @@ spec:
         gpuCount: 2
         vcpu: 24
         ramGb: 256
+      futureRateFrom: '2026-10-12'
+      futureAmount: '216.0252'
+      futureRateUnit: GPU-hour
+      futurePublishedMonth: 155538.144
+      futureVcpuHourlyAmount: '0.9328'
+      futureRamHourlyAmount: '0.3074'
     notes: >
-      В документации MWS есть типы gpu-a100-1-12-128 (1×A100 80 ГБ, 12 vCPU, 128 ГБ)
-      и gpu-a100-2-24-256 (2×A100, 24 vCPU, 256 ГБ) на Intel Xeon Gold 6348
-      (Ice Lake). Публичной цены в тарифах Cloud Platform нет — условия нужно
-      уточнять у провайдера.
+      Типы gpu-a100-1-12-128 (1×A100 80 ГБ, 12 vCPU, 128 ГБ) и gpu-a100-2-24-256
+      (2×A100, 24 vCPU, 256 ГБ) на Intel Xeon Gold 6348 (Ice Lake), только сетевые
+      диски, зона ru-central1-a. GPU тарифицируется поштучно, vCPU и RAM таких ВМ —
+      по отдельным ставкам категории gpu-a100. GPU оплачивается всё время
+      существования ВМ: выключение останавливает списания только за vCPU и RAM.

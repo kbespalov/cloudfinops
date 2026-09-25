@@ -118,3 +118,22 @@ spec:
     covers:
     - ai.inference.tokens.input
     - ai.inference.tokens.output
+  - id: mws.gpt-models
+    title: Доступные модели GPT Model Hub
+    url: https://mws.ru/docs/cloud-platform/gpt/general/gpt-models.html
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - ai.inference.tokens.input
+    - ai.inference.tokens.output
+    - ai.embeddings.tokens
+  - id: mws.news-glm-5-3
+    title: MWS Cloud первой в России развернула GLM-5.3 (новость, 04.09.2026)
+    url: https://mws.ru/news/mws-cloud-pervoj-v-rossii-razvernula-peredovuyu-model-glm-5-3-v-sobstvennom-oblake/
+    type: html
+    access: public
+    priority: 3
+    covers:
+    - ai.inference.tokens.input
+    - ai.inference.tokens.output

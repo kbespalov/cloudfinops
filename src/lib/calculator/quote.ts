@@ -212,17 +212,27 @@ function platformKey(meter: CatalogMeter): string {
   return String(meter.dimensions.cpuPlatformFamily ?? '');
 }
 
+function workloadKey(meter: CatalogMeter): string {
+  return String(meter.dimensions.workloadFamily ?? '');
+}
+
 /**
  * RAM must be orderable together with the chosen vCPU: same region and, when both
  * expose a CPU platform, the same platform (providers price RAM per platform, so a
  * cross-platform mix is not a real SKU). RAM with no platform (billed uniformly)
  * is compatible with anything in the region.
+ *
+ * workloadFamily splits lines that share a CPU generation (Ice Lake vs Ice Lake
+ * Compute-Optimized). A meter that sets it only pairs with the same value.
  */
-function ramCompatible(vcpu: CatalogMeter, ram: CatalogMeter): boolean {
+export function ramCompatible(vcpu: CatalogMeter, ram: CatalogMeter): boolean {
   if (regionKey(vcpu) !== regionKey(ram)) return false;
   const vp = platformKey(vcpu);
   const rp = platformKey(ram);
   if (vp && rp && vp !== rp) return false;
+  const vw = workloadKey(vcpu);
+  const rw = workloadKey(ram);
+  if ((vw || rw) && vw !== rw) return false;
   return true;
 }
 

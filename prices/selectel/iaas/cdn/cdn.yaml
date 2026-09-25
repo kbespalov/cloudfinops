@@ -15,7 +15,7 @@ spec:
     pricingMode: fixed
     region: Все регионы
     effectiveFrom: null
-    checkedAt: '2026-07-25'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.cdn-payment, selectel.cdn]
     dimensions:
       includedOriginGiBMonth: 100
@@ -48,7 +48,7 @@ spec:
     pricingMode: unit
     region: Все регионы
     effectiveFrom: null
-    checkedAt: '2026-07-25'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.calculator, selectel.cdn-payment]
     priceProvenance: selectel-calculator-internal-x100
     dimensions:
@@ -90,7 +90,7 @@ spec:
     pricingMode: unit
     region: Все регионы
     effectiveFrom: null
-    checkedAt: '2026-07-25'
+    checkedAt: '2026-09-25'
     sourceRefs: [selectel.calculator, selectel.cdn]
     priceProvenance: selectel-calculator-internal-x100
     dimensions:

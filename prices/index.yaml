@@ -1,7 +1,7 @@
 apiVersion: cloudfinops.ru/v1alpha1
 kind: Catalog
 metadata:
-  asOf: '2026-09-10'
+  asOf: '2026-09-25'
   taxonomyVersion: 1.7.0
   analyticalModelVersion: 1.1.0
   normalization:
