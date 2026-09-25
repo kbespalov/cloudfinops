@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@gravity-ui/aikit": "^2.11.0",
+    "@gravity-ui/chartkit": "^8.3.0",
     "@gravity-ui/icons": "^2.20.0",
     "@gravity-ui/illustrations": "^2.1.1",
     "@gravity-ui/uikit": "^7.46.0",
