@@ -403,6 +403,25 @@ describe('matchFastPath', () => {
     assert.doesNotMatch(md!, /\+319%/);
     assert.doesNotMatch(md!, /к минимуму/);
     assert.match(md!, /не конкурирующие позиции/);
+    assert.doesNotMatch(md!, /Cached и reasoning/);
+  });
+
+  it('lists Selectel cached and reasoning beside the input/output pair', () => {
+    const md = formatAiTokenPairAnswer(
+      [
+        {provider: 'Selectel', name: 'GLM 5.3 Flash · input', month: 74.64},
+        {provider: 'Selectel', name: 'GLM 5.3 Flash · output', month: 248.55},
+        {provider: 'Selectel', name: 'GLM 5.3 Flash · cached', month: 7.46},
+        {provider: 'Selectel', name: 'GLM 5.3 Flash · reasoning', month: 248.55},
+      ],
+      'glm',
+    );
+    assert.ok(md);
+    assert.match(md!, /74/);
+    assert.match(md!, /248/);
+    assert.match(md!, /cached/);
+    assert.match(md!, /reasoning/);
+    assert.match(md!, /отдельные счётчики/);
   });
 
   it('ranks multi-provider AI tokens on 1M in + 1M out blend', () => {

@@ -69,6 +69,8 @@ export type KubernetesAvailabilityFacet = 'all' | 'zonal' | 'regional';
 /** AI inference token direction — prompt vs completion. */
 export type AiFacet = 'all' | 'input' | 'output';
 
+export type AiTokenDirection = 'input' | 'output' | 'cached' | 'reasoning';
+
 /** Quick family chips on the AI tab (brand / lineage, not exact SKU). */
 export type AiFamilyFacet =
   | 'all'
@@ -360,6 +362,8 @@ export function billingUnitLabel(meter: CatalogMeter): string {
     const direction = extractAiTokenDirection(meter);
     if (direction === 'input') return 'input · 1M ток.';
     if (direction === 'output') return 'output · 1M ток.';
+    if (direction === 'cached') return 'cached · 1M ток.';
+    if (direction === 'reasoning') return 'reasoning · 1M ток.';
     return '1M ток.';
   }
   if (isUsageMeter(meter)) {
@@ -999,12 +1003,13 @@ export function isOpenWeightAiMeter(meter: CatalogMeter): boolean {
   return meter.categoryKey === 'ai' && extractOpenWeights(meter) === true;
 }
 
-export function extractAiTokenDirection(meter: CatalogMeter): 'input' | 'output' | null {
-  const dims = meter.dimensions;
-  if (dims.tokenDirection === 'input' || meter.meter === 'ai.inference.tokens.input') return 'input';
-  if (dims.tokenDirection === 'output' || meter.meter === 'ai.inference.tokens.output') {
-    return 'output';
-  }
+export function extractAiTokenDirection(meter: CatalogMeter): AiTokenDirection | null {
+  const raw = meter.dimensions.tokenDirection;
+  if (raw === 'input' || raw === 'output' || raw === 'cached' || raw === 'reasoning') return raw;
+  if (meter.meter === 'ai.inference.tokens.input') return 'input';
+  if (meter.meter === 'ai.inference.tokens.output') return 'output';
+  if (meter.meter === 'ai.inference.tokens.cached') return 'cached';
+  if (meter.meter === 'ai.inference.tokens.reasoning') return 'reasoning';
   return null;
 }
 

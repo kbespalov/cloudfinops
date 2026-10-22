@@ -311,6 +311,15 @@ describe('recommendInferenceInfra', () => {
     }
   });
 
+  it('does not price Qwen3.8 Max with Selectel 27B or Flash Next', () => {
+    const result = recommendInferenceInfra({model: 'Qwen 3.8', maxConfigs: 1});
+    assert.equal(result.ok, true);
+    const labels =
+      result.hostedAlternative?.providersMatched.map((p) => `${p.label ?? ''} ${p.provider}`).join(' ') ??
+      '';
+    assert.doesNotMatch(labels, /27B|Flash Next|qwen3\.8-27b|flash-next/i);
+  });
+
   it('does not attach sibling DeepSeek SKUs as R1 hosted alternative', () => {
     const result = recommendInferenceInfra({model: 'DeepSeek R1', maxConfigs: 2});
     assert.equal(result.ok, true);

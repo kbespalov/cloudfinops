@@ -1364,7 +1364,16 @@ export function formatAiTokenPairAnswer(
     const explain =
       'Input и output — разные ставки одной модели (вход/выход инференса), не конкурирующие позиции. Стоимость запроса ≈ input×токены_входа + output×токены_выхода.';
 
-    return `**${title}** (₽ за 1M токенов, НДС вкл.)\n\n${header}\n${sep}\n${rows}\n\n${summary}\n\n${explain}${
+    const side = unpaired.filter((row) => /\bcached\b|\breasoning\b/i.test(row.name));
+    const sideTable = side.length
+      ? `\n\nCached и reasoning — отдельные счётчики, не вторая плата поверх input/output.\n\n| Провайдер | Позиция | ₽ / 1M |\n|---|---|---:|\n${side
+          .slice()
+          .sort((a, b) => a.name.localeCompare(b.name, 'ru'))
+          .map((row) => `| ${row.provider} | ${row.name} | ${formatRub(row.month)} |`)
+          .join('\n')}`
+      : '';
+
+    return `**${title}** (₽ за 1M токенов, НДС вкл.)\n\n${header}\n${sep}\n${rows}\n\n${summary}\n\n${explain}${sideTable}${
       multi && best.input != null && best.output != null
         ? `\n\n«К минимуму» — по сумме **1M input + 1M output** (иллюстративная смесь; реальная доля выхода обычно меньше).`
         : ''

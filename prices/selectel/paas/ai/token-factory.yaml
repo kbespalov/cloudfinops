@@ -1,0 +1,658 @@
+apiVersion: cloudfinops.ru/v1alpha1
+kind: PriceBook
+metadata:
+  provider: selectel
+  layer: paas
+  service: ai
+  category: paas.ai.inference
+  title: Token Factory — inference tokens
+# Selectel Token Factory: OpenAI-compatible token API in Selectel DCs.
+# Rates are the figures on the model card in the control panel on 2026-10-22,
+# ₽ per 1M tokens, VAT included — same unit as Yandex / MWS / Cloud.ru.
+# Cached on these cards is about 10% of input (panel rounding). Reasoning
+# equals output and is a separate counter, not a second charge on top of output.
+# modelId matches a peer only when it is the same model:
+#   deepseek-v4-flash — same id as Yandex AI Studio (300 / 500 ₽)
+#   glm-5.3-flash     — not MWS glm-5.3 (178.12 / 746.64 ₽)
+#   kimi-k2.7-code    — not kimi-k2.6 (MWS 157.38 / 652.70 ₽)
+#   qwen3.8-27b / qwen3.8-flash-next — not Qwen3.8 Max (~2.4T, no token price here)
+#   deepseek-v4.1-flash (Yandex / Cloud.ru) is a different id
+# Context windows are the Selectel card, not the weight-card maximum.
+# No public price page yet; numeric source is the logged-in Token Factory panel.
+spec:
+  meters:
+  - sku: selectel.ai.glm-5.3-flash.input
+    name: GLM 5.3 Flash · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-10-22'
+    sourceRefs: [selectel.token-factory, selectel.token-factory-announce]
+    dimensions:
+      modelFamily: glm-5.3-flash
+      modelId: glm-5.3-flash
+      providerModelAlias: glm-5.3-flash
+      openWeights: true
+      modelCapability: text-generation
+      inferenceScope: local
+      serviceProduct: token-factory
+      inferenceMode: synchronous
+      tokenDirection: input
+      releaseChannel: beta
+      contextWindowTokens: 262144
+    notes: >
+      Token Factory, бета. Ставка панели за 1 млн входных токенов, с НДС.
+      Это не GLM 5.3 из MWS GPT Model Hub (modelId glm-5.3, 178,12 / 746,64 ₽):
+      другая модель. Число параметров на карточке Selectel не указано.
+    pricing:
+      rate:
+        amount: '74.64'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: selectel.ai.glm-5.3-flash.output
+    name: GLM 5.3 Flash · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-10-22'
+    sourceRefs: [selectel.token-factory, selectel.token-factory-announce]
+    dimensions:
+      modelFamily: glm-5.3-flash
+      modelId: glm-5.3-flash
+      providerModelAlias: glm-5.3-flash
+      openWeights: true
+      modelCapability: text-generation
+      inferenceScope: local
+      serviceProduct: token-factory
+      inferenceMode: synchronous
+      tokenDirection: output
+      releaseChannel: beta
+      contextWindowTokens: 262144
+    notes: >
+      Token Factory, бета. Ставка панели за 1 млн выходных токенов, с НДС.
+      Не путать с MWS glm-5.3.
+    pricing:
+      rate:
+        amount: '248.55'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: selectel.ai.glm-5.3-flash.cached
+    name: GLM 5.3 Flash · cached
+    meter: ai.inference.tokens.cached
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-10-22'
+    sourceRefs: [selectel.token-factory, selectel.token-factory-announce]
+    dimensions:
+      modelFamily: glm-5.3-flash
+      modelId: glm-5.3-flash
+      providerModelAlias: glm-5.3-flash
+      openWeights: true
+      modelCapability: text-generation
+      inferenceScope: local
+      serviceProduct: token-factory
+      inferenceMode: synchronous
+      tokenDirection: cached
+      releaseChannel: beta
+      contextWindowTokens: 262144
+    notes: >
+      Token Factory, бета. Кэшированный вход, 1 млн токенов, с НДС.
+      На карточке это 10% input (74,64 → 7,46). У MWS и Yandex отдельной
+      ставки cache для этой модели в каталоге нет.
+    pricing:
+      rate:
+        amount: '7.46'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: selectel.ai.glm-5.3-flash.reasoning
+    name: GLM 5.3 Flash · reasoning
+    meter: ai.inference.tokens.reasoning
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-10-22'
+    sourceRefs: [selectel.token-factory, selectel.token-factory-announce]
+    dimensions:
+      modelFamily: glm-5.3-flash
+      modelId: glm-5.3-flash
+      providerModelAlias: glm-5.3-flash
+      openWeights: true
+      modelCapability: text-generation
+      inferenceScope: local
+      serviceProduct: token-factory
+      inferenceMode: synchronous
+      tokenDirection: reasoning
+      releaseChannel: beta
+      contextWindowTokens: 262144
+    notes: >
+      Token Factory, бета. Reasoning-токены, 1 млн, с НДС. На карточке ставка
+      равна output (248,55 ₽). Это отдельный счётчик, не доплата поверх output.
+    pricing:
+      rate:
+        amount: '248.55'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: selectel.ai.kimi-k2.7-code.input
+    name: Kimi K2.7 Code · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-10-22'
+    sourceRefs: [selectel.token-factory, selectel.token-factory-announce]
+    dimensions:
+      modelFamily: kimi-k2.7-code
+      modelId: kimi-k2.7-code
+      providerModelAlias: kimi-k2.7-code
+      openWeights: true
+      modelCapability: text-generation
+      inferenceScope: local
+      serviceProduct: token-factory
+      inferenceMode: synchronous
+      tokenDirection: input
+      releaseChannel: beta
+      contextWindowTokens: 262144
+    notes: >
+      Token Factory, бета. Алиас панели kimi-k2.7-code. Это не Kimi K2.6
+      (MWS 157,38 / 652,70 ₽, Cloud.ru — modelId kimi-k2.6). Input 157,2 ₽
+      близок к K2.6, но модели разные. На карточке есть значок предупреждения,
+      текст в снимке не читается. Число параметров на карточке не указано.
+    pricing:
+      rate:
+        amount: '157.2'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: selectel.ai.kimi-k2.7-code.output
+    name: Kimi K2.7 Code · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-10-22'
+    sourceRefs: [selectel.token-factory, selectel.token-factory-announce]
+    dimensions:
+      modelFamily: kimi-k2.7-code
+      modelId: kimi-k2.7-code
+      providerModelAlias: kimi-k2.7-code
+      openWeights: true
+      modelCapability: text-generation
+      inferenceScope: local
+      serviceProduct: token-factory
+      inferenceMode: synchronous
+      tokenDirection: output
+      releaseChannel: beta
+      contextWindowTokens: 262144
+    notes: >
+      Token Factory, бета. Выход, 1 млн токенов, с НДС. Не путать с kimi-k2.6.
+    pricing:
+      rate:
+        amount: '628.7'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: selectel.ai.kimi-k2.7-code.cached
+    name: Kimi K2.7 Code · cached
+    meter: ai.inference.tokens.cached
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-10-22'
+    sourceRefs: [selectel.token-factory, selectel.token-factory-announce]
+    dimensions:
+      modelFamily: kimi-k2.7-code
+      modelId: kimi-k2.7-code
+      providerModelAlias: kimi-k2.7-code
+      openWeights: true
+      modelCapability: text-generation
+      inferenceScope: local
+      serviceProduct: token-factory
+      inferenceMode: synchronous
+      tokenDirection: cached
+      releaseChannel: beta
+      contextWindowTokens: 262144
+    notes: >
+      Token Factory, бета. Кэш входа. 15,72 ₽ = 10% от input 157,2 ₽.
+    pricing:
+      rate:
+        amount: '15.72'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: selectel.ai.kimi-k2.7-code.reasoning
+    name: Kimi K2.7 Code · reasoning
+    meter: ai.inference.tokens.reasoning
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-10-22'
+    sourceRefs: [selectel.token-factory, selectel.token-factory-announce]
+    dimensions:
+      modelFamily: kimi-k2.7-code
+      modelId: kimi-k2.7-code
+      providerModelAlias: kimi-k2.7-code
+      openWeights: true
+      modelCapability: text-generation
+      inferenceScope: local
+      serviceProduct: token-factory
+      inferenceMode: synchronous
+      tokenDirection: reasoning
+      releaseChannel: beta
+      contextWindowTokens: 262144
+    notes: >
+      Token Factory, бета. Reasoning равен output на карточке (628,7 ₽),
+      отдельный счётчик.
+    pricing:
+      rate:
+        amount: '628.7'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: selectel.ai.qwen3.8-27b.input
+    name: Qwen3.8 27B · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-10-22'
+    sourceRefs: [selectel.token-factory, selectel.token-factory-announce]
+    dimensions:
+      modelFamily: qwen3.8-27b
+      modelId: qwen3.8-27b
+      providerModelAlias: qwen3.8-27b
+      openWeights: true
+      modelCapability: text-generation
+      parameterCountB: 27
+      inferenceScope: local
+      serviceProduct: token-factory
+      inferenceMode: synchronous
+      tokenDirection: input
+      releaseChannel: beta
+      contextWindowTokens: 262144
+    notes: >
+      Token Factory, бета. Алиас qwen3.8-27b. 27B в названии карточки —
+      размер этой модели, не Qwen3.8 Max (~2,4T) и не Qwen3.8 Flash Next.
+      У MWS / Yandex / Cloud.ru этого modelId нет.
+    pricing:
+      rate:
+        amount: '37.01'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: selectel.ai.qwen3.8-27b.output
+    name: Qwen3.8 27B · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-10-22'
+    sourceRefs: [selectel.token-factory, selectel.token-factory-announce]
+    dimensions:
+      modelFamily: qwen3.8-27b
+      modelId: qwen3.8-27b
+      providerModelAlias: qwen3.8-27b
+      openWeights: true
+      modelCapability: text-generation
+      parameterCountB: 27
+      inferenceScope: local
+      serviceProduct: token-factory
+      inferenceMode: synchronous
+      tokenDirection: output
+      releaseChannel: beta
+      contextWindowTokens: 262144
+    notes: >
+      Token Factory, бета. Выход, 1 млн токенов, с НДС. Не путать с Flash Next
+      и с Qwen3.8 Max.
+    pricing:
+      rate:
+        amount: '206.5'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: selectel.ai.qwen3.8-27b.cached
+    name: Qwen3.8 27B · cached
+    meter: ai.inference.tokens.cached
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-10-22'
+    sourceRefs: [selectel.token-factory, selectel.token-factory-announce]
+    dimensions:
+      modelFamily: qwen3.8-27b
+      modelId: qwen3.8-27b
+      providerModelAlias: qwen3.8-27b
+      openWeights: true
+      modelCapability: text-generation
+      parameterCountB: 27
+      inferenceScope: local
+      serviceProduct: token-factory
+      inferenceMode: synchronous
+      tokenDirection: cached
+      releaseChannel: beta
+      contextWindowTokens: 262144
+    notes: >
+      Token Factory, бета. Кэш входа. На карточке 3,7 ₽; 10% от 37,01 ₽ — 3,701,
+      панель округляет до показанной ставки.
+    pricing:
+      rate:
+        amount: '3.7'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: selectel.ai.qwen3.8-27b.reasoning
+    name: Qwen3.8 27B · reasoning
+    meter: ai.inference.tokens.reasoning
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-10-22'
+    sourceRefs: [selectel.token-factory, selectel.token-factory-announce]
+    dimensions:
+      modelFamily: qwen3.8-27b
+      modelId: qwen3.8-27b
+      providerModelAlias: qwen3.8-27b
+      openWeights: true
+      modelCapability: text-generation
+      parameterCountB: 27
+      inferenceScope: local
+      serviceProduct: token-factory
+      inferenceMode: synchronous
+      tokenDirection: reasoning
+      releaseChannel: beta
+      contextWindowTokens: 262144
+    notes: >
+      Token Factory, бета. Reasoning равен output на карточке (206,5 ₽).
+    pricing:
+      rate:
+        amount: '206.5'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: selectel.ai.qwen3.8-flash-next.input
+    name: Qwen3.8 Flash Next · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-10-22'
+    sourceRefs: [selectel.token-factory, selectel.token-factory-announce]
+    dimensions:
+      modelFamily: qwen3.8-flash-next
+      modelId: qwen3.8-flash-next
+      providerModelAlias: qwen3.8-flash-next
+      openWeights: true
+      modelCapability: text-generation
+      inferenceScope: local
+      serviceProduct: token-factory
+      inferenceMode: synchronous
+      tokenDirection: input
+      releaseChannel: beta
+      contextWindowTokens: 262144
+    notes: >
+      Token Factory, бета. Алиас qwen3.8-flash-next. Не Qwen3.8 27B и не
+      Qwen3.8 Max. Число параметров на карточке не указано. Окно карточки
+      262 144 токена.
+    pricing:
+      rate:
+        amount: '20.85'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: selectel.ai.qwen3.8-flash-next.output
+    name: Qwen3.8 Flash Next · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-10-22'
+    sourceRefs: [selectel.token-factory, selectel.token-factory-announce]
+    dimensions:
+      modelFamily: qwen3.8-flash-next
+      modelId: qwen3.8-flash-next
+      providerModelAlias: qwen3.8-flash-next
+      openWeights: true
+      modelCapability: text-generation
+      inferenceScope: local
+      serviceProduct: token-factory
+      inferenceMode: synchronous
+      tokenDirection: output
+      releaseChannel: beta
+      contextWindowTokens: 262144
+    notes: >
+      Token Factory, бета. Выход, 1 млн токенов, с НДС.
+    pricing:
+      rate:
+        amount: '61.3'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: selectel.ai.qwen3.8-flash-next.cached
+    name: Qwen3.8 Flash Next · cached
+    meter: ai.inference.tokens.cached
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-10-22'
+    sourceRefs: [selectel.token-factory, selectel.token-factory-announce]
+    dimensions:
+      modelFamily: qwen3.8-flash-next
+      modelId: qwen3.8-flash-next
+      providerModelAlias: qwen3.8-flash-next
+      openWeights: true
+      modelCapability: text-generation
+      inferenceScope: local
+      serviceProduct: token-factory
+      inferenceMode: synchronous
+      tokenDirection: cached
+      releaseChannel: beta
+      contextWindowTokens: 262144
+    notes: >
+      Token Factory, бета. Кэш входа. 10% от 20,85 ₽ — 2,085; на карточке 2,09 ₽.
+    pricing:
+      rate:
+        amount: '2.09'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: selectel.ai.qwen3.8-flash-next.reasoning
+    name: Qwen3.8 Flash Next · reasoning
+    meter: ai.inference.tokens.reasoning
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-10-22'
+    sourceRefs: [selectel.token-factory, selectel.token-factory-announce]
+    dimensions:
+      modelFamily: qwen3.8-flash-next
+      modelId: qwen3.8-flash-next
+      providerModelAlias: qwen3.8-flash-next
+      openWeights: true
+      modelCapability: text-generation
+      inferenceScope: local
+      serviceProduct: token-factory
+      inferenceMode: synchronous
+      tokenDirection: reasoning
+      releaseChannel: beta
+      contextWindowTokens: 262144
+    notes: >
+      Token Factory, бета. Reasoning равен output на карточке (61,3 ₽).
+    pricing:
+      rate:
+        amount: '61.3'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: selectel.ai.deepseek-v4-flash.input
+    name: DeepSeek V4 Flash · input
+    meter: ai.inference.tokens.input
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-10-22'
+    sourceRefs: [selectel.token-factory, selectel.token-factory-announce]
+    dimensions:
+      modelFamily: DeepSeek v4 flash
+      modelId: deepseek-v4-flash
+      providerModelAlias: deepseek-v4-flash
+      openWeights: true
+      modelCapability: text-generation
+      parameterCountB: 284
+      activeParameterCountB: 13
+      inferenceScope: local
+      serviceProduct: token-factory
+      inferenceMode: synchronous
+      tokenDirection: input
+      releaseChannel: beta
+      contextWindowTokens: 393216
+    notes: >
+      Token Factory, бета. Тот же modelId, что у Yandex AI Studio
+      (yc.ai.deepseek-v4-flash, 300 ₽ input / 500 ₽ output). Размер 284B / 13B
+      active взят из той же карточки модели, не из панели Selectel.
+      Окно на карточке Selectel — 393 216 токенов, не 1M у весов.
+      DeepSeek V4.1 Flash (Yandex и Cloud.ru, modelId deepseek-v4.1-flash) —
+      другая модель. Cloud.ru V4.1 Flash input 64,9406 ₽.
+    pricing:
+      rate:
+        amount: '75.42'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: selectel.ai.deepseek-v4-flash.output
+    name: DeepSeek V4 Flash · output
+    meter: ai.inference.tokens.output
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-10-22'
+    sourceRefs: [selectel.token-factory, selectel.token-factory-announce]
+    dimensions:
+      modelFamily: DeepSeek v4 flash
+      modelId: deepseek-v4-flash
+      providerModelAlias: deepseek-v4-flash
+      openWeights: true
+      modelCapability: text-generation
+      parameterCountB: 284
+      activeParameterCountB: 13
+      inferenceScope: local
+      serviceProduct: token-factory
+      inferenceMode: synchronous
+      tokenDirection: output
+      releaseChannel: beta
+      contextWindowTokens: 393216
+    notes: >
+      Token Factory, бета. Тот же modelId, что у Yandex (output 500 ₽).
+      Cloud.ru deepseek-v4.1-flash output 194,8096 ₽ — другая версия.
+    pricing:
+      rate:
+        amount: '186.29'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: selectel.ai.deepseek-v4-flash.cached
+    name: DeepSeek V4 Flash · cached
+    meter: ai.inference.tokens.cached
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-10-22'
+    sourceRefs: [selectel.token-factory, selectel.token-factory-announce]
+    dimensions:
+      modelFamily: DeepSeek v4 flash
+      modelId: deepseek-v4-flash
+      providerModelAlias: deepseek-v4-flash
+      openWeights: true
+      modelCapability: text-generation
+      parameterCountB: 284
+      activeParameterCountB: 13
+      inferenceScope: local
+      serviceProduct: token-factory
+      inferenceMode: synchronous
+      tokenDirection: cached
+      releaseChannel: beta
+      contextWindowTokens: 393216
+    notes: >
+      Token Factory, бета. Кэш входа. 10% от 75,42 ₽ — 7,542; на карточке 7,54 ₽.
+      У Yandex для deepseek-v4-flash отдельной ставки cache нет.
+    pricing:
+      rate:
+        amount: '7.54'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable
+  - sku: selectel.ai.deepseek-v4-flash.reasoning
+    name: DeepSeek V4 Flash · reasoning
+    meter: ai.inference.tokens.reasoning
+    status: available
+    pricingMode: unit
+    region: Россия
+    effectiveFrom: null
+    checkedAt: '2026-10-22'
+    sourceRefs: [selectel.token-factory, selectel.token-factory-announce]
+    dimensions:
+      modelFamily: DeepSeek v4 flash
+      modelId: deepseek-v4-flash
+      providerModelAlias: deepseek-v4-flash
+      openWeights: true
+      modelCapability: text-generation
+      parameterCountB: 284
+      activeParameterCountB: 13
+      inferenceScope: local
+      serviceProduct: token-factory
+      inferenceMode: synchronous
+      tokenDirection: reasoning
+      releaseChannel: beta
+      contextWindowTokens: 393216
+    notes: >
+      Token Factory, бета. Reasoning равен output на карточке (186,29 ₽).
+    pricing:
+      rate:
+        amount: '186.29'
+        currency: RUB
+        unit: {quantity: 1M-token, period: usage}
+        vat: included
+        byteBasis: not-applicable

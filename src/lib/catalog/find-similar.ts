@@ -364,12 +364,22 @@ export function comparableFilterFromMeter(meter: CatalogMeter): ComparableCatalo
       const family = extractAiFamilyFacet(meter);
       const dir = extractAiTokenDirection(meter);
       const modelTitle = extractAiModelFamily(meter) || modelId;
-      const dirTitle = dir === 'input' ? ' · Input' : dir === 'output' ? ' · Output' : '';
+      const dirTitle =
+        dir === 'input'
+          ? ' · Input'
+          : dir === 'output'
+            ? ' · Output'
+            : dir === 'cached'
+              ? ' · Cached'
+              : dir === 'reasoning'
+                ? ' · Reasoning'
+                : '';
+      const aiFacet: AiFacet = dir === 'input' || dir === 'output' ? dir : 'all';
       return {
         ...EMPTY_NESTED,
         category: 'ai',
         aiFamilyFacet: family ?? 'all',
-        aiFacet: dir ?? 'all',
+        aiFacet,
         aiModelId: modelId,
         summary: `AI · ${modelTitle}${dirTitle}`,
       };

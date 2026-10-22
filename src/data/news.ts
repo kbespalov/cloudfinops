@@ -70,6 +70,46 @@ export const NEWS_TAG_TITLE: Record<NewsTag, string> = {
 
 /** Curated industry feature news — start: June 2026. */
 export const newsItems: NewsItem[] = [
+  {
+    id: 'selectel-2026-10-token-factory',
+    date: '2026-10-22',
+    provider: 'selectel',
+    providerName: 'Selectel',
+    title: 'Selectel Token Factory: цены за токены в каталоге',
+    summary:
+      'Selectel открыл Token Factory — потокенный inference в своих ЦОД. В каталог добавлены GLM 5.3 Flash, Kimi K2.7 Code, Qwen3.8 27B, Qwen3.8 Flash Next и DeepSeek V4 Flash. Ставки с карточек панели, с НДС, за 1 млн токенов.',
+    body: [
+      'Одинаковый modelId только у DeepSeek V4 Flash: он сравнивается с Yandex AI Studio (300 ₽ и 500 ₽ за 1 млн входных и выходных). У Selectel на карточке 75,42 ₽ и 186,29 ₽, окно 393 216 токенов.',
+      'GLM 5.3 Flash — не GLM 5.3 из MWS (178,12 ₽ и 746,64 ₽). Kimi K2.7 Code — не Kimi K2.6. Qwen3.8 27B и Flash Next — не Qwen3.8 Max. DeepSeek V4.1 Flash у Yandex и Cloud.ru остаётся отдельной моделью.',
+      'Кэш на этих карточках — около 10% цены входа. Reasoning совпадает с выходом и учитывается отдельно. Foundation Models Catalog по-прежнему тарифицируется ресурсами GPU, не токенами.',
+    ],
+    changes: [
+      {
+        provider: 'Selectel',
+        service: 'Token Factory',
+        change: 'GLM 5.3 Flash — 74,64 ₽ и 248,55 ₽ за 1 млн input и output',
+      },
+      {
+        provider: 'Selectel',
+        service: 'Token Factory',
+        change: 'Kimi K2.7 Code — 157,2 ₽ и 628,7 ₽',
+      },
+      {
+        provider: 'Selectel',
+        service: 'Token Factory',
+        change: 'Qwen3.8 27B — 37,01 ₽ и 206,5 ₽; Qwen3.8 Flash Next — 20,85 ₽ и 61,3 ₽',
+      },
+      {
+        provider: 'Selectel',
+        service: 'Token Factory',
+        change: 'DeepSeek V4 Flash — 75,42 ₽ и 186,29 ₽; тот же modelId, что у Yandex',
+      },
+    ],
+    tags: ['ai', 'finops'],
+    sourceUrl: 'https://habr.com/ru/companies/selectel/articles/1093970/',
+    sourceLabel: 'Selectel на Хабре',
+    catalogHref: '/catalog?category=ai&providers=selectel',
+  },
   // ——— Cloud FinOps (hub → blog / tools) ———
   {
     id: 'cloudfinops-2026-09-price-snapshot',

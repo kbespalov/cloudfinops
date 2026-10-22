@@ -79,6 +79,27 @@ describe('price anchors — snapshot 2026-09-25', () => {
     nearly(hour('t1.gpu.h200'), 593.0555554);
   });
 
+  it('Selectel Token Factory, panel 2026-10-22, ₽ per 1M tokens', () => {
+    nearly(hour('selectel.ai.glm-5.3-flash.input'), 74.64);
+    nearly(hour('selectel.ai.glm-5.3-flash.output'), 248.55);
+    nearly(hour('selectel.ai.glm-5.3-flash.cached'), 7.46);
+    nearly(hour('selectel.ai.kimi-k2.7-code.input'), 157.2);
+    nearly(hour('selectel.ai.kimi-k2.7-code.output'), 628.7);
+    nearly(hour('selectel.ai.qwen3.8-27b.input'), 37.01);
+    nearly(hour('selectel.ai.qwen3.8-27b.output'), 206.5);
+    nearly(hour('selectel.ai.qwen3.8-flash-next.input'), 20.85);
+    nearly(hour('selectel.ai.qwen3.8-flash-next.cached'), 2.09);
+    nearly(hour('selectel.ai.deepseek-v4-flash.input'), 75.42);
+    nearly(hour('selectel.ai.deepseek-v4-flash.output'), 186.29);
+    nearly(hour('selectel.ai.deepseek-v4-flash.reasoning'), 186.29);
+    assert.equal(meter('selectel.ai.deepseek-v4-flash.input').dimensions.modelId, 'deepseek-v4-flash');
+    assert.equal(meter('selectel.ai.glm-5.3-flash.input').dimensions.modelId, 'glm-5.3-flash');
+    assert.notEqual(
+      meter('selectel.ai.glm-5.3-flash.input').dimensions.modelId,
+      meter('mws.ai.glm-5.3.input').dimensions.modelId,
+    );
+  });
+
   it('zero free-tier meters keep explanatory notes', () => {
     for (const sku of [
       'mws.traffic.interzone.ingress',

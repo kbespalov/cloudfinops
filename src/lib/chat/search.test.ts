@@ -611,15 +611,26 @@ describe('AI model matching', () => {
     assert.equal(out?.month, 224.48);
   });
 
-  it('tool payload cap keeps gemma output mate past rows.slice(0,10)', () => {
+  it('tool payload cap keeps output mate past rows.slice(0,10)', () => {
+    // Token Factory cached rates now fill the cheap end, so gemma input is no longer
+    // inside the first 10. gpt-oss-120b input still is; its output is not.
     const r = searchPricesDetailed({
       query: 'AI inference tokens',
       category: 'ai',
       limit: 20,
     });
+    const head = r.rows.slice(0, 10);
+    assert.ok(head.some((row) => /gpt-oss-120b/i.test(row.name) && /\binput\b/i.test(row.name)));
+    assert.equal(
+      head.some((row) => /gpt-oss-120b/i.test(row.name) && /\boutput\b/i.test(row.name)),
+      false,
+    );
     const capped = capPriceRowsKeepingAiPairs(r.rows, 10);
-    assert.ok(capped.some((row) => /gemma-4-31b-it/i.test(row.name) && /input/i.test(row.name)));
-    assert.ok(capped.some((row) => /gemma-4-31b-it/i.test(row.name) && /output/i.test(row.name)));
+    const cappedOutput = capped.find(
+      (row) => /gpt-oss-120b/i.test(row.name) && /\boutput\b/i.test(row.name),
+    );
+    assert.ok(cappedOutput);
+    assert.equal(cappedOutput.month, 54.9);
     assert.ok(capped.length >= 11, `pair mate may exceed hard 10, got ${capped.length}`);
 
     const viaTool = JSON.parse(
@@ -628,10 +639,10 @@ describe('AI model matching', () => {
         JSON.stringify({query: 'AI inference tokens', category: 'ai', limit: 20}),
       ),
     ) as {rows: {name: string; month: number | null}[]};
-    assert.ok(viaTool.rows.some((row) => /gemma-4-31b-it/i.test(row.name) && /output/i.test(row.name)));
     assert.equal(
-      viaTool.rows.find((row) => /gemma-4-31b-it/i.test(row.name) && /output/i.test(row.name))?.month,
-      224.48,
+      viaTool.rows.find((row) => /gpt-oss-120b/i.test(row.name) && /\boutput\b/i.test(row.name))
+        ?.month,
+      54.9,
     );
   });
 });
