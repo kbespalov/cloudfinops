@@ -1,6 +1,7 @@
 import type {Metadata, Viewport} from 'next';
 import {Suspense} from 'react';
-import {Inter} from 'next/font/google';
+/** Inter from npm — the build must not fetch Google Fonts (blocked/altered on the CI host). */
+import '@fontsource-variable/inter';
 import '@gravity-ui/uikit/styles/styles.css';
 /** Sapphire Blue product brand — after styles.css so private/semantic brand tokens win. */
 import '@/styles/brand-theme.css';
@@ -22,14 +23,6 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
   interactiveWidget: 'resizes-content',
 };
-
-/** Self-hosted Inter (no Google Fonts @import) — same family Gravity expects. */
-const inter = Inter({
-  subsets: ['latin', 'cyrillic'],
-  weight: ['400', '600'],
-  display: 'swap',
-  variable: '--font-inter',
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -117,7 +110,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
-    <html lang="ru" className={inter.variable} suppressHydrationWarning>
+    <html lang="ru" suppressHydrationWarning>
       <head>
         <link rel="describedby" href="/llms.txt" type="text/plain"/>
         <link rel="service-desc" href="/api/v1/openapi.json" type="application/vnd.oai.openapi+json"/>
