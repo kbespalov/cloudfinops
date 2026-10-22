@@ -28,6 +28,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-120b
       modelId: gpt-oss-120b
+      modelLineage: gpt-oss
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 120  # total params, billions
@@ -54,6 +55,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-120b
       modelId: gpt-oss-120b
+      modelLineage: gpt-oss
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 120  # total params, billions
@@ -80,6 +82,7 @@ spec:
     dimensions:
       modelFamily: gemma-4-31b-it
       modelId: gemma-4-31b-it
+      modelLineage: gemma-4
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 31  # total params, billions
@@ -106,6 +109,7 @@ spec:
     dimensions:
       modelFamily: gemma-4-31b-it
       modelId: gemma-4-31b-it
+      modelLineage: gemma-4
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 31  # total params, billions
@@ -132,6 +136,7 @@ spec:
     dimensions:
       modelFamily: qwen3.6-35b-a3b
       modelId: qwen3.6-35b-a3b
+      modelLineage: qwen3.6
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 35  # total params, billions
@@ -159,6 +164,7 @@ spec:
     dimensions:
       modelFamily: qwen3.6-35b-a3b
       modelId: qwen3.6-35b-a3b
+      modelLineage: qwen3.6
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 35  # total params, billions
@@ -186,6 +192,7 @@ spec:
     dimensions:
       modelFamily: qwen3-235b-instruct
       modelId: qwen3-235b-instruct
+      modelLineage: qwen3
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 235  # total params, billions
@@ -213,6 +220,7 @@ spec:
     dimensions:
       modelFamily: qwen3-235b-instruct
       modelId: qwen3-235b-instruct
+      modelLineage: qwen3
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 235  # total params, billions
@@ -240,6 +248,7 @@ spec:
     dimensions:
       modelFamily: qwen3-coder-480b-a35b
       modelId: qwen3-coder-480b-a35b
+      modelLineage: qwen3
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 480  # total params, billions
@@ -267,6 +276,7 @@ spec:
     dimensions:
       modelFamily: qwen3-coder-480b-a35b
       modelId: qwen3-coder-480b-a35b
+      modelLineage: qwen3
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 480  # total params, billions
@@ -294,6 +304,7 @@ spec:
     dimensions:
       modelFamily: glm-5.2
       modelId: glm-5.2
+      modelLineage: glm-5
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 744  # total params, billions
@@ -321,6 +332,7 @@ spec:
     dimensions:
       modelFamily: glm-5.2
       modelId: glm-5.2
+      modelLineage: glm-5
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 744  # total params, billions
@@ -348,6 +360,7 @@ spec:
     dimensions:
       modelFamily: glm-5.3
       modelId: glm-5.3
+      modelLineage: glm-5
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 753  # total params, billions
@@ -375,6 +388,7 @@ spec:
     dimensions:
       modelFamily: glm-5.3
       modelId: glm-5.3
+      modelLineage: glm-5
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 753  # total params, billions
@@ -402,6 +416,7 @@ spec:
     dimensions:
       modelFamily: kimi-k2.6
       modelId: kimi-k2.6
+      modelLineage: kimi-k2
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 1000  # total params, billions
@@ -429,6 +444,7 @@ spec:
     dimensions:
       modelFamily: kimi-k2.6
       modelId: kimi-k2.6
+      modelLineage: kimi-k2
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 1000  # total params, billions
@@ -456,6 +472,7 @@ spec:
     dimensions:
       modelFamily: bge-m3
       modelId: bge-m3
+      modelLineage: bge
       openWeights: true
       modelCapability: text-embedding
       inferenceScope: local
@@ -481,6 +498,7 @@ spec:
     dimensions:
       modelFamily: bge-multilingual-gemma2
       modelId: bge-multilingual-gemma2
+      modelLineage: bge
       openWeights: true
       modelCapability: text-embedding
       inferenceScope: local

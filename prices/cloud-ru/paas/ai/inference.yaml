@@ -27,6 +27,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-120b
       modelId: gpt-oss-120b
+      modelLineage: gpt-oss
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 120  # total params, billions
@@ -54,6 +55,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-120b
       modelId: gpt-oss-120b
+      modelLineage: gpt-oss
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 120  # total params, billions
@@ -81,6 +83,7 @@ spec:
     dimensions:
       modelFamily: Qwen3.6-35B-A3B
       modelId: qwen3.6-35b-a3b
+      modelLineage: qwen3.6
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 35  # total params, billions
@@ -109,6 +112,7 @@ spec:
     dimensions:
       modelFamily: Qwen3.6-35B-A3B
       modelId: qwen3.6-35b-a3b
+      modelLineage: qwen3.6
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 35  # total params, billions
@@ -137,6 +141,7 @@ spec:
     dimensions:
       modelFamily: Qwen3-Coder-Next
       modelId: qwen3-coder-next
+      modelLineage: qwen3
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 80  # total params, billions
@@ -165,6 +170,7 @@ spec:
     dimensions:
       modelFamily: Qwen3-Coder-Next
       modelId: qwen3-coder-next
+      modelLineage: qwen3
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 80  # total params, billions
@@ -193,6 +199,7 @@ spec:
     dimensions:
       modelFamily: Qwen3.5-397B-A17B
       modelId: qwen3.5-397b-a17b
+      modelLineage: qwen3.5
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 397  # total params, billions
@@ -221,6 +228,7 @@ spec:
     dimensions:
       modelFamily: Qwen3.5-397B-A17B
       modelId: qwen3.5-397b-a17b
+      modelLineage: qwen3.5
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 397  # total params, billions
@@ -249,6 +257,7 @@ spec:
     dimensions:
       modelFamily: GLM-4.7
       modelId: glm-4.7
+      modelLineage: glm-4
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 358  # total params, billions
@@ -277,6 +286,7 @@ spec:
     dimensions:
       modelFamily: GLM-4.7
       modelId: glm-4.7
+      modelLineage: glm-4
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 358  # total params, billions
@@ -305,6 +315,7 @@ spec:
     dimensions:
       modelFamily: GigaChat-2-Max
       modelId: gigachat-2-max
+      modelLineage: gigachat-2
       openWeights: false
       modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Sber proprietary)
@@ -332,6 +343,7 @@ spec:
     dimensions:
       modelFamily: GigaChat-2-Max
       modelId: gigachat-2-max
+      modelLineage: gigachat-2
       openWeights: false
       modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Sber proprietary)
@@ -359,6 +371,7 @@ spec:
     dimensions:
       modelFamily: GigaChat3-10B-A1.8B
       modelId: gigachat3-10b-a1.8b
+      modelLineage: gigachat-3
       openWeights: false
       modelCapability: text-generation
       parameterCountB: 10  # total params, billions
@@ -387,6 +400,7 @@ spec:
     dimensions:
       modelFamily: GigaChat3-10B-A1.8B
       modelId: gigachat3-10b-a1.8b
+      modelLineage: gigachat-3
       openWeights: false
       modelCapability: text-generation
       parameterCountB: 10  # total params, billions
@@ -415,6 +429,7 @@ spec:
     dimensions:
       modelFamily: MiniMax-M2.5
       modelId: minimax-m2.5
+      modelLineage: minimax-m2
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 230  # total params, billions
@@ -443,6 +458,7 @@ spec:
     dimensions:
       modelFamily: MiniMax-M2.5
       modelId: minimax-m2.5
+      modelLineage: minimax-m2
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 230  # total params, billions
@@ -471,6 +487,7 @@ spec:
     dimensions:
       modelFamily: MiniMax M3
       modelId: minimax-m3
+      modelLineage: minimax-m3
       openWeights: true
       modelCapability: text-generation
       # parameterCountB: unset — size not confirmed in tariff name
@@ -498,6 +515,7 @@ spec:
     dimensions:
       modelFamily: MiniMax M3
       modelId: minimax-m3
+      modelLineage: minimax-m3
       openWeights: true
       modelCapability: text-generation
       # parameterCountB: unset — size not confirmed in tariff name
@@ -527,6 +545,7 @@ spec:
     dimensions:
       modelFamily: kimi-k2.6
       modelId: kimi-k2.6
+      modelLineage: kimi-k2
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 1000  # total params, billions
@@ -558,6 +577,7 @@ spec:
     dimensions:
       modelFamily: kimi-k2.6
       modelId: kimi-k2.6
+      modelLineage: kimi-k2
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 1000  # total params, billions
@@ -645,6 +665,7 @@ spec:
     dimensions:
       modelFamily: GigaChat 3 Pro
       modelId: gigachat-3-pro
+      modelLineage: gigachat-3
       openWeights: false
       modelCapability: text-generation
       inferenceScope: local
@@ -673,6 +694,7 @@ spec:
     dimensions:
       modelFamily: GigaChat 3 Pro
       modelId: gigachat-3-pro
+      modelLineage: gigachat-3
       openWeights: false
       modelCapability: text-generation
       inferenceScope: local
@@ -701,6 +723,7 @@ spec:
     dimensions:
       modelFamily: DeepSeek V4.1 Flash
       modelId: deepseek-v4.1-flash
+      modelLineage: deepseek-v4
       openWeights: true
       modelCapability: text-generation
       inferenceScope: external
@@ -730,6 +753,7 @@ spec:
     dimensions:
       modelFamily: DeepSeek V4.1 Flash
       modelId: deepseek-v4.1-flash
+      modelLineage: deepseek-v4
       openWeights: true
       modelCapability: text-generation
       inferenceScope: external
