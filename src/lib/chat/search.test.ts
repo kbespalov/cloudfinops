@@ -560,6 +560,42 @@ describe('AI model matching', () => {
     }
   });
 
+  it('does not treat GLM 5.3 Flash as GLM 5.3', () => {
+    const base = searchPricesDetailed({
+      query: 'Сколько стоит GLM 5.3 за 1M токенов',
+      category: 'ai',
+      aiModel: 'GLM 5.3',
+      limit: 20,
+    });
+    const baseSkus = base.rows.map((row) => row.sku);
+    assert.ok(baseSkus.some((sku) => sku.startsWith('mws.ai.glm-5.3.')));
+    assert.equal(
+      baseSkus.some((sku) => sku.includes('glm-5.3-flash')),
+      false,
+      baseSkus.join(','),
+    );
+    const flash = searchPricesDetailed({
+      query: 'GLM 5.3 Flash',
+      category: 'ai',
+      aiModel: 'glm-5.3-flash',
+      limit: 20,
+    });
+    assert.ok(flash.rows.length > 0);
+    assert.ok(flash.rows.every((row) => row.sku.includes('glm-5.3-flash')));
+    const same = searchPricesDetailed({
+      query: 'deepseek-v4-flash input',
+      category: 'ai',
+      aiModel: 'deepseek-v4-flash',
+      limit: 20,
+    });
+    const providers = new Set(same.rows.map((row) => row.provider));
+    assert.ok(providers.has('yandex-cloud') && providers.has('selectel'));
+    assert.equal(
+      same.rows.some((row) => row.sku.includes('v4.1') || row.sku.includes('glm-5.3')),
+      false,
+    );
+  });
+
   it('finds Qwen 3.6 on Yandex, Cloud.ru and MWS — not only Yandex', () => {
     const r = searchPricesDetailed({
       query: 'Сравни цены Qwen 3.6 по провайдерам за 1M токенов',

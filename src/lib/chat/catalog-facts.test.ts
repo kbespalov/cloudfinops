@@ -139,6 +139,15 @@ describe('buildCatalogFactsAddendum', () => {
     assertNoMonthlyPrices(addendum!);
   });
 
+  it('does not claim Selectel hosts GLM 5.3 when only GLM 5.3 Flash is there', () => {
+    const addendum = buildCatalogFactsAddendum(['ai'], 'Сколько стоит GLM 5.3 за 1M токенов?');
+    assert.ok(addendum);
+    assert.match(addendum!, /AI hosted API «glm 5\.3»/i);
+    assert.match(addendum!, /mws \(input\+output\)/);
+    assert.ok(!/selectel \(/.test(addendum!), addendum!);
+    assertNoMonthlyPrices(addendum!);
+  });
+
   it('reports missing hosted API when model is absent from catalog', () => {
     const addendum = buildCatalogFactsAddendum(['ai'], 'Сколько стоит gpt-oss-999b за 1M?');
     assert.ok(addendum);

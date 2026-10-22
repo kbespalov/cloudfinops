@@ -70,6 +70,28 @@ test('AI fields are explicit, preserve provider dimensions and do not guess unkn
   assert.equal(listProducts({...modelQuery, modelIds: ['GPT-OSS-120B']}).items.length, 0);
 });
 
+test('cached and reasoning meters do not extend the public tokenDirection enum', async () => {
+  const cached = listProducts({meters: ['ai.inference.tokens.cached'], limit: 100}).items;
+  assert.ok(cached.length >= 5);
+  assert.ok(cached.every(p => p.attributes.tokenDirection === null));
+  assert.ok(cached.every(p => p.providerAttributes.tokenDirection === 'cached'));
+  const reasoning = listProducts({meters: ['ai.inference.tokens.reasoning'], limit: 100}).items;
+  assert.ok(reasoning.every(p => p.attributes.tokenDirection === null && p.providerAttributes.tokenDirection === 'reasoning'));
+  const deepseekInput = listProducts({modelIds: ['deepseek-v4-flash'], tokenDirections: ['input'], limit: 100}).items;
+  assert.deepEqual(skuList(deepseekInput), ['selectel.ai.deepseek-v4-flash.input', 'yc.ai.deepseek-v4-flash.input']);
+  const glm = listProducts({modelIds: ['glm-5.3'], limit: 100}).items;
+  assert.ok(glm.length > 0 && glm.every(p => !p.providerSku.includes('flash')));
+  assert.equal(listProducts({modelIds: ['glm-5.3'], meters: ['ai.inference.tokens.cached']}).items.length, 0);
+  const response = await getProducts(new Request('http://localhost/api/v1/products?meters=ai.inference.tokens.cached&limit=5'));
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  responseSchemas.search_products.parse(body);
+  assert.ok(body.data.every((p: PublicProduct) => p.attributes.tokenDirection === null));
+  const rejected = await getProducts(new Request('http://localhost/api/v1/products?tokenDirections=cached'));
+  assert.equal(rejected.status, 400);
+  assert.equal((await rejected.json()).error.code, 'invalid_parameter');
+});
+
 test('exact meters, service products, modes and direction filter independently with OR/AND semantics', () => {
   const embeddings = listProducts({...tokenQuery, meters: ['ai.embeddings.tokens'], limit: 100}).items;
   assert.ok(embeddings.length >= 6);

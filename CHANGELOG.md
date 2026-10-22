@@ -17,6 +17,8 @@
 
 Foundation Models Catalog по-прежнему считается ресурсами GPU, не токенами. Публичного прайс-листа Token Factory нет: цифры сняты с карточек в панели. `asOf` каталога → `2026-10-22`. Остальные прайсы в этом срезе не перепроверялись.
 
+Публичное поле `attributes.tokenDirection` остаётся `input`, `output` или `null`. Кэш и reasoning не добавляют значений в этот enum: их выбирают метрами `ai.inference.tokens.cached` и `ai.inference.tokens.reasoning`, а исходное направление остаётся в `providerAttributes`. Запрос по уже существующему `modelId` (например GLM 5.3) не подхватывает более длинный id вроде GLM 5.3 Flash.
+
 ## 2026-09-25
 
 ### Каталог: срез цен
