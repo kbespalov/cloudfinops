@@ -82,6 +82,11 @@ export type InferenceModelProfile = {
   recommended: InferenceGpuRec[];
   /** Keys for search_prices aiModel / catalog facets. */
   hostedCatalogKeys?: string[];
+  /**
+   * Hosted modelIds that share a name prefix but are a different product.
+   * Their token prices must not be quoted as this profile's API.
+   */
+  hostedModelIdExcludes?: string[];
   sources: string[];
   checkedAt: string;
   caveats: string[];
@@ -824,7 +829,10 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
       },
     ],
     // Do not use bare «Qwen» — search would match Coder-Next / 3.6 and invent a false API analog.
-    hostedCatalogKeys: ['qwen3.8', 'Qwen3.8', 'qwen 3.8'],
+    // Bare qwen3.8 also hits Selectel Token Factory 27B and Flash Next. Those are
+    // different models; exclude them so Max does not inherit their ₽/1M.
+    hostedCatalogKeys: ['qwen3.8-max', 'Qwen3.8 Max', 'qwen3.8'],
+    hostedModelIdExcludes: ['qwen3.8-27b', 'qwen3.8-flash-next'],
     sources: [
       'Alibaba / Qwen announcement 2026-07-19 (2.4T, open-weight soon)',
       'SCMP / MLQ coverage of Qwen3.8-Max-Preview',
@@ -832,7 +840,7 @@ export const INFERENCE_MODELS: InferenceModelProfile[] = [
     checkedAt: '2026-07-20',
     caveats: [
       'Open-weight «скоро», но checkpoint/лицензия на момент профиля ещё не выложены.',
-      'В каталоге РФ token API для 3.8 пока может отсутствовать — не подставляй цены соседних Qwen.',
+      'Token Factory Selectel продаёт Qwen3.8 27B и Qwen3.8 Flash Next. Это не Max ~2,4T — их ₽/1M сюда не подставлять.',
       'Без опубликованной sparsity active params неизвестны — оценки VRAM консервативные (по total).',
       'Пока preview — Token Plan / Qoder; self-host только после выхода весов.',
     ],

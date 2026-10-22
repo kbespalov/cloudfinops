@@ -18,11 +18,23 @@ const tokenQuery: ProductListQuery = {services: ['ai'], units: ['token']};
 const modelQuery: ProductListQuery = {...tokenQuery, modelIds: ['gpt-oss-120b'], tokenDirections: ['input']};
 
 test('AI token search needs no text and excludes GPU, requests and non-token inference services', () => {
-  const tokens = listProducts({...tokenQuery, limit: 100});
-  assert.equal(tokens.nextCursor, null);
+  const items: PublicProduct[] = [];
+  let cursor: string | null = null;
+  let pages = 0;
+  for (;;) {
+    const page: {items: PublicProduct[]; nextCursor: string | null} = cursor
+      ? listProducts({cursor, limit: 100})
+      : listProducts({...tokenQuery, limit: 100});
+    items.push(...page.items);
+    pages += 1;
+    if (!page.nextCursor) break;
+    cursor = page.nextCursor;
+  }
+  assert.ok(pages >= 2, 'token SKUs exceed one page of 100; clients must follow nextCursor');
   const expected = catalog.meters.filter(m => m.service === 'ai' && m.unitQuantity?.includes('token')).map(m => m.sku).sort();
-  assert.ok(expected.length > 60);
-  assert.deepEqual(skuList(tokens.items), expected);
+  assert.ok(expected.length > 100);
+  assert.deepEqual(skuList(items), expected);
+  const tokens = {items};
   assert.ok(tokens.items.every(p => p.service === 'ai' && p.layer === 'paas' && p.prices.every(price => price.unit === 'token')));
   assert.ok(tokens.items.some(p => p.meter === 'ai.embeddings.tokens'));
   assert.ok(!tokens.items.some(p => p.providerSku === 'selectel.fmc.inference-service' || p.providerSku.includes('.ml.')));

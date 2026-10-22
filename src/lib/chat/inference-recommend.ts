@@ -430,6 +430,7 @@ function hostedAlternative(profile: InferenceModelProfile) {
     | ReturnType<typeof searchPricesDetailed>
     | undefined;
   let usedKey = keys[0] ?? profile.displayName;
+  const excluded = profile.hostedModelIdExcludes ?? [];
   for (const key of keys) {
     const hit = searchPricesDetailed({
       query: key,
@@ -437,8 +438,28 @@ function hostedAlternative(profile: InferenceModelProfile) {
       aiModel: key,
       limit: 24,
     });
-    if (!hit.totalMatches || !hit.providers.length) continue;
-    best = hit;
+    if (!excluded.length) {
+      if (!hit.totalMatches || !hit.providers.length) continue;
+      best = hit;
+      usedKey = key;
+      break;
+    }
+    const rows = hit.rows.filter(
+      (row) => !excluded.some((id) => row.sku.includes(id) || row.name.toLowerCase().includes(id)),
+    );
+    if (!rows.length) continue;
+    const providers = [...new Map(rows.map((row) => [row.provider, row])).keys()].map((provider) => {
+      const own = rows.filter((row) => row.provider === provider);
+      const cheapest = own.reduce((a, b) => ((a.month ?? Infinity) <= (b.month ?? Infinity) ? a : b));
+      return {
+        provider,
+        providerName: own[0]!.providerName,
+        count: own.length,
+        cheapest,
+      };
+    });
+    if (!providers.length) continue;
+    best = {...hit, rows, totalMatches: rows.length, providers};
     usedKey = key;
     break;
   }
@@ -467,7 +488,7 @@ function hostedAlternative(profile: InferenceModelProfile) {
     query: usedKey,
     providersMatched,
     note:
-      'Hosted API той же modelId: всегда разделяй input и output (и cache, если есть). Не подставляй Qwen3-Coder-480B / другие модели. ₽/1M ≠ ₽/мес GPU. Selectel FMC = ресурсы, не токены. Точка безубыточности — по смеси input/output и реальному tok/s узла, не «аренда ÷ только input».',
+      'Hosted API той же modelId: всегда разделяй input и output (и cache / reasoning, если есть). Не подставляй соседнюю версию. ₽/1M ≠ ₽/мес GPU. Selectel Token Factory — токены; Foundation Models Catalog — аренда GPU, не ₽/1M. Точка безубыточности — по смеси input/output и реальному tok/s узла, не «аренда ÷ только input».',
   };
 }
 

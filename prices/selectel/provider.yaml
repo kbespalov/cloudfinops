@@ -110,6 +110,28 @@ spec:
     - compute.gpu
     - compute.vcpu
     - compute.ram
+  - id: selectel.token-factory
+    title: Token Factory — карточки моделей в панели
+    url: https://my.selectel.ru/
+    type: authenticated-portal
+    access: login
+    priority: 1
+    covers:
+    - ai.inference.tokens.input
+    - ai.inference.tokens.output
+    - ai.inference.tokens.cached
+    - ai.inference.tokens.reasoning
+  - id: selectel.token-factory-announce
+    title: Selectel — Token Factory (дайджест, сентябрь 2026)
+    url: https://habr.com/ru/companies/selectel/articles/1093970/
+    type: html
+    access: public
+    priority: 2
+    covers:
+    - ai.inference.tokens.input
+    - ai.inference.tokens.output
+    - ai.inference.tokens.cached
+    - ai.inference.tokens.reasoning
   - id: selectel.cdn
     title: CDN Selectel
     url: https://selectel.ru/services/additional/cdn/

@@ -62,7 +62,7 @@ export type ProductAttributes = {
   serviceProduct: string | null;
   modelId: string | null;
   modelFamily: string | null;
-  tokenDirection: 'input' | 'output' | null;
+  tokenDirection: 'input' | 'output' | 'cached' | 'reasoning' | null;
   inferenceMode: string | null;
   vcpu: number | null;
   memoryGiB: number | null;

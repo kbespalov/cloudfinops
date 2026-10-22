@@ -47,6 +47,33 @@ describe('peer-match.classify / AI', () => {
     });
   });
 
+  it('selectel deepseek v4 flash input is the same model as yandex', () => {
+    const {classification: c} = classifyPair(
+      'yc.ai.deepseek-v4-flash.input',
+      'selectel.ai.deepseek-v4-flash.input',
+    );
+    assertMode('selectel-yc-deepseek-v4-flash-input', c, 'exact', true);
+    assert.deepEqual(c.hardDiffs, []);
+  });
+
+  it('glm 5.3 flash is not mws glm 5.3', () => {
+    const {classification: c} = classifyPair(
+      'mws.ai.glm-5.3.input',
+      'selectel.ai.glm-5.3-flash.input',
+    );
+    assert.notEqual(c.mode, 'exact');
+    assert.ok(hasHard(c, 'canonicalModelId'));
+  });
+
+  it('cached token rate is not an input peer', () => {
+    const {classification: c} = classifyPair(
+      'selectel.ai.deepseek-v4-flash.input',
+      'selectel.ai.deepseek-v4-flash.cached',
+    );
+    assert.notEqual(c.mode, 'exact');
+    assert.ok(hasHard(c, 'tokenDirection'));
+  });
+
   it('ai-input-output-functional', () => {
     const {classification: c} = classifyPair(
       'cloudru.ai.gpt-oss-120b.input',
