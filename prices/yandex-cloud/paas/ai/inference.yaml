@@ -29,6 +29,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-120b
       modelId: gpt-oss-120b
+      modelLineage: gpt-oss
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 120  # total params, billions
@@ -57,6 +58,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-120b
       modelId: gpt-oss-120b
+      modelLineage: gpt-oss
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 120  # total params, billions
@@ -85,6 +87,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-20b
       modelId: gpt-oss-20b
+      modelLineage: gpt-oss
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 20  # total params, billions
@@ -113,6 +116,7 @@ spec:
     dimensions:
       modelFamily: gpt-oss-20b
       modelId: gpt-oss-20b
+      modelLineage: gpt-oss
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 20  # total params, billions
@@ -141,6 +145,7 @@ spec:
     dimensions:
       modelFamily: Gemma3 27B
       modelId: gemma3-27b
+      modelLineage: gemma-3
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 27  # total params, billions
@@ -169,6 +174,7 @@ spec:
     dimensions:
       modelFamily: Gemma3 27B
       modelId: gemma3-27b
+      modelLineage: gemma-3
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 27  # total params, billions
@@ -197,6 +203,7 @@ spec:
     dimensions:
       modelFamily: Qwen 3.6 35B
       modelId: qwen-3.6-35b
+      modelLineage: qwen3.6
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 35  # total params, billions
@@ -226,6 +233,7 @@ spec:
     dimensions:
       modelFamily: Qwen 3.6 35B
       modelId: qwen-3.6-35b
+      modelLineage: qwen3.6
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 35  # total params, billions
@@ -255,6 +263,7 @@ spec:
     dimensions:
       modelFamily: Qwen 3.5 35B
       modelId: qwen-3.5-35b
+      modelLineage: qwen3.5
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 35  # total params, billions
@@ -283,6 +292,7 @@ spec:
     dimensions:
       modelFamily: Qwen 3.5 35B
       modelId: qwen-3.5-35b
+      modelLineage: qwen3.5
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 35  # total params, billions
@@ -311,6 +321,7 @@ spec:
     dimensions:
       modelFamily: Qwen3 235B
       modelId: qwen3-235b
+      modelLineage: qwen3
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 235  # total params, billions
@@ -340,6 +351,7 @@ spec:
     dimensions:
       modelFamily: Qwen3 235B
       modelId: qwen3-235b
+      modelLineage: qwen3
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 235  # total params, billions
@@ -369,6 +381,7 @@ spec:
     dimensions:
       modelFamily: YandexGPT Lite 5
       modelId: yandexgpt-lite-5
+      modelLineage: yandexgpt-5
       openWeights: false
       modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
@@ -397,6 +410,7 @@ spec:
     dimensions:
       modelFamily: YandexGPT Lite 5
       modelId: yandexgpt-lite-5
+      modelLineage: yandexgpt-5
       openWeights: false
       modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
@@ -425,6 +439,7 @@ spec:
     dimensions:
       modelFamily: YandexGPT Pro 5
       modelId: yandexgpt-pro-5
+      modelLineage: yandexgpt-5
       openWeights: false
       modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
@@ -453,6 +468,7 @@ spec:
     dimensions:
       modelFamily: YandexGPT Pro 5
       modelId: yandexgpt-pro-5
+      modelLineage: yandexgpt-5
       openWeights: false
       modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
@@ -481,6 +497,7 @@ spec:
     dimensions:
       modelFamily: YandexGPT Pro 5.1
       modelId: yandexgpt-pro-5.1
+      modelLineage: yandexgpt-5
       openWeights: false
       modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
@@ -509,6 +526,7 @@ spec:
     dimensions:
       modelFamily: YandexGPT Pro 5.1
       modelId: yandexgpt-pro-5.1
+      modelLineage: yandexgpt-5
       openWeights: false
       modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
@@ -537,6 +555,7 @@ spec:
     dimensions:
       modelFamily: Alice AI LLM
       modelId: alice-ai-llm
+      modelLineage: alice-ai
       openWeights: false
       modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
@@ -565,6 +584,7 @@ spec:
     dimensions:
       modelFamily: Alice AI LLM
       modelId: alice-ai-llm
+      modelLineage: alice-ai
       openWeights: false
       modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
@@ -593,6 +613,7 @@ spec:
     dimensions:
       modelFamily: Alice AI LLM Flash
       modelId: alice-ai-llm-flash
+      modelLineage: alice-ai
       openWeights: false
       modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
@@ -621,6 +642,7 @@ spec:
     dimensions:
       modelFamily: Alice AI LLM Flash
       modelId: alice-ai-llm-flash
+      modelLineage: alice-ai
       openWeights: false
       modelCapability: text-generation
       # parameterCountB: unset — size undisclosed (Yandex proprietary)
@@ -649,6 +671,7 @@ spec:
     dimensions:
       modelFamily: DeepSeek v3.2
       modelId: deepseek-v3.2
+      modelLineage: deepseek-v3
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 671  # total params, billions
@@ -678,6 +701,7 @@ spec:
     dimensions:
       modelFamily: DeepSeek v3.2
       modelId: deepseek-v3.2
+      modelLineage: deepseek-v3
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 671  # total params, billions
@@ -707,6 +731,7 @@ spec:
     dimensions:
       modelFamily: DeepSeek v4 flash
       modelId: deepseek-v4-flash
+      modelLineage: deepseek-v4
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 284  # total params, billions
@@ -736,6 +761,7 @@ spec:
     dimensions:
       modelFamily: DeepSeek v4 flash
       modelId: deepseek-v4-flash
+      modelLineage: deepseek-v4
       openWeights: true
       modelCapability: text-generation
       parameterCountB: 284  # total params, billions
@@ -869,6 +895,7 @@ spec:
     dimensions:
       modelFamily: DeepSeek v4.1 Flash
       modelId: deepseek-v4.1-flash
+      modelLineage: deepseek-v4
       openWeights: true
       modelCapability: text-generation
       inferenceScope: local
@@ -896,6 +923,7 @@ spec:
     dimensions:
       modelFamily: DeepSeek v4.1 Flash
       modelId: deepseek-v4.1-flash
+      modelLineage: deepseek-v4
       openWeights: true
       modelCapability: text-generation
       inferenceScope: local

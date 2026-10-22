@@ -2,6 +2,12 @@
 
 ## 2026-10-22
 
+### Каталог / AI: линейка модели и параметры Token Factory
+
+У AI-моделей Yandex, MWS, Cloud.ru и Selectel появилось поле `modelLineage`: общая линейка, к которой относятся родственные модели разных провайдеров (`glm-5`, `kimi-k2`, `qwen3.8`, `deepseek-v4` и т. д.). Так видно, что Selectel GLM 5.3 Flash и MWS GLM 5.3 — одна линейка, а Kimi K2.7 Code построена на K2.6. Это не ключ «та же модель»: точное сравнение по-прежнему идёт только по `modelId`, `modelFamily` не менялся. Поле доступно в `providerAttributes`.
+
+У трёх моделей Token Factory записано число параметров из официальных карточек Hugging Face: GLM 5.3 Flash — 320B / 18B active, Kimi K2.7 Code — 1T / 32B, Qwen3.8 Flash Next — 125B / 6B (без 51B n-gram embedding и 4B MTP). Цены не менялись.
+
 ### Каталог / Selectel: Token Factory
 
 В панели Selectel появился потокенный inference **Token Factory** (бета). В каталог добавлены пять моделей, ставки как на карточках 22 октября 2026, ₽ за 1 млн токенов, с НДС. Кэш на этих карточках — около 10% input, reasoning совпадает с output и записан отдельной ставкой.

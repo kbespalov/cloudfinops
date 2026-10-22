@@ -18,6 +18,10 @@ metadata:
 #   qwen3.8-27b / qwen3.8-flash-next — not Qwen3.8 Max (~2.4T, no token price here)
 #   deepseek-v4.1-flash (Yandex / Cloud.ru) is a different id
 # Context windows are the Selectel card, not the weight-card maximum.
+# Parameter counts are the official Hugging Face cards (zai-org/GLM-5.3-Flash,
+# moonshotai/Kimi-K2.7-Code, Qwen/Qwen3.8-Flash-Next); the panel shows none.
+# modelLineage links related models across providers (glm-5, kimi-k2, qwen3.8);
+# it is not an exact-peer key — modelId still is.
 # No public price page yet; numeric source is the logged-in Token Factory panel.
 spec:
   meters:
@@ -33,6 +37,7 @@ spec:
     dimensions:
       modelFamily: glm-5.3-flash
       modelId: glm-5.3-flash
+      modelLineage: glm-5
       providerModelAlias: glm-5.3-flash
       openWeights: true
       modelCapability: text-generation
@@ -42,10 +47,13 @@ spec:
       tokenDirection: input
       releaseChannel: beta
       contextWindowTokens: 262144
+      parameterCountB: 320
+      activeParameterCountB: 18
     notes: >
       Token Factory, бета. Ставка панели за 1 млн входных токенов, с НДС.
       Это не GLM 5.3 из MWS GPT Model Hub (modelId glm-5.3, 178,12 / 746,64 ₽):
-      другая модель. Число параметров на карточке Selectel не указано.
+      другая модель (320B / 18B active против 753B / 40B), общая только линейка glm-5.
+      Параметры — карточка zai-org/GLM-5.3-Flash на Hugging Face.
     pricing:
       rate:
         amount: '74.64'
@@ -65,6 +73,7 @@ spec:
     dimensions:
       modelFamily: glm-5.3-flash
       modelId: glm-5.3-flash
+      modelLineage: glm-5
       providerModelAlias: glm-5.3-flash
       openWeights: true
       modelCapability: text-generation
@@ -74,6 +83,8 @@ spec:
       tokenDirection: output
       releaseChannel: beta
       contextWindowTokens: 262144
+      parameterCountB: 320
+      activeParameterCountB: 18
     notes: >
       Token Factory, бета. Ставка панели за 1 млн выходных токенов, с НДС.
       Не путать с MWS glm-5.3.
@@ -96,6 +107,7 @@ spec:
     dimensions:
       modelFamily: glm-5.3-flash
       modelId: glm-5.3-flash
+      modelLineage: glm-5
       providerModelAlias: glm-5.3-flash
       openWeights: true
       modelCapability: text-generation
@@ -105,6 +117,8 @@ spec:
       tokenDirection: cached
       releaseChannel: beta
       contextWindowTokens: 262144
+      parameterCountB: 320
+      activeParameterCountB: 18
     notes: >
       Token Factory, бета. Кэшированный вход, 1 млн токенов, с НДС.
       На карточке это 10% input (74,64 → 7,46). У MWS и Yandex отдельной
@@ -128,6 +142,7 @@ spec:
     dimensions:
       modelFamily: glm-5.3-flash
       modelId: glm-5.3-flash
+      modelLineage: glm-5
       providerModelAlias: glm-5.3-flash
       openWeights: true
       modelCapability: text-generation
@@ -137,6 +152,8 @@ spec:
       tokenDirection: reasoning
       releaseChannel: beta
       contextWindowTokens: 262144
+      parameterCountB: 320
+      activeParameterCountB: 18
     notes: >
       Token Factory, бета. Reasoning-токены, 1 млн, с НДС. На карточке ставка
       равна output (248,55 ₽). Это отдельный счётчик, не доплата поверх output.
@@ -159,6 +176,7 @@ spec:
     dimensions:
       modelFamily: kimi-k2.7-code
       modelId: kimi-k2.7-code
+      modelLineage: kimi-k2
       providerModelAlias: kimi-k2.7-code
       openWeights: true
       modelCapability: text-generation
@@ -168,11 +186,14 @@ spec:
       tokenDirection: input
       releaseChannel: beta
       contextWindowTokens: 262144
+      parameterCountB: 1000
+      activeParameterCountB: 32
     notes: >
       Token Factory, бета. Алиас панели kimi-k2.7-code. Это не Kimi K2.6
       (MWS 157,38 / 652,70 ₽, Cloud.ru — modelId kimi-k2.6). Input 157,2 ₽
       близок к K2.6, но модели разные. На карточке есть значок предупреждения,
-      текст в снимке не читается. Число параметров на карточке не указано.
+      текст в снимке не читается. 1T / 32B active по карточке moonshotai/Kimi-K2.7-Code;
+      вендор пишет, что модель построена на Kimi K2.6.
     pricing:
       rate:
         amount: '157.2'
@@ -192,6 +213,7 @@ spec:
     dimensions:
       modelFamily: kimi-k2.7-code
       modelId: kimi-k2.7-code
+      modelLineage: kimi-k2
       providerModelAlias: kimi-k2.7-code
       openWeights: true
       modelCapability: text-generation
@@ -201,6 +223,8 @@ spec:
       tokenDirection: output
       releaseChannel: beta
       contextWindowTokens: 262144
+      parameterCountB: 1000
+      activeParameterCountB: 32
     notes: >
       Token Factory, бета. Выход, 1 млн токенов, с НДС. Не путать с kimi-k2.6.
     pricing:
@@ -222,6 +246,7 @@ spec:
     dimensions:
       modelFamily: kimi-k2.7-code
       modelId: kimi-k2.7-code
+      modelLineage: kimi-k2
       providerModelAlias: kimi-k2.7-code
       openWeights: true
       modelCapability: text-generation
@@ -231,6 +256,8 @@ spec:
       tokenDirection: cached
       releaseChannel: beta
       contextWindowTokens: 262144
+      parameterCountB: 1000
+      activeParameterCountB: 32
     notes: >
       Token Factory, бета. Кэш входа. 15,72 ₽ = 10% от input 157,2 ₽.
     pricing:
@@ -252,6 +279,7 @@ spec:
     dimensions:
       modelFamily: kimi-k2.7-code
       modelId: kimi-k2.7-code
+      modelLineage: kimi-k2
       providerModelAlias: kimi-k2.7-code
       openWeights: true
       modelCapability: text-generation
@@ -261,6 +289,8 @@ spec:
       tokenDirection: reasoning
       releaseChannel: beta
       contextWindowTokens: 262144
+      parameterCountB: 1000
+      activeParameterCountB: 32
     notes: >
       Token Factory, бета. Reasoning равен output на карточке (628,7 ₽),
       отдельный счётчик.
@@ -283,6 +313,7 @@ spec:
     dimensions:
       modelFamily: qwen3.8-27b
       modelId: qwen3.8-27b
+      modelLineage: qwen3.8
       providerModelAlias: qwen3.8-27b
       openWeights: true
       modelCapability: text-generation
@@ -316,6 +347,7 @@ spec:
     dimensions:
       modelFamily: qwen3.8-27b
       modelId: qwen3.8-27b
+      modelLineage: qwen3.8
       providerModelAlias: qwen3.8-27b
       openWeights: true
       modelCapability: text-generation
@@ -348,6 +380,7 @@ spec:
     dimensions:
       modelFamily: qwen3.8-27b
       modelId: qwen3.8-27b
+      modelLineage: qwen3.8
       providerModelAlias: qwen3.8-27b
       openWeights: true
       modelCapability: text-generation
@@ -380,6 +413,7 @@ spec:
     dimensions:
       modelFamily: qwen3.8-27b
       modelId: qwen3.8-27b
+      modelLineage: qwen3.8
       providerModelAlias: qwen3.8-27b
       openWeights: true
       modelCapability: text-generation
@@ -411,6 +445,7 @@ spec:
     dimensions:
       modelFamily: qwen3.8-flash-next
       modelId: qwen3.8-flash-next
+      modelLineage: qwen3.8
       providerModelAlias: qwen3.8-flash-next
       openWeights: true
       modelCapability: text-generation
@@ -420,9 +455,12 @@ spec:
       tokenDirection: input
       releaseChannel: beta
       contextWindowTokens: 262144
+      parameterCountB: 125
+      activeParameterCountB: 6
     notes: >
       Token Factory, бета. Алиас qwen3.8-flash-next. Не Qwen3.8 27B и не
-      Qwen3.8 Max. Число параметров на карточке не указано. Окно карточки
+      Qwen3.8 Max. 125B / 6B active по карточке Qwen/Qwen3.8-Flash-Next
+      (плюс 51B n-gram embedding и 4B MTP вне этого числа). Окно карточки
       262 144 токена.
     pricing:
       rate:
@@ -443,6 +481,7 @@ spec:
     dimensions:
       modelFamily: qwen3.8-flash-next
       modelId: qwen3.8-flash-next
+      modelLineage: qwen3.8
       providerModelAlias: qwen3.8-flash-next
       openWeights: true
       modelCapability: text-generation
@@ -452,6 +491,8 @@ spec:
       tokenDirection: output
       releaseChannel: beta
       contextWindowTokens: 262144
+      parameterCountB: 125
+      activeParameterCountB: 6
     notes: >
       Token Factory, бета. Выход, 1 млн токенов, с НДС.
     pricing:
@@ -473,6 +514,7 @@ spec:
     dimensions:
       modelFamily: qwen3.8-flash-next
       modelId: qwen3.8-flash-next
+      modelLineage: qwen3.8
       providerModelAlias: qwen3.8-flash-next
       openWeights: true
       modelCapability: text-generation
@@ -482,6 +524,8 @@ spec:
       tokenDirection: cached
       releaseChannel: beta
       contextWindowTokens: 262144
+      parameterCountB: 125
+      activeParameterCountB: 6
     notes: >
       Token Factory, бета. Кэш входа. 10% от 20,85 ₽ — 2,085; на карточке 2,09 ₽.
     pricing:
@@ -503,6 +547,7 @@ spec:
     dimensions:
       modelFamily: qwen3.8-flash-next
       modelId: qwen3.8-flash-next
+      modelLineage: qwen3.8
       providerModelAlias: qwen3.8-flash-next
       openWeights: true
       modelCapability: text-generation
@@ -512,6 +557,8 @@ spec:
       tokenDirection: reasoning
       releaseChannel: beta
       contextWindowTokens: 262144
+      parameterCountB: 125
+      activeParameterCountB: 6
     notes: >
       Token Factory, бета. Reasoning равен output на карточке (61,3 ₽).
     pricing:
@@ -533,6 +580,7 @@ spec:
     dimensions:
       modelFamily: DeepSeek v4 flash
       modelId: deepseek-v4-flash
+      modelLineage: deepseek-v4
       providerModelAlias: deepseek-v4-flash
       openWeights: true
       modelCapability: text-generation
@@ -570,6 +618,7 @@ spec:
     dimensions:
       modelFamily: DeepSeek v4 flash
       modelId: deepseek-v4-flash
+      modelLineage: deepseek-v4
       providerModelAlias: deepseek-v4-flash
       openWeights: true
       modelCapability: text-generation
@@ -603,6 +652,7 @@ spec:
     dimensions:
       modelFamily: DeepSeek v4 flash
       modelId: deepseek-v4-flash
+      modelLineage: deepseek-v4
       providerModelAlias: deepseek-v4-flash
       openWeights: true
       modelCapability: text-generation
@@ -636,6 +686,7 @@ spec:
     dimensions:
       modelFamily: DeepSeek v4 flash
       modelId: deepseek-v4-flash
+      modelLineage: deepseek-v4
       providerModelAlias: deepseek-v4-flash
       openWeights: true
       modelCapability: text-generation
