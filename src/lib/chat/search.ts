@@ -290,9 +290,25 @@ export function compactAiModelId(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, '');
 }
 
+let exactCompactAiModelIds: Set<string> | null = null;
+
+/** Compact modelIds that already exist as their own SKU (glm-5.3, not a prefix of it). */
+function exactCompactAiModelIdsSet(): Set<string> {
+  if (exactCompactAiModelIds) return exactCompactAiModelIds;
+  const ids = new Set<string>();
+  for (const meter of catalog.meters) {
+    const key = extractAiModelKey(meter);
+    if (key) ids.add(compactAiModelId(key));
+  }
+  exactCompactAiModelIds = ids;
+  return ids;
+}
+
 /**
  * Match AI model across naming variants:
  * "Qwen 3.6" ↔ "Qwen3.6-35B-A3B" ↔ "qwen3.6-35b-a3b".
+ * If the needle is already an exact catalog modelId, a longer id is a different
+ * product (glm-5.3 does not match glm-5.3-flash).
  */
 export function aiModelMatchesNeedle(
   needle: string,
@@ -301,8 +317,9 @@ export function aiModelMatchesNeedle(
 ): boolean {
   const n = compactAiModelId(needle);
   if (n.length < 3) return false;
-  const family = compactAiModelId(extractAiModelFamily(meter) ?? '');
   const id = compactAiModelId(extractAiModelKey(meter) ?? '');
+  if (exactCompactAiModelIdsSet().has(n)) return id === n;
+  const family = compactAiModelId(extractAiModelFamily(meter) ?? '');
   const blob = compactAiModelId(hay);
   return family.includes(n) || id.includes(n) || blob.includes(n);
 }

@@ -80,7 +80,8 @@ export function exactSummaryFromFeatures(features: PeerFeatures): string | null 
     case 'ai': {
       const model = hardVal(features, 'canonicalModelId');
       const dir = hardVal(features, 'tokenDirection');
-      const dirRu = dir === 'input' ? 'Input' : dir === 'output' ? 'Output' : null;
+      const dirRu =
+        dir === 'input' ? 'Input' : dir === 'output' ? 'Output' : dir === 'cached' ? 'Cached' : dir === 'reasoning' ? 'Reasoning' : null;
       return ['AI', model, dirRu].filter(Boolean).join(' · ');
     }
     default:

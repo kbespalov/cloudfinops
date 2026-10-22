@@ -10,7 +10,6 @@ import {
 } from '@/lib/calculator/quote-view';
 import {
   catalog,
-  extractAiModelKey,
   extractAiTokenDirection,
   isAiTokenMeter,
   meterNativeName,
@@ -18,7 +17,6 @@ import {
 } from '@/lib/catalog';
 import {
   aiModelMatchesNeedle,
-  compactAiModelId,
   detectAiModelNeedle,
 } from '@/lib/chat/search';
 
@@ -71,17 +69,10 @@ type AiProviderPresence = {
 };
 
 /**
- * Prefer compact modelId equality / key-prefix so gpt-oss-20b never inherits
- * gpt-oss-120b via naive substring includes.
+ * Same rule as search: an exact catalog modelId does not swallow a longer variant,
+ * and a size suffix (Qwen 3.6 → 35B-A3B) still matches when no exact id exists.
  */
 function meterMatchesNamedAiModel(modelNeedle: string, meter: CatalogMeter): boolean {
-  const key = extractAiModelKey(meter);
-  const n = compactAiModelId(modelNeedle);
-  if (!n) return false;
-  if (key) {
-    const k = compactAiModelId(key);
-    return k === n || k.startsWith(n);
-  }
   return aiModelMatchesNeedle(modelNeedle, meter, `${meter.name} ${meter.sku}`);
 }
 
