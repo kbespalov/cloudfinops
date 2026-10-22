@@ -1,4 +1,4 @@
-/* next/font Inter → Gravity sans token (overrides uikit default family name). */
+/* Inter (@fontsource-variable/inter, imported in layout) → Gravity sans token. */
 :root {
   /* Shared product column (header + catalog/chat/calculator/…). */
   --cf-page-max: 1200px;
@@ -9,7 +9,7 @@
 
 :root,
 .g-root {
-  --g-font-family-sans: var(--font-inter), 'Helvetica Neue', Arial, Helvetica, sans-serif;
+  --g-font-family-sans: 'Inter Variable', 'Helvetica Neue', Arial, Helvetica, sans-serif;
 }
 
 html,
